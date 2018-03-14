@@ -9,10 +9,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/jhump/protoreflect/dynamic"
-
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
+	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"google.golang.org/grpc"
 )
@@ -86,6 +85,10 @@ func main() {
 		usageAndExit("No call specified.")
 	}
 
+	if *data == "" {
+		usageAndExit("No data specified.")
+	}
+
 	file, err := os.Open(*proto)
 	if err != nil {
 		errAndExit(err.Error())
@@ -97,7 +100,7 @@ func main() {
 
 	importPaths := [2]string{filepath.Dir(*proto), "."}
 
-	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\n", host, *proto, *call, importPaths)
+	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%s\n", host, *proto, *call, importPaths, *data)
 
 	p := &protoparse.Parser{ImportPaths: importPaths[:]}
 
@@ -108,9 +111,6 @@ func main() {
 	}
 
 	fileDesc := fds[0]
-
-	fmt.Printf("%+v\n", fileDesc.GetName())
-	fmt.Printf("%+v\n", fileDesc.GetMessageTypes())
 
 	svc, mth := parseSymbol(*call)
 	if svc == "" || mth == "" {
@@ -141,10 +141,9 @@ func main() {
 	defer cc.Close()
 
 	input := dynamic.NewMessage(mtd.GetInputType())
-	fmt.Printf("%+v\n", input)
-	err = input.TrySetFieldByName("name", "ASDF")
+	err = input.UnmarshalJSON([]byte(*data))
 	if err != nil {
-		errAndExit("No name in input")
+		errAndExit("Invalid data JSON")
 	}
 
 	stub := grpcdynamic.NewStub(cc)
