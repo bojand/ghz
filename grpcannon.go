@@ -27,19 +27,21 @@ var (
 	insecure = flag.Bool("insecure", false, "Use insecure mode.")
 
 	data     = flag.String("d", "", "The call data as stringified JSON.")
-	dataFile = flag.String("D", "", "Path for call data JSON file.")
+	dataPath = flag.String("D", "", "Path for call data JSON file.")
 	md       = flag.String("m", "", "Request metadata as stringified JSON.")
-	mdFile   = flag.String("M", "", "Path for call metadata JSON file.")
+	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
 
-	format = flag.String("f", "", "Output format")
+	format = flag.String("o", "", "Output format")
 
 	c = flag.Int("c", 50, "Number of requests to run concurrently.")
 	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
-	q = flag.Float64("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
+	q = flag.Int("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
 	t = flag.Int("t", 20, "Timeout for each request in seconds.")
 	z = flag.Duration("z", 0, "")
 
 	cpus = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
+
+	localConfigName = "grpcannon.json"
 )
 
 var usage = `Usage: grpcannon [options...] <host>
@@ -85,16 +87,37 @@ func main() {
 
 	host := flag.Args()[0]
 
-	if *proto == "" || filepath.Ext(*proto) != ".proto" {
-		usageAndExit("No protocol buffer file (.proto) specified.")
-	}
+	var config *Config
 
-	if *call == "" {
-		usageAndExit("No call specified.")
-	}
+	if _, err := os.Stat(localConfigName); err == nil {
+		config, err = ReadConfig(localConfigName)
+		if err != nil {
+			errAndExit(err.Error())
+		}
+	} else {
+		config = &Config{
+			Proto:    *proto,
+			Call:     *call,
+			CACert:   *cacert,
+			Cert:     *cert,
+			Key:      *key,
+			Insecure: *insecure,
+			N:        *n,
+			C:        *c,
+			QPS:      *q,
+			Z:        *z,
+			Timeout:  *t,
+			Data:     *data,
+			DataPath: *dataPath,
+			Metadata: *md,
+			MDPath:   *mdPath,
+			Format:   *format,
+			CPUs:     *cpus}
 
-	if *data == "" {
-		usageAndExit("No data specified.")
+		err := config.Validate()
+		if err != nil {
+			errAndExit(err.Error())
+		}
 	}
 
 	file, err := os.Open(*proto)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -32,38 +33,6 @@ type Config struct {
 	CPUs     int           `json:"cpus"`
 }
 
-// ReadConfig reads the configuration from `path`.
-func ReadConfig(path string) (*Config, error) {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return ParseConfig(b)
-}
-
-// ParseConfigString returns config from JSON string.
-func ParseConfigString(s string) (*Config, error) {
-	return ParseConfig([]byte(s))
-}
-
-// ParseConfig returns config from JSON bytes.
-func ParseConfig(b []byte) (*Config, error) {
-	c := &Config{}
-
-	if err := json.Unmarshal(b, c); err != nil {
-		return nil, errors.Wrap(err, "parsing json")
-	}
-
-	c.Default()
-
-	if err := c.Validate(); err != nil {
-		return nil, errors.Wrap(err, "validating")
-	}
-
-	return c, nil
-}
-
 // Default implementation.
 func (c *Config) Default() {
 	if c.N == 0 {
@@ -78,46 +47,54 @@ func (c *Config) Default() {
 // Validate implementation.
 func (c *Config) Validate() error {
 	if err := requiredString(c.Proto); err != nil {
-		return errors.Wrap(err, ".proto")
+		return errors.Wrap(err, "proto")
+	}
+
+	if filepath.Ext(c.Proto) != ".proto" {
+		return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
 	}
 
 	if err := requiredString(c.Call); err != nil {
-		return errors.Wrap(err, ".call")
+		return errors.Wrap(err, "call")
 	}
 
 	if c.Insecure == false {
 		if strings.TrimSpace(c.Cert) != "" {
 			if err := requiredString(c.Key); err != nil {
-				return errors.Wrap(err, ".key")
+				return errors.Wrap(err, "key")
+			}
+		} else if strings.TrimSpace(c.Key) != "" {
+			if err := requiredString(c.Cert); err != nil {
+				return errors.Wrap(err, "cert")
 			}
 		} else if err := requiredString(c.CACert); err != nil {
-			return errors.Wrap(err, ".cacert")
+			return errors.Wrap(err, "cacert")
 		}
 	}
 
 	if err := minValue(c.N, 0); err != nil {
-		return errors.Wrap(err, ".n")
+		return errors.Wrap(err, "n")
 	}
 
 	if err := minValue(c.C, 0); err != nil {
-		return errors.Wrap(err, ".c")
+		return errors.Wrap(err, "c")
 	}
 
 	if err := minValue(c.QPS, 0); err != nil {
-		return errors.Wrap(err, ".q")
+		return errors.Wrap(err, "q")
 	}
 
 	if err := minValue(c.Timeout, 0); err != nil {
-		return errors.Wrap(err, ".t")
+		return errors.Wrap(err, "t")
 	}
 
 	if err := minValue(c.CPUs, 0); err != nil {
-		return errors.Wrap(err, ".cpus")
+		return errors.Wrap(err, "cpus")
 	}
 
-	if strings.TrimSpace(c.DataPath) != "" {
+	if strings.TrimSpace(c.DataPath) == "" {
 		if err := requiredString(c.Data); err != nil {
-			return errors.Wrap(err, ".data")
+			return errors.Wrap(err, "data")
 		}
 	}
 
@@ -169,4 +146,34 @@ func minValue(v int, min int) error {
 	}
 
 	return nil
+}
+
+// ReadConfig reads config from path
+func ReadConfig(path string) (*Config, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseConfig(b)
+}
+
+func parseConfigString(s string) (*Config, error) {
+	return parseConfig([]byte(s))
+}
+
+func parseConfig(b []byte) (*Config, error) {
+	c := &Config{}
+
+	if err := json.Unmarshal(b, c); err != nil {
+		return nil, errors.Wrap(err, "parsing json")
+	}
+
+	c.Default()
+
+	if err := c.Validate(); err != nil {
+		return nil, errors.Wrap(err, "validating")
+	}
+
+	return c, nil
 }

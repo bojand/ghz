@@ -1,0 +1,6 @@
+{
+    "proto": "my.proto",
+    "call": "mycall",
+    "cacert": "mycert",
+    "d": "{\"name\":\"mydata\"}"
+}
