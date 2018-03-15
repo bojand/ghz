@@ -16,19 +16,22 @@ import (
 	"google.golang.org/grpc"
 )
 
-// TODO add more options
+// TODO add import paths option
 
 var (
-	proto  = flag.String("proto", "", `The .proto file.`)
-	call   = flag.String("call", "", `A fully-qualified symbol name.`)
-	cacert = flag.String("cacert", "", "Root certificate file.")
-	cert   = flag.String("cert", "", "Client certificate file.")
-	key    = flag.String("key", "", "Private key file.")
+	proto    = flag.String("proto", "", `The .proto file.`)
+	call     = flag.String("call", "", `A fully-qualified symbol name.`)
+	cacert   = flag.String("cacert", "", "Root certificate file.")
+	cert     = flag.String("cert", "", "Client certificate file.")
+	key      = flag.String("key", "", "Private key file.")
+	insecure = flag.Bool("insecure", false, "Use insecure mode.")
 
-	data     = flag.String("d", "", "")
-	dataFile = flag.String("D", "", "")
+	data     = flag.String("d", "", "The call data as stringified JSON.")
+	dataFile = flag.String("D", "", "Path for call data JSON file.")
+	md       = flag.String("m", "", "Request metadata as stringified JSON.")
+	mdFile   = flag.String("M", "", "Path for call metadata JSON file.")
 
-	output = flag.String("o", "", "")
+	format = flag.String("f", "", "Output format")
 
 	c = flag.Int("c", 50, "Number of requests to run concurrently.")
 	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
@@ -47,6 +50,7 @@ Options:
   -cert		File containing client certificate (public key), to present to the server. 
 			Must also provide -key option.
   -key 		File containing client private key, to present to the server. Must also provide -cert option.
+  -insecure Use insecure mode. Ignores any of the cert options above.
 
   -n  Number of requests to run. Default is 200.
   -c  Number of requests to run concurrently. Total number of requests cannot
@@ -56,8 +60,12 @@ Options:
       application stops and exits. If duration is specified, n is ignored.
       Examples: -z 10s -z 3m.
   -t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
+  
   -d  The call data as stringified JSON.
-  -D  Call data from JSON file. For example, /home/user/file.json or ./file.json.
+  -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
+  -m  Request metadata as stringified JSON.
+  -M  Path for call data JSON file. For example, /home/user/metadata.json or ./metadata.json.
+ 
   -o  Output type. If none provided, a summary is printed.
       "csv" is the only supported alternative. Dumps the response
       metrics in comma-separated values format.
