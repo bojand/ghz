@@ -128,9 +128,6 @@ func main() {
 	defer file.Close()
 	config.ProtoFile = file
 
-	exePath, _ := os.Executable()
-	fmt.Printf("Executable: %s\n", exePath)
-
 	config.ImportPaths = []string{filepath.Dir(config.Proto), "."}
 
 	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%s\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
@@ -165,6 +162,16 @@ func parseSymbol(svcAndMethod string) (string, string) {
 }
 
 func doCall(config *Config) {
+	mtd, err := getMethodDesc(config)
+	if err != nil {
+		errAndExit(err.Error())
+	}
+	if mtd.IsClientStreaming() && mtd.IsServerStreaming() {
+		invokeUnary(config, mtd)
+	}
+}
+
+func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 	p := &protoparse.Parser{ImportPaths: config.ImportPaths}
 
 	fileName := filepath.Base(config.Proto)
@@ -177,28 +184,25 @@ func doCall(config *Config) {
 
 	svc, mth := parseSymbol(config.Call)
 	if svc == "" || mth == "" {
-		errAndExit(fmt.Sprintf("given method name %q is not in expected format: 'service/method' or 'service.method'", config.Call))
+		return nil, fmt.Errorf("given method name %q is not in expected format: 'service/method' or 'service.method'", config.Call)
 	}
 
 	dsc := fileDesc.FindSymbol(svc)
 	if dsc == nil {
-		errAndExit(fmt.Sprintf("target server does not expose service %q", svc))
+		return nil, fmt.Errorf("target server does not expose service %q", svc)
 	}
 
 	sd, ok := dsc.(*desc.ServiceDescriptor)
 	if !ok {
-		errAndExit(fmt.Sprintf("target server does not expose service %q", svc))
+		return nil, fmt.Errorf("target server does not expose service %q", svc)
 	}
 
 	mtd := sd.FindMethodByName(mth)
 	if mtd == nil {
-		errAndExit(fmt.Sprintf("service %q does not include a method named %q", svc, mth))
+		return nil, fmt.Errorf("service %q does not include a method named %q", svc, mth)
 	}
 
-	if mtd.IsClientStreaming() && mtd.IsServerStreaming() {
-		invokeUnary(config, mtd)
-	}
-
+	return mtd, nil
 }
 
 func invokeUnary(config *Config, mtd *desc.MethodDescriptor) {
