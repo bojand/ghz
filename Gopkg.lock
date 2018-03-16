@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -31,6 +37,24 @@
     "internal"
   ]
   revision = "6f4f3bba11fd817df7f57c9b319eeb55a2590167"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
 
 [[projects]]
   branch = "master"
@@ -112,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7d05dcaca577277c7de516919af7404298c58dc67bc26f733e56d8804d298acb"
+  inputs-digest = "9064fba59139e3d376f3f33999fbf67f5f5cdae111f9244a0cfc2db3da4f41c0"
   solver-name = "gps-cdcl"
   solver-version = 1

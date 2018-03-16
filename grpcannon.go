@@ -13,8 +13,26 @@ import (
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 )
+
+// CallResult holds RPC call result
+type CallResult struct {
+	Response   interface{}
+	MethodInfo *desc.MethodDescriptor
+}
+
+// GetResponseString return string of response if not server streaming
+func (r *CallResult) GetResponseString() string {
+	if r.Response != nil && !r.MethodInfo.IsServerStreaming() {
+		if m, ok := r.Response.(fmt.Stringer); ok {
+			return m.String()
+		}
+		return ""
+	}
+	return ""
+}
 
 // TODO add import paths option
 
@@ -132,6 +150,14 @@ func main() {
 
 	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%s\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
 
+	resp, err := doCall(config)
+	if err != nil {
+		errAndExit(err.Error())
+	}
+
+	fmt.Printf("%T: &resp2=%p resp2=%+v\n", resp, &resp, resp)
+	fmt.Printf("%T: &resp2.Response=%p resp=%+v\n", resp.Response, &resp.Response, resp.Response)
+	fmt.Printf("%+v\n", resp.GetResponseString())
 }
 
 func errAndExit(msg string) {
@@ -161,14 +187,15 @@ func parseSymbol(svcAndMethod string) (string, string) {
 	return svcAndMethod[:pos], svcAndMethod[pos+1:]
 }
 
-func doCall(config *Config) {
+func doCall(config *Config) (*CallResult, error) {
 	mtd, err := getMethodDesc(config)
 	if err != nil {
-		errAndExit(err.Error())
+		return nil, err
 	}
-	if mtd.IsClientStreaming() && mtd.IsServerStreaming() {
-		invokeUnary(config, mtd)
+	if !mtd.IsClientStreaming() && !mtd.IsServerStreaming() {
+		return invokeUnary(config, mtd)
 	}
+	return nil, errors.New("Unsupported call")
 }
 
 func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
@@ -177,7 +204,7 @@ func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 	fileName := filepath.Base(config.Proto)
 	fds, err := p.ParseFiles(fileName)
 	if err != nil {
-		errAndExit(err.Error())
+		return nil, err
 	}
 
 	fileDesc := fds[0]
@@ -205,25 +232,25 @@ func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 	return mtd, nil
 }
 
-func invokeUnary(config *Config, mtd *desc.MethodDescriptor) {
+func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error) {
 	cc, err := grpc.Dial(config.Host, grpc.WithInsecure())
 	if err != nil {
-		errAndExit(fmt.Sprintf("Failed to create client to %s: %s", config.Host, err.Error()))
+		return nil, fmt.Errorf("Failed to create client to %s: %s", config.Host, err.Error())
 	}
 	defer cc.Close()
 
 	input := dynamic.NewMessage(mtd.GetInputType())
 	err = input.UnmarshalJSON([]byte(config.Data))
 	if err != nil {
-		errAndExit("Invalid data JSON")
+		return nil, errors.Wrap(err, "Invalid data JSON: ")
 	}
 
 	stub := grpcdynamic.NewStub(cc)
 
 	resp, err := stub.InvokeRpc(context.Background(), mtd, input)
 	if err != nil {
-		errAndExit(err.Error())
+		return nil, err
 	}
 
-	fmt.Printf("%+v\n", resp.String())
+	return &CallResult{resp, mtd}, nil
 }
