@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expected = `{"z":"4h30m0s","proto":"asdf","call":"","cacert":"","cert":"","key":"","insecure":false,"n":0,"c":0,"q":0,"t":0,"d":"","D":"","m":"","M":"","o":"oval","O":"","cpus":0}`
+const expected = `{"proto":"asdf","call":"","cacert":"","cert":"","key":"","insecure":false,"n":0,"c":0,"q":0,"t":0,"d":"","D":"","m":"","M":"","o":"oval","O":"","host":"","cpus":0,"z":"4h30m0s"}`
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")

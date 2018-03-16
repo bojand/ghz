@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -30,7 +31,12 @@ type Config struct {
 	MDPath   string        `json:"M"`
 	Format   string        `json:"o"`
 	Output   string        `json:"O"`
+	Host     string        `json:"host"`
 	CPUs     int           `json:"cpus"`
+
+	// internals
+	ProtoFile   *os.File `json:"-"`
+	ImportPaths []string `json:"-"`
 }
 
 // Default implementation.
@@ -118,18 +124,15 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON is our custom implementation to handle the Duration field Z
-func (c *Config) MarshalJSON() ([]byte, error) {
+func (c Config) MarshalJSON() ([]byte, error) {
 	type Alias Config
-	aux := &struct {
-		Z string `json:"z"`
+	return json.Marshal(&struct {
 		*Alias
+		Z string `json:"z"`
 	}{
-		Alias: (*Alias)(c),
-	}
-
-	aux.Z = c.Z.String()
-
-	return json.Marshal(&aux)
+		Alias: (*Alias)(&c),
+		Z:     c.Z.String(),
+	})
 }
 
 func requiredString(s string) error {
