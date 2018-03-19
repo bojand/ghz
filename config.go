@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -47,6 +48,10 @@ func (c *Config) Default() {
 
 	if c.C == 0 {
 		c.C = 50
+	}
+
+	if c.CPUs == 0 {
+		c.CPUs = runtime.GOMAXPROCS(-1)
 	}
 }
 

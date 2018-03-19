@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"runtime"
 	"testing"
 	"time"
 
@@ -36,6 +37,35 @@ func TestConfig_Default(t *testing.T) {
 	assert.Equal(t, c.N, 200)
 	assert.Equal(t, c.C, 50)
 	assert.Equal(t, c.Insecure, false)
+	assert.Equal(t, c.CPUs, runtime.GOMAXPROCS(-1))
+}
+
+func TestConfig_ReadConfig(t *testing.T) {
+	c, err := ReadConfig("testdata/grpcannon.json")
+
+	ec := Config{
+		Proto:    "my.proto",
+		Call:     "mycall",
+		CACert:   "mycert",
+		Data:     "{\"name\":\"mydata\"}",
+		Cert:     "",
+		Key:      "",
+		Insecure: false,
+		N:        200,
+		C:        50,
+		QPS:      0,
+		Z:        0,
+		DataPath: "",
+		MDPath:   "",
+		Format:   "",
+		Output:   "",
+		Host:     "",
+		CPUs:     runtime.GOMAXPROCS(-1)}
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, ec, *c)
+	assert.Equal(t, ec.Data, c.Data)
 }
 
 func TestConfig_Validate(t *testing.T) {
