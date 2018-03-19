@@ -12,8 +12,8 @@ const expected = `{"proto":"asdf","call":"","cacert":"","cert":"","key":"","inse
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")
-	c := &Config{Proto: "asdf", Z: z, Format: "oval"}
-	cJSON, err := json.Marshal(c)
+	c := Config{Proto: "asdf", Z: z, Format: "oval"}
+	cJSON, err := json.Marshal(&c)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, string(cJSON))
 }
