@@ -35,6 +35,7 @@ func (r *CallResult) GetResponseString() string {
 }
 
 // TODO add import paths option
+// TODO add keepalive options
 
 var (
 	proto    = flag.String("proto", "", `The .proto file.`)
