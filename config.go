@@ -15,25 +15,25 @@ import (
 
 // Config for the run.
 type Config struct {
-	Proto    string        `json:"proto"`
-	Call     string        `json:"call"`
-	CACert   string        `json:"cacert"`
-	Cert     string        `json:"cert"`
-	Key      string        `json:"key"`
-	Insecure bool          `json:"insecure"`
-	N        int           `json:"n"`
-	C        int           `json:"c"`
-	QPS      int           `json:"q"`
-	Z        time.Duration `json:"z"`
-	Timeout  int           `json:"t"`
-	Data     string        `json:"d"`
-	DataPath string        `json:"D"`
-	Metadata string        `json:"m"`
-	MDPath   string        `json:"M"`
-	Format   string        `json:"o"`
-	Output   string        `json:"O"`
-	Host     string        `json:"host"`
-	CPUs     int           `json:"cpus"`
+	Proto    string                  `json:"proto"`
+	Call     string                  `json:"call"`
+	CACert   string                  `json:"cacert"`
+	Cert     string                  `json:"cert"`
+	Key      string                  `json:"key"`
+	Insecure bool                    `json:"insecure"`
+	N        int                     `json:"n"`
+	C        int                     `json:"c"`
+	QPS      int                     `json:"q"`
+	Z        time.Duration           `json:"z"`
+	Timeout  int                     `json:"t"`
+	Data     *map[string]interface{} `json:"d,omitempty"`
+	DataPath string                  `json:"D"`
+	Metadata string                  `json:"m"`
+	MDPath   string                  `json:"M"`
+	Format   string                  `json:"o"`
+	Output   string                  `json:"O"`
+	Host     string                  `json:"host"`
+	CPUs     int                     `json:"cpus"`
 
 	// internals
 	ProtoFile   *os.File `json:"-"`
@@ -57,7 +57,7 @@ func (c *Config) Default() {
 
 // Validate implementation.
 func (c *Config) Validate() error {
-	if err := requiredString(c.Proto); err != nil {
+	if err := RequiredString(c.Proto); err != nil {
 		return errors.Wrap(err, "proto")
 	}
 
@@ -65,20 +65,20 @@ func (c *Config) Validate() error {
 		return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
 	}
 
-	if err := requiredString(c.Call); err != nil {
+	if err := RequiredString(c.Call); err != nil {
 		return errors.Wrap(err, "call")
 	}
 
 	if c.Insecure == false {
 		if strings.TrimSpace(c.Cert) != "" {
-			if err := requiredString(c.Key); err != nil {
+			if err := RequiredString(c.Key); err != nil {
 				return errors.Wrap(err, "key")
 			}
 		} else if strings.TrimSpace(c.Key) != "" {
-			if err := requiredString(c.Cert); err != nil {
+			if err := RequiredString(c.Cert); err != nil {
 				return errors.Wrap(err, "cert")
 			}
-		} else if err := requiredString(c.CACert); err != nil {
+		} else if err := RequiredString(c.CACert); err != nil {
 			return errors.Wrap(err, "cacert")
 		}
 	}
@@ -104,8 +104,11 @@ func (c *Config) Validate() error {
 	}
 
 	if strings.TrimSpace(c.DataPath) == "" {
-		if err := requiredString(c.Data); err != nil {
-			return errors.Wrap(err, "data")
+		// if err := RequiredString(c.Data); err != nil {
+		// 	return errors.Wrap(err, "data")
+		// }
+		if c.Data == nil {
+			return errors.New("data: is required")
 		}
 	}
 
@@ -140,7 +143,32 @@ func (c Config) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func requiredString(s string) error {
+// InitData returns the payload data
+func (c *Config) InitData() error {
+	if c.Data != nil {
+		return nil
+	} else if strings.TrimSpace(c.DataPath) != "" {
+		d, err := ioutil.ReadFile(c.DataPath)
+		if err != nil {
+			return err
+		}
+
+		return json.Unmarshal(d, &c.Data)
+	}
+
+	return errors.New("No data specified")
+}
+
+// SetData sets data based on input JSON string
+func (c *Config) SetData(in string) error {
+	if strings.TrimSpace(in) != "" {
+		return json.Unmarshal([]byte(in), &c.Data)
+	}
+	return nil
+}
+
+// RequiredString checks if the required string is empty
+func RequiredString(s string) error {
 	if strings.TrimSpace(s) == "" {
 		return errors.New("is required")
 	}

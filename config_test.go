@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"runtime"
 	"testing"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expected = `{"proto":"asdf","call":"","cacert":"","cert":"","key":"","insecure":false,"n":0,"c":0,"q":0,"t":0,"d":"","D":"","m":"","M":"","o":"oval","O":"","host":"","cpus":0,"z":"4h30m0s"}`
+const expected = `{"proto":"asdf","call":"","cacert":"","cert":"","key":"","insecure":false,"n":0,"c":0,"q":0,"t":0,"D":"","m":"","M":"","o":"oval","O":"","host":"","cpus":0,"z":"4h30m0s"}`
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")
@@ -43,11 +44,14 @@ func TestConfig_Default(t *testing.T) {
 func TestConfig_ReadConfig(t *testing.T) {
 	c, err := ReadConfig("testdata/grpcannon.json")
 
+	data := make(map[string]interface{})
+	data["name"] = "mydata"
+
 	ec := Config{
 		Proto:    "my.proto",
 		Call:     "mycall",
 		CACert:   "mycert",
-		Data:     "{\"name\":\"mydata\"}",
+		Data:     &data,
 		Cert:     "",
 		Key:      "",
 		Insecure: false,
@@ -151,5 +155,35 @@ func TestConfig_Validate(t *testing.T) {
 		c := &Config{Proto: "asdf.proto", Call: "call", Insecure: true, DataPath: "asdf"}
 		err := c.Validate()
 		assert.NoError(t, err)
+	})
+}
+
+func TestConfig_InitData(t *testing.T) {
+	t.Run("when empty", func(t *testing.T) {
+		c := &Config{}
+		err := c.InitData()
+		assert.Equal(t, "No data specified", err.Error())
+	})
+
+	t.Run("with map data", func(t *testing.T) {
+		data := make(map[string]interface{})
+		data["name"] = "mydata"
+		c := &Config{Data: &data}
+		err := c.InitData()
+		assert.NoError(t, err)
+		assert.Equal(t, c.Data, &data)
+	})
+
+	t.Run("with file specified", func(t *testing.T) {
+		data := make(map[string]interface{})
+		dat, err := ioutil.ReadFile("testdata/data.json")
+		assert.NoError(t, err)
+		err = json.Unmarshal([]byte(dat), &data)
+		assert.NoError(t, err)
+
+		c := &Config{DataPath: "testdata/data.json"}
+		err = c.InitData()
+		assert.NoError(t, err)
+		assert.Equal(t, c.Data, &data)
 	})
 }

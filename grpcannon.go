@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
@@ -15,12 +16,14 @@ import (
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 // CallResult holds RPC call result
 type CallResult struct {
 	Response   interface{}
 	MethodInfo *desc.MethodDescriptor
+	Duration   *time.Duration
 }
 
 // GetResponseString return string of response if not server streaming
@@ -114,6 +117,8 @@ func main() {
 			errAndExit(err.Error())
 		}
 	} else {
+		// TODO Fix up with .New()
+
 		config = &Config{
 			Proto:    *proto,
 			Call:     *call,
@@ -126,7 +131,6 @@ func main() {
 			QPS:      *q,
 			Z:        *z,
 			Timeout:  *t,
-			Data:     *data,
 			DataPath: *dataPath,
 			Metadata: *md,
 			MDPath:   *mdPath,
@@ -134,7 +138,17 @@ func main() {
 			Host:     host,
 			CPUs:     *cpus}
 
-		err := config.Validate()
+		err := config.SetData(*data)
+		if err != nil {
+			errAndExit(err.Error())
+		}
+
+		err = config.InitData()
+		if err != nil {
+			errAndExit(err.Error())
+		}
+
+		err = config.Validate()
 		if err != nil {
 			errAndExit(err.Error())
 		}
@@ -149,16 +163,14 @@ func main() {
 
 	config.ImportPaths = []string{filepath.Dir(config.Proto), "."}
 
-	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%s\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
+	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%+v\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
 
 	resp, err := doCall(config)
 	if err != nil {
 		errAndExit(err.Error())
 	}
 
-	fmt.Printf("%T: &resp2=%p resp2=%+v\n", resp, &resp, resp)
-	fmt.Printf("%T: &resp2.Response=%p resp=%+v\n", resp.Response, &resp.Response, resp.Response)
-	fmt.Printf("%+v\n", resp.GetResponseString())
+	fmt.Printf("Response: %s Duration: %+v\n", resp.GetResponseString(), resp.Duration)
 }
 
 func errAndExit(msg string) {
@@ -241,17 +253,32 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	defer cc.Close()
 
 	input := dynamic.NewMessage(mtd.GetInputType())
-	err = input.UnmarshalJSON([]byte(config.Data))
-	if err != nil {
-		return nil, errors.Wrap(err, "Invalid data JSON: ")
+	// err = input.UnmarshalJSON([]byte(config.Data))
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "Invalid data JSON: ")
+	// }
+
+	for k, v := range *config.Data {
+		input.TrySetFieldByName(k, v)
 	}
 
 	stub := grpcdynamic.NewStub(cc)
 
+	start := time.Now()
+	// var respHeaders metadata.MD
+	// var respTrailers metadata.MD
+	// resp, err := stub.InvokeRpc(context.Background(), mtd, input, grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
 	resp, err := stub.InvokeRpc(context.Background(), mtd, input)
-	if err != nil {
+	_, ok := status.FromError(err)
+	if !ok || err != nil {
 		return nil, err
 	}
 
-	return &CallResult{resp, mtd}, nil
+	end := time.Now()
+	duration := end.Sub(start)
+
+	// log.Printf("%+v\n", respHeaders)
+	// log.Printf("%+v\n", respTrailers)
+
+	return &CallResult{resp, mtd, &duration}, nil
 }
