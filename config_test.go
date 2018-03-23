@@ -48,23 +48,24 @@ func TestConfig_ReadConfig(t *testing.T) {
 	data["name"] = "mydata"
 
 	ec := Config{
-		Proto:    "my.proto",
-		Call:     "mycall",
-		CACert:   "mycert",
-		Data:     &data,
-		Cert:     "",
-		Key:      "",
-		Insecure: false,
-		N:        200,
-		C:        50,
-		QPS:      0,
-		Z:        0,
-		DataPath: "",
-		MDPath:   "",
-		Format:   "",
-		Output:   "",
-		Host:     "",
-		CPUs:     runtime.GOMAXPROCS(-1)}
+		Proto:       "my.proto",
+		Call:        "mycall",
+		CACert:      "mycert",
+		Data:        &data,
+		Cert:        "",
+		Key:         "",
+		Insecure:    false,
+		N:           200,
+		C:           50,
+		QPS:         0,
+		Z:           0,
+		DataPath:    "",
+		MDPath:      "",
+		Format:      "",
+		Output:      "",
+		Host:        "",
+		CPUs:        runtime.GOMAXPROCS(-1),
+		ImportPaths: []string{"/path/to/protos"}}
 
 	assert.NoError(t, err)
 

@@ -2,8 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -16,6 +20,8 @@ import (
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -159,9 +165,9 @@ func main() {
 		errAndExit(err.Error())
 	}
 	defer file.Close()
-	config.ProtoFile = file
+	// config.ProtoFile = file
 
-	config.ImportPaths = []string{filepath.Dir(config.Proto), "."}
+	config.ImportPaths = append(config.ImportPaths, filepath.Dir(config.Proto), ".")
 
 	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%+v\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
 
@@ -253,10 +259,6 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	defer cc.Close()
 
 	input := dynamic.NewMessage(mtd.GetInputType())
-	// err = input.UnmarshalJSON([]byte(config.Data))
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "Invalid data JSON: ")
-	// }
 
 	for k, v := range *config.Data {
 		input.TrySetFieldByName(k, v)
@@ -265,10 +267,10 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	stub := grpcdynamic.NewStub(cc)
 
 	start := time.Now()
-	// var respHeaders metadata.MD
-	// var respTrailers metadata.MD
-	// resp, err := stub.InvokeRpc(context.Background(), mtd, input, grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
-	resp, err := stub.InvokeRpc(context.Background(), mtd, input)
+	var respHeaders metadata.MD
+	var respTrailers metadata.MD
+	resp, err := stub.InvokeRpc(context.Background(), mtd, input, grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
+	// resp, err := stub.InvokeRpc(context.Background(), mtd, input)
 	_, ok := status.FromError(err)
 	if !ok || err != nil {
 		return nil, err
@@ -277,8 +279,45 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	end := time.Now()
 	duration := end.Sub(start)
 
-	// log.Printf("%+v\n", respHeaders)
-	// log.Printf("%+v\n", respTrailers)
+	log.Printf("%+v\n", respHeaders)
+	log.Printf("%+v\n", respTrailers)
 
 	return &CallResult{resp, mtd, &duration}, nil
+}
+
+// ClientTransportCredentials builds transport credentials for a GRPC client using the
+// given properties. If cacertFile is blank, only standard trusted certs are used to
+// verify the server certs. If clientCertFile is blank, the client will not use a client
+// certificate. If clientCertFile is not blank then clientKeyFile must not be blank.
+func ClientTransportCredentials(insecureSkipVerify bool, cacertFile, clientCertFile, clientKeyFile string) (credentials.TransportCredentials, error) {
+	var tlsConf tls.Config
+
+	if clientCertFile != "" {
+		// Load the client certificates from disk
+		certificate, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("could not load client key pair: %v", err)
+		}
+		tlsConf.Certificates = []tls.Certificate{certificate}
+	}
+
+	if insecureSkipVerify {
+		tlsConf.InsecureSkipVerify = true
+	} else if cacertFile != "" {
+		// Create a certificate pool from the certificate authority
+		certPool := x509.NewCertPool()
+		ca, err := ioutil.ReadFile(cacertFile)
+		if err != nil {
+			return nil, fmt.Errorf("could not read ca certificate: %v", err)
+		}
+
+		// Append the certificates from the CA
+		if ok := certPool.AppendCertsFromPEM(ca); !ok {
+			return nil, errors.New("failed to append ca certs")
+		}
+
+		tlsConf.RootCAs = certPool
+	}
+
+	return credentials.NewTLS(&tlsConf), nil
 }

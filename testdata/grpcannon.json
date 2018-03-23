@@ -4,5 +4,8 @@
     "cacert": "mycert",
     "d": {
         "name": "mydata"
-    }
+    },
+    "importPaths": [
+        "/path/to/protos"
+    ]
 }

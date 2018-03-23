@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -15,29 +14,26 @@ import (
 
 // Config for the run.
 type Config struct {
-	Proto    string                  `json:"proto"`
-	Call     string                  `json:"call"`
-	CACert   string                  `json:"cacert"`
-	Cert     string                  `json:"cert"`
-	Key      string                  `json:"key"`
-	Insecure bool                    `json:"insecure"`
-	N        int                     `json:"n"`
-	C        int                     `json:"c"`
-	QPS      int                     `json:"q"`
-	Z        time.Duration           `json:"z"`
-	Timeout  int                     `json:"t"`
-	Data     *map[string]interface{} `json:"d,omitempty"`
-	DataPath string                  `json:"D"`
-	Metadata string                  `json:"m"`
-	MDPath   string                  `json:"M"`
-	Format   string                  `json:"o"`
-	Output   string                  `json:"O"`
-	Host     string                  `json:"host"`
-	CPUs     int                     `json:"cpus"`
-
-	// internals
-	ProtoFile   *os.File `json:"-"`
-	ImportPaths []string `json:"-"`
+	Proto       string                  `json:"proto"`
+	Call        string                  `json:"call"`
+	CACert      string                  `json:"cacert"`
+	Cert        string                  `json:"cert"`
+	Key         string                  `json:"key"`
+	Insecure    bool                    `json:"insecure"`
+	N           int                     `json:"n"`
+	C           int                     `json:"c"`
+	QPS         int                     `json:"q"`
+	Z           time.Duration           `json:"z"`
+	Timeout     int                     `json:"t"`
+	Data        *map[string]interface{} `json:"d,omitempty"`
+	DataPath    string                  `json:"D"`
+	Metadata    string                  `json:"m"`
+	MDPath      string                  `json:"M"`
+	Format      string                  `json:"o"`
+	Output      string                  `json:"O"`
+	Host        string                  `json:"host"`
+	CPUs        int                     `json:"cpus"`
+	ImportPaths []string                `json:"importPaths,omitempty"`
 }
 
 // Default implementation.
