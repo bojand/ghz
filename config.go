@@ -14,26 +14,23 @@ import (
 
 // Config for the run.
 type Config struct {
-	Proto       string                  `json:"proto"`
-	Call        string                  `json:"call"`
-	CACert      string                  `json:"cacert"`
-	Cert        string                  `json:"cert"`
-	Key         string                  `json:"key"`
-	Insecure    bool                    `json:"insecure"`
-	N           int                     `json:"n"`
-	C           int                     `json:"c"`
-	QPS         int                     `json:"q"`
-	Z           time.Duration           `json:"z"`
-	Timeout     int                     `json:"t"`
-	Data        *map[string]interface{} `json:"d,omitempty"`
-	DataPath    string                  `json:"D"`
-	Metadata    string                  `json:"m"`
-	MDPath      string                  `json:"M"`
-	Format      string                  `json:"o"`
-	Output      string                  `json:"O"`
-	Host        string                  `json:"host"`
-	CPUs        int                     `json:"cpus"`
-	ImportPaths []string                `json:"importPaths,omitempty"`
+	Proto        string                  `json:"proto"`
+	Call         string                  `json:"call"`
+	Cert         string                  `json:"cert"`
+	N            int                     `json:"n"`
+	C            int                     `json:"c"`
+	QPS          int                     `json:"qps"`
+	Z            time.Duration           `json:"z"`
+	Timeout      int                     `json:"timeout"`
+	Data         *map[string]interface{} `json:"data,omitempty"`
+	DataPath     string                  `json:"dataPath"`
+	Metadata     *map[string]string      `json:"metadata,omitempty"`
+	MetadataPath string                  `json:"metadataPath"`
+	Format       string                  `json:"format"`
+	Output       string                  `json:"output"`
+	Host         string                  `json:"host"`
+	CPUs         int                     `json:"cpus"`
+	ImportPaths  []string                `json:"importPaths,omitempty"`
 }
 
 // Default implementation.
@@ -63,20 +60,6 @@ func (c *Config) Validate() error {
 
 	if err := RequiredString(c.Call); err != nil {
 		return errors.Wrap(err, "call")
-	}
-
-	if c.Insecure == false {
-		if strings.TrimSpace(c.Cert) != "" {
-			if err := RequiredString(c.Key); err != nil {
-				return errors.Wrap(err, "key")
-			}
-		} else if strings.TrimSpace(c.Key) != "" {
-			if err := RequiredString(c.Cert); err != nil {
-				return errors.Wrap(err, "cert")
-			}
-		} else if err := RequiredString(c.CACert); err != nil {
-			return errors.Wrap(err, "cacert")
-		}
 	}
 
 	if err := minValue(c.N, 0); err != nil {
@@ -159,6 +142,14 @@ func (c *Config) InitData() error {
 func (c *Config) SetData(in string) error {
 	if strings.TrimSpace(in) != "" {
 		return json.Unmarshal([]byte(in), &c.Data)
+	}
+	return nil
+}
+
+// SetMetadata sets the metadata based on input JSON string
+func (c *Config) SetMetadata(in string) error {
+	if strings.TrimSpace(in) != "" {
+		return json.Unmarshal([]byte(in), &c.Metadata)
 	}
 	return nil
 }

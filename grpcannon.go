@@ -2,11 +2,8 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,14 +11,16 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc/credentials"
+
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 )
 
@@ -47,12 +46,11 @@ func (r *CallResult) GetResponseString() string {
 // TODO add keepalive options
 
 var (
-	proto    = flag.String("proto", "", `The .proto file.`)
-	call     = flag.String("call", "", `A fully-qualified symbol name.`)
-	cacert   = flag.String("cacert", "", "Root certificate file.")
-	cert     = flag.String("cert", "", "Client certificate file.")
-	key      = flag.String("key", "", "Private key file.")
-	insecure = flag.Bool("insecure", false, "Use insecure mode.")
+	proto  = flag.String("proto", "", `The .proto file.`)
+	call   = flag.String("call", "", `A fully-qualified symbol name.`)
+	cacert = flag.String("cacert", "", "Root certificate file.")
+	cert   = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
+	key    = flag.String("key", "", "Private key file.")
 
 	data     = flag.String("d", "", "The call data as stringified JSON.")
 	dataPath = flag.String("D", "", "Path for call data JSON file.")
@@ -128,23 +126,25 @@ func main() {
 		config = &Config{
 			Proto:    *proto,
 			Call:     *call,
-			CACert:   *cacert,
 			Cert:     *cert,
-			Key:      *key,
-			Insecure: *insecure,
 			N:        *n,
 			C:        *c,
 			QPS:      *q,
 			Z:        *z,
 			Timeout:  *t,
 			DataPath: *dataPath,
-			Metadata: *md,
-			MDPath:   *mdPath,
-			Format:   *format,
-			Host:     host,
-			CPUs:     *cpus}
+			// Metadata:     *md,
+			MetadataPath: *mdPath,
+			Format:       *format,
+			Host:         host,
+			CPUs:         *cpus}
 
 		err := config.SetData(*data)
+		if err != nil {
+			errAndExit(err.Error())
+		}
+
+		err = config.SetMetadata(*md)
 		if err != nil {
 			errAndExit(err.Error())
 		}
@@ -252,7 +252,12 @@ func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 }
 
 func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error) {
-	cc, err := grpc.Dial(config.Host, grpc.WithInsecure())
+	credOptions, err := CreateClientCredOption(config)
+	if err != nil {
+		return nil, err
+	}
+
+	cc, err := grpc.Dial(config.Host, grpc.WithStatsHandler(&ClientHandler{}), credOptions)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create client to %s: %s", config.Host, err.Error())
 	}
@@ -266,11 +271,20 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 
 	stub := grpcdynamic.NewStub(cc)
 
-	start := time.Now()
+	ctx := context.Background()
+
+	if config.Metadata != nil && len(*config.Metadata) > 0 {
+		reqMD := metadata.New(*config.Metadata)
+		ctx = metadata.NewOutgoingContext(ctx, reqMD)
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	var respHeaders metadata.MD
 	var respTrailers metadata.MD
-	resp, err := stub.InvokeRpc(context.Background(), mtd, input, grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
-	// resp, err := stub.InvokeRpc(context.Background(), mtd, input)
+	start := time.Now()
+	resp, err := stub.InvokeRpc(ctx, mtd, input, grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
 	_, ok := status.FromError(err)
 	if !ok || err != nil {
 		return nil, err
@@ -285,39 +299,61 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	return &CallResult{resp, mtd, &duration}, nil
 }
 
-// ClientTransportCredentials builds transport credentials for a GRPC client using the
-// given properties. If cacertFile is blank, only standard trusted certs are used to
-// verify the server certs. If clientCertFile is blank, the client will not use a client
-// certificate. If clientCertFile is not blank then clientKeyFile must not be blank.
-func ClientTransportCredentials(insecureSkipVerify bool, cacertFile, clientCertFile, clientKeyFile string) (credentials.TransportCredentials, error) {
-	var tlsConf tls.Config
-
-	if clientCertFile != "" {
-		// Load the client certificates from disk
-		certificate, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+// CreateClientCredOption creates the credential dial options based on config
+func CreateClientCredOption(config *Config) (grpc.DialOption, error) {
+	credOptions := grpc.WithInsecure()
+	if strings.TrimSpace(config.Cert) != "" {
+		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
 		if err != nil {
-			return nil, fmt.Errorf("could not load client key pair: %v", err)
+			return nil, err
 		}
-		tlsConf.Certificates = []tls.Certificate{certificate}
+		credOptions = grpc.WithTransportCredentials(creds)
 	}
 
-	if insecureSkipVerify {
-		tlsConf.InsecureSkipVerify = true
-	} else if cacertFile != "" {
-		// Create a certificate pool from the certificate authority
-		certPool := x509.NewCertPool()
-		ca, err := ioutil.ReadFile(cacertFile)
-		if err != nil {
-			return nil, fmt.Errorf("could not read ca certificate: %v", err)
-		}
+	return credOptions, nil
+}
 
-		// Append the certificates from the CA
-		if ok := certPool.AppendCertsFromPEM(ca); !ok {
-			return nil, errors.New("failed to append ca certs")
-		}
+// ClientHandler is for gRPC stats
+type ClientHandler struct{}
 
-		tlsConf.RootCAs = certPool
+// HandleConn handle the connection
+func (c *ClientHandler) HandleConn(ctx context.Context, cs stats.ConnStats) {
+	// no-op
+}
+
+// TagConn exists to satisfy gRPC stats.Handler.
+func (c *ClientHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) context.Context {
+	// no-op
+	return ctx
+}
+
+// HandleRPC implements per-RPC tracing and stats instrumentation.
+func (c *ClientHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
+
+	switch st := rs.(type) {
+	case *stats.Begin:
+		log.Println("Begin")
+	case *stats.OutHeader:
+		log.Println("OutHeader")
+	case *stats.InHeader:
+		log.Println("InHeader")
+	case *stats.InTrailer:
+		log.Println("InTrailer")
+	case *stats.OutTrailer:
+		log.Println("OutTrailer")
+	case *stats.OutPayload:
+		log.Println("OutPayload")
+	case *stats.InPayload:
+		log.Println("InPayload")
+	case *stats.End:
+		log.Println("End")
+	default:
+		log.Println("unexpected stats: %T", st)
 	}
+}
 
-	return credentials.NewTLS(&tlsConf), nil
+// TagRPC implements per-RPC context management.
+func (c *ClientHandler) TagRPC(ctx context.Context, rti *stats.RPCTagInfo) context.Context {
+	// no op
+	return ctx
 }

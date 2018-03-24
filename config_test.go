@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expected = `{"proto":"asdf","call":"","cacert":"","cert":"","key":"","insecure":false,"n":0,"c":0,"q":0,"t":0,"D":"","m":"","M":"","o":"oval","O":"","host":"","cpus":0,"z":"4h30m0s"}`
+const expected = `{"proto":"asdf","call":"","cert":"","n":0,"c":0,"qps":0,"timeout":0,"dataPath":"","metadataPath":"","format":"oval","output":"","host":"","cpus":0,"z":"4h30m0s"}`
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")
@@ -37,7 +37,6 @@ func TestConfig_Default(t *testing.T) {
 
 	assert.Equal(t, c.N, 200)
 	assert.Equal(t, c.C, 50)
-	assert.Equal(t, c.Insecure, false)
 	assert.Equal(t, c.CPUs, runtime.GOMAXPROCS(-1))
 }
 
@@ -48,24 +47,21 @@ func TestConfig_ReadConfig(t *testing.T) {
 	data["name"] = "mydata"
 
 	ec := Config{
-		Proto:       "my.proto",
-		Call:        "mycall",
-		CACert:      "mycert",
-		Data:        &data,
-		Cert:        "",
-		Key:         "",
-		Insecure:    false,
-		N:           200,
-		C:           50,
-		QPS:         0,
-		Z:           0,
-		DataPath:    "",
-		MDPath:      "",
-		Format:      "",
-		Output:      "",
-		Host:        "",
-		CPUs:        runtime.GOMAXPROCS(-1),
-		ImportPaths: []string{"/path/to/protos"}}
+		Proto:        "my.proto",
+		Call:         "mycall",
+		Data:         &data,
+		Cert:         "",
+		N:            200,
+		C:            50,
+		QPS:          0,
+		Z:            0,
+		DataPath:     "",
+		MetadataPath: "",
+		Format:       "",
+		Output:       "",
+		Host:         "",
+		CPUs:         runtime.GOMAXPROCS(-1),
+		ImportPaths:  []string{"/path/to/protos"}}
 
 	assert.NoError(t, err)
 
@@ -92,68 +88,44 @@ func TestConfig_Validate(t *testing.T) {
 		assert.Equal(t, "call: is required", err.Error())
 	})
 
-	t.Run("missing cacert", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call"}
-		err := c.Validate()
-		assert.Equal(t, "cacert: is required", err.Error())
-	})
-
-	t.Run("missing cert", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", Key: "key"}
-		err := c.Validate()
-		assert.Equal(t, "cert: is required", err.Error())
-	})
-
-	t.Run("missing cert", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert"}
-		err := c.Validate()
-		assert.Equal(t, "key: is required", err.Error())
-	})
-
 	t.Run("N < 0", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", CACert: "cacert", N: -1}
+		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert", N: -1}
 		err := c.Validate()
 		assert.Equal(t, "n: must be at least 0", err.Error())
 	})
 
 	t.Run("C < 0", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", CACert: "cacert", C: -1}
+		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert", C: -1}
 		err := c.Validate()
 		assert.Equal(t, "c: must be at least 0", err.Error())
 	})
 
 	t.Run("QPS < 0", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", CACert: "cacert", QPS: -1}
+		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert", QPS: -1}
 		err := c.Validate()
 		assert.Equal(t, "q: must be at least 0", err.Error())
 	})
 
 	t.Run("T < 0", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", CACert: "cacert", Timeout: -1}
+		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert", Timeout: -1}
 		err := c.Validate()
 		assert.Equal(t, "t: must be at least 0", err.Error())
 	})
 
 	t.Run("CPUs < 0", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", CACert: "cacert", CPUs: -1}
+		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert", CPUs: -1}
 		err := c.Validate()
 		assert.Equal(t, "cpus: must be at least 0", err.Error())
 	})
 
 	t.Run("missing data", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", CACert: "cacert"}
+		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert"}
 		err := c.Validate()
 		assert.Equal(t, "data: is required", err.Error())
 	})
 
 	t.Run("DataPath", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", CACert: "cacert", DataPath: "asdf"}
-		err := c.Validate()
-		assert.NoError(t, err)
-	})
-
-	t.Run("Insecure=true", func(t *testing.T) {
-		c := &Config{Proto: "asdf.proto", Call: "call", Insecure: true, DataPath: "asdf"}
+		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert", DataPath: "asdf"}
 		err := c.Validate()
 		assert.NoError(t, err)
 	})
