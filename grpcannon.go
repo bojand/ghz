@@ -44,6 +44,7 @@ func (r *CallResult) GetResponseString() string {
 
 // TODO add import paths option
 // TODO add keepalive options
+// TODO add connetion timeout
 
 var (
 	proto  = flag.String("proto", "", `The .proto file.`)
@@ -154,6 +155,11 @@ func main() {
 			errAndExit(err.Error())
 		}
 
+		err = config.InitMetadata()
+		if err != nil {
+			errAndExit(err.Error())
+		}
+
 		err = config.Validate()
 		if err != nil {
 			errAndExit(err.Error())
@@ -257,19 +263,11 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 		return nil, err
 	}
 
-	cc, err := grpc.Dial(config.Host, grpc.WithStatsHandler(&ClientHandler{}), credOptions)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create client to %s: %s", config.Host, err.Error())
-	}
-	defer cc.Close()
-
 	input := dynamic.NewMessage(mtd.GetInputType())
 
 	for k, v := range *config.Data {
 		input.TrySetFieldByName(k, v)
 	}
-
-	stub := grpcdynamic.NewStub(cc)
 
 	ctx := context.Background()
 
@@ -281,8 +279,22 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	timeout := time.Duration(int64(*t) * int64(time.Second))
+	ctx, _ = context.WithTimeout(ctx, timeout)
+
 	var respHeaders metadata.MD
 	var respTrailers metadata.MD
+
+	cc, err := grpc.Dial(config.Host, grpc.WithStatsHandler(&ClientHandler{}), credOptions)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create client to %s: %s", config.Host, err.Error())
+	}
+	defer cc.Close()
+
+	stub := grpcdynamic.NewStub(cc)
+
+	log.Printf("%+v\n", ctx)
+
 	start := time.Now()
 	resp, err := stub.InvokeRpc(ctx, mtd, input, grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
 	_, ok := status.FromError(err)

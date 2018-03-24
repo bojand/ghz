@@ -50,7 +50,7 @@ func (c *Config) Default() {
 
 // Validate implementation.
 func (c *Config) Validate() error {
-	if err := RequiredString(c.Proto); err != nil {
+	if err := requiredString(c.Proto); err != nil {
 		return errors.Wrap(err, "proto")
 	}
 
@@ -58,7 +58,7 @@ func (c *Config) Validate() error {
 		return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
 	}
 
-	if err := RequiredString(c.Call); err != nil {
+	if err := requiredString(c.Call); err != nil {
 		return errors.Wrap(err, "call")
 	}
 
@@ -154,8 +154,24 @@ func (c *Config) SetMetadata(in string) error {
 	return nil
 }
 
+// InitMetadata returns the payload data
+func (c *Config) InitMetadata() error {
+	if c.Metadata != nil && len(*c.Metadata) > 0 {
+		return nil
+	} else if strings.TrimSpace(c.MetadataPath) != "" {
+		d, err := ioutil.ReadFile(c.MetadataPath)
+		if err != nil {
+			return err
+		}
+
+		return json.Unmarshal(d, &c.Metadata)
+	}
+
+	return nil
+}
+
 // RequiredString checks if the required string is empty
-func RequiredString(s string) error {
+func requiredString(s string) error {
 	if strings.TrimSpace(s) == "" {
 		return errors.New("is required")
 	}
