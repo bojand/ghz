@@ -1,8 +1,12 @@
 package main
 
 import (
+	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Max size of the buffer of result channel.
@@ -43,35 +47,40 @@ func (b *Requestor) Run() {
 	b.Finish()
 }
 
-func (b *Requestor) Stop() {
-	// Send stop signal so that workers can stop gracefully.
-	for i := 0; i < b.config.C; i++ {
-		b.stopCh <- struct{}{}
-	}
-}
+// func (b *Requestor) Stop() {
+// 	// Send stop signal so that workers can stop gracefully.
+// 	for i := 0; i < b.config.C; i++ {
+// 		b.stopCh <- struct{}{}
+// 	}
+// }
 
 func (b *Requestor) Finish() {
 	close(b.results)
-	total := time.Now().Sub(b.start)
+	// total := time.Now().Sub(b.start)
 }
 
 func (b *Requestor) runWorkers() {
 	var wg sync.WaitGroup
 	wg.Add(b.config.C)
 
-	// TODO create connection
+	// credOptions, err := CreateClientCredOption(config)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// Ignore the case where b.N % b.C != 0.
 	for i := 0; i < b.config.C; i++ {
 		go func() {
-			// b.runWorker(client, b.config.N/b.config.C)
-			wg.Done()
+			defer wg.Done()
+
+			b.runWorker(b.config.N / b.config.C)
+
 		}()
 	}
 	wg.Wait()
 }
 
-func (b *Requestor) runWorker( /* client, */ n int) {
+func (b *Requestor) runWorker(n int) {
 	var throttle <-chan time.Time
 	if b.config.QPS > 0 {
 		throttle = time.Tick(time.Duration(1e6/(b.config.QPS)) * time.Microsecond)
@@ -93,6 +102,20 @@ func (b *Requestor) runWorker( /* client, */ n int) {
 }
 
 func (b *Requestor) makeRequest( /*c *http.Client*/ ) {
+}
+
+// CreateClientCredOption creates the credential dial options based on config
+func CreateClientCredOption(config *Config) (grpc.DialOption, error) {
+	credOptions := grpc.WithInsecure()
+	if strings.TrimSpace(config.Cert) != "" {
+		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
+		if err != nil {
+			return nil, err
+		}
+		credOptions = grpc.WithTransportCredentials(creds)
+	}
+
+	return credOptions, nil
 }
 
 func min(a, b int) int {

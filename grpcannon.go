@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/grpc/credentials"
-
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
@@ -311,19 +309,19 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	return &CallResult{resp, mtd, &duration}, nil
 }
 
-// CreateClientCredOption creates the credential dial options based on config
-func CreateClientCredOption(config *Config) (grpc.DialOption, error) {
-	credOptions := grpc.WithInsecure()
-	if strings.TrimSpace(config.Cert) != "" {
-		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
-		if err != nil {
-			return nil, err
-		}
-		credOptions = grpc.WithTransportCredentials(creds)
-	}
+// // CreateClientCredOption creates the credential dial options based on config
+// func CreateClientCredOption(config *Config) (grpc.DialOption, error) {
+// 	credOptions := grpc.WithInsecure()
+// 	if strings.TrimSpace(config.Cert) != "" {
+// 		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		credOptions = grpc.WithTransportCredentials(creds)
+// 	}
 
-	return credOptions, nil
-}
+// 	return credOptions, nil
+// }
 
 // ClientHandler is for gRPC stats
 type ClientHandler struct{}
