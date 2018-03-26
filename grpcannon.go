@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/jhump/protoreflect/desc"
@@ -256,23 +257,24 @@ func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 }
 
 func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error) {
+	// create credentials
 	credOptions, err := CreateClientCredOption(config)
 	if err != nil {
 		return nil, err
 	}
 
-	input := dynamic.NewMessage(mtd.GetInputType())
-
-	for k, v := range *config.Data {
-		input.TrySetFieldByName(k, v)
+	// create client connection
+	cc, err := grpc.Dial(config.Host, grpc.WithStatsHandler(&ClientHandler{}), credOptions)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create client to %s: %s", config.Host, err.Error())
 	}
+	defer cc.Close()
 
+	// the client stub for the connection
+	stub := grpcdynamic.NewStub(cc)
+
+	// create call context
 	ctx := context.Background()
-
-	if config.Metadata != nil && len(*config.Metadata) > 0 {
-		reqMD := metadata.New(*config.Metadata)
-		ctx = metadata.NewOutgoingContext(ctx, reqMD)
-	}
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -280,18 +282,19 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	timeout := time.Duration(int64(*t) * int64(time.Second))
 	ctx, _ = context.WithTimeout(ctx, timeout)
 
+	// include the metadata
+	if config.Metadata != nil && len(*config.Metadata) > 0 {
+		reqMD := metadata.New(*config.Metadata)
+		ctx = metadata.NewOutgoingContext(ctx, reqMD)
+	}
 	var respHeaders metadata.MD
 	var respTrailers metadata.MD
 
-	cc, err := grpc.Dial(config.Host, grpc.WithStatsHandler(&ClientHandler{}), credOptions)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create client to %s: %s", config.Host, err.Error())
+	// payload
+	input := dynamic.NewMessage(mtd.GetInputType())
+	for k, v := range *config.Data {
+		input.TrySetFieldByName(k, v)
 	}
-	defer cc.Close()
-
-	stub := grpcdynamic.NewStub(cc)
-
-	log.Printf("%+v\n", ctx)
 
 	start := time.Now()
 	resp, err := stub.InvokeRpc(ctx, mtd, input, grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
@@ -303,10 +306,46 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	end := time.Now()
 	duration := end.Sub(start)
 
-	log.Printf("%+v\n", respHeaders)
-	log.Printf("%+v\n", respTrailers)
+	DoParallelRequests(&stub, mtd)
 
 	return &CallResult{resp, mtd, &duration}, nil
+}
+
+// DoParallelRequests testing concurrent gRPC requests
+func DoParallelRequests(stub *grpcdynamic.Stub, mtd *desc.MethodDescriptor) {
+	log.Println("==================")
+	var wg sync.WaitGroup
+	wg.Add(5)
+
+	for i := 0; i < 5; i++ {
+		go func(counter int) {
+			defer wg.Done()
+
+			log.Printf("start %d\n", counter)
+
+			input := dynamic.NewMessage(mtd.GetInputType())
+			input.TrySetFieldByName("name", fmt.Sprintf("Msg %d", counter))
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, "counter", counter)
+
+			start := time.Now()
+			resp, err := stub.InvokeRpc(ctx, mtd, input)
+			_, ok := status.FromError(err)
+
+			end := time.Now()
+			duration := end.Sub(start)
+
+			if resp != nil && err == nil && ok {
+				log.Printf("response for %d: %+v\n", counter, resp)
+			}
+
+			log.Printf("duration for %d: %+v\n", counter, duration)
+
+		}(i)
+	}
+	wg.Wait()
+	log.Println("==================")
 }
 
 // // CreateClientCredOption creates the credential dial options based on config
@@ -339,6 +378,32 @@ func (c *ClientHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) con
 
 // HandleRPC implements per-RPC tracing and stats instrumentation.
 func (c *ClientHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
+
+	// switch st := rs.(type) {
+	switch rs.(type) {
+	case *stats.Begin:
+		log.Printf("Begin: %+v\n %+v\n", ctx, rs)
+	// case *stats.OutHeader:
+	// 	log.Println("OutHeader")
+	// case *stats.InHeader:
+	// 	log.Println("InHeader")
+	// case *stats.InTrailer:
+	// 	log.Println("InTrailer")
+	// case *stats.OutTrailer:
+	// 	log.Println("OutTrailer")
+	// case *stats.OutPayload:
+	// 	log.Println("OutPayload")
+	// case *stats.InPayload:
+	// log.Println("InPayload")
+	case *stats.End:
+		log.Printf("End: %+v %+v\n", ctx, rs)
+		// default:
+		// log.Println("unexpected stats: %T", st)
+	}
+}
+
+// HandleRPC2 implements per-RPC tracing and stats instrumentation.
+func (c *ClientHandler) HandleRPC2(ctx context.Context, rs stats.RPCStats) {
 
 	switch st := rs.(type) {
 	case *stats.Begin:
