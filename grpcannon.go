@@ -181,12 +181,18 @@ func main() {
 
 	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%+v\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
 
-	resp, err := doCall(config)
+	// resp, err := doCall(config)
+	// if err != nil {
+	// 	errAndExit(err.Error())
+	// }
+
+	// fmt.Printf("Response: %s Duration: %+v\n", resp.GetResponseString(), resp.Duration)
+
+	err = doReq(config)
 	if err != nil {
 		errAndExit(err.Error())
 	}
-
-	fmt.Printf("Response: %s Duration: %+v\n", resp.GetResponseString(), resp.Duration)
+	fmt.Printf("Done!")
 }
 
 func errAndExit(msg string) {
@@ -214,6 +220,20 @@ func parseSymbol(svcAndMethod string) (string, string) {
 		}
 	}
 	return svcAndMethod[:pos], svcAndMethod[pos+1:]
+}
+
+func doReq(config *Config) error {
+	mtd, err := getMethodDesc(config)
+	if err != nil {
+		return err
+	}
+
+	reqr, err := New(config, mtd)
+	if err != nil {
+		return err
+	}
+
+	return reqr.Run()
 }
 
 func doCall(config *Config) (*CallResult, error) {

@@ -180,6 +180,14 @@ func (b *Requestor) makeRequest() {
 		ctx = metadata.NewOutgoingContext(ctx, *b.reqMD)
 	}
 
+	// customMD := metadata.Pairs("grpcannon_id", strconv.FormatInt(int64(rand.Intn(100000)), 10))
+	// reqMetadata := customMD
+	// if b.reqMD != nil {
+	// 	reqMetadata = metadata.Join(customMD, *b.reqMD)
+	// 	// ctx = metadata.NewOutgoingContext(ctx, *b.reqMD)
+	// }
+	// ctx = metadata.NewOutgoingContext(ctx, reqMetadata)
+
 	b.stub.InvokeRpc(ctx, b.mtd, b.input)
 }
 
