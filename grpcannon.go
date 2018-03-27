@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -22,6 +23,10 @@ import (
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 )
+
+type rpcStatsTagKey string
+
+const rpcStatsTagID = rpcStatsTagKey("id")
 
 // CallResult holds RPC call result
 type CallResult struct {
@@ -279,7 +284,7 @@ func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	timeout := time.Duration(int64(*t) * int64(time.Second))
+	timeout := time.Duration(int64(config.Timeout) * int64(time.Second))
 	ctx, _ = context.WithTimeout(ctx, timeout)
 
 	// include the metadata
@@ -327,9 +332,11 @@ func DoParallelRequests(stub *grpcdynamic.Stub, mtd *desc.MethodDescriptor) {
 			input.TrySetFieldByName("name", fmt.Sprintf("Msg %d", counter))
 
 			ctx := context.Background()
-			ctx = context.WithValue(ctx, "counter", counter)
+
+			// ctx = context.WithValue(ctx, rpcStatsTagID, counter)
 
 			start := time.Now()
+
 			resp, err := stub.InvokeRpc(ctx, mtd, input)
 			_, ok := status.FromError(err)
 
@@ -382,7 +389,8 @@ func (c *ClientHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 	// switch st := rs.(type) {
 	switch rs.(type) {
 	case *stats.Begin:
-		log.Printf("Begin: %+v\n %+v\n", ctx, rs)
+		// log.Printf("Begin: %+v\n %+v\n", ctx, rs)
+
 	// case *stats.OutHeader:
 	// 	log.Println("OutHeader")
 	// case *stats.InHeader:
@@ -396,7 +404,18 @@ func (c *ClientHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 	// case *stats.InPayload:
 	// log.Println("InPayload")
 	case *stats.End:
-		log.Printf("End: %+v %+v\n", ctx, rs)
+		// log.Printf("End: %+v %+v\n", ctx, rs)
+		idValue, ok := ctx.Value(rpcStatsTagID).(int)
+		if ok {
+			// log.Printf("[End] ID value: %+v\n", idValue)
+			startID := fmt.Sprintf("start_%v", idValue)
+			startValue, ok := ctx.Value(rpcStatsTagKey(startID)).(time.Time)
+			if ok {
+				end := time.Now()
+				duration := end.Sub(startValue)
+				log.Printf("[End] Duration for %+v: %+v\n", startID, duration)
+			}
+		}
 		// default:
 		// log.Println("unexpected stats: %T", st)
 	}
@@ -428,7 +447,20 @@ func (c *ClientHandler) HandleRPC2(ctx context.Context, rs stats.RPCStats) {
 }
 
 // TagRPC implements per-RPC context management.
-func (c *ClientHandler) TagRPC(ctx context.Context, rti *stats.RPCTagInfo) context.Context {
-	// no op
+func (c *ClientHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) context.Context {
+	if info == nil {
+		return ctx
+	}
+
+	// idValue, ok := ctx.Value(rpcStatsTagID).(int)
+	// if ok {
+	idValue := rand.Intn(100000)
+	ctx = context.WithValue(ctx, rpcStatsTagID, idValue)
+	startID := fmt.Sprintf("start_%v", idValue)
+	rpcStatsTagStart := rpcStatsTagKey(startID)
+	start := time.Now()
+	ctx = context.WithValue(ctx, rpcStatsTagStart, start)
+	// }
+
 	return ctx
 }
