@@ -166,20 +166,14 @@ func main() {
 
 	config.ImportPaths = append(config.ImportPaths, filepath.Dir(config.Proto), ".")
 
-	fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%+v\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
+	// fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%+v\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
 
-	// resp, err := doCall(config)
-	// if err != nil {
-	// 	errAndExit(err.Error())
-	// }
-
-	// fmt.Printf("Response: %s Duration: %+v\n", resp.GetResponseString(), resp.Duration)
-
-	err = doReq(config)
+	report, err := doReq(config)
 	if err != nil {
 		errAndExit(err.Error())
 	}
-	fmt.Printf("Done!")
+
+	fmt.Printf("Count: %+v\nDuration: %+v\nAverage: %+v\n", report.count, report.duration, report.average)
 }
 
 func errAndExit(msg string) {
@@ -209,21 +203,21 @@ func parseSymbol(svcAndMethod string) (string, string) {
 	return svcAndMethod[:pos], svcAndMethod[pos+1:]
 }
 
-func doReq(config *Config) error {
+func doReq(config *Config) (*Report, error) {
 	mtd, err := getMethodDesc(config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	reqr, err := New(config, mtd)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	cancel := make(chan os.Signal, 1)
+	signal.Notify(cancel, os.Interrupt)
 	go func() {
-		<-c
+		<-cancel
 		reqr.Stop()
 	}()
 

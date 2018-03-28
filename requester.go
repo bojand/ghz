@@ -28,6 +28,12 @@ type Result struct {
 	duration time.Duration
 }
 
+type Report struct {
+	count    uint32
+	duration time.Duration
+	average  time.Duration
+}
+
 // Requestor is used for doing the requests
 type Requestor struct {
 	cc    *grpc.ClientConn
@@ -73,7 +79,7 @@ func New(c *Config, mtd *desc.MethodDescriptor) (*Requestor, error) {
 
 // Run makes all the requests, prints the summary.
 // It blocks until all work is done.
-func (b *Requestor) Run() error {
+func (b *Requestor) Run() (*Report, error) {
 	b.results = make(chan *Result, min(b.config.C*1000, maxResult))
 	b.stopCh = make(chan bool, b.config.C)
 	b.start = time.Now()
@@ -84,7 +90,7 @@ func (b *Requestor) Run() error {
 
 	cc, err := b.connect()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	b.cc = cc
@@ -94,7 +100,7 @@ func (b *Requestor) Run() error {
 
 	go func() {
 		for res := range b.results {
-			fmt.Printf("Result: %+v Duration: %+v\n", *res, res.duration)
+			// fmt.Printf("Result: %+v Duration: %+v\n", *res, res.duration)
 			b.avgTotal += res.duration.Seconds()
 			b.totalCount++
 		}
@@ -103,9 +109,9 @@ func (b *Requestor) Run() error {
 
 	b.runWorkers()
 
-	b.Finish()
+	report := b.Finish()
 
-	return nil
+	return report, nil
 }
 
 // Stop stops the test
@@ -117,15 +123,17 @@ func (b *Requestor) Stop() {
 }
 
 // Finish finishes the test run
-func (b *Requestor) Finish() {
+func (b *Requestor) Finish() *Report {
 	close(b.results)
 	total := time.Now().Sub(b.start)
 
 	// Wait until the reporter is done.
 	<-b.done
-	average := b.avgTotal / float64(b.totalCount) * 1000
+	average := b.avgTotal / float64(b.totalCount)
 
-	fmt.Printf("Total count: %+v duration: %+v average: %+v ms\n", b.totalCount, total, average)
+	avgDuration := time.Duration(average * float64(time.Second))
+
+	return &Report{b.totalCount, total, avgDuration}
 }
 
 func (b *Requestor) connect() (*grpc.ClientConn, error) {
