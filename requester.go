@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
 	"strings"
 	"sync"
@@ -43,6 +42,9 @@ type Requestor struct {
 	results chan *Result
 	stopCh  chan struct{}
 	start   time.Time
+
+	totalCount uint32
+	avgTotal   float64
 }
 
 // New creates new Requestor
@@ -77,6 +79,9 @@ func (b *Requestor) Run() error {
 	b.stopCh = make(chan struct{}, b.config.C)
 	b.start = time.Now()
 
+	b.totalCount = 0
+	b.avgTotal = 0
+
 	cc, err := b.connect()
 	if err != nil {
 		return err
@@ -87,16 +92,11 @@ func (b *Requestor) Run() error {
 
 	b.stub = grpcdynamic.NewStub(cc)
 
-	// b.report = newReport(b.writer(), b.results, b.Output, b.N)
-	// // Run the reporter first, it polls the result channel until it is closed.
-	// go func() {
-	// 	runReporter(b.report)
-	// }()
-
 	go func() {
 		for res := range b.results {
-			fmt.Printf("%+v\n", res)
-			fmt.Println("=========")
+			fmt.Printf("Result: %+v Duration: %+v\n", *res, res.duration)
+			b.avgTotal += res.duration.Seconds()
+			b.totalCount++
 		}
 	}()
 
@@ -117,7 +117,9 @@ func (b *Requestor) Stop() {
 // Finish finishes the test run
 func (b *Requestor) Finish() {
 	close(b.results)
-	// total := time.Now().Sub(b.start)
+	total := time.Now().Sub(b.start)
+	average := b.avgTotal / float64(b.totalCount) * 1000
+	fmt.Printf("Total count: %+v duration: %+v average: %+v ms\n", b.totalCount, total, average)
 }
 
 func (b *Requestor) connect() (*grpc.ClientConn, error) {
@@ -140,7 +142,6 @@ func (b *Requestor) runWorkers() {
 			defer wg.Done()
 
 			b.runWorker(b.config.N / b.config.C)
-
 		}()
 	}
 	wg.Wait()
@@ -242,7 +243,6 @@ func (c *StatsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 			if ok {
 				end := time.Now()
 				duration := end.Sub(startValue)
-				// log.Printf("[End] Duration for %+v: %+v\n", startID, duration)
 
 				rpcStats := rs.(*stats.End)
 				var st string
@@ -253,8 +253,7 @@ func (c *StatsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 					}
 				}
 
-				result := Result{idValue, rpcStats.Error, st, duration}
-				log.Printf("[End] %+v: Duration: %+v Result: %+v\n", startID, duration, result)
+				c.results <- &Result{idValue, rpcStats.Error, st, duration}
 			}
 		}
 	}
