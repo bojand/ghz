@@ -22,12 +22,14 @@ import (
 const maxResult = 1000000
 const maxIdleConn = 500
 
+// Result is a result of a call
 type Result struct {
 	err      error
 	status   string
 	duration time.Duration
 }
 
+// Report holds the data for the full test
 type Report struct {
 	count    uint32
 	duration time.Duration
