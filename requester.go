@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"strings"
 	"sync"
 	"time"
@@ -24,7 +23,6 @@ const maxResult = 1000000
 const maxIdleConn = 500
 
 type Result struct {
-	id       int
 	err      error
 	status   string
 	duration time.Duration
@@ -45,6 +43,7 @@ type Requestor struct {
 
 	totalCount uint32
 	avgTotal   float64
+	done       chan bool
 }
 
 // New creates new Requestor
@@ -81,6 +80,7 @@ func (b *Requestor) Run() error {
 
 	b.totalCount = 0
 	b.avgTotal = 0
+	b.done = make(chan bool, 1)
 
 	cc, err := b.connect()
 	if err != nil {
@@ -98,9 +98,11 @@ func (b *Requestor) Run() error {
 			b.avgTotal += res.duration.Seconds()
 			b.totalCount++
 		}
+		b.done <- true
 	}()
 
 	b.runWorkers()
+
 	b.Finish()
 
 	return nil
@@ -118,7 +120,11 @@ func (b *Requestor) Stop() {
 func (b *Requestor) Finish() {
 	close(b.results)
 	total := time.Now().Sub(b.start)
+
+	// Wait until the reporter is done.
+	<-b.done
 	average := b.avgTotal / float64(b.totalCount) * 1000
+
 	fmt.Printf("Total count: %+v duration: %+v average: %+v ms\n", b.totalCount, total, average)
 }
 
@@ -182,14 +188,6 @@ func (b *Requestor) makeRequest() {
 		ctx = metadata.NewOutgoingContext(ctx, *b.reqMD)
 	}
 
-	// customMD := metadata.Pairs("grpcannon_id", strconv.FormatInt(int64(rand.Intn(100000)), 10))
-	// reqMetadata := customMD
-	// if b.reqMD != nil {
-	// 	reqMetadata = metadata.Join(customMD, *b.reqMD)
-	// 	// ctx = metadata.NewOutgoingContext(ctx, *b.reqMD)
-	// }
-	// ctx = metadata.NewOutgoingContext(ctx, reqMetadata)
-
 	if !b.mtd.IsClientStreaming() && !b.mtd.IsServerStreaming() {
 		b.stub.InvokeRpc(ctx, b.mtd, b.input)
 	}
@@ -236,41 +234,23 @@ func (c *StatsHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) cont
 func (c *StatsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 	switch rs.(type) {
 	case *stats.End:
-		idValue, ok := ctx.Value(rpcStatsTagID).(int)
-		if ok {
-			startID := fmt.Sprintf("start_%v", idValue)
-			startValue, ok := ctx.Value(rpcStatsTagKey(startID)).(time.Time)
+		rpcStats := rs.(*stats.End)
+		end := time.Now()
+		duration := end.Sub(rpcStats.BeginTime)
+
+		var st string
+		if rpcStats.Error != nil {
+			s, ok := status.FromError(rpcStats.Error)
 			if ok {
-				end := time.Now()
-				duration := end.Sub(startValue)
-
-				rpcStats := rs.(*stats.End)
-				var st string
-				if rpcStats.Error != nil {
-					s, ok := status.FromError(rpcStats.Error)
-					if ok {
-						st = s.Code().String()
-					}
-				}
-
-				c.results <- &Result{idValue, rpcStats.Error, st, duration}
+				st = s.Code().String()
 			}
 		}
+
+		c.results <- &Result{rpcStats.Error, st, duration}
 	}
 }
 
 // TagRPC implements per-RPC context management.
 func (c *StatsHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) context.Context {
-	if info == nil {
-		return ctx
-	}
-
-	idValue := rand.Intn(100000000)
-	ctx = context.WithValue(ctx, rpcStatsTagID, idValue)
-	startID := fmt.Sprintf("start_%v", idValue)
-	rpcStatsTagStart := rpcStatsTagKey(startID)
-	start := time.Now()
-	ctx = context.WithValue(ctx, rpcStatsTagStart, start)
-
 	return ctx
 }
