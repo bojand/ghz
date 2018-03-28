@@ -38,7 +38,7 @@ type Requestor struct {
 
 	config  *Config
 	results chan *Result
-	stopCh  chan struct{}
+	stopCh  chan bool
 	start   time.Time
 
 	totalCount uint32
@@ -75,7 +75,7 @@ func New(c *Config, mtd *desc.MethodDescriptor) (*Requestor, error) {
 // It blocks until all work is done.
 func (b *Requestor) Run() error {
 	b.results = make(chan *Result, min(b.config.C*1000, maxResult))
-	b.stopCh = make(chan struct{}, b.config.C)
+	b.stopCh = make(chan bool, b.config.C)
 	b.start = time.Now()
 
 	b.totalCount = 0
@@ -112,7 +112,7 @@ func (b *Requestor) Run() error {
 func (b *Requestor) Stop() {
 	// Send stop signal so that workers can stop gracefully.
 	for i := 0; i < b.config.C; i++ {
-		b.stopCh <- struct{}{}
+		b.stopCh <- true
 	}
 }
 
