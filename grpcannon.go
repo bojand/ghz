@@ -14,28 +14,6 @@ import (
 	"github.com/jhump/protoreflect/desc/protoparse"
 )
 
-type rpcStatsTagKey string
-
-const rpcStatsTagID = rpcStatsTagKey("id")
-
-// CallResult holds RPC call result
-type CallResult struct {
-	Response   interface{}
-	MethodInfo *desc.MethodDescriptor
-	Duration   *time.Duration
-}
-
-// GetResponseString return string of response if not server streaming
-func (r *CallResult) GetResponseString() string {
-	if r.Response != nil && !r.MethodInfo.IsServerStreaming() {
-		if m, ok := r.Response.(fmt.Stringer); ok {
-			return m.String()
-		}
-		return ""
-	}
-	return ""
-}
-
 // TODO add import paths option
 // TODO add keepalive options
 // TODO add connetion timeout
@@ -155,25 +133,22 @@ func main() {
 		}
 	}
 
-	runtime.GOMAXPROCS(config.CPUs)
-
 	file, err := os.Open(config.Proto)
 	if err != nil {
 		errAndExit(err.Error())
 	}
 	defer file.Close()
-	// config.ProtoFile = file
 
 	config.ImportPaths = append(config.ImportPaths, filepath.Dir(config.Proto), ".")
 
-	// fmt.Printf("host: %s\nproto: %s\ncall: %s\nimports:%s\ndata:%+v\n", host, config.Proto, config.Call, config.ImportPaths, config.Data)
+	runtime.GOMAXPROCS(config.CPUs)
 
-	report, err := doReq(config)
+	report, err := runTest(config)
 	if err != nil {
 		errAndExit(err.Error())
 	}
 
-	fmt.Printf("Count: %+v\nDuration: %+v\nAverage: %+v\n", report.count, report.duration, report.average)
+	printReport(report)
 }
 
 func errAndExit(msg string) {
@@ -192,18 +167,7 @@ func usageAndExit(msg string) {
 	os.Exit(1)
 }
 
-func parseSymbol(svcAndMethod string) (string, string) {
-	pos := strings.LastIndex(svcAndMethod, "/")
-	if pos < 0 {
-		pos = strings.LastIndex(svcAndMethod, ".")
-		if pos < 0 {
-			return "", ""
-		}
-	}
-	return svcAndMethod[:pos], svcAndMethod[pos+1:]
-}
-
-func doReq(config *Config) (*Report, error) {
+func runTest(config *Config) (*Report, error) {
 	mtd, err := getMethodDesc(config)
 	if err != nil {
 		return nil, err
@@ -232,16 +196,9 @@ func doReq(config *Config) (*Report, error) {
 	return reqr.Run()
 }
 
-// func doCall(config *Config) (*CallResult, error) {
-// 	mtd, err := getMethodDesc(config)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if !mtd.IsClientStreaming() && !mtd.IsServerStreaming() {
-// 		return invokeUnary(config, mtd)
-// 	}
-// 	return nil, errors.New("Unsupported call")
-// }
+func printReport(report *Report) {
+	fmt.Printf("Count: %+v\nDuration: %+v\nAverage: %+v\n", report.count, report.duration, report.average)
+}
 
 func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 	p := &protoparse.Parser{ImportPaths: config.ImportPaths}
@@ -277,7 +234,43 @@ func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 	return mtd, nil
 }
 
-/*
+func parseSymbol(svcAndMethod string) (string, string) {
+	pos := strings.LastIndex(svcAndMethod, "/")
+	if pos < 0 {
+		pos = strings.LastIndex(svcAndMethod, ".")
+		if pos < 0 {
+			return "", ""
+		}
+	}
+	return svcAndMethod[:pos], svcAndMethod[pos+1:]
+}
+
+/* ================================
+
+type rpcStatsTagKey string
+
+const rpcStatsTagID = rpcStatsTagKey("id")
+
+// CallResult holds RPC call result
+type CallResult struct {
+	Response   interface{}
+	MethodInfo *desc.MethodDescriptor
+	Duration   *time.Duration
+}
+
+// GetResponseString return string of response if not server streaming
+func (r *CallResult) GetResponseString() string {
+	if r.Response != nil && !r.MethodInfo.IsServerStreaming() {
+		if m, ok := r.Response.(fmt.Stringer); ok {
+			return m.String()
+		}
+		return ""
+	}
+	return ""
+}
+
+// ================================
+
 func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error) {
 	// create credentials
 	credOptions, err := CreateClientCredOption(config)
