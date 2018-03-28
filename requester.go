@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/stats"
+	"google.golang.org/grpc/status"
 )
 
 // Max size of the buffer of result channel.
@@ -24,9 +25,9 @@ const maxResult = 1000000
 const maxIdleConn = 500
 
 type Result struct {
-	id       string
+	id       int
 	err      error
-	status   int
+	status   string
 	duration time.Duration
 }
 
@@ -105,12 +106,13 @@ func (b *Requestor) Run() error {
 	return nil
 }
 
-// func (b *Requestor) Stop() {
-// 	// Send stop signal so that workers can stop gracefully.
-// 	for i := 0; i < b.config.C; i++ {
-// 		b.stopCh <- struct{}{}
-// 	}
-// }
+// Stop stops the test
+func (b *Requestor) Stop() {
+	// Send stop signal so that workers can stop gracefully.
+	for i := 0; i < b.config.C; i++ {
+		b.stopCh <- struct{}{}
+	}
+}
 
 // Finish finishes the test run
 func (b *Requestor) Finish() {
@@ -159,7 +161,6 @@ func (b *Requestor) runWorker(n int) {
 			if b.config.QPS > 0 {
 				<-throttle
 			}
-			// b.makeRequest(client)
 			b.makeRequest()
 		}
 	}
@@ -188,7 +189,9 @@ func (b *Requestor) makeRequest() {
 	// }
 	// ctx = metadata.NewOutgoingContext(ctx, reqMetadata)
 
-	b.stub.InvokeRpc(ctx, b.mtd, b.input)
+	if !b.mtd.IsClientStreaming() && !b.mtd.IsServerStreaming() {
+		b.stub.InvokeRpc(ctx, b.mtd, b.input)
+	}
 }
 
 // CreateClientCredOption creates the credential dial options based on config
@@ -230,7 +233,6 @@ func (c *StatsHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) cont
 
 // HandleRPC implements per-RPC tracing and stats instrumentation.
 func (c *StatsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
-
 	switch rs.(type) {
 	case *stats.End:
 		idValue, ok := ctx.Value(rpcStatsTagID).(int)
@@ -240,7 +242,19 @@ func (c *StatsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 			if ok {
 				end := time.Now()
 				duration := end.Sub(startValue)
-				log.Printf("[End] Duration for %+v: %+v\n", startID, duration)
+				// log.Printf("[End] Duration for %+v: %+v\n", startID, duration)
+
+				rpcStats := rs.(*stats.End)
+				var st string
+				if rpcStats.Error != nil {
+					s, ok := status.FromError(rpcStats.Error)
+					if ok {
+						st = s.Code().String()
+					}
+				}
+
+				result := Result{idValue, rpcStats.Error, st, duration}
+				log.Printf("[End] %+v: Duration: %+v Result: %+v\n", startID, duration, result)
 			}
 		}
 	}
@@ -252,7 +266,7 @@ func (c *StatsHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) conte
 		return ctx
 	}
 
-	idValue := rand.Intn(100000)
+	idValue := rand.Intn(100000000)
 	ctx = context.WithValue(ctx, rpcStatsTagID, idValue)
 	startID := fmt.Sprintf("start_%v", idValue)
 	rpcStatsTagStart := rpcStatsTagKey(startID)

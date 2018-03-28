@@ -1,27 +1,17 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"log"
-	"math/rand"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
-	"github.com/jhump/protoreflect/dynamic"
-	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
-	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/stats"
-	"google.golang.org/grpc/status"
 )
 
 type rpcStatsTagKey string
@@ -51,11 +41,9 @@ func (r *CallResult) GetResponseString() string {
 // TODO add connetion timeout
 
 var (
-	proto  = flag.String("proto", "", `The .proto file.`)
-	call   = flag.String("call", "", `A fully-qualified symbol name.`)
-	cacert = flag.String("cacert", "", "Root certificate file.")
-	cert   = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
-	key    = flag.String("key", "", "Private key file.")
+	proto = flag.String("proto", "", `The .proto file.`)
+	call  = flag.String("call", "", `A fully-qualified symbol name.`)
+	cert  = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
 
 	data     = flag.String("d", "", "The call data as stringified JSON.")
 	dataPath = flag.String("D", "", "Path for call data JSON file.")
@@ -79,11 +67,8 @@ var usage = `Usage: grpcannon [options...] <host>
 Options:
   -proto	The Protocol Buffer file
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
-  -cacert	File containing trusted root certificates for verifying the server.
   -cert		File containing client certificate (public key), to present to the server. 
 			Must also provide -key option.
-  -key 		File containing client private key, to present to the server. Must also provide -cert option.
-  -insecure Use insecure mode. Ignores any of the cert options above.
 
   -n  Number of requests to run. Default is 200.
   -c  Number of requests to run concurrently. Total number of requests cannot
@@ -170,6 +155,8 @@ func main() {
 		}
 	}
 
+	runtime.GOMAXPROCS(config.CPUs)
+
 	file, err := os.Open(config.Proto)
 	if err != nil {
 		errAndExit(err.Error())
@@ -233,19 +220,34 @@ func doReq(config *Config) error {
 		return err
 	}
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		reqr.Stop()
+	}()
+
+	if config.Z > 0 {
+		go func() {
+			time.Sleep(config.Z)
+			reqr.Stop()
+			fmt.Printf("Stopped due to test timeout after %+v\n", config.Z)
+		}()
+	}
+
 	return reqr.Run()
 }
 
-func doCall(config *Config) (*CallResult, error) {
-	mtd, err := getMethodDesc(config)
-	if err != nil {
-		return nil, err
-	}
-	if !mtd.IsClientStreaming() && !mtd.IsServerStreaming() {
-		return invokeUnary(config, mtd)
-	}
-	return nil, errors.New("Unsupported call")
-}
+// func doCall(config *Config) (*CallResult, error) {
+// 	mtd, err := getMethodDesc(config)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if !mtd.IsClientStreaming() && !mtd.IsServerStreaming() {
+// 		return invokeUnary(config, mtd)
+// 	}
+// 	return nil, errors.New("Unsupported call")
+// }
 
 func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 	p := &protoparse.Parser{ImportPaths: config.ImportPaths}
@@ -281,6 +283,7 @@ func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 	return mtd, nil
 }
 
+/*
 func invokeUnary(config *Config, mtd *desc.MethodDescriptor) (*CallResult, error) {
 	// create credentials
 	credOptions, err := CreateClientCredOption(config)
@@ -375,19 +378,6 @@ func DoParallelRequests(stub *grpcdynamic.Stub, mtd *desc.MethodDescriptor) {
 	log.Println("==================")
 }
 
-// // CreateClientCredOption creates the credential dial options based on config
-// func CreateClientCredOption(config *Config) (grpc.DialOption, error) {
-// 	credOptions := grpc.WithInsecure()
-// 	if strings.TrimSpace(config.Cert) != "" {
-// 		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		credOptions = grpc.WithTransportCredentials(creds)
-// 	}
-
-// 	return credOptions, nil
-// }
 
 // ClientHandler is for gRPC stats
 type ClientHandler struct{}
@@ -484,3 +474,4 @@ func (c *ClientHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) cont
 
 	return ctx
 }
+*/
