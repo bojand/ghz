@@ -1,3 +1,4 @@
+// Package grpcannon provides gRPC benchmarking functionality
 package grpcannon
 
 import (
@@ -15,8 +16,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/stats"
-	"google.golang.org/grpc/status"
 )
 
 // Max size of the buffer of result channel.
@@ -24,7 +23,7 @@ const maxResult = 1000000
 const maxIdleConn = 500
 
 // Result is a result of a call
-type Result struct {
+type callResult struct {
 	err      error
 	status   string
 	duration time.Duration
@@ -40,7 +39,7 @@ type Requester struct {
 	reporter *Reporter
 
 	config  *config.Config
-	results chan *Result
+	results chan *callResult
 	stopCh  chan bool
 	start   time.Time
 }
@@ -73,7 +72,7 @@ func New(c *config.Config, mtd *desc.MethodDescriptor) (*Requester, error) {
 // Run makes all the requests, prints the summary.
 // It blocks until all work is done.
 func (b *Requester) Run() (*Report, error) {
-	b.results = make(chan *Result, min(b.config.C*1000, maxResult))
+	b.results = make(chan *callResult, min(b.config.C*1000, maxResult))
 	b.stopCh = make(chan bool, b.config.C)
 	b.start = time.Now()
 
@@ -126,7 +125,7 @@ func (b *Requester) connect() (*grpc.ClientConn, error) {
 	}
 
 	// create client connection
-	return grpc.Dial(b.config.Host, grpc.WithStatsHandler(&StatsHandler{b.results}), credOptions)
+	return grpc.Dial(b.config.Host, grpc.WithStatsHandler(&statsHandler{b.results}), credOptions)
 }
 
 func (b *Requester) runWorkers() {
@@ -202,45 +201,4 @@ func min(a, b int) int {
 		return a
 	}
 	return b
-}
-
-// StatsHandler is for gRPC stats
-type StatsHandler struct {
-	results chan *Result
-}
-
-// HandleConn handle the connection
-func (c *StatsHandler) HandleConn(ctx context.Context, cs stats.ConnStats) {
-	// no-op
-}
-
-// TagConn exists to satisfy gRPC stats.Handler.
-func (c *StatsHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) context.Context {
-	// no-op
-	return ctx
-}
-
-// HandleRPC implements per-RPC tracing and stats instrumentation.
-func (c *StatsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
-	switch rs.(type) {
-	case *stats.End:
-		rpcStats := rs.(*stats.End)
-		end := time.Now()
-		duration := end.Sub(rpcStats.BeginTime)
-
-		var st string
-		if rpcStats.Error != nil {
-			s, ok := status.FromError(rpcStats.Error)
-			if ok {
-				st = s.Code().String()
-			}
-		}
-
-		c.results <- &Result{rpcStats.Error, st, duration}
-	}
-}
-
-// TagRPC implements per-RPC context management.
-func (c *StatsHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) context.Context {
-	return ctx
 }

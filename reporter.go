@@ -10,7 +10,7 @@ import (
 
 // Reporter gethers all the results
 type Reporter struct {
-	results chan *Result
+	results chan *callResult
 	done    chan bool
 
 	avgTotal       float64
@@ -36,7 +36,7 @@ type Report struct {
 	Histogram           []Bucket
 }
 
-func newReporter(results chan *Result, n int) *Reporter {
+func newReporter(results chan *callResult, n int) *Reporter {
 	cap := min(n, maxResult)
 	return &Reporter{
 		results:        results,
