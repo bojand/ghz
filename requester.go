@@ -1,4 +1,4 @@
-package main
+package grpcannon
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bojand/grpcannon/config"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
@@ -29,33 +30,23 @@ type Result struct {
 	duration time.Duration
 }
 
-// Report holds the data for the full test
-type Report struct {
-	count    uint32
-	duration time.Duration
-	average  time.Duration
-}
+// Requester is used for doing the requests
+type Requester struct {
+	cc       *grpc.ClientConn
+	stub     grpcdynamic.Stub
+	mtd      *desc.MethodDescriptor
+	input    *dynamic.Message
+	reqMD    *metadata.MD
+	reporter *Reporter
 
-// Requestor is used for doing the requests
-type Requestor struct {
-	cc    *grpc.ClientConn
-	stub  grpcdynamic.Stub
-	mtd   *desc.MethodDescriptor
-	input *dynamic.Message
-	reqMD *metadata.MD
-
-	config  *Config
+	config  *config.Config
 	results chan *Result
 	stopCh  chan bool
 	start   time.Time
-
-	totalCount uint32
-	avgTotal   float64
-	done       chan bool
 }
 
-// New creates new Requestor
-func New(c *Config, mtd *desc.MethodDescriptor) (*Requestor, error) {
+// New creates new Requester
+func New(c *config.Config, mtd *desc.MethodDescriptor) (*Requester, error) {
 	input := dynamic.NewMessage(mtd.GetInputType())
 	if input == nil {
 		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
@@ -76,19 +67,15 @@ func New(c *Config, mtd *desc.MethodDescriptor) (*Requestor, error) {
 		reqMD = &md
 	}
 
-	return &Requestor{config: c, input: input, reqMD: reqMD, mtd: mtd}, nil
+	return &Requester{config: c, input: input, reqMD: reqMD, mtd: mtd}, nil
 }
 
 // Run makes all the requests, prints the summary.
 // It blocks until all work is done.
-func (b *Requestor) Run() (*Report, error) {
+func (b *Requester) Run() (*Report, error) {
 	b.results = make(chan *Result, min(b.config.C*1000, maxResult))
 	b.stopCh = make(chan bool, b.config.C)
 	b.start = time.Now()
-
-	b.totalCount = 0
-	b.avgTotal = 0
-	b.done = make(chan bool, 1)
 
 	cc, err := b.connect()
 	if err != nil {
@@ -100,13 +87,10 @@ func (b *Requestor) Run() (*Report, error) {
 
 	b.stub = grpcdynamic.NewStub(cc)
 
+	b.reporter = newReporter(b.results, b.config.N)
+
 	go func() {
-		for res := range b.results {
-			// fmt.Printf("Result: %+v Duration: %+v\n", *res, res.duration)
-			b.avgTotal += res.duration.Seconds()
-			b.totalCount++
-		}
-		b.done <- true
+		b.reporter.Run()
 	}()
 
 	b.runWorkers()
@@ -117,7 +101,7 @@ func (b *Requestor) Run() (*Report, error) {
 }
 
 // Stop stops the test
-func (b *Requestor) Stop() {
+func (b *Requester) Stop() {
 	// Send stop signal so that workers can stop gracefully.
 	for i := 0; i < b.config.C; i++ {
 		b.stopCh <- true
@@ -125,20 +109,17 @@ func (b *Requestor) Stop() {
 }
 
 // Finish finishes the test run
-func (b *Requestor) Finish() *Report {
+func (b *Requester) Finish() *Report {
 	close(b.results)
 	total := time.Now().Sub(b.start)
 
 	// Wait until the reporter is done.
-	<-b.done
-	average := b.avgTotal / float64(b.totalCount)
+	<-b.reporter.done
 
-	avgDuration := time.Duration(average * float64(time.Second))
-
-	return &Report{b.totalCount, total, avgDuration}
+	return b.reporter.Finalize(total)
 }
 
-func (b *Requestor) connect() (*grpc.ClientConn, error) {
+func (b *Requester) connect() (*grpc.ClientConn, error) {
 	credOptions, err := CreateClientCredOption(b.config)
 	if err != nil {
 		return nil, err
@@ -148,7 +129,7 @@ func (b *Requestor) connect() (*grpc.ClientConn, error) {
 	return grpc.Dial(b.config.Host, grpc.WithStatsHandler(&StatsHandler{b.results}), credOptions)
 }
 
-func (b *Requestor) runWorkers() {
+func (b *Requester) runWorkers() {
 	var wg sync.WaitGroup
 	wg.Add(b.config.C)
 
@@ -163,7 +144,7 @@ func (b *Requestor) runWorkers() {
 	wg.Wait()
 }
 
-func (b *Requestor) runWorker(n int) {
+func (b *Requester) runWorker(n int) {
 	var throttle <-chan time.Time
 	if b.config.QPS > 0 {
 		throttle = time.Tick(time.Duration(1e6/(b.config.QPS)) * time.Microsecond)
@@ -183,8 +164,7 @@ func (b *Requestor) runWorker(n int) {
 	}
 }
 
-func (b *Requestor) makeRequest() {
-	// create call context
+func (b *Requester) makeRequest() {
 	ctx := context.Background()
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -204,7 +184,7 @@ func (b *Requestor) makeRequest() {
 }
 
 // CreateClientCredOption creates the credential dial options based on config
-func CreateClientCredOption(config *Config) (grpc.DialOption, error) {
+func CreateClientCredOption(config *config.Config) (grpc.DialOption, error) {
 	credOptions := grpc.WithInsecure()
 	if strings.TrimSpace(config.Cert) != "" {
 		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
