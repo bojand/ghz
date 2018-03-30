@@ -4,6 +4,7 @@ package grpcannon
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -177,7 +178,22 @@ func (b *Requester) makeRequest() {
 		ctx = metadata.NewOutgoingContext(ctx, *b.reqMD)
 	}
 
-	if !b.mtd.IsClientStreaming() && !b.mtd.IsServerStreaming() {
+	if b.mtd.IsClientStreaming() && b.mtd.IsServerStreaming() {
+		fmt.Println("Bidi Stream!")
+	} else if b.mtd.IsClientStreaming() {
+		fmt.Println("Client Stream!")
+	} else if b.mtd.IsServerStreaming() {
+		str, err := b.stub.InvokeRpcServerStream(ctx, b.mtd, b.input)
+		for err == nil {
+			_, err := str.RecvMsg()
+			if err != nil {
+				if err == io.EOF {
+					err = nil
+				}
+				break
+			}
+		}
+	} else {
 		b.stub.InvokeRpc(ctx, b.mtd, b.input)
 	}
 }
