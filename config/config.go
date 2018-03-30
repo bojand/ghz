@@ -14,23 +14,23 @@ import (
 
 // Config for the run.
 type Config struct {
-	Proto        string                  `json:"proto"`
-	Call         string                  `json:"call"`
-	Cert         string                  `json:"cert"`
-	N            int                     `json:"n"`
-	C            int                     `json:"c"`
-	QPS          int                     `json:"qps"`
-	Z            time.Duration           `json:"z"`
-	Timeout      int                     `json:"timeout"`
-	Data         *map[string]interface{} `json:"data,omitempty"`
-	DataPath     string                  `json:"dataPath"`
-	Metadata     *map[string]string      `json:"metadata,omitempty"`
-	MetadataPath string                  `json:"metadataPath"`
-	Format       string                  `json:"format"`
-	Output       string                  `json:"output"`
-	Host         string                  `json:"host"`
-	CPUs         int                     `json:"cpus"`
-	ImportPaths  []string                `json:"importPaths,omitempty"`
+	Proto        string             `json:"proto"`
+	Call         string             `json:"call"`
+	Cert         string             `json:"cert"`
+	N            int                `json:"n"`
+	C            int                `json:"c"`
+	QPS          int                `json:"qps"`
+	Z            time.Duration      `json:"z"`
+	Timeout      int                `json:"timeout"`
+	Data         interface{}        `json:"data,omitempty"`
+	DataPath     string             `json:"dataPath"`
+	Metadata     *map[string]string `json:"metadata,omitempty"`
+	MetadataPath string             `json:"metadataPath"`
+	Format       string             `json:"format"`
+	Output       string             `json:"output"`
+	Host         string             `json:"host"`
+	CPUs         int                `json:"cpus"`
+	ImportPaths  []string           `json:"importPaths,omitempty"`
 }
 
 // Default implementation.
@@ -83,9 +83,6 @@ func (c *Config) Validate() error {
 	}
 
 	if strings.TrimSpace(c.DataPath) == "" {
-		// if err := RequiredString(c.Data); err != nil {
-		// 	return errors.Wrap(err, "data")
-		// }
 		if c.Data == nil {
 			return errors.New("data: is required")
 		}
@@ -106,7 +103,37 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
+
+	if aux.Data != nil {
+		err := checkData(aux.Data)
+		if err != nil {
+			return err
+		}
+	}
+
 	c.Z, _ = time.ParseDuration(aux.Z)
+	return nil
+}
+
+func checkData(data interface{}) error {
+	_, isObjData := data.(map[string]interface{})
+	if !isObjData {
+		arrData, isArrData := data.([]interface{})
+		if !isArrData {
+			return errors.New("Unsupported type for Data")
+		}
+		if len(arrData) == 0 {
+			return errors.New("Data array must not be empty")
+		}
+		for _, elem := range arrData {
+			_, isObjData = elem.(map[string]interface{})
+			if !isObjData {
+				return errors.New("Data array contains unsupported type")
+			}
+		}
+
+	}
+
 	return nil
 }
 

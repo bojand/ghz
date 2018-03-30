@@ -21,14 +21,161 @@ func TestConfig_MarshalJSON(t *testing.T) {
 }
 
 func TestConfig_UnmarshalJSON(t *testing.T) {
-	c := Config{}
-	err := json.Unmarshal([]byte(expected), &c)
-	z, _ := time.ParseDuration("4h30m")
-	ec := Config{Proto: "asdf", Z: z, Format: "oval"}
+	t.Run("duration", func(t *testing.T) {
+		c := Config{}
+		err := json.Unmarshal([]byte(expected), &c)
+		z, _ := time.ParseDuration("4h30m")
+		ec := Config{Proto: "asdf", Z: z, Format: "oval"}
 
-	assert.NoError(t, err)
-	assert.Equal(t, ec, c)
-	assert.Equal(t, ec.Z.String(), c.Z.String())
+		assert.NoError(t, err)
+		assert.Equal(t, ec, c)
+		assert.Equal(t, ec.Z.String(), c.Z.String())
+	})
+
+	t.Run("data not present", func(t *testing.T) {
+		jsonStr := `{"proto":"protofile", "call":"someCall"}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+		ec := Config{Proto: "protofile", Call: "someCall"}
+
+		assert.NoError(t, err)
+		assert.Equal(t, ec, c)
+		assert.Nil(t, c.Data)
+	})
+
+	t.Run("data empty string should fail", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":""}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.Error(t, err)
+		assert.Equal(t, "Unsupported type for Data", err.Error())
+	})
+
+	t.Run("data string should fail", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":"bob"}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.Error(t, err)
+		assert.Equal(t, "Unsupported type for Data", err.Error())
+	})
+
+	t.Run("data array of strings should fail", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":["bob", "kate"]}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.Error(t, err)
+		assert.Equal(t, "Data array contains unsupported type", err.Error())
+	})
+
+	t.Run("data empty object", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":{}}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, c.Data)
+		assert.Empty(t, c.Data)
+	})
+
+	t.Run("data empty array", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":[]}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.Error(t, err)
+		assert.Equal(t, "Data array must not be empty", err.Error())
+	})
+
+	t.Run("data valid object", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":{"name":"bob"}}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.NoError(t, err)
+
+		expected := make(map[string]interface{})
+		expected["name"] = "bob"
+		assert.Equal(t, expected, c.Data)
+	})
+
+	t.Run("data valid array of objects", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":[{"name":"bob"}, {"name":"kate"}]}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, c.Data)
+		assert.NotEmpty(t, c.Data)
+		assert.Len(t, c.Data, 2)
+
+		expected1 := make(map[string]interface{})
+		expected2 := make(map[string]interface{})
+		expected1["name"] = "bob"
+		expected2["name"] = "kate"
+
+		actual, ok := c.Data.([]interface{})
+		assert.True(t, ok)
+		assert.NotNil(t, actual)
+
+		assert.Equal(t, expected1, actual[0])
+		assert.Equal(t, expected2, actual[1])
+	})
+
+	t.Run("data valid array of empty objects", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":[{},{},{}]}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, c.Data)
+		assert.NotEmpty(t, c.Data)
+		assert.Len(t, c.Data, 3)
+
+		expected := make(map[string]interface{})
+
+		actual, ok := c.Data.([]interface{})
+		assert.True(t, ok)
+		assert.NotNil(t, actual)
+
+		assert.Equal(t, expected, actual[0])
+		assert.Equal(t, expected, actual[1])
+		assert.Equal(t, expected, actual[2])
+	})
+
+	t.Run("data valid array of mixed objects", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":[{},{"name":"bob"},{}]}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, c.Data)
+		assert.NotEmpty(t, c.Data)
+		assert.Len(t, c.Data, 3)
+
+		expected := make(map[string]interface{})
+		expected2 := make(map[string]interface{})
+		expected2["name"] = "bob"
+
+		actual, ok := c.Data.([]interface{})
+		assert.True(t, ok)
+		assert.NotNil(t, actual)
+
+		assert.Equal(t, expected, actual[0])
+		assert.Equal(t, expected2, actual[1])
+		assert.Equal(t, expected, actual[2])
+	})
+
+	t.Run("data mixed with invalid should fail", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "data":[{"name":"bob"},"kate",{"name":"kate"}]}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.Error(t, err)
+		assert.Equal(t, "Data array contains unsupported type", err.Error())
+	})
 }
 
 func TestConfig_Default(t *testing.T) {
@@ -49,7 +196,7 @@ func TestConfig_ReadConfig(t *testing.T) {
 	ec := Config{
 		Proto:        "my.proto",
 		Call:         "mycall",
-		Data:         &data,
+		Data:         data,
 		Cert:         "",
 		N:            200,
 		C:            50,
@@ -157,6 +304,6 @@ func TestConfig_InitData(t *testing.T) {
 		c := &Config{DataPath: "../testdata/data.json"}
 		err = c.InitData()
 		assert.NoError(t, err)
-		assert.Equal(t, c.Data, &data)
+		assert.Equal(t, c.Data, data)
 	})
 }
