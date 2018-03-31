@@ -3,7 +3,6 @@ package grpcannon
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -184,119 +183,55 @@ func (b *Requester) makeRequest() {
 	if b.mtd.IsClientStreaming() && b.mtd.IsServerStreaming() {
 		fmt.Println("Bidi Stream!")
 	} else if b.mtd.IsClientStreaming() {
-		str, err := b.stub.InvokeRpcClientStream(ctx, b.mtd)
-		counter := 0
-		for err == nil {
-			streamInput := *b.streamInput
-			inputLen := len(streamInput)
-			if b.streamInput == nil || inputLen == 0 {
-				str.CloseAndReceive()
-				break
-			}
-
-			if counter == inputLen {
-				str.CloseAndReceive()
-				break
-			}
-
-			payload := streamInput[counter]
-			err = str.SendMsg(payload)
-			if err == io.EOF {
-				// We get EOF on send if the server says "go away"
-				// We have to use CloseAndReceive to get the actual code
-				str.CloseAndReceive()
-				break
-			}
-			counter++
-		}
+		b.makeClientStreamingRequest(&ctx)
 	} else if b.mtd.IsServerStreaming() {
-		str, err := b.stub.InvokeRpcServerStream(ctx, b.mtd, b.input)
-		for err == nil {
-			_, err := str.RecvMsg()
-			if err != nil {
-				if err == io.EOF {
-					err = nil
-				}
-				break
-			}
-		}
+		b.makeServerStreamingRequest(&ctx)
 	} else {
 		b.stub.InvokeRpc(ctx, b.mtd, b.input)
 	}
 }
 
-func isArrayData(data interface{}) bool {
-	arrData, isArrData := data.([]interface{})
-	if !isArrData {
-		return false
-	}
-
-	for _, elem := range arrData {
-		if !isMapData(elem) {
-			return false
+func (b *Requester) makeClientStreamingRequest(ctx *context.Context) {
+	str, err := b.stub.InvokeRpcClientStream(*ctx, b.mtd)
+	counter := 0
+	for err == nil {
+		streamInput := *b.streamInput
+		inputLen := len(streamInput)
+		if b.streamInput == nil || inputLen == 0 {
+			str.CloseAndReceive()
+			break
 		}
+
+		if counter == inputLen {
+			str.CloseAndReceive()
+			break
+		}
+
+		payload := streamInput[counter]
+		err = str.SendMsg(payload)
+		if err == io.EOF {
+			// We get EOF on send if the server says "go away"
+			// We have to use CloseAndReceive to get the actual code
+			str.CloseAndReceive()
+			break
+		}
+		counter++
 	}
-
-	return true
 }
 
-func isMapData(data interface{}) bool {
-	_, isArrData := data.(map[string]interface{})
-	return isArrData
-}
-
-func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error {
-	for k, v := range *data {
-		err := input.TrySetFieldByName(k, v)
+func (b *Requester) makeServerStreamingRequest(ctx *context.Context) {
+	str, err := b.stub.InvokeRpcServerStream(*ctx, b.mtd, b.input)
+	for err == nil {
+		_, err := str.RecvMsg()
 		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func createPayloads(data interface{}, mtd *desc.MethodDescriptor) (*dynamic.Message, *[]*dynamic.Message, error) {
-	md := mtd.GetInputType()
-	var input *dynamic.Message
-	var streamInput []*dynamic.Message
-
-	// payload
-	if isArrayData(data) {
-		data := data.([]interface{})
-		elems := len(data)
-		if elems > 0 {
-			streamInput = make([]*dynamic.Message, elems)
-		}
-		for i, elem := range data {
-			o := elem.(map[string]interface{})
-			elemMsg := dynamic.NewMessage(md)
-			err := messageFromMap(elemMsg, &o)
-			if err != nil {
-				return nil, nil, err
+			if err == io.EOF {
+				err = nil
 			}
-
-			streamInput[i] = elemMsg
+			break
 		}
-	} else if isMapData(data) {
-		input = dynamic.NewMessage(md)
-		data := data.(map[string]interface{})
-		err := messageFromMap(input, &data)
-		if err != nil {
-			return nil, nil, err
-		}
-	} else {
-		return nil, nil, errors.New("Unsupported type for Data")
 	}
-
-	if mtd.IsClientStreaming() && streamInput == nil && input != nil {
-		streamInput = make([]*dynamic.Message, 1)
-		streamInput[0] = input
-	}
-
-	return input, &streamInput, nil
 }
 
-// CreateClientCredOption creates the credential dial options based on config
 func createClientCredOption(config *config.Config) (grpc.DialOption, error) {
 	credOptions := grpc.WithInsecure()
 	if strings.TrimSpace(config.Cert) != "" {
