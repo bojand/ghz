@@ -181,7 +181,7 @@ func (b *Requester) makeRequest() {
 	}
 
 	if b.mtd.IsClientStreaming() && b.mtd.IsServerStreaming() {
-		fmt.Println("Bidi Stream!")
+		b.makeBidiRequest(&ctx)
 	} else if b.mtd.IsClientStreaming() {
 		b.makeClientStreamingRequest(&ctx)
 	} else if b.mtd.IsServerStreaming() {
@@ -221,6 +221,38 @@ func (b *Requester) makeClientStreamingRequest(ctx *context.Context) {
 
 func (b *Requester) makeServerStreamingRequest(ctx *context.Context) {
 	str, err := b.stub.InvokeRpcServerStream(*ctx, b.mtd, b.input)
+	for err == nil {
+		_, err := str.RecvMsg()
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
+			break
+		}
+	}
+}
+
+func (b *Requester) makeBidiRequest(ctx *context.Context) {
+	str, err := b.stub.InvokeRpcBidiStream(*ctx, b.mtd)
+	counter := 0
+	for err == nil {
+		streamInput := *b.streamInput
+		inputLen := len(streamInput)
+		if b.streamInput == nil || inputLen == 0 {
+			str.CloseSend()
+			break
+		}
+
+		if counter == inputLen {
+			str.CloseSend()
+			break
+		}
+
+		payload := streamInput[counter]
+		err = str.SendMsg(payload)
+		counter++
+	}
+
 	for err == nil {
 		_, err := str.RecvMsg()
 		if err != nil {
