@@ -1,5 +1,14 @@
 package main
 
+// TODO
+// * Add import paths option
+// * Add keepalive options
+// * Add connetion timeout
+// * Fix up config with .New()
+// * Add support for data from stdin
+// * goreleaser
+// * Add more metrics such as duration of different parts and size
+
 import (
 	"flag"
 	"fmt"
@@ -17,14 +26,16 @@ import (
 	"github.com/jhump/protoreflect/desc/protoparse"
 )
 
-// TODO add import paths option
-// TODO add keepalive options
-// TODO add connetion timeout
-
 var (
 	proto = flag.String("proto", "", `The .proto file.`)
 	call  = flag.String("call", "", `A fully-qualified symbol name.`)
 	cert  = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
+
+	c = flag.Int("c", 50, "Number of requests to run concurrently.")
+	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
+	q = flag.Int("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
+	t = flag.Int("t", 20, "Timeout for each request in seconds.")
+	z = flag.Duration("z", 0, "")
 
 	data     = flag.String("d", "", "The call data as stringified JSON.")
 	dataPath = flag.String("D", "", "Path for call data JSON file.")
@@ -32,12 +43,6 @@ var (
 	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
 
 	format = flag.String("o", "", "Output format")
-
-	c = flag.Int("c", 50, "Number of requests to run concurrently.")
-	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
-	q = flag.Int("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
-	t = flag.Int("t", 20, "Timeout for each request in seconds.")
-	z = flag.Duration("z", 0, "")
 
 	cpus = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
 
@@ -51,14 +56,14 @@ Options:
   -cert		File containing client certificate (public key), to present to the server. 
 			Must also provide -key option.
 
-  -n  Number of requests to run. Default is 200.
   -c  Number of requests to run concurrently. Total number of requests cannot
-      be smaller than the concurrency level. Default is 50.
+	  be smaller than the concurrency level. Default is 50.
+  -n  Number of requests to run. Default is 200.
   -q  Rate limit, in queries per second (QPS). Default is no rate limit.
+  -t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
   -z  Duration of application to send requests. When duration is reached,
       application stops and exits. If duration is specified, n is ignored.
       Examples: -z 10s -z 3m.
-  -t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
   
   -d  The call data as stringified JSON.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
@@ -92,8 +97,6 @@ func main() {
 			errAndExit(err.Error())
 		}
 	} else {
-		// TODO Fix up with .New()
-
 		cfg = &config.Config{
 			Proto:    *proto,
 			Call:     *call,
