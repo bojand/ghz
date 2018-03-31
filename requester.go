@@ -37,7 +37,7 @@ type Requester struct {
 	stub        grpcdynamic.Stub
 	mtd         *desc.MethodDescriptor
 	input       *dynamic.Message
-	streamInput []*dynamic.Message
+	streamInput *[]*dynamic.Message
 	reqMD       *metadata.MD
 	reporter    *Reporter
 
@@ -55,40 +55,9 @@ func New(c *config.Config, mtd *desc.MethodDescriptor) (*Requester, error) {
 		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
 	}
 
-	var input *dynamic.Message
-	var streamInput []*dynamic.Message
-
-	// payload
-	if isArrayData(c.Data) {
-		data := c.Data.([]interface{})
-		elems := len(data)
-		if elems > 0 {
-			streamInput = make([]*dynamic.Message, elems)
-		}
-		for i, elem := range data {
-			o := elem.(map[string]interface{})
-			elemMsg := dynamic.NewMessage(md)
-			err := messageFromMap(elemMsg, &o)
-			if err != nil {
-				return nil, err
-			}
-
-			streamInput[i] = elemMsg
-		}
-	} else if isMapData(c.Data) {
-		input = dynamic.NewMessage(md)
-		data := c.Data.(map[string]interface{})
-		err := messageFromMap(input, &data)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("Unsupported type for Data")
-	}
-
-	if mtd.IsClientStreaming() && streamInput == nil && input != nil {
-		streamInput = make([]*dynamic.Message, 1)
-		streamInput[0] = input
+	input, streamInput, err := createPayloads(c.Data, mtd)
+	if err != nil {
+		return nil, err
 	}
 
 	// metadata
@@ -154,7 +123,7 @@ func (b *Requester) Finish() *Report {
 }
 
 func (b *Requester) connect() (*grpc.ClientConn, error) {
-	credOptions, err := CreateClientCredOption(b.config)
+	credOptions, err := createClientCredOption(b.config)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +187,8 @@ func (b *Requester) makeRequest() {
 		str, err := b.stub.InvokeRpcClientStream(ctx, b.mtd)
 		counter := 0
 		for err == nil {
-			inputLen := len(b.streamInput)
+			streamInput := *b.streamInput
+			inputLen := len(streamInput)
 			if b.streamInput == nil || inputLen == 0 {
 				str.CloseAndReceive()
 				break
@@ -229,7 +199,7 @@ func (b *Requester) makeRequest() {
 				break
 			}
 
-			payload := b.streamInput[counter]
+			payload := streamInput[counter]
 			err = str.SendMsg(payload)
 			if err == io.EOF {
 				// We get EOF on send if the server says "go away"
@@ -285,8 +255,49 @@ func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error 
 	return nil
 }
 
+func createPayloads(data interface{}, mtd *desc.MethodDescriptor) (*dynamic.Message, *[]*dynamic.Message, error) {
+	md := mtd.GetInputType()
+	var input *dynamic.Message
+	var streamInput []*dynamic.Message
+
+	// payload
+	if isArrayData(data) {
+		data := data.([]interface{})
+		elems := len(data)
+		if elems > 0 {
+			streamInput = make([]*dynamic.Message, elems)
+		}
+		for i, elem := range data {
+			o := elem.(map[string]interface{})
+			elemMsg := dynamic.NewMessage(md)
+			err := messageFromMap(elemMsg, &o)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			streamInput[i] = elemMsg
+		}
+	} else if isMapData(data) {
+		input = dynamic.NewMessage(md)
+		data := data.(map[string]interface{})
+		err := messageFromMap(input, &data)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		return nil, nil, errors.New("Unsupported type for Data")
+	}
+
+	if mtd.IsClientStreaming() && streamInput == nil && input != nil {
+		streamInput = make([]*dynamic.Message, 1)
+		streamInput[0] = input
+	}
+
+	return input, &streamInput, nil
+}
+
 // CreateClientCredOption creates the credential dial options based on config
-func CreateClientCredOption(config *config.Config) (grpc.DialOption, error) {
+func createClientCredOption(config *config.Config) (grpc.DialOption, error) {
 	credOptions := grpc.WithInsecure()
 	if strings.TrimSpace(config.Cert) != "" {
 		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
