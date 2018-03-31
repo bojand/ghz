@@ -3,6 +3,7 @@ package grpcannon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -32,12 +33,13 @@ type callResult struct {
 
 // Requester is used for doing the requests
 type Requester struct {
-	cc       *grpc.ClientConn
-	stub     grpcdynamic.Stub
-	mtd      *desc.MethodDescriptor
-	input    *dynamic.Message
-	reqMD    *metadata.MD
-	reporter *Reporter
+	cc          *grpc.ClientConn
+	stub        grpcdynamic.Stub
+	mtd         *desc.MethodDescriptor
+	input       *dynamic.Message
+	streamInput []*dynamic.Message
+	reqMD       *metadata.MD
+	reporter    *Reporter
 
 	config  *config.Config
 	results chan *callResult
@@ -47,17 +49,46 @@ type Requester struct {
 
 // New creates new Requester
 func New(c *config.Config, mtd *desc.MethodDescriptor) (*Requester, error) {
-	input := dynamic.NewMessage(mtd.GetInputType())
-	if input == nil {
+	md := mtd.GetInputType()
+	payloadMessage := dynamic.NewMessage(md)
+	if payloadMessage == nil {
 		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
 	}
 
+	var input *dynamic.Message
+	var streamInput []*dynamic.Message
+
 	// payload
-	for k, v := range *c.Data {
-		err := input.TrySetFieldByName(k, v)
+	if isArrayData(c.Data) {
+		data := c.Data.([]interface{})
+		elems := len(data)
+		if elems > 0 {
+			streamInput = make([]*dynamic.Message, elems)
+		}
+		for i, elem := range data {
+			o := elem.(map[string]interface{})
+			elemMsg := dynamic.NewMessage(md)
+			err := messageFromMap(elemMsg, &o)
+			if err != nil {
+				return nil, err
+			}
+
+			streamInput[i] = elemMsg
+		}
+	} else if isMapData(c.Data) {
+		input = dynamic.NewMessage(md)
+		data := c.Data.(map[string]interface{})
+		err := messageFromMap(input, &data)
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		return nil, errors.New("Unsupported type for Data")
+	}
+
+	if mtd.IsClientStreaming() && streamInput == nil && input != nil {
+		streamInput = make([]*dynamic.Message, 1)
+		streamInput[0] = input
 	}
 
 	// metadata
@@ -67,7 +98,10 @@ func New(c *config.Config, mtd *desc.MethodDescriptor) (*Requester, error) {
 		reqMD = &md
 	}
 
-	return &Requester{config: c, input: input, reqMD: reqMD, mtd: mtd}, nil
+	return &Requester{config: c,
+		input:       input,
+		streamInput: streamInput,
+		reqMD:       reqMD, mtd: mtd}, nil
 }
 
 // Run makes all the requests, prints the summary.
@@ -181,7 +215,30 @@ func (b *Requester) makeRequest() {
 	if b.mtd.IsClientStreaming() && b.mtd.IsServerStreaming() {
 		fmt.Println("Bidi Stream!")
 	} else if b.mtd.IsClientStreaming() {
-		fmt.Println("Client Stream!")
+		str, err := b.stub.InvokeRpcClientStream(ctx, b.mtd)
+		counter := 0
+		for err == nil {
+			inputLen := len(b.streamInput)
+			if b.streamInput == nil || inputLen == 0 {
+				str.CloseAndReceive()
+				break
+			}
+
+			if counter == inputLen {
+				str.CloseAndReceive()
+				break
+			}
+
+			payload := b.streamInput[counter]
+			err = str.SendMsg(payload)
+			if err == io.EOF {
+				// We get EOF on send if the server says "go away"
+				// We have to use CloseAndReceive to get the actual code
+				str.CloseAndReceive()
+				break
+			}
+			counter++
+		}
 	} else if b.mtd.IsServerStreaming() {
 		str, err := b.stub.InvokeRpcServerStream(ctx, b.mtd, b.input)
 		for err == nil {
@@ -196,6 +253,36 @@ func (b *Requester) makeRequest() {
 	} else {
 		b.stub.InvokeRpc(ctx, b.mtd, b.input)
 	}
+}
+
+func isArrayData(data interface{}) bool {
+	arrData, isArrData := data.([]interface{})
+	if !isArrData {
+		return false
+	}
+
+	for _, elem := range arrData {
+		if !isMapData(elem) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func isMapData(data interface{}) bool {
+	_, isArrData := data.(map[string]interface{})
+	return isArrData
+}
+
+func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error {
+	for k, v := range *data {
+		err := input.TrySetFieldByName(k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // CreateClientCredOption creates the credential dial options based on config

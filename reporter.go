@@ -75,10 +75,15 @@ func (r *Reporter) Finalize(total time.Duration) *Report {
 
 	sort.Float64s(lats)
 
-	fastestNum := lats[0]
-	slowestNum := lats[len(lats)-1]
-	fastest := time.Duration(fastestNum * float64(time.Second))
-	slowest := time.Duration(slowestNum * float64(time.Second))
+	var fastestNum, slowestNum float64
+	var fastest, slowest time.Duration
+
+	if len(lats) > 0 {
+		fastestNum = lats[0]
+		slowestNum = lats[len(lats)-1]
+		fastest = time.Duration(fastestNum * float64(time.Second))
+		slowest = time.Duration(slowestNum * float64(time.Second))
+	}
 
 	rep := &Report{
 		Count:          r.totalCount,
