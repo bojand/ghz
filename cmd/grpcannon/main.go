@@ -1,7 +1,6 @@
 package main
 
 // TODO
-// * Add import paths option
 // * Add keepalive options
 // * Add connetion timeout
 // * Add support for data from stdin
@@ -40,6 +39,8 @@ var (
 	md       = flag.String("m", "", "Request metadata as stringified JSON.")
 	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
 
+	paths = flag.String("i", "", "Comma separated list of proto import paths")
+
 	output = flag.String("o", "", "Output path")
 	format = flag.String("O", "", "Output format")
 
@@ -52,8 +53,7 @@ var usage = `Usage: grpcannon [options...] <host>
 Options:
   -proto	The Protocol Buffer file
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
-  -cert		File containing client certificate (public key), to present to the server. 
-			Must also provide -key option.
+  -cert		File containing client certificate (public key), to present to the server.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
 	  be smaller than the concurrency level. Default is 50.
@@ -72,7 +72,10 @@ Options:
   -o  Output path. If none provided stdout is used.
   -O  Output type. If none provided, a summary is printed.
       "csv" is the only supported alternative. Dumps the response
-      metrics in comma-separated values format.
+	  metrics in comma-separated values format.
+	  
+  -i  Comma separated list of proto import paths. The current working directory and the directory
+      of the protocol buffer file are automatically added to the import list.
 
   -cpus		Number of used cpu cores. (default for current machine is %d cores)
 `
@@ -98,12 +101,20 @@ func main() {
 		}
 	} else {
 
+		iPaths := []string{}
+		pathsTrimmed := strings.TrimSpace(*paths)
+		if pathsTrimmed != "" {
+			iPaths = strings.Split(pathsTrimmed, ",")
+		}
+
 		cfg, err = NewConfig(*proto, *call, *cert, *n, *c, *q, *z, *t,
-			*data, *dataPath, *md, *mdPath, *output, *format, host, *cpus, []string{})
+			*data, *dataPath, *md, *mdPath, *output, *format, host, *cpus, iPaths)
 		if err != nil {
 			errAndExit(err.Error())
 		}
 	}
+
+	fmt.Printf("%+v\n", cfg.ImportPaths)
 
 	file, err := os.Open(cfg.Proto)
 	if err != nil {

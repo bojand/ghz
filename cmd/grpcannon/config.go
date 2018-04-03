@@ -51,6 +51,7 @@ func NewConfig(proto, call, cert string, n, c, qps int, z time.Duration, timeout
 		MetadataPath: mdPath,
 		Format:       format,
 		Host:         host,
+		ImportPaths:  importPaths,
 		CPUs:         cpus}
 
 	err := cfg.setData(data)
