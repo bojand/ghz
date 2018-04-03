@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bojand/grpcannon/config"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
@@ -18,6 +17,19 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 )
+
+// Options represents the request options
+type Options struct {
+	Cert     string
+	N        int
+	C        int
+	QPS      int
+	Z        time.Duration
+	Timeout  int
+	Host     string
+	Data     interface{}
+	Metadata *map[string]string
+}
 
 // Max size of the buffer of result channel.
 const maxResult = 1000000
@@ -40,14 +52,14 @@ type Requester struct {
 	reqMD       *metadata.MD
 	reporter    *Reporter
 
-	config  *config.Config
+	config  *Options
 	results chan *callResult
 	stopCh  chan bool
 	start   time.Time
 }
 
 // New creates new Requester
-func New(c *config.Config, mtd *desc.MethodDescriptor) (*Requester, error) {
+func New(c *Options, mtd *desc.MethodDescriptor) (*Requester, error) {
 	md := mtd.GetInputType()
 	payloadMessage := dynamic.NewMessage(md)
 	if payloadMessage == nil {
@@ -264,7 +276,7 @@ func (b *Requester) makeBidiRequest(ctx *context.Context) {
 	}
 }
 
-func createClientCredOption(config *config.Config) (grpc.DialOption, error) {
+func createClientCredOption(config *Options) (grpc.DialOption, error) {
 	credOptions := grpc.WithInsecure()
 	if strings.TrimSpace(config.Cert) != "" {
 		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")

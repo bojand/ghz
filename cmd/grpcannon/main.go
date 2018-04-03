@@ -4,7 +4,6 @@ package main
 // * Add import paths option
 // * Add keepalive options
 // * Add connetion timeout
-// * Fix up config with .New()
 // * Add support for data from stdin
 // * goreleaser
 // * Add more metrics such as duration of different parts and size
@@ -20,7 +19,6 @@ import (
 	"time"
 
 	"github.com/bojand/grpcannon"
-	"github.com/bojand/grpcannon/config"
 	"github.com/bojand/grpcannon/printer"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
@@ -42,7 +40,7 @@ var (
 	md       = flag.String("m", "", "Request metadata as stringified JSON.")
 	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
 
-	format = flag.String("o", "", "Output format")
+	output = flag.String("o", "", "Output path")
 
 	cpus = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
 
@@ -70,9 +68,7 @@ Options:
   -m  Request metadata as stringified JSON.
   -M  Path for call data JSON file. For example, /home/user/metadata.json or ./metadata.json.
  
-  -o  Output type. If none provided, a summary is printed.
-      "csv" is the only supported alternative. Dumps the response
-      metrics in comma-separated values format.
+  -o Output path. If none provided stdout is used.
 
   -cpus		Number of used cpu cores. (default for current machine is %d cores)
 `
@@ -89,51 +85,17 @@ func main() {
 
 	host := flag.Args()[0]
 
-	var cfg *config.Config
+	var cfg *Config
 
 	if _, err := os.Stat(localConfigName); err == nil {
-		cfg, err = config.ReadConfig(localConfigName)
+		cfg, err = ReadConfig(localConfigName)
 		if err != nil {
 			errAndExit(err.Error())
 		}
 	} else {
-		cfg = &config.Config{
-			Proto:    *proto,
-			Call:     *call,
-			Cert:     *cert,
-			N:        *n,
-			C:        *c,
-			QPS:      *q,
-			Z:        *z,
-			Timeout:  *t,
-			DataPath: *dataPath,
-			// Metadata:     *md,
-			MetadataPath: *mdPath,
-			Format:       *format,
-			Host:         host,
-			CPUs:         *cpus}
 
-		err := cfg.SetData(*data)
-		if err != nil {
-			errAndExit(err.Error())
-		}
-
-		err = cfg.SetMetadata(*md)
-		if err != nil {
-			errAndExit(err.Error())
-		}
-
-		err = cfg.InitData()
-		if err != nil {
-			errAndExit(err.Error())
-		}
-
-		err = cfg.InitMetadata()
-		if err != nil {
-			errAndExit(err.Error())
-		}
-
-		err = cfg.Validate()
+		cfg, err = NewConfig(*proto, *call, *cert, *n, *c, *q, *z, *t,
+			*data, *dataPath, *md, *mdPath, *output, "", host, *cpus, []string{})
 		if err != nil {
 			errAndExit(err.Error())
 		}
@@ -144,8 +106,6 @@ func main() {
 		errAndExit(err.Error())
 	}
 	defer file.Close()
-
-	cfg.ImportPaths = append(cfg.ImportPaths, filepath.Dir(cfg.Proto), ".")
 
 	runtime.GOMAXPROCS(cfg.CPUs)
 
@@ -177,13 +137,25 @@ func usageAndExit(msg string) {
 	os.Exit(1)
 }
 
-func runTest(config *config.Config) (*grpcannon.Report, error) {
+func runTest(config *Config) (*grpcannon.Report, error) {
 	mtd, err := getMethodDesc(config)
 	if err != nil {
 		return nil, err
 	}
 
-	reqr, err := grpcannon.New(config, mtd)
+	opts := &grpcannon.Options{
+		Cert:     config.Cert,
+		N:        config.N,
+		C:        config.C,
+		QPS:      config.QPS,
+		Z:        config.Z,
+		Timeout:  config.Timeout,
+		Host:     config.Host,
+		Data:     config.Data,
+		Metadata: config.Metadata,
+	}
+
+	reqr, err := grpcannon.New(opts, mtd)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +178,7 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	return reqr.Run()
 }
 
-func getMethodDesc(config *config.Config) (*desc.MethodDescriptor, error) {
+func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
 	p := &protoparse.Parser{ImportPaths: config.ImportPaths}
 
 	fileName := filepath.Base(config.Proto)

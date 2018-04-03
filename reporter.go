@@ -70,33 +70,28 @@ func (r *Reporter) Finalize(total time.Duration) *Report {
 	avgDuration := time.Duration(average * float64(time.Second))
 	rps := float64(r.totalCount) / total.Seconds()
 
-	lats := make([]float64, len(r.lats))
-	copy(lats, r.lats)
-
-	sort.Float64s(lats)
-
-	var fastestNum, slowestNum float64
-	var fastest, slowest time.Duration
-
-	if len(lats) > 0 {
-		fastestNum = lats[0]
-		slowestNum = lats[len(lats)-1]
-		fastest = time.Duration(fastestNum * float64(time.Second))
-		slowest = time.Duration(slowestNum * float64(time.Second))
-	}
-
 	rep := &Report{
 		Count:          r.totalCount,
 		Total:          total,
 		Average:        avgDuration,
-		Fastest:        fastest,
-		Slowest:        slowest,
 		Rps:            rps,
 		ErrorDist:      r.errorDist,
 		StatusCodeDist: r.statusCodeDist}
 
-	rep.Histogram = histogram(&lats, slowestNum, fastestNum)
-	rep.LatencyDistribution = latencies(&lats)
+	if len(r.lats) > 0 {
+		lats := make([]float64, len(r.lats))
+		copy(lats, r.lats)
+		sort.Float64s(lats)
+
+		var fastestNum, slowestNum float64
+		fastestNum = lats[0]
+		slowestNum = lats[len(lats)-1]
+
+		rep.Fastest = time.Duration(fastestNum * float64(time.Second))
+		rep.Slowest = time.Duration(slowestNum * float64(time.Second))
+		rep.Histogram = histogram(&lats, slowestNum, fastestNum)
+		rep.LatencyDistribution = latencies(&lats)
+	}
 
 	return rep
 }

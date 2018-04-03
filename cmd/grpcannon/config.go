@@ -1,4 +1,4 @@
-package config
+package main
 
 import (
 	"encoding/json"
@@ -26,11 +26,61 @@ type Config struct {
 	DataPath     string             `json:"dataPath"`
 	Metadata     *map[string]string `json:"metadata,omitempty"`
 	MetadataPath string             `json:"metadataPath"`
-	Format       string             `json:"format"`
 	Output       string             `json:"output"`
+	Format       string             `json:"format"`
 	Host         string             `json:"host"`
 	CPUs         int                `json:"cpus"`
 	ImportPaths  []string           `json:"importPaths,omitempty"`
+}
+
+// NewConfig creates a new config
+func NewConfig(proto, call, cert string, n, c, qps int, z time.Duration, timeout int,
+	data, dataPath, metadata, mdPath, output, format, host string,
+	cpus int, importPaths []string) (*Config, error) {
+
+	cfg := &Config{
+		Proto:        proto,
+		Call:         call,
+		Cert:         cert,
+		N:            n,
+		C:            c,
+		QPS:          qps,
+		Z:            z,
+		Timeout:      timeout,
+		DataPath:     dataPath,
+		MetadataPath: mdPath,
+		Format:       format,
+		Host:         host,
+		CPUs:         cpus}
+
+	err := cfg.setData(data)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cfg.setMetadata(metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cfg.initData()
+	if err != nil {
+		return nil, err
+	}
+
+	err = cfg.initMetadata()
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.Default()
+
+	err = cfg.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
 }
 
 // Default implementation.
@@ -45,6 +95,12 @@ func (c *Config) Default() {
 
 	if c.CPUs == 0 {
 		c.CPUs = runtime.GOMAXPROCS(-1)
+	}
+
+	c.ImportPaths = append(c.ImportPaths, ".")
+	dir := filepath.Dir(c.Proto)
+	if dir != "." {
+		c.ImportPaths = append(c.ImportPaths, dir)
 	}
 }
 
@@ -150,7 +206,7 @@ func (c Config) MarshalJSON() ([]byte, error) {
 }
 
 // InitData returns the payload data
-func (c *Config) InitData() error {
+func (c *Config) initData() error {
 	if c.Data != nil {
 		return nil
 	} else if strings.TrimSpace(c.DataPath) != "" {
@@ -166,7 +222,7 @@ func (c *Config) InitData() error {
 }
 
 // SetData sets data based on input JSON string
-func (c *Config) SetData(in string) error {
+func (c *Config) setData(in string) error {
 	if strings.TrimSpace(in) != "" {
 		return json.Unmarshal([]byte(in), &c.Data)
 	}
@@ -174,7 +230,7 @@ func (c *Config) SetData(in string) error {
 }
 
 // SetMetadata sets the metadata based on input JSON string
-func (c *Config) SetMetadata(in string) error {
+func (c *Config) setMetadata(in string) error {
 	if strings.TrimSpace(in) != "" {
 		return json.Unmarshal([]byte(in), &c.Metadata)
 	}
@@ -182,7 +238,7 @@ func (c *Config) SetMetadata(in string) error {
 }
 
 // InitMetadata returns the payload data
-func (c *Config) InitMetadata() error {
+func (c *Config) initMetadata() error {
 	if c.Metadata != nil && len(*c.Metadata) > 0 {
 		return nil
 	} else if strings.TrimSpace(c.MetadataPath) != "" {

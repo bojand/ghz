@@ -1,4 +1,4 @@
-package config
+package main
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expected = `{"proto":"asdf","call":"","cert":"","n":0,"c":0,"qps":0,"timeout":0,"dataPath":"","metadataPath":"","format":"oval","output":"","host":"","cpus":0,"z":"4h30m0s"}`
+const expected = `{"proto":"asdf","call":"","cert":"","n":0,"c":0,"qps":0,"timeout":0,"dataPath":"","metadataPath":"","output":"","format":"oval","host":"","cpus":0,"z":"4h30m0s"}`
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")
@@ -188,7 +188,7 @@ func TestConfig_Default(t *testing.T) {
 }
 
 func TestConfig_ReadConfig(t *testing.T) {
-	c, err := ReadConfig("../testdata/grpcannon.json")
+	c, err := ReadConfig("../../testdata/grpcannon.json")
 
 	data := make(map[string]interface{})
 	data["name"] = "mydata"
@@ -208,7 +208,7 @@ func TestConfig_ReadConfig(t *testing.T) {
 		Output:       "",
 		Host:         "",
 		CPUs:         runtime.GOMAXPROCS(-1),
-		ImportPaths:  []string{"/path/to/protos"}}
+		ImportPaths:  []string{"/path/to/protos", "."}}
 
 	assert.NoError(t, err)
 
@@ -278,10 +278,10 @@ func TestConfig_Validate(t *testing.T) {
 	})
 }
 
-func TestConfig_InitData(t *testing.T) {
+func TestConfig_initData(t *testing.T) {
 	t.Run("when empty", func(t *testing.T) {
 		c := &Config{}
-		err := c.InitData()
+		err := c.initData()
 		assert.Equal(t, "No data specified", err.Error())
 	})
 
@@ -289,20 +289,20 @@ func TestConfig_InitData(t *testing.T) {
 		data := make(map[string]interface{})
 		data["name"] = "mydata"
 		c := &Config{Data: &data}
-		err := c.InitData()
+		err := c.initData()
 		assert.NoError(t, err)
 		assert.Equal(t, c.Data, &data)
 	})
 
 	t.Run("with file specified", func(t *testing.T) {
 		data := make(map[string]interface{})
-		dat, err := ioutil.ReadFile("../testdata/data.json")
+		dat, err := ioutil.ReadFile("../../testdata/data.json")
 		assert.NoError(t, err)
 		err = json.Unmarshal([]byte(dat), &data)
 		assert.NoError(t, err)
 
-		c := &Config{DataPath: "../testdata/data.json"}
-		err = c.InitData()
+		c := &Config{DataPath: "../../testdata/data.json"}
+		err = c.initData()
 		assert.NoError(t, err)
 		assert.Equal(t, c.Data, data)
 	})
