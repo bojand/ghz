@@ -41,6 +41,7 @@ var (
 	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
 
 	output = flag.String("o", "", "Output path")
+	format = flag.String("O", "", "Output format")
 
 	cpus = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
 
@@ -68,7 +69,10 @@ Options:
   -m  Request metadata as stringified JSON.
   -M  Path for call data JSON file. For example, /home/user/metadata.json or ./metadata.json.
  
-  -o Output path. If none provided stdout is used.
+  -o  Output path. If none provided stdout is used.
+  -O  Output type. If none provided, a summary is printed.
+      "csv" is the only supported alternative. Dumps the response
+      metrics in comma-separated values format.
 
   -cpus		Number of used cpu cores. (default for current machine is %d cores)
 `
@@ -95,7 +99,7 @@ func main() {
 	} else {
 
 		cfg, err = NewConfig(*proto, *call, *cert, *n, *c, *q, *z, *t,
-			*data, *dataPath, *md, *mdPath, *output, "", host, *cpus, []string{})
+			*data, *dataPath, *md, *mdPath, *output, *format, host, *cpus, []string{})
 		if err != nil {
 			errAndExit(err.Error())
 		}
@@ -118,7 +122,7 @@ func main() {
 		Report: report,
 		Out:    os.Stdout}
 
-	p.Print()
+	p.Print(cfg.Format)
 }
 
 func errAndExit(msg string) {

@@ -23,8 +23,14 @@ type ReportPrinter struct {
 }
 
 // Print the report
-func (rp *ReportPrinter) Print() {
-	outputTmpl := defaultTmpl
+func (rp *ReportPrinter) Print(format string) {
+	outputTmpl := format
+	switch outputTmpl {
+	case "":
+		outputTmpl = defaultTmpl
+	case "csv":
+		outputTmpl = csvTmpl
+	}
 	buf := &bytes.Buffer{}
 	templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(outputTmpl))
 	if err := templ.Execute(buf, *rp.Report); err != nil {
@@ -93,5 +99,10 @@ Status code distribution:{{ range $code, $num := .StatusCodeDist }}
   [{{ $code }}]	{{ $num }} responses{{ end }}
 {{ if gt (len .ErrorDist) 0 }}Error distribution:{{ range $err, $num := .ErrorDist }}
   [{{ $num }}]	{{ $err }}{{ end }}{{ end }}
+`
+
+	csvTmpl = `
+duration (ms),status,error{{ range $i, $v := .Details }}
+{{ formatNumber .Latency.Seconds }},{{ .Status }},{{ .Error }}{{ end }}
 `
 )

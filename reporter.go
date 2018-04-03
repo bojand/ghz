@@ -13,8 +13,12 @@ type Reporter struct {
 	results chan *callResult
 	done    chan bool
 
-	avgTotal       float64
-	lats           []float64
+	avgTotal float64
+
+	lats     []float64
+	errors   []string
+	statuses []string
+
 	errorDist      map[string]int
 	statusCodeDist map[string]int
 	totalCount     uint64
@@ -34,6 +38,7 @@ type Report struct {
 
 	LatencyDistribution []LatencyDistribution
 	Histogram           []Bucket
+	Details             []ResultDetail
 }
 
 func newReporter(results chan *callResult, n int) *Reporter {
@@ -52,12 +57,21 @@ func (r *Reporter) Run() {
 	for res := range r.results {
 		r.totalCount++
 		if res.err != nil {
-			r.errorDist[res.err.Error()]++
+			errStr := res.err.Error()
+			r.errorDist[errStr]++
+
+			if len(r.errors) < maxResult {
+				r.errors = append(r.errors, errStr)
+				r.statuses = append(r.statuses, res.status)
+			}
 		} else {
 			r.avgTotal += res.duration.Seconds()
 			r.statusCodeDist[res.status]++
+
 			if len(r.lats) < maxResult {
 				r.lats = append(r.lats, res.duration.Seconds())
+				r.errors = append(r.errors, "")
+				r.statuses = append(r.statuses, res.status)
 			}
 		}
 	}
@@ -91,6 +105,12 @@ func (r *Reporter) Finalize(total time.Duration) *Report {
 		rep.Slowest = time.Duration(slowestNum * float64(time.Second))
 		rep.Histogram = histogram(&lats, slowestNum, fastestNum)
 		rep.LatencyDistribution = latencies(&lats)
+
+		rep.Details = make([]ResultDetail, len(r.lats))
+		for i, num := range r.lats {
+			lat := time.Duration(num * float64(time.Second))
+			rep.Details[i] = ResultDetail{Latency: lat, Error: r.errors[i], Status: r.statuses[i]}
+		}
 	}
 
 	return rep
@@ -163,4 +183,11 @@ type Bucket struct {
 	Mark      float64
 	Count     int
 	Frequency float64
+}
+
+// ResultDetail data for each result
+type ResultDetail struct {
+	Latency time.Duration
+	Error   string
+	Status  string
 }

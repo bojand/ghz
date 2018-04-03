@@ -33,11 +33,9 @@ func (c *statsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 		duration := end.Sub(rpcStats.BeginTime)
 
 		var st string
-		if rpcStats.Error != nil {
-			s, ok := status.FromError(rpcStats.Error)
-			if ok {
-				st = s.Code().String()
-			}
+		s, ok := status.FromError(rpcStats.Error)
+		if ok {
+			st = s.Code().String()
 		}
 
 		c.results <- &callResult{rpcStats.Error, st, duration}
