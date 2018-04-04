@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -188,27 +188,30 @@ func TestConfig_Default(t *testing.T) {
 }
 
 func TestConfig_ReadConfig(t *testing.T) {
-	c, err := ReadConfig("../../testdata/grpcannon.json")
+	c, err := ReadConfig("../testdata/grpcannon.json")
 
 	data := make(map[string]interface{})
 	data["name"] = "mydata"
 
 	ec := Config{
-		Proto:        "my.proto",
-		Call:         "mycall",
-		Data:         data,
-		Cert:         "",
-		N:            200,
-		C:            50,
-		QPS:          0,
-		Z:            0,
-		DataPath:     "",
-		MetadataPath: "",
-		Format:       "",
-		Output:       "",
-		Host:         "",
-		CPUs:         runtime.GOMAXPROCS(-1),
-		ImportPaths:  []string{"/path/to/protos", "."}}
+		Proto:         "my.proto",
+		Call:          "mycall",
+		Data:          data,
+		Cert:          "",
+		N:             200,
+		C:             50,
+		QPS:           0,
+		Z:             0,
+		Timeout:       20,
+		DataPath:      "",
+		MetadataPath:  "",
+		Format:        "",
+		Output:        "",
+		Host:          "",
+		DialTimeout:   10,
+		KeepaliveTime: 0,
+		CPUs:          runtime.GOMAXPROCS(-1),
+		ImportPaths:   []string{"/path/to/protos", "."}}
 
 	assert.NoError(t, err)
 
@@ -296,12 +299,12 @@ func TestConfig_initData(t *testing.T) {
 
 	t.Run("with file specified", func(t *testing.T) {
 		data := make(map[string]interface{})
-		dat, err := ioutil.ReadFile("../../testdata/data.json")
+		dat, err := ioutil.ReadFile("../testdata/data.json")
 		assert.NoError(t, err)
 		err = json.Unmarshal([]byte(dat), &data)
 		assert.NoError(t, err)
 
-		c := &Config{DataPath: "../../testdata/data.json"}
+		c := &Config{DataPath: "../testdata/data.json"}
 		err = c.initData()
 		assert.NoError(t, err)
 		assert.Equal(t, c.Data, data)

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/bojand/grpcannon"
+	"github.com/bojand/grpcannon/config"
 	"github.com/bojand/grpcannon/printer"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
@@ -97,22 +98,21 @@ func main() {
 
 	host := flag.Args()[0]
 
-	var cfg *Config
+	var cfg *config.Config
 
 	if _, err := os.Stat(localConfigName); err == nil {
-		cfg, err = ReadConfig(localConfigName)
+		cfg, err = config.ReadConfig(localConfigName)
 		if err != nil {
 			errAndExit(err.Error())
 		}
 	} else {
-
 		iPaths := []string{}
 		pathsTrimmed := strings.TrimSpace(*paths)
 		if pathsTrimmed != "" {
 			iPaths = strings.Split(pathsTrimmed, ",")
 		}
 
-		cfg, err = NewConfig(*proto, *call, *cert, *n, *c, *q, *z, *t,
+		cfg, err = config.New(*proto, *call, *cert, *n, *c, *q, *z, *t,
 			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths)
 		if err != nil {
 			errAndExit(err.Error())
@@ -155,7 +155,7 @@ func usageAndExit(msg string) {
 	os.Exit(1)
 }
 
-func runTest(config *Config) (*grpcannon.Report, error) {
+func runTest(config *config.Config) (*grpcannon.Report, error) {
 	mtd, err := getMethodDesc(config)
 	if err != nil {
 		return nil, err
@@ -198,7 +198,7 @@ func runTest(config *Config) (*grpcannon.Report, error) {
 	return reqr.Run()
 }
 
-func getMethodDesc(config *Config) (*desc.MethodDescriptor, error) {
+func getMethodDesc(config *config.Config) (*desc.MethodDescriptor, error) {
 	p := &protoparse.Parser{ImportPaths: config.ImportPaths}
 
 	fileName := filepath.Base(config.Proto)

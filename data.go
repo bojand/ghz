@@ -7,7 +7,13 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 )
 
+// checks if data is an array / slice of maps
 func isArrayData(data interface{}) bool {
+	_, isMapArray := data.([]map[string]interface{})
+	if isMapArray {
+		return true
+	}
+
 	arrData, isArrData := data.([]interface{})
 	if !isArrData {
 		return false
@@ -22,11 +28,13 @@ func isArrayData(data interface{}) bool {
 	return true
 }
 
+// checks that a data object is a map with string for keys
 func isMapData(data interface{}) bool {
 	_, isArrData := data.(map[string]interface{})
 	return isArrData
 }
 
+// creates a message from a map
 func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error {
 	for k, v := range *data {
 		err := input.TrySetFieldByName(k, v)

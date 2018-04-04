@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -36,7 +36,7 @@ type Config struct {
 }
 
 // NewConfig creates a new config
-func NewConfig(proto, call, cert string, n, c, qps int, z time.Duration, timeout int,
+func New(proto, call, cert string, n, c, qps int, z time.Duration, timeout int,
 	data, dataPath, metadata, mdPath, output, format, host string,
 	dialTimout, keepaliveTime, cpus int, importPaths []string) (*Config, error) {
 
@@ -267,6 +267,15 @@ func (c *Config) initMetadata() error {
 func checkData(data interface{}) error {
 	_, isObjData := data.(map[string]interface{})
 	if !isObjData {
+		mapArray, isMapArray := data.([]map[string]interface{})
+		if isMapArray {
+			if len(mapArray) == 0 {
+				return errors.New("Data array must not be empty")
+			}
+
+			return nil
+		}
+
 		arrData, isArrData := data.([]interface{})
 		if !isArrData {
 			return errors.New("Unsupported type for Data")
