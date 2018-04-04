@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expected = `{"proto":"asdf","call":"","cert":"","n":0,"c":0,"qps":0,"timeout":0,"dataPath":"","metadataPath":"","output":"","format":"oval","host":"","cpus":0,"z":"4h30m0s"}`
+const expected = `{"proto":"asdf","call":"","cert":"","n":0,"c":0,"qps":0,"timeout":0,"dataPath":"","metadataPath":"","output":"","format":"oval","host":"","connectionTimeout":0,"keepaliveTime":0,"cpus":0,"z":"4h30m0s"}`
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")

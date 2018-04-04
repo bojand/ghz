@@ -15,20 +15,23 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 )
 
 // Options represents the request options
 type Options struct {
-	Cert     string
-	N        int
-	C        int
-	QPS      int
-	Z        time.Duration
-	Timeout  int
-	Host     string
-	Data     interface{}
-	Metadata *map[string]string
+	Cert          string
+	N             int
+	C             int
+	QPS           int
+	Z             time.Duration
+	Timeout       int
+	DialTimtout   int
+	KeepaliveTime int
+	Host          string
+	Data          interface{}
+	Metadata      *map[string]string
 }
 
 // Max size of the buffer of result channel.
@@ -134,13 +137,32 @@ func (b *Requester) Finish() *Report {
 }
 
 func (b *Requester) connect() (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
 	credOptions, err := createClientCredOption(b.config)
 	if err != nil {
 		return nil, err
 	}
 
+	opts = append(opts, credOptions)
+
+	ctx := context.Background()
+	dialTime := time.Duration(b.config.DialTimtout * int(time.Second))
+	ctx, _ = context.WithTimeout(ctx, dialTime)
+	// cancel is ignored here as connection.Close() is used.
+	// See https://godoc.org/google.golang.org/grpc#DialContext
+
+	if b.config.KeepaliveTime > 0 {
+		timeout := time.Duration(b.config.KeepaliveTime * int(time.Second))
+		opts = append(opts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:    timeout,
+			Timeout: timeout,
+		}))
+	}
+
+	opts = append(opts, grpc.WithStatsHandler(&statsHandler{b.results}))
+
 	// create client connection
-	return grpc.Dial(b.config.Host, grpc.WithStatsHandler(&statsHandler{b.results}), credOptions)
+	return grpc.DialContext(ctx, b.config.Host, opts...)
 }
 
 func (b *Requester) runWorkers() {

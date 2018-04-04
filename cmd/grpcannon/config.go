@@ -14,45 +14,49 @@ import (
 
 // Config for the run.
 type Config struct {
-	Proto        string             `json:"proto"`
-	Call         string             `json:"call"`
-	Cert         string             `json:"cert"`
-	N            int                `json:"n"`
-	C            int                `json:"c"`
-	QPS          int                `json:"qps"`
-	Z            time.Duration      `json:"z"`
-	Timeout      int                `json:"timeout"`
-	Data         interface{}        `json:"data,omitempty"`
-	DataPath     string             `json:"dataPath"`
-	Metadata     *map[string]string `json:"metadata,omitempty"`
-	MetadataPath string             `json:"metadataPath"`
-	Output       string             `json:"output"`
-	Format       string             `json:"format"`
-	Host         string             `json:"host"`
-	CPUs         int                `json:"cpus"`
-	ImportPaths  []string           `json:"importPaths,omitempty"`
+	Proto         string             `json:"proto"`
+	Call          string             `json:"call"`
+	Cert          string             `json:"cert"`
+	N             int                `json:"n"`
+	C             int                `json:"c"`
+	QPS           int                `json:"qps"`
+	Z             time.Duration      `json:"z"`
+	Timeout       int                `json:"timeout"`
+	Data          interface{}        `json:"data,omitempty"`
+	DataPath      string             `json:"dataPath"`
+	Metadata      *map[string]string `json:"metadata,omitempty"`
+	MetadataPath  string             `json:"metadataPath"`
+	Output        string             `json:"output"`
+	Format        string             `json:"format"`
+	Host          string             `json:"host"`
+	DialTimeout   int                `json:"connectionTimeout"`
+	KeepaliveTime int                `json:"keepaliveTime"`
+	CPUs          int                `json:"cpus"`
+	ImportPaths   []string           `json:"importPaths,omitempty"`
 }
 
 // NewConfig creates a new config
 func NewConfig(proto, call, cert string, n, c, qps int, z time.Duration, timeout int,
 	data, dataPath, metadata, mdPath, output, format, host string,
-	cpus int, importPaths []string) (*Config, error) {
+	dialTimout, keepaliveTime, cpus int, importPaths []string) (*Config, error) {
 
 	cfg := &Config{
-		Proto:        proto,
-		Call:         call,
-		Cert:         cert,
-		N:            n,
-		C:            c,
-		QPS:          qps,
-		Z:            z,
-		Timeout:      timeout,
-		DataPath:     dataPath,
-		MetadataPath: mdPath,
-		Format:       format,
-		Host:         host,
-		ImportPaths:  importPaths,
-		CPUs:         cpus}
+		Proto:         proto,
+		Call:          call,
+		Cert:          cert,
+		N:             n,
+		C:             c,
+		QPS:           qps,
+		Z:             z,
+		Timeout:       timeout,
+		DataPath:      dataPath,
+		MetadataPath:  mdPath,
+		Format:        format,
+		Host:          host,
+		ImportPaths:   importPaths,
+		DialTimeout:   dialTimout,
+		KeepaliveTime: keepaliveTime,
+		CPUs:          cpus}
 
 	err := cfg.setData(data)
 	if err != nil {
@@ -133,6 +137,14 @@ func (c *Config) Validate() error {
 
 	if err := minValue(c.Timeout, 0); err != nil {
 		return errors.Wrap(err, "t")
+	}
+
+	if err := minValue(c.DialTimeout, 0); err != nil {
+		return errors.Wrap(err, "connectionTimeout")
+	}
+
+	if err := minValue(c.KeepaliveTime, 0); err != nil {
+		return errors.Wrap(err, "keepaliveTime")
 	}
 
 	if err := minValue(c.CPUs, 0); err != nil {

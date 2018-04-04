@@ -1,8 +1,6 @@
 package main
 
 // TODO
-// * Add keepalive options
-// * Add connetion timeout
 // * Add support for data from stdin
 // * goreleaser
 // * Add more metrics such as duration of different parts and size
@@ -44,6 +42,9 @@ var (
 	output = flag.String("o", "", "Output path")
 	format = flag.String("O", "", "Output format")
 
+	ct = flag.Int("T", 10, "Connection timeout in seconds for the initial connection dial.")
+	kt = flag.Int("L", 0, "Keepalive time in seconds.")
+
 	cpus = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
 
 	localConfigName = "grpcannon.json"
@@ -75,7 +76,10 @@ Options:
 	  metrics in comma-separated values format.
 	  
   -i  Comma separated list of proto import paths. The current working directory and the directory
-      of the protocol buffer file are automatically added to the import list.
+	  of the protocol buffer file are automatically added to the import list.
+	  
+  -T  Connection timeout in seconds for the initial connection dial. Default is 10.
+  -L  Keepalive time in seconds. Only used if present and above 0.
 
   -cpus		Number of used cpu cores. (default for current machine is %d cores)
 `
@@ -108,13 +112,11 @@ func main() {
 		}
 
 		cfg, err = NewConfig(*proto, *call, *cert, *n, *c, *q, *z, *t,
-			*data, *dataPath, *md, *mdPath, *output, *format, host, *cpus, iPaths)
+			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths)
 		if err != nil {
 			errAndExit(err.Error())
 		}
 	}
-
-	fmt.Printf("%+v\n", cfg.ImportPaths)
 
 	file, err := os.Open(cfg.Proto)
 	if err != nil {
@@ -159,15 +161,17 @@ func runTest(config *Config) (*grpcannon.Report, error) {
 	}
 
 	opts := &grpcannon.Options{
-		Cert:     config.Cert,
-		N:        config.N,
-		C:        config.C,
-		QPS:      config.QPS,
-		Z:        config.Z,
-		Timeout:  config.Timeout,
-		Host:     config.Host,
-		Data:     config.Data,
-		Metadata: config.Metadata,
+		Cert:          config.Cert,
+		N:             config.N,
+		C:             config.C,
+		QPS:           config.QPS,
+		Z:             config.Z,
+		Timeout:       config.Timeout,
+		DialTimtout:   config.DialTimeout,
+		KeepaliveTime: config.KeepaliveTime,
+		Host:          config.Host,
+		Data:          config.Data,
+		Metadata:      config.Metadata,
 	}
 
 	reqr, err := grpcannon.New(opts, mtd)
