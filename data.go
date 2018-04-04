@@ -9,11 +9,6 @@ import (
 
 // checks if data is an array / slice of maps
 func isArrayData(data interface{}) bool {
-	_, isMapArray := data.([]map[string]interface{})
-	if isMapArray {
-		return true
-	}
-
 	arrData, isArrData := data.([]interface{})
 	if !isArrData {
 		return false

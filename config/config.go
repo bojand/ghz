@@ -267,15 +267,6 @@ func (c *Config) initMetadata() error {
 func checkData(data interface{}) error {
 	_, isObjData := data.(map[string]interface{})
 	if !isObjData {
-		mapArray, isMapArray := data.([]map[string]interface{})
-		if isMapArray {
-			if len(mapArray) == 0 {
-				return errors.New("Data array must not be empty")
-			}
-
-			return nil
-		}
-
 		arrData, isArrData := data.([]interface{})
 		if !isArrData {
 			return errors.New("Unsupported type for Data")

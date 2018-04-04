@@ -45,7 +45,7 @@ func TestData_isArrayData(t *testing.T) {
 		assert.False(t, res)
 	})
 
-	t.Run("true when a slice of correct maps", func(t *testing.T) {
+	t.Run("false when a slice of maps as we require slice of ifaces which are maps", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 		m1["foo"] = "far"
@@ -56,7 +56,7 @@ func TestData_isArrayData(t *testing.T) {
 
 		s := []map[string]interface{}{m1, m2}
 		res := isArrayData(s)
-		assert.True(t, res)
+		assert.False(t, res)
 	})
 
 	t.Run("true when a slice of correct maps as interfaces", func(t *testing.T) {

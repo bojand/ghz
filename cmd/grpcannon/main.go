@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -19,8 +18,7 @@ import (
 	"github.com/bojand/grpcannon"
 	"github.com/bojand/grpcannon/config"
 	"github.com/bojand/grpcannon/printer"
-	"github.com/jhump/protoreflect/desc"
-	"github.com/jhump/protoreflect/desc/protoparse"
+	"github.com/bojand/grpcannon/protodesc"
 )
 
 var (
@@ -156,7 +154,7 @@ func usageAndExit(msg string) {
 }
 
 func runTest(config *config.Config) (*grpcannon.Report, error) {
-	mtd, err := getMethodDesc(config)
+	mtd, err := protodesc.GetMethodDesc(config.Call, config.Proto, config.ImportPaths)
 	if err != nil {
 		return nil, err
 	}
@@ -196,49 +194,4 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	}
 
 	return reqr.Run()
-}
-
-func getMethodDesc(config *config.Config) (*desc.MethodDescriptor, error) {
-	p := &protoparse.Parser{ImportPaths: config.ImportPaths}
-
-	fileName := filepath.Base(config.Proto)
-	fds, err := p.ParseFiles(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	fileDesc := fds[0]
-
-	svc, mth := parseSymbol(config.Call)
-	if svc == "" || mth == "" {
-		return nil, fmt.Errorf("given method name %q is not in expected format: 'service/method' or 'service.method'", config.Call)
-	}
-
-	dsc := fileDesc.FindSymbol(svc)
-	if dsc == nil {
-		return nil, fmt.Errorf("target server does not expose service %q", svc)
-	}
-
-	sd, ok := dsc.(*desc.ServiceDescriptor)
-	if !ok {
-		return nil, fmt.Errorf("target server does not expose service %q", svc)
-	}
-
-	mtd := sd.FindMethodByName(mth)
-	if mtd == nil {
-		return nil, fmt.Errorf("service %q does not include a method named %q", svc, mth)
-	}
-
-	return mtd, nil
-}
-
-func parseSymbol(svcAndMethod string) (string, string) {
-	pos := strings.LastIndex(svcAndMethod, "/")
-	if pos < 0 {
-		pos = strings.LastIndex(svcAndMethod, ".")
-		if pos < 0 {
-			return "", ""
-		}
-	}
-	return svcAndMethod[:pos], svcAndMethod[pos+1:]
 }
