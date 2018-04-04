@@ -88,7 +88,8 @@ func NewConfig(proto, call, cert string, n, c, qps int, z time.Duration, timeout
 	return cfg, nil
 }
 
-// Default implementation.
+// Default sets the defaults values for some of the properties
+// that need to have valid values
 func (c *Config) Default() {
 	if c.N == 0 {
 		c.N = 200
@@ -102,6 +103,14 @@ func (c *Config) Default() {
 		c.CPUs = runtime.GOMAXPROCS(-1)
 	}
 
+	if c.Timeout == 0 {
+		c.Timeout = 20
+	}
+
+	if c.DialTimeout == 0 {
+		c.DialTimeout = 10
+	}
+
 	c.ImportPaths = append(c.ImportPaths, ".")
 	dir := filepath.Dir(c.Proto)
 	if dir != "." {
@@ -109,7 +118,7 @@ func (c *Config) Default() {
 	}
 }
 
-// Validate implementation.
+// Validate the config
 func (c *Config) Validate() error {
 	if err := requiredString(c.Proto); err != nil {
 		return errors.Wrap(err, "proto")
@@ -161,6 +170,7 @@ func (c *Config) Validate() error {
 }
 
 // UnmarshalJSON is our custom implementation to handle the Duration field Z
+// and validate data
 func (c *Config) UnmarshalJSON(data []byte) error {
 	type Alias Config
 	aux := &struct {
@@ -184,28 +194,6 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func checkData(data interface{}) error {
-	_, isObjData := data.(map[string]interface{})
-	if !isObjData {
-		arrData, isArrData := data.([]interface{})
-		if !isArrData {
-			return errors.New("Unsupported type for Data")
-		}
-		if len(arrData) == 0 {
-			return errors.New("Data array must not be empty")
-		}
-		for _, elem := range arrData {
-			_, isObjData = elem.(map[string]interface{})
-			if !isObjData {
-				return errors.New("Data array contains unsupported type")
-			}
-		}
-
-	}
-
-	return nil
-}
-
 // MarshalJSON is our custom implementation to handle the Duration field Z
 func (c Config) MarshalJSON() ([]byte, error) {
 	type Alias Config
@@ -216,6 +204,16 @@ func (c Config) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&c),
 		Z:     c.Z.String(),
 	})
+}
+
+// ReadConfig reads the JSON config from path, applies the defaults and validates
+func ReadConfig(path string) (*Config, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseConfig(b)
 }
 
 // InitData returns the payload data
@@ -266,6 +264,28 @@ func (c *Config) initMetadata() error {
 	return nil
 }
 
+func checkData(data interface{}) error {
+	_, isObjData := data.(map[string]interface{})
+	if !isObjData {
+		arrData, isArrData := data.([]interface{})
+		if !isArrData {
+			return errors.New("Unsupported type for Data")
+		}
+		if len(arrData) == 0 {
+			return errors.New("Data array must not be empty")
+		}
+		for _, elem := range arrData {
+			_, isObjData = elem.(map[string]interface{})
+			if !isObjData {
+				return errors.New("Data array contains unsupported type")
+			}
+		}
+
+	}
+
+	return nil
+}
+
 // RequiredString checks if the required string is empty
 func requiredString(s string) error {
 	if strings.TrimSpace(s) == "" {
@@ -281,16 +301,6 @@ func minValue(v int, min int) error {
 	}
 
 	return nil
-}
-
-// ReadConfig reads config from path
-func ReadConfig(path string) (*Config, error) {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return parseConfig(b)
 }
 
 func parseConfigString(s string) (*Config, error) {

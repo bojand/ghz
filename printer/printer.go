@@ -22,7 +22,9 @@ type ReportPrinter struct {
 	Report *grpcannon.Report
 }
 
-// Print the report
+// Print the report using the given format
+// If format is "csv" detailed listing is printer in csv format.
+// Otherwise the summary of results is printed.
 func (rp *ReportPrinter) Print(format string) {
 	outputTmpl := format
 	switch outputTmpl {

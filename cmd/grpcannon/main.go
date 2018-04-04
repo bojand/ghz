@@ -162,6 +162,7 @@ func runTest(config *Config) (*grpcannon.Report, error) {
 	}
 
 	opts := &grpcannon.Options{
+		Host:          config.Host,
 		Cert:          config.Cert,
 		N:             config.N,
 		C:             config.C,
@@ -170,12 +171,11 @@ func runTest(config *Config) (*grpcannon.Report, error) {
 		Timeout:       config.Timeout,
 		DialTimtout:   config.DialTimeout,
 		KeepaliveTime: config.KeepaliveTime,
-		Host:          config.Host,
 		Data:          config.Data,
 		Metadata:      config.Metadata,
 	}
 
-	reqr, err := grpcannon.New(opts, mtd)
+	reqr, err := grpcannon.New(mtd, opts)
 	if err != nil {
 		return nil, err
 	}

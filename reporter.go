@@ -5,9 +5,6 @@ import (
 	"time"
 )
 
-// We report for max 1M results.
-// const maxResult = 1000000
-
 // Reporter gethers all the results
 type Reporter struct {
 	results chan *callResult

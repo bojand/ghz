@@ -21,6 +21,7 @@ import (
 
 // Options represents the request options
 type Options struct {
+	Host          string
 	Cert          string
 	N             int
 	C             int
@@ -29,16 +30,14 @@ type Options struct {
 	Timeout       int
 	DialTimtout   int
 	KeepaliveTime int
-	Host          string
 	Data          interface{}
 	Metadata      *map[string]string
 }
 
 // Max size of the buffer of result channel.
 const maxResult = 1000000
-const maxIdleConn = 500
 
-// Result is a result of a call
+// result of a call
 type callResult struct {
 	err      error
 	status   string
@@ -62,7 +61,7 @@ type Requester struct {
 }
 
 // New creates new Requester
-func New(c *Options, mtd *desc.MethodDescriptor) (*Requester, error) {
+func New(mtd *desc.MethodDescriptor, c *Options) (*Requester, error) {
 	md := mtd.GetInputType()
 	payloadMessage := dynamic.NewMessage(md)
 	if payloadMessage == nil {
