@@ -3,6 +3,8 @@ package grpcannon
 import (
 	"testing"
 
+	"github.com/bojand/grpcannon/protodesc"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -153,5 +155,115 @@ func TestData_isMapData(t *testing.T) {
 		s := []map[string]interface{}{m1, m2}
 		res := isMapData(s)
 		assert.False(t, res)
+	})
+}
+
+func TestData_createPayloads(t *testing.T) {
+	mtdUnary, err := protodesc.GetMethodDesc(
+		"helloworld.Greeter.SayHello",
+		"./testdata/greeter.proto",
+		nil)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, mtdUnary)
+
+	mtdClientStreaming, err := protodesc.GetMethodDesc(
+		"helloworld.Greeter.SayHelloCS",
+		"./testdata/greeter.proto",
+		nil)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, mtdClientStreaming)
+
+	t.Run("fail when nil", func(t *testing.T) {
+		single, streaming, err := createPayloads(nil, mtdUnary)
+		assert.Error(t, err)
+		assert.Nil(t, single)
+		assert.Nil(t, streaming)
+	})
+
+	t.Run("fail for invalid data shape", func(t *testing.T) {
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m1["unknown"] = "field"
+
+		single, streaming, err := createPayloads(m1, mtdUnary)
+		assert.Error(t, err)
+		assert.Nil(t, single)
+		assert.Nil(t, streaming)
+	})
+
+	t.Run("create single object from map for unary", func(t *testing.T) {
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+
+		single, streaming, err := createPayloads(m1, mtdUnary)
+		assert.NoError(t, err)
+		assert.NotNil(t, single)
+		assert.Empty(t, streaming)
+	})
+
+	t.Run("create array from map for client streaming", func(t *testing.T) {
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+
+		single, streaming, err := createPayloads(m1, mtdClientStreaming)
+		assert.NoError(t, err)
+		assert.Nil(t, single)
+		assert.NotNil(t, streaming)
+		assert.Len(t, *streaming, 1)
+	})
+
+	t.Run("create slice of messages from slice for client streaming", func(t *testing.T) {
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+
+		m2 := make(map[string]interface{})
+		m2["name"] = "kate"
+
+		s := []interface{}{m1, m2}
+
+		single, streaming, err := createPayloads(s, mtdClientStreaming)
+		assert.NoError(t, err)
+		assert.Nil(t, single)
+		assert.NotNil(t, streaming)
+		assert.Len(t, *streaming, 2)
+	})
+
+	t.Run("fail on invalid shape of data in slice for client streaming", func(t *testing.T) {
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+
+		m2 := make(map[string]interface{})
+		m2["name"] = "kate"
+
+		m3 := make(map[string]interface{})
+		m3["name"] = "Jim"
+		m3["foo"] = "bar"
+
+		s := []interface{}{m1, m2, m3}
+
+		single, streaming, err := createPayloads(s, mtdClientStreaming)
+		assert.Error(t, err)
+		assert.Nil(t, single)
+		assert.Nil(t, streaming)
+	})
+
+	t.Run("get object for slice and unary", func(t *testing.T) {
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+
+		m2 := make(map[string]interface{})
+		m2["name"] = "kate"
+
+		m3 := make(map[string]interface{})
+		m3["name"] = "Jim"
+
+		s := []interface{}{m1, m2, m3}
+
+		single, streaming, err := createPayloads(s, mtdUnary)
+		assert.NoError(t, err)
+		assert.NotNil(t, single)
+		assert.Empty(t, streaming)
 	})
 }

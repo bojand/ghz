@@ -73,9 +73,15 @@ func createPayloads(data interface{}, mtd *desc.MethodDescriptor) (*dynamic.Mess
 		return nil, nil, errors.New("Unsupported type for Data")
 	}
 
-	if mtd.IsClientStreaming() && streamInput == nil && input != nil {
+	if mtd.IsClientStreaming() && len(streamInput) == 0 && input != nil {
 		streamInput = make([]*dynamic.Message, 1)
 		streamInput[0] = input
+		input = nil
+	}
+
+	if !mtd.IsClientStreaming() && input == nil && len(streamInput) > 0 {
+		input = streamInput[0]
+		streamInput = nil
 	}
 
 	return input, &streamInput, nil
