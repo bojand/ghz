@@ -117,12 +117,6 @@ func main() {
 		}
 	}
 
-	file, err := os.Open(cfg.Proto)
-	if err != nil {
-		errAndExit(err.Error())
-	}
-	defer file.Close()
-
 	runtime.GOMAXPROCS(cfg.CPUs)
 
 	report, err := runTest(cfg)
