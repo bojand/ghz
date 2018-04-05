@@ -1,9 +1,10 @@
 package grpcannon
 
 import (
-	"fmt"
 	"net"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -33,10 +34,11 @@ func startServer() (*helloworld.Greeter, *grpc.Server, error) {
 }
 
 func TestRequestUnary(t *testing.T) {
-	fmt.Println("starting server")
 	gs, s, err := startServer()
-	fmt.Println("server started")
 	assert.NoError(t, err)
+	assert.Nil(t, err)
+	assert.NotNil(t, gs)
+	assert.NotNil(t, s)
 	defer s.Stop()
 
 	md, err := protodesc.GetMethodDesc("helloworld.Greeter.SayHello", "./testdata/greeter.proto", []string{})
@@ -45,7 +47,6 @@ func TestRequestUnary(t *testing.T) {
 	data["name"] = "bob"
 
 	t.Run("test N", func(t *testing.T) {
-		fmt.Printf("testing N")
 		reqr, err := New(md, &Options{
 			Host:        localhost,
 			N:           20,
@@ -61,5 +62,34 @@ func TestRequestUnary(t *testing.T) {
 		assert.NotNil(t, report)
 		count := gs.CallCounts["unary"]
 		assert.Equal(t, 20, count)
+	})
+
+	t.Run("test QPS", func(t *testing.T) {
+		var wg sync.WaitGroup
+		reqr, err := New(md, &Options{
+			Host:        localhost,
+			N:           20,
+			C:           2,
+			QPS:         1,
+			Timeout:     20,
+			DialTimtout: 20,
+			Data:        data,
+		})
+		assert.NoError(t, err)
+
+		wg.Add(1)
+
+		time.AfterFunc(time.Second, func() {
+			count := gs.CallCounts["unary"]
+			assert.Equal(t, 1, count)
+		})
+
+		go func() {
+			report, err := reqr.Run()
+			assert.NoError(t, err)
+			assert.NotNil(t, report)
+			wg.Done()
+		}()
+		wg.Wait()
 	})
 }
