@@ -35,10 +35,11 @@ func startServer() (*helloworld.Greeter, *grpc.Server, error) {
 
 func TestRequestUnary(t *testing.T) {
 	gs, s, err := startServer()
-	assert.NoError(t, err)
-	assert.Nil(t, err)
-	assert.NotNil(t, gs)
-	assert.NotNil(t, s)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
 	defer s.Stop()
 
 	md, err := protodesc.GetMethodDesc("helloworld.Greeter.SayHello", "./testdata/greeter.proto", []string{})
@@ -47,6 +48,8 @@ func TestRequestUnary(t *testing.T) {
 	data["name"] = "bob"
 
 	t.Run("test N", func(t *testing.T) {
+		gs.ResetCounters()
+
 		reqr, err := New(md, &Options{
 			Host:        localhost,
 			N:           20,
@@ -65,7 +68,10 @@ func TestRequestUnary(t *testing.T) {
 	})
 
 	t.Run("test QPS", func(t *testing.T) {
+		gs.ResetCounters()
+
 		var wg sync.WaitGroup
+
 		reqr, err := New(md, &Options{
 			Host:        localhost,
 			N:           20,
@@ -79,9 +85,9 @@ func TestRequestUnary(t *testing.T) {
 
 		wg.Add(1)
 
-		time.AfterFunc(time.Second, func() {
+		time.AfterFunc(time.Duration(1500*time.Millisecond), func() {
 			count := gs.CallCounts["unary"]
-			assert.Equal(t, 1, count)
+			assert.Equal(t, 2, count)
 		})
 
 		go func() {
