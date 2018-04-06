@@ -1,4 +1,4 @@
-uild:
+build:
   main: cmd/grpcannon/main.go
   binary: grpcannon
   goos:
