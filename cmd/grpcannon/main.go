@@ -22,6 +22,9 @@ import (
 )
 
 var (
+	// set by goreleaser with -ldflags="-X main.version=..."
+	version = "dev"
+
 	proto = flag.String("proto", "", `The .proto file.`)
 	call  = flag.String("call", "", `A fully-qualified symbol name.`)
 	cert  = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
@@ -82,6 +85,8 @@ Options:
   -L  Keepalive time in seconds. Only used if present and above 0.
 
   -cpus		Number of used cpu cores. (default for current machine is %d cores)
+
+  -v  Print the version.
 `
 
 func main() {
@@ -89,7 +94,16 @@ func main() {
 		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
 	}
 
+	var verFlag versionFlag
+	flag.Var(&verFlag, "v", "Print the version.")
+
 	flag.Parse()
+
+	if verFlag.set {
+		fmt.Println(version)
+		os.Exit(1)
+	}
+
 	if flag.NArg() < 1 {
 		usageAndExit("")
 	}
@@ -188,4 +202,21 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	}
 
 	return reqr.Run()
+}
+
+type versionFlag struct {
+	set bool
+}
+
+func (vf *versionFlag) Set(_ string) error {
+	vf.set = true
+	return nil
+}
+
+func (vf *versionFlag) String() string {
+	return fmt.Sprintf("%t", vf.set)
+}
+
+func (vf versionFlag) IsBoolFlag() bool {
+	return true
 }
