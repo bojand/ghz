@@ -86,7 +86,7 @@ func New(mtd *desc.MethodDescriptor, c *Options) (*Requester, error) {
 		reqMD:       reqMD, mtd: mtd}, nil
 }
 
-// Run makes all the requests, prints the summary.
+// Run makes all the requests and returns a report of results
 // It blocks until all work is done.
 func (b *Requester) Run() (*Report, error) {
 	b.results = make(chan *callResult, min(b.config.C*1000, maxResult))

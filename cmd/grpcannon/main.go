@@ -1,11 +1,5 @@
 package main
 
-// TODO
-// * Add support for data from stdin
-// * Docs and more tests
-// * goreleaser
-// * Add more metrics such as duration of different parts and size
-
 import (
 	"flag"
 	"fmt"
