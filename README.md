@@ -93,7 +93,7 @@ Example `grpcannon.json`
 
 Sample standard output of summary of the results:
 
-```sh
+```
 Summary:
   Count:	2000
   Total:	345.52 ms
