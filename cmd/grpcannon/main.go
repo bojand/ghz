@@ -50,6 +50,8 @@ var (
 
 	cpus = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
 
+	v = flag.Bool("v", false, "Print the version.")
+
 	localConfigName = "grpcannon.json"
 )
 
@@ -94,14 +96,11 @@ func main() {
 		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
 	}
 
-	var verFlag versionFlag
-	flag.Var(&verFlag, "v", "Print the version.")
-
 	flag.Parse()
 
-	if verFlag.set {
+	if *v {
 		fmt.Println(version)
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	if flag.NArg() < 1 {
@@ -202,21 +201,4 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	}
 
 	return reqr.Run()
-}
-
-type versionFlag struct {
-	set bool
-}
-
-func (vf *versionFlag) Set(_ string) error {
-	vf.set = true
-	return nil
-}
-
-func (vf *versionFlag) String() string {
-	return fmt.Sprintf("%t", vf.set)
-}
-
-func (vf versionFlag) IsBoolFlag() bool {
-	return true
 }
