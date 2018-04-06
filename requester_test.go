@@ -34,7 +34,7 @@ func startServer() (*helloworld.Greeter, *grpc.Server, error) {
 }
 
 func TestRequesterUnary(t *testing.T) {
-	callType := "unary"
+	callType := helloworld.Unary
 
 	gs, s, err := startServer()
 
@@ -127,7 +127,7 @@ func TestRequesterUnary(t *testing.T) {
 }
 
 func TestRequesterServerStreaming(t *testing.T) {
-	callType := "ss"
+	callType := helloworld.ServerStream
 
 	gs, s, err := startServer()
 
@@ -164,7 +164,7 @@ func TestRequesterServerStreaming(t *testing.T) {
 }
 
 func TestRequesterClientStreaming(t *testing.T) {
-	callType := "cs"
+	callType := helloworld.ClientStream
 
 	gs, s, err := startServer()
 
@@ -211,7 +211,7 @@ func TestRequesterClientStreaming(t *testing.T) {
 }
 
 func TestRequesterBidi(t *testing.T) {
-	callType := "bidi"
+	callType := helloworld.Bidi
 
 	gs, s, err := startServer()
 

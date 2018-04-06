@@ -8,9 +8,3 @@ uild:
   goarch:
     - amd64
     - 386
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^refactor'

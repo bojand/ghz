@@ -8,18 +8,34 @@ import (
 	context "golang.org/x/net/context"
 )
 
+// CallType represents one of the gRPC call types:
+// unary, client streaming, server streaming, bidi
+type CallType string
+
+// Unary is a uniry call
+var Unary CallType = "unary"
+
+// ClientStream is a client streaming call
+var ClientStream CallType = "cs"
+
+// ServerStream is a server streaming call
+var ServerStream CallType = "ss"
+
+// Bidi is a bidi / duplex call
+var Bidi CallType = "bidi"
+
 // Greeter implements the GreeterServer for tests
 type Greeter struct {
 	streamData []*HelloReply
 	mutex      *sync.Mutex
 
-	callCounts map[string]int
+	callCounts map[CallType]int
 }
 
 // SayHello implements helloworld.GreeterServer
 func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, error) {
 	s.mutex.Lock()
-	s.callCounts["unary"]++
+	s.callCounts[Unary]++
 	s.mutex.Unlock()
 
 	return &HelloReply{Message: "Hello " + in.Name}, nil
@@ -28,7 +44,7 @@ func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, 
 // SayHellos lists all hellos
 func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) error {
 	s.mutex.Lock()
-	s.callCounts["ss"]++
+	s.callCounts[ServerStream]++
 	s.mutex.Unlock()
 
 	for _, msg := range s.streamData {
@@ -43,7 +59,7 @@ func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) e
 // SayHelloCS is client streaming handler
 func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 	s.mutex.Lock()
-	s.callCounts["cs"]++
+	s.callCounts[ClientStream]++
 	s.mutex.Unlock()
 
 	msgCount := 0
@@ -64,7 +80,7 @@ func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 // SayHelloBidi duplex call handler
 func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 	s.mutex.Lock()
-	s.callCounts["bidi"]++
+	s.callCounts[Bidi]++
 	s.mutex.Unlock()
 
 	for {
@@ -86,18 +102,16 @@ func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 // ResetCounters resets the call counts
 func (s *Greeter) ResetCounters() {
 	s.mutex.Lock()
-	s.callCounts["unary"] = 0
-	s.callCounts["ss"] = 0
-	s.callCounts["cs"] = 0
-	s.callCounts["bidi"] = 0
+	s.callCounts[Unary] = 0
+	s.callCounts[ServerStream] = 0
+	s.callCounts[ClientStream] = 0
+	s.callCounts[Bidi] = 0
 	s.mutex.Unlock()
 }
 
 // GetCount gets the count for specific call type
-func (s *Greeter) GetCount(key string) int {
-	s.mutex.Lock()
+func (s *Greeter) GetCount(key CallType) int {
 	val, ok := s.callCounts[key]
-	s.mutex.Unlock()
 	if ok {
 		return val
 	}
@@ -113,11 +127,11 @@ func NewGreeter() *Greeter {
 		&HelloReply{Message: "Hello Sara"},
 	}
 
-	m := make(map[string]int)
-	m["unary"] = 0
-	m["ss"] = 0
-	m["cs"] = 0
-	m["bidi"] = 0
+	m := make(map[CallType]int)
+	m[Unary] = 0
+	m[ServerStream] = 0
+	m[ClientStream] = 0
+	m[Bidi] = 0
 
 	return &Greeter{streamData: streamData, callCounts: m, mutex: &sync.Mutex{}}
 }
