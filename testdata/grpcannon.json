@@ -1,11 +1,11 @@
 {
     "proto": "my.proto",
     "call": "mycall",
-    "cacert": "mycert",
-    "data": {
+    "cert": "mycert",
+    "d": {
         "name": "mydata"
     },
-    "importPaths": [
+    "i": [
         "/path/to/protos"
     ]
 }

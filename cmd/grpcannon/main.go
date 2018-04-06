@@ -57,9 +57,9 @@ var (
 
 var usage = `Usage: grpcannon [options...] <host>
 Options:
-  -proto	The Protocol Buffer file
+  -proto	The protocol buffer file.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
-  -cert		File containing client certificate (public key), to present to the server.
+  -cert		The file containing the CA root cert file.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
 	  be smaller than the concurrency level. Default is 50.

@@ -19,20 +19,20 @@ type Config struct {
 	Cert          string             `json:"cert"`
 	N             int                `json:"n"`
 	C             int                `json:"c"`
-	QPS           int                `json:"qps"`
+	QPS           int                `json:"q"`
 	Z             time.Duration      `json:"z"`
-	Timeout       int                `json:"timeout"`
-	Data          interface{}        `json:"data,omitempty"`
-	DataPath      string             `json:"dataPath"`
-	Metadata      *map[string]string `json:"metadata,omitempty"`
-	MetadataPath  string             `json:"metadataPath"`
-	Output        string             `json:"output"`
-	Format        string             `json:"format"`
+	Timeout       int                `json:"t"`
+	Data          interface{}        `json:"d,omitempty"`
+	DataPath      string             `json:"D"`
+	Metadata      *map[string]string `json:"m,omitempty"`
+	MetadataPath  string             `json:"M"`
+	Output        string             `json:"o"`
+	Format        string             `json:"O"`
 	Host          string             `json:"host"`
-	DialTimeout   int                `json:"connectionTimeout"`
-	KeepaliveTime int                `json:"keepaliveTime"`
+	DialTimeout   int                `json:"T"`
+	KeepaliveTime int                `json:"L"`
 	CPUs          int                `json:"cpus"`
-	ImportPaths   []string           `json:"importPaths,omitempty"`
+	ImportPaths   []string           `json:"i,omitempty"`
 }
 
 // NewConfig creates a new config

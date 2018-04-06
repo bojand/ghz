@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expected = `{"proto":"asdf","call":"","cert":"","n":0,"c":0,"qps":0,"timeout":0,"dataPath":"","metadataPath":"","output":"","format":"oval","host":"","connectionTimeout":0,"keepaliveTime":0,"cpus":0,"z":"4h30m0s"}`
+const expected = `{"proto":"asdf","call":"","cert":"","n":0,"c":0,"q":0,"t":0,"D":"","M":"","o":"","O":"oval","host":"","T":0,"L":0,"cpus":0,"z":"4h30m0s"}`
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")
@@ -44,7 +44,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data empty string should fail", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":""}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":""}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -53,7 +53,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data string should fail", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":"bob"}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":"bob"}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -62,7 +62,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data array of strings should fail", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":["bob", "kate"]}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":["bob", "kate"]}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -71,7 +71,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data empty object", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":{}}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":{}}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -81,7 +81,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data empty array", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":[]}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[]}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -90,7 +90,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data valid object", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":{"name":"bob"}}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":{"name":"bob"}}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -102,7 +102,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data valid array of objects", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":[{"name":"bob"}, {"name":"kate"}]}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[{"name":"bob"}, {"name":"kate"}]}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -125,7 +125,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data valid array of empty objects", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":[{},{},{}]}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[{},{},{}]}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -146,7 +146,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data valid array of mixed objects", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":[{},{"name":"bob"},{}]}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[{},{"name":"bob"},{}]}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -169,7 +169,7 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 	})
 
 	t.Run("data mixed with invalid should fail", func(t *testing.T) {
-		jsonStr := `{"proto":"pf", "call":"sc", "data":[{"name":"bob"},"kate",{"name":"kate"}]}`
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[{"name":"bob"},"kate",{"name":"kate"}]}`
 		c := Config{}
 		err := json.Unmarshal([]byte(jsonStr), &c)
 
@@ -197,7 +197,7 @@ func TestConfig_ReadConfig(t *testing.T) {
 		Proto:         "my.proto",
 		Call:          "mycall",
 		Data:          data,
-		Cert:          "",
+		Cert:          "mycert",
 		N:             200,
 		C:             50,
 		QPS:           0,
