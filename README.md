@@ -9,6 +9,10 @@ Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [h
 
 ![demo](grpcannon.gif)
 
+## Install
+
+Download a prebuild executable binary from the [releases page](https://github.com/bojand/grpcannon/releases).
+
 ## Usage
 
 ```
