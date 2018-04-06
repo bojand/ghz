@@ -88,6 +88,60 @@ Example `grpcannon.json`
 }
 ```
 
+## Output
+
+Sample standard output:
+
+```sh
+Summary:
+  Count:	2000
+  Total:	345.52 ms
+  Slowest:	15.41 ms
+  Fastest:	0.66 ms
+  Average:	6.83 ms
+  Requests/sec:	5788347.22
+
+Response time histogram:
+  0.664 [1]	|
+  2.138 [36]	|∎
+  3.613 [14]	|
+  5.087 [65]	|∎∎
+  6.561 [1305]	|∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  8.035 [274]	|∎∎∎∎∎∎∎∎
+  9.509 [66]	|∎∎
+  10.983 [0]	|
+  12.458 [59]	|∎∎
+  13.932 [130]	|∎∎∎∎
+  15.406 [50]	|∎∎
+
+Latency distribution:
+  10% in 5.18 ms
+  25% in 5.51 ms
+  50% in 6.10 ms
+  75% in 6.72 ms
+  90% in 12.19 ms
+  95% in 13.26 ms
+  99% in 14.73 ms
+Status code distribution:
+  [OK]	2000 responses
+```
+
+Alternatively with `-O csv` flag we can get detailed listing in csv format:
+
+```sh
+duration (ms),status,error
+1.43,OK,
+0.39,OK,
+0.36,OK,
+0.50,OK,
+0.36,OK,
+0.40,OK,
+0.37,OK,
+0.34,OK,
+0.35,OK,
+0.32,OK,
+```
+
 ## License
 
 Apache-2.0
