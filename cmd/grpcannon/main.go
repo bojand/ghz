@@ -73,7 +73,7 @@ Options:
   -d  The call data as stringified JSON.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
   -m  Request metadata as stringified JSON.
-  -M  Path for call data JSON file. For example, /home/user/metadata.json or ./metadata.json.
+  -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
  
   -o  Output path. If none provided stdout is used.
   -O  Output type. If none provided, a summary is printed.

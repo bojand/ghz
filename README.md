@@ -1,6 +1,7 @@
 # grpcannon
 
 [![build status](https://img.shields.io/travis/bojand/grpcannon/master.svg?style=flat-square)](https://travis-ci.org/bojand/grpcannon)
+![EXPERIMENTAL](https://img.shields.io/badge/STATUS-EXPERIMENTAL-orange.svg?style=flat-square)
 
 Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [hey](https://github.com/rakyll/hey/) and [grpcurl](https://github.com/fullstorydev/grpcurl).
 
@@ -29,7 +30,7 @@ Options:
   -d  The call data as stringified JSON.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
   -m  Request metadata as stringified JSON.
-  -M  Path for call data JSON file. For example, /home/user/metadata.json or ./metadata.json.
+  -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
 
   -o  Output path. If none provided stdout is used.
   -O  Output type. If none provided, a summary is printed.
@@ -54,19 +55,19 @@ Alternatively all settings can be set via `grpcannon.json` file if present in th
 A simple unary call:
 
 ```sh
-/grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' 0.0.0.0:50051
+grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' 0.0.0.0:50051
 ```
 
 Custom number of requests and concurrency:
 
 ```sh
-/grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' -n 2000 -c 20 0.0.0.0:50051
+grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' -n 2000 -c 20 0.0.0.0:50051
 ```
 
 Client streaming data can be sent as an array, each element representing a single message:
 
 ```sh
-/grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHelloCS -d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]' 0.0.0.0:50051
+grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHelloCS -d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]' 0.0.0.0:50051
 ```
 
 If a single object is given for data it is sent as every message.
@@ -90,7 +91,7 @@ Example `grpcannon.json`
 
 ## Output
 
-Sample standard output:
+Sample standard output of summary of the results:
 
 ```sh
 Summary:
@@ -140,6 +141,7 @@ duration (ms),status,error
 0.34,OK,
 0.35,OK,
 0.32,OK,
+...
 ```
 
 ## License
