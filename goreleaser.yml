@@ -7,4 +7,3 @@ build:
     - windows
   goarch:
     - amd64
-    - 386
