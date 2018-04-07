@@ -1,7 +1,6 @@
 # grpcannon
 
 [![build status](https://img.shields.io/travis/bojand/grpcannon/master.svg?style=flat-square)](https://travis-ci.org/bojand/grpcannon)
-![EXPERIMENTAL](https://img.shields.io/badge/STATUS-EXPERIMENTAL-orange.svg?style=flat-square)
 
 Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [hey](https://github.com/rakyll/hey/) and [grpcurl](https://github.com/fullstorydev/grpcurl).
 
