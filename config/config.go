@@ -68,19 +68,7 @@ func New(proto, call, cert string, n, c, qps int, z time.Duration, timeout int,
 		return nil, err
 	}
 
-	err = cfg.initData()
-	if err != nil {
-		return nil, err
-	}
-
-	err = cfg.initMetadata()
-	if err != nil {
-		return nil, err
-	}
-
-	cfg.Default()
-
-	err = cfg.Validate()
+	err = cfg.init()
 	if err != nil {
 		return nil, err
 	}
@@ -264,6 +252,27 @@ func (c *Config) initMetadata() error {
 	return nil
 }
 
+func (c *Config) init() error {
+	err := c.initData()
+	if err != nil {
+		return err
+	}
+
+	err = c.initMetadata()
+	if err != nil {
+		return err
+	}
+
+	c.Default()
+
+	err = c.Validate()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func checkData(data interface{}) error {
 	_, isObjData := data.(map[string]interface{})
 	if !isObjData {
@@ -314,10 +323,9 @@ func parseConfig(b []byte) (*Config, error) {
 		return nil, errors.Wrap(err, "parsing json")
 	}
 
-	c.Default()
-
-	if err := c.Validate(); err != nil {
-		return nil, errors.Wrap(err, "validating")
+	err := c.init()
+	if err != nil {
+		return nil, err
 	}
 
 	return c, nil

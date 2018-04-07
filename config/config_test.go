@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"runtime"
 	"testing"
 	"time"
@@ -176,6 +177,60 @@ func TestConfig_UnmarshalJSON(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, "Data array contains unsupported type", err.Error())
 	})
+
+	t.Run("invalid metadata array", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[{"name":"bob"},{"name":"kate"}],"m":["requestId","1234"]}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("invalid metadata shape", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[{"name":"bob"},{"name":"kate"}],"m":{"requestId":{"n":"1234"}}}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("invalid metadata type", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[{"name":"bob"},{"name":"kate"}],"m":{"requestId":1234}}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("metadata", func(t *testing.T) {
+		jsonStr := `{"proto":"pf", "call":"sc", "d":[{"name":"bob"},{"name":"kate"}],"m":{"requestId":"1234"}}`
+		c := Config{}
+		err := json.Unmarshal([]byte(jsonStr), &c)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, c.Data)
+		assert.NotEmpty(t, c.Data)
+		assert.Len(t, c.Data, 2)
+
+		expected1 := make(map[string]interface{})
+		expected2 := make(map[string]interface{})
+		expected1["name"] = "bob"
+		expected2["name"] = "kate"
+
+		actual, ok := c.Data.([]interface{})
+		assert.True(t, ok)
+		assert.NotNil(t, actual)
+
+		assert.Equal(t, expected1, actual[0])
+		assert.Equal(t, expected2, actual[1])
+
+		assert.Equal(t, "pf", c.Proto)
+		assert.Equal(t, "sc", c.Call)
+
+		expectedMD := make(map[string]string, 1)
+		expectedMD["requestId"] = "1234"
+		assert.Equal(t, expectedMD, *c.Metadata)
+	})
 }
 
 func TestConfig_Default(t *testing.T) {
@@ -188,35 +243,86 @@ func TestConfig_Default(t *testing.T) {
 }
 
 func TestConfig_ReadConfig(t *testing.T) {
-	c, err := ReadConfig("../testdata/grpcannon.json")
+	os.Chdir("../testdata/")
 
-	data := make(map[string]interface{})
-	data["name"] = "mydata"
+	t.Run("grpcannon.json", func(t *testing.T) {
+		c, err := ReadConfig("../testdata/grpcannon.json")
 
-	ec := Config{
-		Proto:         "my.proto",
-		Call:          "mycall",
-		Data:          data,
-		Cert:          "mycert",
-		N:             200,
-		C:             50,
-		QPS:           0,
-		Z:             0,
-		Timeout:       20,
-		DataPath:      "",
-		MetadataPath:  "",
-		Format:        "",
-		Output:        "",
-		Host:          "",
-		DialTimeout:   10,
-		KeepaliveTime: 0,
-		CPUs:          runtime.GOMAXPROCS(-1),
-		ImportPaths:   []string{"/path/to/protos", "."}}
+		assert.NoError(t, err)
+		assert.NotNil(t, c)
 
-	assert.NoError(t, err)
+		if c != nil {
+			data := make(map[string]interface{})
+			data["name"] = "mydata"
 
-	assert.Equal(t, ec, *c)
-	assert.Equal(t, ec.Data, c.Data)
+			ec := Config{
+				Proto:         "my.proto",
+				Call:          "mycall",
+				Data:          data,
+				Cert:          "mycert",
+				N:             200,
+				C:             50,
+				QPS:           0,
+				Z:             0,
+				Timeout:       20,
+				DataPath:      "",
+				MetadataPath:  "",
+				Format:        "",
+				Output:        "",
+				Host:          "",
+				DialTimeout:   10,
+				KeepaliveTime: 0,
+				CPUs:          runtime.GOMAXPROCS(-1),
+				ImportPaths:   []string{"/path/to/protos", "."}}
+
+			assert.Equal(t, ec, *c)
+			assert.Equal(t, ec.Data, c.Data)
+		}
+	})
+
+	t.Run("cfgpath.json", func(t *testing.T) {
+		c, err := ReadConfig("../testdata/cfgpath.json")
+
+		assert.NoError(t, err)
+		assert.NotNil(t, c)
+
+		if c != nil {
+			data := make(map[string]interface{})
+			data["name"] = "mydata"
+
+			metaData := make(map[string]string)
+			metaData["requestId"] = "12345"
+
+			ec := Config{
+				Proto:         "my.proto",
+				Call:          "mycall",
+				Data:          data,
+				Cert:          "mycert",
+				N:             200,
+				C:             50,
+				QPS:           0,
+				Z:             0,
+				Timeout:       20,
+				Metadata:      &metaData,
+				DataPath:      "./data.json",
+				MetadataPath:  "./metadata.json",
+				Format:        "",
+				Output:        "",
+				Host:          "",
+				DialTimeout:   10,
+				KeepaliveTime: 0,
+				CPUs:          runtime.GOMAXPROCS(-1),
+				ImportPaths:   []string{"/path/to/protos", "."}}
+
+			assert.Equal(t, ec, *c)
+			assert.Equal(t, ec.Data, c.Data)
+			assert.Equal(t, ec.Metadata, c.Metadata)
+
+			actualMD := *c.Metadata
+			val := actualMD["requestId"]
+			assert.Equal(t, "12345", val)
+		}
+	})
 }
 
 func TestConfig_Validate(t *testing.T) {
