@@ -11,18 +11,29 @@ import (
 	"github.com/bojand/grpcannon/internal/helloworld"
 	"github.com/bojand/grpcannon/protodesc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const port = ":50051"
-const localhost = "0.0.0.0:50051"
+const localhost = "localhost:50051"
 
-func startServer() (*helloworld.Greeter, *grpc.Server, error) {
+func startServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	s := grpc.NewServer()
+	var opts []grpc.ServerOption
+
+	if secure {
+		creds, err := credentials.NewServerTLSFromFile("./testdata/localhost.crt", "./testdata/localhost.key")
+		if err != nil {
+			return nil, nil, err
+		}
+		opts = []grpc.ServerOption{grpc.Creds(creds)}
+	}
+
+	s := grpc.NewServer(opts...)
 
 	gs := helloworld.NewGreeter()
 	helloworld.RegisterGreeterServer(s, gs)
@@ -36,7 +47,7 @@ func startServer() (*helloworld.Greeter, *grpc.Server, error) {
 func TestRequesterUnary(t *testing.T) {
 	callType := helloworld.Unary
 
-	gs, s, err := startServer()
+	gs, s, err := startServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -65,7 +76,8 @@ func TestRequesterUnary(t *testing.T) {
 		report, err := reqr.Run()
 		assert.NoError(t, err)
 		assert.NotNil(t, report)
-		assert.Equal(t, uint64(1), report.Count)
+		assert.Equal(t, 1, int(report.Count))
+		assert.Len(t, report.ErrorDist, 0)
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 1, count)
@@ -88,6 +100,7 @@ func TestRequesterUnary(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, report)
 		assert.Equal(t, 12, int(report.Count))
+		assert.Len(t, report.ErrorDist, 0)
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 12, count)
@@ -120,6 +133,7 @@ func TestRequesterUnary(t *testing.T) {
 			report, err := reqr.Run()
 			assert.NoError(t, err)
 			assert.NotNil(t, report)
+			assert.Len(t, report.ErrorDist, 0)
 			wg.Done()
 		}()
 		wg.Wait()
@@ -129,7 +143,7 @@ func TestRequesterUnary(t *testing.T) {
 func TestRequesterServerStreaming(t *testing.T) {
 	callType := helloworld.ServerStream
 
-	gs, s, err := startServer()
+	gs, s, err := startServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -158,6 +172,7 @@ func TestRequesterServerStreaming(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, report)
 	assert.Equal(t, 15, int(report.Count))
+	assert.Len(t, report.ErrorDist, 0)
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 15, count)
@@ -166,7 +181,7 @@ func TestRequesterServerStreaming(t *testing.T) {
 func TestRequesterClientStreaming(t *testing.T) {
 	callType := helloworld.ClientStream
 
-	gs, s, err := startServer()
+	gs, s, err := startServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -205,6 +220,7 @@ func TestRequesterClientStreaming(t *testing.T) {
 	assert.Equal(t, 16, int(report.Count))
 	assert.True(t, len(report.LatencyDistribution) > 1)
 	assert.True(t, len(report.Histogram) > 1)
+	assert.Len(t, report.ErrorDist, 0)
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 16, count)
@@ -213,7 +229,7 @@ func TestRequesterClientStreaming(t *testing.T) {
 func TestRequesterBidi(t *testing.T) {
 	callType := helloworld.Bidi
 
-	gs, s, err := startServer()
+	gs, s, err := startServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -252,7 +268,47 @@ func TestRequesterBidi(t *testing.T) {
 	assert.Equal(t, 20, int(report.Count))
 	assert.True(t, len(report.LatencyDistribution) > 1)
 	assert.True(t, len(report.Histogram) > 1)
+	assert.Len(t, report.ErrorDist, 0)
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 20, count)
+}
+
+func TestRequesterUnarySecure(t *testing.T) {
+	callType := helloworld.Unary
+
+	gs, s, err := startServer(true)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	md, err := protodesc.GetMethodDesc("helloworld.Greeter.SayHello", "./testdata/greeter.proto", []string{})
+
+	data := make(map[string]interface{})
+	data["name"] = "bob"
+
+	gs.ResetCounters()
+
+	reqr, err := New(md, &Options{
+		Host:        localhost,
+		N:           18,
+		C:           3,
+		Timeout:     20,
+		DialTimtout: 20,
+		Data:        data,
+		Cert:        "./testdata/localhost.crt",
+	})
+	assert.NoError(t, err)
+
+	report, err := reqr.Run()
+	assert.NoError(t, err)
+	assert.NotNil(t, report)
+	assert.Equal(t, 18, int(report.Count))
+	assert.Len(t, report.ErrorDist, 0)
+
+	count := gs.GetCount(callType)
+	assert.Equal(t, 18, count)
 }

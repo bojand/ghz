@@ -10,10 +10,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-const address = "0.0.0.0:50051"
+const address = "localhost:50051"
 
 func TestStatsHandler(t *testing.T) {
-	_, s, err := startServer()
+	_, s, err := startServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
