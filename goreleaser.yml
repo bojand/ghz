@@ -1,0 +1,9 @@
+build:
+  main: cmd/grpcannon/main.go
+  binary: grpcannon
+  goos:
+    - darwin
+    - linux
+    - windows
+  goarch:
+    - amd64

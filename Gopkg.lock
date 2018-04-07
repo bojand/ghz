@@ -2,6 +2,15 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/alecthomas/template"
+  packages = [
+    ".",
+    "parse"
+  ]
+  revision = "a0175ee3bccc567396460bf5acd36800cb10c49c"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -36,7 +45,7 @@
     "dynamic/grpcdynamic",
     "internal"
   ]
-  revision = "6f4f3bba11fd817df7f57c9b319eeb55a2590167"
+  revision = "cfdba734743d6b9685ff2e8d78c7e6c7e6ddad65"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -68,7 +77,7 @@
     "lex/httplex",
     "trace"
   ]
-  revision = "892bf7b0c6e2f93b51166bf3882e50277fa5afc6"
+  revision = "b68f30494add4df6bd8ef5e82803f308e7f7c59c"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -101,7 +110,7 @@
     "protobuf/ptype",
     "protobuf/source_context"
   ]
-  revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
+  revision = "35de2414665fc36f56b72d982c5af480d86de5ab"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -130,12 +139,12 @@
     "tap",
     "transport"
   ]
-  revision = "8e4536a86ab602859c20df5ebfd0bd4228d08655"
-  version = "v1.10.0"
+  revision = "1e2570b1b19ade82d8dbb31bba4e65e9f9ef5b34"
+  version = "v1.11.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "84004261468556cb97c443f6080fd40c067598d6304974cae344f7c4944962f3"
+  inputs-digest = "341f42f065172507186c885dda22956db170054a68da94b318caf488d8461ab4"
   solver-name = "gps-cdcl"
   solver-version = 1

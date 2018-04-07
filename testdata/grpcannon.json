@@ -1,8 +1,11 @@
 {
     "proto": "my.proto",
     "call": "mycall",
-    "cacert": "mycert",
+    "cert": "mycert",
     "d": {
         "name": "mydata"
-    }
+    },
+    "i": [
+        "/path/to/protos"
+    ]
 }
