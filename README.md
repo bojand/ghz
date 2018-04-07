@@ -10,7 +10,7 @@ Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [h
 
 ## Install
 
-Download a prebuild executable binary from the [releases page](https://github.com/bojand/grpcannon/releases).
+Download a prebuilt executable binary from the [releases page](https://github.com/bojand/grpcannon/releases).
 
 ## Usage
 
