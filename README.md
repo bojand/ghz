@@ -103,7 +103,7 @@ Summary:
   Slowest:	15.41 ms
   Fastest:	0.66 ms
   Average:	6.83 ms
-  Requests/sec:	5788347.22
+  Requests/sec:	5788.35
 
 Response time histogram:
   0.664 [1]	|

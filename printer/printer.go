@@ -50,9 +50,10 @@ func (rp *ReportPrinter) printf(s string, v ...interface{}) {
 }
 
 var tmplFuncMap = template.FuncMap{
-	"formatNumber": formatNumber,
-	"histogram":    histogram,
-	"jsonify":      jsonify,
+	"formatMilli":   formatMilli,
+	"formatSeconds": formatSeconds,
+	"histogram":     histogram,
+	"jsonify":       jsonify,
 }
 
 func jsonify(v interface{}) string {
@@ -60,8 +61,12 @@ func jsonify(v interface{}) string {
 	return string(d)
 }
 
-func formatNumber(duration float64) string {
+func formatMilli(duration float64) string {
 	return fmt.Sprintf("%4.2f", duration*1000)
+}
+
+func formatSeconds(duration float64) string {
+	return fmt.Sprintf("%4.2f", duration)
 }
 
 func histogram(buckets []grpcannon.Bucket) string {
@@ -87,16 +92,16 @@ var (
 	defaultTmpl = `
 Summary:
   Count:	{{ .Count }}
-  Total:	{{ formatNumber .Total.Seconds }} ms
-  Slowest:	{{ formatNumber .Slowest.Seconds }} ms
-  Fastest:	{{ formatNumber .Fastest.Seconds }} ms
-  Average:	{{ formatNumber .Average.Seconds }} ms
-  Requests/sec:	{{ formatNumber .Rps }}
+  Total:	{{ formatMilli .Total.Seconds }} ms
+  Slowest:	{{ formatMilli .Slowest.Seconds }} ms
+  Fastest:	{{ formatMilli .Fastest.Seconds }} ms
+  Average:	{{ formatMilli .Average.Seconds }} ms
+  Requests/sec:	{{ formatSeconds .Rps }}
 
 Response time histogram:
 {{ histogram .Histogram }}
 Latency distribution:{{ range .LatencyDistribution }}
-  {{ .Percentage }}%% in {{ formatNumber .Latency.Seconds }} ms{{ end }}
+  {{ .Percentage }}%% in {{ formatMilli .Latency.Seconds }} ms{{ end }}
 Status code distribution:{{ range $code, $num := .StatusCodeDist }}
   [{{ $code }}]	{{ $num }} responses{{ end }}
 {{ if gt (len .ErrorDist) 0 }}Error distribution:{{ range $err, $num := .ErrorDist }}
@@ -105,6 +110,6 @@ Status code distribution:{{ range $code, $num := .StatusCodeDist }}
 
 	csvTmpl = `
 duration (ms),status,error{{ range $i, $v := .Details }}
-{{ formatNumber .Latency.Seconds }},{{ .Status }},{{ .Error }}{{ end }}
+{{ formatMilli .Latency.Seconds }},{{ .Status }},{{ .Error }}{{ end }}
 `
 )
