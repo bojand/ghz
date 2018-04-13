@@ -55,7 +55,7 @@ func TestRequesterUnary(t *testing.T) {
 
 	defer s.Stop()
 
-	md, err := protodesc.GetMethodDesc("helloworld.Greeter.SayHello", "./testdata/greeter.proto", []string{})
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter.SayHello", "./testdata/greeter.proto", []string{})
 
 	data := make(map[string]interface{})
 	data["name"] = "bob"
@@ -151,7 +151,7 @@ func TestRequesterServerStreaming(t *testing.T) {
 
 	defer s.Stop()
 
-	md, err := protodesc.GetMethodDesc("helloworld.Greeter.SayHellos", "./testdata/greeter.proto", []string{})
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter.SayHellos", "./testdata/greeter.proto", []string{})
 
 	data := make(map[string]interface{})
 	data["name"] = "bob"
@@ -189,7 +189,7 @@ func TestRequesterClientStreaming(t *testing.T) {
 
 	defer s.Stop()
 
-	md, err := protodesc.GetMethodDesc("helloworld.Greeter.SayHelloCS", "./testdata/greeter.proto", []string{})
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter.SayHelloCS", "./testdata/greeter.proto", []string{})
 
 	m1 := make(map[string]interface{})
 	m1["name"] = "bob"
@@ -237,7 +237,7 @@ func TestRequesterBidi(t *testing.T) {
 
 	defer s.Stop()
 
-	md, err := protodesc.GetMethodDesc("helloworld.Greeter.SayHelloBidi", "./testdata/greeter.proto", []string{})
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter.SayHelloBidi", "./testdata/greeter.proto", []string{})
 
 	m1 := make(map[string]interface{})
 	m1["name"] = "bob"
@@ -285,7 +285,7 @@ func TestRequesterUnarySecure(t *testing.T) {
 
 	defer s.Stop()
 
-	md, err := protodesc.GetMethodDesc("helloworld.Greeter.SayHello", "./testdata/greeter.proto", []string{})
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter.SayHello", "./testdata/greeter.proto", []string{})
 
 	data := make(map[string]interface{})
 	data["name"] = "bob"

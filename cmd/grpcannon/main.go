@@ -155,7 +155,7 @@ func usageAndExit(msg string) {
 }
 
 func runTest(config *config.Config) (*grpcannon.Report, error) {
-	mtd, err := protodesc.GetMethodDesc(config.Call, config.Proto, config.ImportPaths)
+	mtd, err := protodesc.GetMethodDescFromProto(config.Call, config.Proto, config.ImportPaths)
 	if err != nil {
 		return nil, err
 	}
