@@ -119,7 +119,7 @@ func main() {
 			iPaths = strings.Split(pathsTrimmed, ",")
 		}
 
-		cfg, err = config.New(*proto, *call, *cert, *cn, *n, *c, *q, *z, *t,
+		cfg, err = config.New(*proto, *call, *cert, *cname, *n, *c, *q, *z, *t,
 			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths)
 		if err != nil {
 			errAndExit(err.Error())
@@ -165,6 +165,7 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	opts := &grpcannon.Options{
 		Host:          config.Host,
 		Cert:          config.Cert,
+		CName:		   config.CName,
 		N:             config.N,
 		C:             config.C,
 		QPS:           config.QPS,

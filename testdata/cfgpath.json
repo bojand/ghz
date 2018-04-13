@@ -2,6 +2,7 @@
     "proto": "my.proto",
     "call": "mycall",
     "cert": "mycert",
+    "cName": "localhost",
     "D": "./data.json",
     "M": "./metadata.json",
     "i": [
