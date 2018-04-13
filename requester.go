@@ -32,6 +32,7 @@ type Options struct {
 	KeepaliveTime int
 	Data          interface{}
 	Metadata      *map[string]string
+	CN			  string
 }
 
 // Max size of the buffer of result channel.
@@ -300,7 +301,7 @@ func (b *Requester) makeBidiRequest(ctx *context.Context) {
 func createClientCredOption(config *Options) (grpc.DialOption, error) {
 	credOptions := grpc.WithInsecure()
 	if strings.TrimSpace(config.Cert) != "" {
-		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
+		creds, err := credentials.NewClientTLSFromFile(config.Cert, config.CN)
 		if err != nil {
 			return nil, err
 		}

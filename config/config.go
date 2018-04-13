@@ -17,6 +17,7 @@ type Config struct {
 	Proto         string             `json:"proto"`
 	Call          string             `json:"call"`
 	Cert          string             `json:"cert"`
+	CN			  string			 `json:"cn"`
 	N             int                `json:"n"`
 	C             int                `json:"c"`
 	QPS           int                `json:"q"`
@@ -36,7 +37,7 @@ type Config struct {
 }
 
 // NewConfig creates a new config
-func New(proto, call, cert string, n, c, qps int, z time.Duration, timeout int,
+func New(proto, call, cert, cn string, n, c, qps int, z time.Duration, timeout int,
 	data, dataPath, metadata, mdPath, output, format, host string,
 	dialTimout, keepaliveTime, cpus int, importPaths []string) (*Config, error) {
 
@@ -44,6 +45,7 @@ func New(proto, call, cert string, n, c, qps int, z time.Duration, timeout int,
 		Proto:         proto,
 		Call:          call,
 		Cert:          cert,
+		CN:			   cn,
 		N:             n,
 		C:             c,
 		QPS:           qps,
