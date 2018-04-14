@@ -23,6 +23,7 @@ import (
 type Options struct {
 	Host          string
 	Cert          string
+	CName		  string
 	N             int
 	C             int
 	QPS           int
@@ -300,7 +301,7 @@ func (b *Requester) makeBidiRequest(ctx *context.Context) {
 func createClientCredOption(config *Options) (grpc.DialOption, error) {
 	credOptions := grpc.WithInsecure()
 	if strings.TrimSpace(config.Cert) != "" {
-		creds, err := credentials.NewClientTLSFromFile(config.Cert, "")
+		creds, err := credentials.NewClientTLSFromFile(config.Cert, config.CName)
 		if err != nil {
 			return nil, err
 		}
