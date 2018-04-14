@@ -13,6 +13,7 @@ import (
 	"github.com/bojand/grpcannon/config"
 	"github.com/bojand/grpcannon/printer"
 	"github.com/bojand/grpcannon/protodesc"
+	"github.com/jhump/protoreflect/desc"
 )
 
 var (
@@ -158,7 +159,7 @@ func usageAndExit(msg string) {
 }
 
 func runTest(config *config.Config) (*grpcannon.Report, error) {
-	mtd, err := protodesc.GetMethodDescFromProto(config.Call, config.Proto, config.ImportPaths)
+	mtd, err := getMethodDesc(config)
 	if err != nil {
 		return nil, err
 	}
@@ -199,4 +200,12 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	}
 
 	return reqr.Run()
+}
+
+func getMethodDesc(config *config.Config) (*desc.MethodDescriptor, error) {
+	if config.Proto != "" {
+		return protodesc.GetMethodDescFromProto(config.Call, config.Proto, config.ImportPaths)
+	} else {
+		return protodesc.GetMethodDescFromProtoSet(config.Call, config.Protoset)
+	}
 }
