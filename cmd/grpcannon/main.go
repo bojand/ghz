@@ -22,6 +22,7 @@ var (
 	proto = flag.String("proto", "", `The .proto file.`)
 	call  = flag.String("call", "", `A fully-qualified symbol name.`)
 	cert  = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
+	cname = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs")
 
 	c = flag.Int("c", 50, "Number of requests to run concurrently.")
 	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
@@ -54,6 +55,7 @@ Options:
   -proto	The protocol buffer file.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
+  -cname	an override of the expect Server Cname presented by the server.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
 	  be smaller than the concurrency level. Default is 50.
@@ -117,7 +119,7 @@ func main() {
 			iPaths = strings.Split(pathsTrimmed, ",")
 		}
 
-		cfg, err = config.New(*proto, *call, *cert, *n, *c, *q, *z, *t,
+		cfg, err = config.New(*proto, *call, *cert, *cname, *n, *c, *q, *z, *t,
 			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths)
 		if err != nil {
 			errAndExit(err.Error())
@@ -163,6 +165,7 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	opts := &grpcannon.Options{
 		Host:          config.Host,
 		Cert:          config.Cert,
+		CName:		   config.CName,
 		N:             config.N,
 		C:             config.C,
 		QPS:           config.QPS,
