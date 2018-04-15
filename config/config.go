@@ -122,7 +122,7 @@ func (c *Config) Validate() error {
 		}
 	} else {
 		if filepath.Ext(c.Protoset) != ".protoset" {
-			return errors.Errorf(fmt.Sprintf("proto: must have .protoset extension"))
+			return errors.Errorf(fmt.Sprintf("protoset: must have .protoset extension"))
 		}
 	}
 
