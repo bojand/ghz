@@ -24,8 +24,10 @@ Download a prebuilt executable binary from the [releases page](https://github.co
 Usage: grpcannon [options...] <host>
 Options:
   -proto	The protocol buffer file.
+  -protoset The compiled protoset file. Alternative to proto. -proto takes precedence.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
+  -cname	an override of the expect Server Cname presented by the server.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
 	  be smaller than the concurrency level. Default is 50.
@@ -80,6 +82,22 @@ grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHelloCS -d '[{"name
 ```
 
 If a single object is given for data it is sent as every message.
+
+We can also use `.protoset` files which can bundle multiple protoco buffer files into one binary file.
+
+Create a protoset
+
+```
+protoc --proto_path=. --descriptor_set_out=bundle.protoset *.proto
+```
+
+And then use it as input to `grpcannon` with `-protoset` option:
+
+```
+./grpcannon -protoset ./bundle.protoset -call helloworld.Greeter.SayHello -d '{"name":"Bob"}' -n 1000 -c 10 0.0.0.0:50051
+```
+
+Note that only one of `-proto` or `-protoset` options will be used. `-proto` takes precedence.
 
 Example `grpcannon.json`
 
