@@ -159,7 +159,7 @@ func TestData_isMapData(t *testing.T) {
 }
 
 func TestData_createPayloads(t *testing.T) {
-	mtdUnary, err := protodesc.GetMethodDesc(
+	mtdUnary, err := protodesc.GetMethodDescFromProto(
 		"helloworld.Greeter.SayHello",
 		"./testdata/greeter.proto",
 		nil)
@@ -167,7 +167,7 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mtdUnary)
 
-	mtdClientStreaming, err := protodesc.GetMethodDesc(
+	mtdClientStreaming, err := protodesc.GetMethodDescFromProto(
 		"helloworld.Greeter.SayHelloCS",
 		"./testdata/greeter.proto",
 		nil)

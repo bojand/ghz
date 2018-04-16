@@ -15,9 +15,10 @@ import (
 // Config for the run.
 type Config struct {
 	Proto         string             `json:"proto"`
+	Protoset      string             `json:"protoset"`
 	Call          string             `json:"call"`
 	Cert          string             `json:"cert"`
-	CName		  string			 `json:"cName"`
+	CName         string             `json:"cName"`
 	N             int                `json:"n"`
 	C             int                `json:"c"`
 	QPS           int                `json:"q"`
@@ -36,16 +37,17 @@ type Config struct {
 	ImportPaths   []string           `json:"i,omitempty"`
 }
 
-// NewConfig creates a new config
-func New(proto, call, cert, cName string, n, c, qps int, z time.Duration, timeout int,
+// New creates a new config
+func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Duration, timeout int,
 	data, dataPath, metadata, mdPath, output, format, host string,
 	dialTimout, keepaliveTime, cpus int, importPaths []string) (*Config, error) {
 
 	cfg := &Config{
 		Proto:         proto,
+		Protoset:      protoset,
 		Call:          call,
 		Cert:          cert,
-		CName:		   cName,
+		CName:         cName,
 		N:             n,
 		C:             c,
 		QPS:           qps,
@@ -110,12 +112,18 @@ func (c *Config) Default() {
 
 // Validate the config
 func (c *Config) Validate() error {
-	if err := requiredString(c.Proto); err != nil {
-		return errors.Wrap(err, "proto")
+	if strings.TrimSpace(c.Proto) == "" && strings.TrimSpace(c.Protoset) == "" {
+		return errors.New("Proto or Protoset required")
 	}
 
-	if filepath.Ext(c.Proto) != ".proto" {
-		return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
+	if strings.TrimSpace(c.Proto) != "" {
+		if filepath.Ext(c.Proto) != ".proto" {
+			return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
+		}
+	} else {
+		if filepath.Ext(c.Protoset) != ".protoset" {
+			return errors.Errorf(fmt.Sprintf("protoset: must have .protoset extension"))
+		}
 	}
 
 	if err := requiredString(c.Call); err != nil {

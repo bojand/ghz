@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package cap;
+
+import "common.proto";
+
+service Capper {
+  rpc Cap (common.HelloRequest) returns (common.HelloReply) {}
+}

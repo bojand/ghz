@@ -13,16 +13,18 @@ import (
 	"github.com/bojand/grpcannon/config"
 	"github.com/bojand/grpcannon/printer"
 	"github.com/bojand/grpcannon/protodesc"
+	"github.com/jhump/protoreflect/desc"
 )
 
 var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
 
-	proto = flag.String("proto", "", `The .proto file.`)
-	call  = flag.String("call", "", `A fully-qualified symbol name.`)
-	cert  = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
-	cname = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs")
+	proto    = flag.String("proto", "", `The .proto file.`)
+	protoset = flag.String("protoset", "", `The .protoset file.`)
+	call     = flag.String("call", "", `A fully-qualified symbol name.`)
+	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
+	cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs")
 
 	c = flag.Int("c", 50, "Number of requests to run concurrently.")
 	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
@@ -53,6 +55,7 @@ var (
 var usage = `Usage: grpcannon [options...] <host>
 Options:
   -proto	The protocol buffer file.
+  -protoset The compiled protoset file. Alternative to proto. -proto takes precedence.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
   -cname	an override of the expect Server Cname presented by the server.
@@ -119,7 +122,7 @@ func main() {
 			iPaths = strings.Split(pathsTrimmed, ",")
 		}
 
-		cfg, err = config.New(*proto, *call, *cert, *cname, *n, *c, *q, *z, *t,
+		cfg, err = config.New(*proto, *protoset, *call, *cert, *cname, *n, *c, *q, *z, *t,
 			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths)
 		if err != nil {
 			errAndExit(err.Error())
@@ -157,7 +160,7 @@ func usageAndExit(msg string) {
 }
 
 func runTest(config *config.Config) (*grpcannon.Report, error) {
-	mtd, err := protodesc.GetMethodDesc(config.Call, config.Proto, config.ImportPaths)
+	mtd, err := getMethodDesc(config)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +168,7 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	opts := &grpcannon.Options{
 		Host:          config.Host,
 		Cert:          config.Cert,
-		CName:		   config.CName,
+		CName:         config.CName,
 		N:             config.N,
 		C:             config.C,
 		QPS:           config.QPS,
@@ -198,4 +201,12 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 	}
 
 	return reqr.Run()
+}
+
+func getMethodDesc(config *config.Config) (*desc.MethodDescriptor, error) {
+	if config.Proto != "" {
+		return protodesc.GetMethodDescFromProto(config.Call, config.Proto, config.ImportPaths)
+	} else {
+		return protodesc.GetMethodDescFromProtoSet(config.Call, config.Protoset)
+	}
 }

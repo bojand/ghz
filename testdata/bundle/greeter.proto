@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package helloworld;
+
+import "common.proto";
+
+service Greeter {
+  rpc SayHello (common.HelloRequest) returns (common.HelloReply) {}
+  rpc SayHelloCS (stream common.HelloRequest) returns (common.HelloReply) {}
+  rpc SayHellos (common.HelloRequest) returns (stream common.HelloReply) {}
+  rpc SayHelloBidi (stream common.HelloRequest) returns (stream common.HelloReply) {}
+}
