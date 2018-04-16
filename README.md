@@ -26,6 +26,8 @@ Options:
   -proto	The protocol buffer file.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
+  -cname	an override of the expect Server Cname presented by the server.
+  -config	Path to the config JSON file.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
 	  be smaller than the concurrency level. Default is 50.
@@ -57,7 +59,7 @@ Options:
   -v  Print the version.
 ```
 
-Alternatively all settings can be set via `grpcannon.json` file if present in the same path as the `grpcannon` executable.
+Alternatively all settings can be set via `grpcannon.json` file if present in the same path as the `grpcannon` executable. A custom configuration file can be specified using `-config` option.
 
 ## Examples
 
@@ -81,6 +83,12 @@ grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHelloCS -d '[{"name
 
 If a single object is given for data it is sent as every message.
 
+Using a custom config file:
+
+```sh
+grpcannon -config ./config.json
+```
+
 Example `grpcannon.json`
 
 ```json
@@ -94,7 +102,10 @@ Example `grpcannon.json`
     },
     "i": [
         "/path/to/protos"
-    ]
+    ],
+    "n": 4000,
+    "c": 40,
+    "host": "0.0.0.0:50051"
 }
 ```
 
