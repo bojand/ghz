@@ -27,7 +27,8 @@ Options:
   -protoset The compiled protoset file. Alternative to proto. -proto takes precedence.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
-  -cname	an override of the expect Server Cname presented by the server.
+  -cname	An override of the expect Server Cname presented by the server.
+  -config	Path to the config JSON file.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
 	  be smaller than the concurrency level. Default is 50.
@@ -59,7 +60,7 @@ Options:
   -v  Print the version.
 ```
 
-Alternatively all settings can be set via `grpcannon.json` file if present in the same path as the `grpcannon` executable.
+Alternatively all settings can be set via `grpcannon.json` file if present in the same path as the `grpcannon` executable. A custom configuration file can be specified using `-config` option.
 
 ## Examples
 
@@ -99,6 +100,12 @@ And then use it as input to `grpcannon` with `-protoset` option:
 
 Note that only one of `-proto` or `-protoset` options will be used. `-proto` takes precedence.
 
+Using a custom config file:
+
+```sh
+grpcannon -config ./config.json
+```
+
 Example `grpcannon.json`
 
 ```json
@@ -112,7 +119,10 @@ Example `grpcannon.json`
     },
     "i": [
         "/path/to/protos"
-    ]
+    ],
+    "n": 4000,
+    "c": 40,
+    "host": "0.0.0.0:50051"
 }
 ```
 

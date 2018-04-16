@@ -24,7 +24,8 @@ var (
 	protoset = flag.String("protoset", "", `The .protoset file.`)
 	call     = flag.String("call", "", `A fully-qualified symbol name.`)
 	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
-	cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs")
+	cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs.")
+	cPath    = flag.String("config", "", "Path to the config JSON file.")
 
 	c = flag.Int("c", 50, "Number of requests to run concurrently.")
 	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
@@ -58,7 +59,8 @@ Options:
   -protoset The compiled protoset file. Alternative to proto. -proto takes precedence.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
-  -cname	an override of the expect Server Cname presented by the server.
+  -cname	An override of the expect Server Cname presented by the server.
+  -config	Path to the config JSON file.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
 	  be smaller than the concurrency level. Default is 50.
@@ -102,20 +104,28 @@ func main() {
 		os.Exit(0)
 	}
 
-	if flag.NArg() < 1 {
-		usageAndExit("")
-	}
-
-	host := flag.Args()[0]
-
 	var cfg *config.Config
 
-	if _, err := os.Stat(localConfigName); err == nil {
+	cfgPath := strings.TrimSpace(*cPath)
+
+	if cfgPath != "" {
+		var err error
+		cfg, err = config.ReadConfig(cfgPath)
+		if err != nil {
+			errAndExit(err.Error())
+		}
+	} else if _, err := os.Stat(localConfigName); err == nil {
 		cfg, err = config.ReadConfig(localConfigName)
 		if err != nil {
 			errAndExit(err.Error())
 		}
 	} else {
+		if flag.NArg() < 1 {
+			usageAndExit("")
+		}
+
+		host := flag.Args()[0]
+
 		iPaths := []string{}
 		pathsTrimmed := strings.TrimSpace(*paths)
 		if pathsTrimmed != "" {

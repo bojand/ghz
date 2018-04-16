@@ -175,7 +175,7 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mtdClientStreaming)
 
-	mtdTestUnary, err := protodesc.GetMethodDesc(
+	mtdTestUnary, err := protodesc.GetMethodDescFromProto(
 		"data.DataTestService.TestCall",
 		"./testdata/data.proto",
 		nil)
@@ -183,7 +183,7 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mtdTestUnary)
 
-	mtdTestUnaryTwo, err := protodesc.GetMethodDesc(
+	mtdTestUnaryTwo, err := protodesc.GetMethodDescFromProto(
 		"data.DataTestService.TestCallTwo",
 		"./testdata/data.proto",
 		nil)
