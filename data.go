@@ -1,8 +1,10 @@
 package grpcannon
 
 import (
+	"encoding/json"
 	"errors"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 )
@@ -30,13 +32,19 @@ func isMapData(data interface{}) bool {
 }
 
 // creates a message from a map
+// marshal to JSON then use jsonb to marshal to message
+// this way we follow protobuf more closely and allow cammelCase properties.
 func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error {
-	for k, v := range *data {
-		err := input.TrySetFieldByName(k, v)
-		if err != nil {
-			return err
-		}
+	strData, err := json.Marshal(data)
+	if err != nil {
+		return err
 	}
+
+	err = jsonpb.UnmarshalString(string(strData), input)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

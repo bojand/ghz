@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expected = `{"proto":"asdf","call":"","cert":"","cName":"","n":0,"c":0,"q":0,"t":0,"D":"","M":"","o":"","O":"oval","host":"","T":0,"L":0,"cpus":0,"z":"4h30m0s"}`
+const expected = `{"proto":"asdf","protoset":"","call":"","cert":"","cName":"","n":0,"c":0,"q":0,"t":0,"D":"","M":"","o":"","O":"oval","host":"","T":0,"L":0,"cpus":0,"z":"4h30m0s"}`
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")
@@ -260,7 +260,7 @@ func TestConfig_ReadConfig(t *testing.T) {
 				Call:          "mycall",
 				Data:          data,
 				Cert:          "mycert",
-				CName: 		   "localhost",
+				CName:         "localhost",
 				N:             200,
 				C:             50,
 				QPS:           0,
@@ -299,7 +299,7 @@ func TestConfig_ReadConfig(t *testing.T) {
 				Call:          "mycall",
 				Data:          data,
 				Cert:          "mycert",
-				CName: 		   "localhost",
+				CName:         "localhost",
 				N:             200,
 				C:             50,
 				QPS:           0,
@@ -331,7 +331,7 @@ func TestConfig_Validate(t *testing.T) {
 	t.Run("missing proto", func(t *testing.T) {
 		c := &Config{}
 		err := c.Validate()
-		assert.Equal(t, "proto: is required", err.Error())
+		assert.Equal(t, "Proto or Protoset required", err.Error())
 	})
 
 	t.Run("invalid proto", func(t *testing.T) {
