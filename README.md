@@ -27,7 +27,7 @@ Options:
   -protoset The compiled protoset file. Alternative to proto. -proto takes precedence.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
-  -cname	an override of the expect Server Cname presented by the server.
+  -cname	An override of the expect Server Cname presented by the server.
   -config	Path to the config JSON file.
 
   -c  Number of requests to run concurrently. Total number of requests cannot

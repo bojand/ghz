@@ -25,7 +25,7 @@ var (
 	call     = flag.String("call", "", `A fully-qualified symbol name.`)
 	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
 	cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs.")
-	cPath = flag.String("config", "", "Path to the config JSON file.")
+	cPath    = flag.String("config", "", "Path to the config JSON file.")
 
 	c = flag.Int("c", 50, "Number of requests to run concurrently.")
 	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
@@ -59,7 +59,7 @@ Options:
   -protoset The compiled protoset file. Alternative to proto. -proto takes precedence.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
-  -cname	an override of the expect Server Cname presented by the server.
+  -cname	An override of the expect Server Cname presented by the server.
   -config	Path to the config JSON file.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
