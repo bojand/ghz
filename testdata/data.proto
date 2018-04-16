@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package data;
+
+service DataTestService {
+    rpc TestCall (CallRequestOne) returns (CallReplyOne) {}
+    rpc TestCallTwo (CallRequestTwo) returns (CallReplyOne) {}
+}
+
+message CallRequestOne {
+    string param_one = 1;
+}
+
+message CallRequestTwo {
+    CallRequestOne nested_prop = 1;
+}
+  
+message CallReplyOne {
+    string result_message = 1;
+}
