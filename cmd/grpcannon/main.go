@@ -56,7 +56,7 @@ var (
 var usage = `Usage: grpcannon [options...] <host>
 Options:
   -proto	The protocol buffer file.
-  -protoset The compiled protoset file. Alternative to proto. -proto takes precedence.
+  -protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
   -cname	An override of the expect Server Cname presented by the server.
