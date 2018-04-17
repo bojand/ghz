@@ -7,6 +7,7 @@
 # grpcannon
 
 [![build status](https://img.shields.io/travis/bojand/grpcannon/master.svg?style=flat-square)](https://travis-ci.org/bojand/grpcannon)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bojand/grpcannon?style=flat-square)](https://goreportcard.com/report/github.com/bojand/grpcannon)
 
 Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [hey](https://github.com/rakyll/hey/) and [grpcurl](https://github.com/fullstorydev/grpcurl).
 
