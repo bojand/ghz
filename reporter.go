@@ -38,6 +38,26 @@ type Report struct {
 	Details             []ResultDetail
 }
 
+// LatencyDistribution holds latency distribution data
+type LatencyDistribution struct {
+	Percentage int
+	Latency    time.Duration
+}
+
+// Bucket holds histogram data
+type Bucket struct {
+	Mark      float64 // The Mark for histogram bucket in seconds
+	Count     int     // The count in the bucket
+	Frequency float64 // The frequency of results in the bucket as a decimal percentage
+}
+
+// ResultDetail data for each result
+type ResultDetail struct {
+	Latency time.Duration
+	Error   string
+	Status  string
+}
+
 func newReporter(results chan *callResult, n int) *Reporter {
 	cap := min(n, maxResult)
 	return &Reporter{
@@ -167,24 +187,4 @@ func histogram(latencies *[]float64, slowest, fastest float64) []Bucket {
 		}
 	}
 	return res
-}
-
-// LatencyDistribution holds latency distribution data
-type LatencyDistribution struct {
-	Percentage int
-	Latency    time.Duration
-}
-
-// Bucket holds histogram data
-type Bucket struct {
-	Mark      float64
-	Count     int
-	Frequency float64
-}
-
-// ResultDetail data for each result
-type ResultDetail struct {
-	Latency time.Duration
-	Error   string
-	Status  string
 }

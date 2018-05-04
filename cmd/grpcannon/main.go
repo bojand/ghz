@@ -146,9 +146,20 @@ func main() {
 		errAndExit(err.Error())
 	}
 
+	output := os.Stdout
+	outputPath := strings.TrimSpace(cfg.Output)
+	if outputPath != "" {
+		f, err := os.Create(outputPath)
+		if err != nil {
+			errAndExit(err.Error())
+		}
+		defer f.Close()
+		output = f
+	}
+
 	p := printer.ReportPrinter{
 		Report: report,
-		Out:    os.Stdout}
+		Out:    output}
 
 	p.Print(cfg.Format)
 }

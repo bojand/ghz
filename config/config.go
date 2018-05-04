@@ -55,6 +55,7 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 		Timeout:       timeout,
 		DataPath:      dataPath,
 		MetadataPath:  mdPath,
+		Output:        output,
 		Format:        format,
 		Host:          host,
 		ImportPaths:   importPaths,
