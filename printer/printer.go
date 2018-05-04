@@ -26,23 +26,30 @@ type ReportPrinter struct {
 // If format is "csv" detailed listing is printer in csv format.
 // Otherwise the summary of results is printed.
 func (rp *ReportPrinter) Print(format string) {
-	outputTmpl := format
-	switch outputTmpl {
-	case "":
-		outputTmpl = defaultTmpl
-	case "csv":
-		outputTmpl = csvTmpl
-	}
-	buf := &bytes.Buffer{}
-	templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(outputTmpl))
-	if err := templ.Execute(buf, *rp.Report); err != nil {
-		log.Println("error:", err.Error())
-		return
-	}
+	switch format {
+	case "", "csv":
+		outputTmpl := defaultTmpl
+		if format == "csv" {
+			outputTmpl = csvTmpl
+		}
+		buf := &bytes.Buffer{}
+		templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(outputTmpl))
+		if err := templ.Execute(buf, *rp.Report); err != nil {
+			log.Println("error:", err.Error())
+			return
+		}
 
-	rp.printf(buf.String())
+		rp.printf(buf.String())
 
-	rp.printf("\n")
+		rp.printf("\n")
+	case "json":
+		rep, err := json.Marshal(*rp.Report)
+		if err != nil {
+			log.Println("error:", err.Error())
+			return
+		}
+		rp.printf(string(rep))
+	}
 }
 
 func (rp *ReportPrinter) printf(s string, v ...interface{}) {
