@@ -42,12 +42,23 @@ func (rp *ReportPrinter) Print(format string) {
 		rp.printf(buf.String())
 
 		rp.printf("\n")
-	case "json":
+	case "json", "pretty":
 		rep, err := json.Marshal(*rp.Report)
 		if err != nil {
 			log.Println("error:", err.Error())
 			return
 		}
+
+		if format == "pretty" {
+			var out bytes.Buffer
+			err = json.Indent(&out, rep, "", "  ")
+			if err != nil {
+				log.Println("error:", err.Error())
+				return
+			}
+			rep = out.Bytes()
+		}
+
 		rp.printf(string(rep))
 	}
 }
