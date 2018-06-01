@@ -31,7 +31,8 @@ var (
 	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
 	q = flag.Int("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
 	t = flag.Int("t", 20, "Timeout for each request in seconds.")
-	z = flag.Duration("z", 0, "")
+	z = flag.Duration("z", 0, "Duration of application to send requests.")
+	x = flag.Duration("x", 0, "Maximum duration of application to send requests.")
 
 	data     = flag.String("d", "", "The call data as stringified JSON.")
 	dataPath = flag.String("D", "", "Path for call data JSON file.")
@@ -70,6 +71,9 @@ Options:
   -z  Duration of application to send requests. When duration is reached,
       application stops and exits. If duration is specified, n is ignored.
       Examples: -z 10s -z 3m.
+  -x  Maximum duration of application to send requests with n setting respected.
+      If duration is reached before n requests are completed, application stops and exits.
+      Examples: -x 10s -x 3m.
   
   -d  The call data as stringified JSON.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
@@ -132,7 +136,7 @@ func main() {
 			iPaths = strings.Split(pathsTrimmed, ",")
 		}
 
-		cfg, err = config.New(*proto, *protoset, *call, *cert, *cname, *n, *c, *q, *z, *t,
+		cfg, err = config.New(*proto, *protoset, *call, *cert, *cname, *n, *c, *q, *z, *x, *t,
 			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths)
 		if err != nil {
 			errAndExit(err.Error())

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -23,6 +24,7 @@ type Config struct {
 	C             int                `json:"c"`
 	QPS           int                `json:"q"`
 	Z             time.Duration      `json:"z"`
+	X             time.Duration      `json:"x"`
 	Timeout       int                `json:"t"`
 	Data          interface{}        `json:"d,omitempty"`
 	DataPath      string             `json:"D"`
@@ -38,8 +40,8 @@ type Config struct {
 }
 
 // New creates a new config
-func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Duration, timeout int,
-	data, dataPath, metadata, mdPath, output, format, host string,
+func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Duration, x time.Duration,
+	timeout int, data, dataPath, metadata, mdPath, output, format, host string,
 	dialTimout, keepaliveTime, cpus int, importPaths []string) (*Config, error) {
 
 	cfg := &Config{
@@ -52,6 +54,7 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 		C:             c,
 		QPS:           qps,
 		Z:             z,
+		X:             x,
 		Timeout:       timeout,
 		DataPath:      dataPath,
 		MetadataPath:  mdPath,
@@ -174,6 +177,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	type Alias Config
 	aux := &struct {
 		Z string `json:"z"`
+		X string `json:"x"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -199,6 +203,7 @@ func (c Config) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		*Alias
 		Z string `json:"z"`
+		X string `json:"x"`
 	}{
 		Alias: (*Alias)(&c),
 		Z:     c.Z.String(),
@@ -263,6 +268,14 @@ func (c *Config) initMetadata() error {
 	return nil
 }
 
+func (c *Config) initDurations() {
+	if c.X > 0 {
+		c.Z = c.X
+	} else if c.Z > 0 {
+		c.N = math.MaxInt32
+	}
+}
+
 func (c *Config) init() error {
 	err := c.initData()
 	if err != nil {
@@ -273,6 +286,8 @@ func (c *Config) init() error {
 	if err != nil {
 		return err
 	}
+
+	c.initDurations()
 
 	c.Default()
 

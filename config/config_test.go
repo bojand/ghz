@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"math"
 	"os"
 	"runtime"
 	"testing"
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expected = `{"proto":"asdf","protoset":"","call":"","cert":"","cName":"","n":0,"c":0,"q":0,"t":0,"D":"","M":"","o":"","O":"oval","host":"","T":0,"L":0,"cpus":0,"z":"4h30m0s"}`
+const expected = `{"proto":"asdf","protoset":"","call":"","cert":"","cName":"","n":0,"c":0,"q":0,"t":0,"D":"","M":"","o":"","O":"oval","host":"","T":0,"L":0,"cpus":0,"z":"4h30m0s","x":""}`
 
 func TestConfig_MarshalJSON(t *testing.T) {
 	z, _ := time.ParseDuration("4h30m")
@@ -416,5 +417,33 @@ func TestConfig_initData(t *testing.T) {
 		err = c.initData()
 		assert.NoError(t, err)
 		assert.Equal(t, c.Data, data)
+	})
+}
+
+func TestConfig_initDurations(t *testing.T) {
+	t.Run("with Z specified should set N to max int", func(t *testing.T) {
+		dur, _ := time.ParseDuration("4h30m")
+		c := &Config{N: 500, Z: dur}
+		c.initDurations()
+		assert.Equal(t, c.N, math.MaxInt32)
+	})
+
+	t.Run("with X specified should set Z to X and keep N", func(t *testing.T) {
+		dur, _ := time.ParseDuration("4h30m")
+		c := &Config{N: 500, X: dur}
+		c.initDurations()
+		assert.Equal(t, c.N, 500)
+		assert.Equal(t, c.X, dur)
+		assert.Equal(t, c.Z, dur)
+	})
+
+	t.Run("with X and Z specified should set Z to X and keep N", func(t *testing.T) {
+		dur, _ := time.ParseDuration("4m")
+		dur2, _ := time.ParseDuration("5m")
+		c := &Config{N: 500, X: dur, Z: dur2}
+		c.initDurations()
+		assert.Equal(t, c.N, 500)
+		assert.Equal(t, c.X, dur)
+		assert.Equal(t, c.Z, dur)
 	})
 }
