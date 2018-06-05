@@ -82,8 +82,9 @@ Options:
  
   -o  Output path. If none provided stdout is used.
   -O  Output type. If none provided, a summary is printed.
-      "json" outputs the metrics report in JSON format.
       "csv" outputs the response metrics in comma-separated values format.
+      "json" outputs the metrics report in JSON format.
+      "pretty" outputs the metrics report in pretty JSON format.
 	  
   -i  Comma separated list of proto import paths. The current working directory and the directory
 	  of the protocol buffer file are automatically added to the import list.
