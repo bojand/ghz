@@ -39,6 +39,9 @@ Options:
   -z  Duration of application to send requests. When duration is reached,
       application stops and exits. If duration is specified, n is ignored.
       Examples: -z 10s -z 3m.
+  -x  Maximum duration of application to send requests with n setting respected.
+      If duration is reached before n requests are completed, application stops and exits.
+      Examples: -x 10s -x 3m.
 
   -d  The call data as stringified JSON.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
@@ -49,7 +52,7 @@ Options:
   -O  Output type. If none provided, a summary is printed.
       "csv" outputs the response metrics in comma-separated values format.
       "json" outputs the metrics report in JSON format.
-      "pretty" outputs the metrics report in pretty JSON format.      
+      "pretty" outputs the metrics report in pretty JSON format.
 
   -i  Comma separated list of proto import paths. The current working directory and the directory
 	  of the protocol buffer file are automatically added to the import list.
