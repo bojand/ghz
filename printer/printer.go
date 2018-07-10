@@ -152,7 +152,6 @@ duration (ms),status,error{{ range $i, $v := .Details }}
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Results</title>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.7.4/d3.js"></script> -->
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/britecharts@2/dist/bundled/britecharts.min.js"></script>
@@ -161,38 +160,41 @@ duration (ms),status,error{{ range $i, $v := .Details }}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" />
 
   </head>
-  <body>
+	
+	<body>
+	
     <section class="section">
-      <div class="container">
+	  
+	  <div class="container">
         <div class="columns">
-          <div class="column is-offset-2-desktop is-narrow">
+          <div class="column is-narrow">
             <div class="content">
 			  <h3>Summary</h3>
 			  <table class="table">
 				<tbody>
-				  <tr>
+			      <tr>
 					<th>Count</th>
 					<td>{{ .Count }}</td>
 				  </tr>
 				  <tr>
-					<th>Total</th>
-					<td>{{ formatMilli .Total.Seconds }} ms</td>
+				    <th>Total</th>
+				    <td>{{ formatMilli .Total.Seconds }} ms</td>
 				  </tr>
 				  <tr>
-					<th>Slowest</th>
+				    <th>Slowest</th>
 					<td>{{ formatMilli .Slowest.Seconds }} ms</td>
 				  </tr>
 				  <tr>
-					<th>Fastest</th>
-					<td>{{ formatMilli .Fastest.Seconds }} ms</td>
+				    <th>Fastest</th>
+				    <td>{{ formatMilli .Fastest.Seconds }} ms</td>
 				  </tr>
 				  <tr>
-					<th>Average</th>
-					<td>{{ formatMilli .Average.Seconds }} ms</td>
+				    <th>Average</th>
+				    <td>{{ formatMilli .Average.Seconds }} ms</td>
 				  </tr>
 				  <tr>
-					<th>Requests / sec</th>
-					<td>{{ formatSeconds .Rps }}</td>
+				    <th>Requests / sec</th>
+				    <td>{{ formatSeconds .Rps }}</td>
 				  </tr>
 				</tbody>
 			  </table>
@@ -202,95 +204,164 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 	  </div>
 
 	  <br />
-      <div class="container">
-        <div class="columns">
-          <div class="column is-8-desktop is-offset-2-desktop">
-            <div class="content">
-              <h3>Historam</h3>
-              <p>
-                <div class="js-bar-container"></div>
-              </p>
-            </div>
-          </div>
-        </div>
+		<div class="container">
+			<div class="content">
+				<h3>Historam</h3>
+				<p>
+					<div class="js-bar-container"></div>
+				</p>
+			</div>
 	  </div>
 
 	  <br />
-      <div class="container">
-        <div class="columns">
-          <div class="column is-8-desktop is-offset-2-desktop">
-            <div class="content">
-              <h3>Latency distribution</h3>
-              <p>
-                <table class="table is-fullwidth">
-                  <thead>
-					<tr>
-					{{ range .LatencyDistribution }}
-						<th>{{ .Percentage }} %%</th>
-					{{ end }}
-                    </tr>
-                  </thead>
-                  <tbody>
-					<tr>
-					{{ range .LatencyDistribution }}
-						<td>{{ formatMilli .Latency.Seconds }} ms</td>
-					{{ end }}
-                    </tr>
-                  </tbody>
-                </table>
-              </p>
-            </div>
-          </div>
-        </div>
-	  </div>
-	</section>
+		<div class="container">
+			<div class="content">
+				<h3>Latency distribution</h3>
+				<table class="table is-fullwidth">
+					<thead>
+						<tr>
+							{{ range .LatencyDistribution }}
+								<th>{{ .Percentage }} %%</th>
+							{{ end }}
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							{{ range .LatencyDistribution }}
+								<td>{{ formatMilli .Latency.Seconds }} ms</td>
+							{{ end }}
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<br />
+		<div class="container">
+			<div class="columns">
+				<div class="column is-narrow">
+					<div class="content">
+						<h3>Status distribution</h3>
+						<table class="table is-hoverable">
+							<thead>
+								<tr>
+									<th>Status</th>
+									<th>Count</th>
+								</tr>
+							</thead>
+							<tbody>
+							  {{ range $code, $num := .StatusCodeDist }}
+									<tr>
+									  <td>{{ $code }}</td>
+									  <td>{{ $num }}</td>
+									</tr>
+									{{ end }}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			{{ if gt (len .ErrorDist) 0 }}
+				
+				<br />
+				<div class="container">
+					<div class="columns">
+						<div class="column is-narrow">
+							<div class="content">
+								<h3>Errors</h3>
+								<table class="table is-hoverable">
+									<thead>
+										<tr>
+											<th>Error</th>
+											<th>Count</th>
+										</tr>
+									</thead>
+									<tbody>
+										{{ range $err, $num := .ErrorDist }}
+											<tr>
+												<td>{{ $err }}</td>
+												<td>{{ $num }}</td>
+											</tr>
+											{{ end }}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+
+			{{ end }}
+		
+		</section>
+
   </body>
 
   <script>
 
-const data = [
-  {{ range .Histogram }}
-  	{ name: {{ formatMark .Mark }}, value: {{ .Frequency }} },
-  {{ end }}
-];
+	const count = {{ .Count }};
 
-function createHorizontalBarChart() {
-  let barChart = britecharts.bar(),
-    tooltip = britecharts.miniTooltip(),
-    barContainer = d3.select('.js-bar-container'),
-    containerWidth = barContainer.node() ? barContainer.node().getBoundingClientRect().width : false,
-    tooltipContainer,
-    dataset;
-  
-	if (containerWidth) {
-    dataset = data;
-    barChart
-      .isHorizontal(true)
-      .isAnimated(true)
-      .margin({
-        left: 100,
-        right: 20,
-        top: 20,
-        bottom: 20
-      })
-      .colorSchema(britecharts.colors.colorSchemas.teal)
-      .width(containerWidth)
-      .yAxisPaddingBetweenChart(30)
-      .height(300)
-      .hasPercentage(true)
-      .enableLabels(true)
-      .labelsNumberFormat('.0%%')
-      .percentageAxisToMaxRatio(1.3)
-      .on('customMouseOver', tooltip.show)
-      .on('customMouseMove', tooltip.update)
-      .on('customMouseOut', tooltip.hide);
-    barContainer.datum(dataset).call(barChart);
-    tooltipContainer = d3.select('.js-bar-container .bar-chart .metadata-group');
-    tooltipContainer.datum([]).call(tooltip);
-  }
-}
+	const data = [
+		{{ range .Histogram }}
+			{ name: {{ formatMark .Mark }}, value: {{ .Count }} },
+		{{ end }}
+	];
 
-createHorizontalBarChart();
+	function createHorizontalBarChart() {
+		let barChart = britecharts.bar(),
+			tooltip = britecharts.miniTooltip(),
+			barContainer = d3.select('.js-bar-container'),
+			containerWidth = barContainer.node() ? barContainer.node().getBoundingClientRect().width : false,
+			tooltipContainer,
+			dataset;
+
+		tooltip.numberFormat('')
+		tooltip.valueFormatter(function(v) {
+			var percent = v / count * 100;
+			return v + ' ' + '(' + Number.parseFloat(percent).toFixed(1) + ' %%)';
+		})
+
+		if (containerWidth) {
+			dataset = data;
+			barChart
+				.isHorizontal(true)
+				.isAnimated(true)
+				.margin({
+					left: 100,
+					right: 20,
+					top: 20,
+					bottom: 20
+				})
+				.colorSchema(britecharts.colors.colorSchemas.teal)
+				.width(containerWidth)
+				.yAxisPaddingBetweenChart(20)
+				.height(300)
+				// .hasPercentage(true)
+				.enableLabels(true)
+				.labelsNumberFormat('')
+				.percentageAxisToMaxRatio(1.3)
+				.on('customMouseOver', tooltip.show)
+				.on('customMouseMove', tooltip.update)
+				.on('customMouseOut', tooltip.hide);
+
+			barChart.orderingFunction(function(a, b) {
+				var nA = a.name.replace(/ms/gi, '');
+				var nB = b.name.replace(/ms/gi, '');
+
+				var vA = Number.parseFloat(nA);
+				var vB = Number.parseFloat(nB);
+
+				return vB - vA;
+			})
+
+			barContainer.datum(dataset).call(barChart);
+			tooltipContainer = d3.select('.js-bar-container .bar-chart .metadata-group');
+			tooltipContainer.datum([]).call(tooltip);
+		}
+	}
+
+	createHorizontalBarChart();
 	</script>
 	
 </html>
