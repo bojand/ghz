@@ -82,6 +82,7 @@ var tmplFuncMap = template.FuncMap{
 	"histogram":     histogram,
 	"jsonify":       jsonify,
 	"formatMark":    formatMarkMs,
+	"formatPercent": formatPercent,
 }
 
 func jsonify(v interface{}) string {
@@ -95,6 +96,11 @@ func formatMilli(duration float64) string {
 
 func formatSeconds(duration float64) string {
 	return fmt.Sprintf("%4.2f", duration)
+}
+
+func formatPercent(num int, total uint64) string {
+	p := float64(num) / float64(total)
+	return fmt.Sprintf("%.2f", p*100)
 }
 
 func histogram(buckets []grpcannon.Bucket) string {
@@ -206,14 +212,14 @@ duration (ms),status,error{{ range $i, $v := .Details }}
               <span class="icon is-small">
                 <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
               </span>
-              <span>Error Distribution</span>
+              <span>Errors</span>
             </a>
 					</li>
 					{{ end }}
           <li>
             <a href="#data">
               <span class="icon is-small">
-                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <i class="far fa-file-alt" aria-hidden="true"></i>
               </span>
               <span>Data</span>
             </a>
@@ -313,13 +319,15 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 								<tr>
 									<th>Status</th>
 									<th>Count</th>
+									<th>%% of Total</th>
 								</tr>
 							</thead>
 							<tbody>
 							  {{ range $code, $num := .StatusCodeDist }}
 									<tr>
 									  <td>{{ $code }}</td>
-									  <td>{{ $num }}</td>
+										<td>{{ $num }}</td>
+										<td>{{ formatPercent $num $.Count }} %%</td>
 									</tr>
 									{{ end }}
 								</tbody>
@@ -344,6 +352,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 										<tr>
 											<th>Error</th>
 											<th>Count</th>
+											<th>%% of Total</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -351,6 +360,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 											<tr>
 												<td>{{ $err }}</td>
 												<td>{{ $num }}</td>
+												<td>{{ formatPercent $num $.Count }} %%</td>
 											</tr>
 											{{ end }}
 										</tbody>
