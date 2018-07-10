@@ -153,7 +153,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Results</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
-
+		<script src="https://cdn.jsdelivr.net/npm/papaparse@4.5.0/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/britecharts@2/dist/bundled/britecharts.min.js"></script>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/britecharts/dist/css/britecharts.min.css" type="text/css" /></head>
@@ -163,42 +163,102 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 	
 	<body>
 	
-    <section class="section">
+		<section class="section">
+		
+		<div class="container">
+        <nav class="breadcrumb has-bullet-separator" aria-label="breadcrumbs">
+        <ul>
+          <li>
+            <a href="#summary">
+              <span class="icon is-small">
+                <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+              </span>
+              <span>Summary</span>
+            </a>
+          </li>
+          <li>
+            <a href="#histogram">
+              <span class="icon is-small">
+                <i class="fas fa-chart-bar" aria-hidden="true"></i>
+              </span>
+              <span>Histogram</span>
+            </a>
+          </li>
+          <li>
+            <a href="#latency">
+              <span class="icon is-small">
+                <i class="far fa-clock" aria-hidden="true"></i>
+              </span>
+              <span>Latency Distribution</span>
+            </a>
+          </li>
+          <li>
+            <a href="#status">
+              <span class="icon is-small">
+                <i class="far fa-check-square" aria-hidden="true"></i>
+              </span>
+              <span>Status Distribution</span>
+            </a>
+					</li>
+					{{ if gt (len .ErrorDist) 0 }}
+          <li>
+            <a href="#errors">
+              <span class="icon is-small">
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+              </span>
+              <span>Error Distribution</span>
+            </a>
+					</li>
+					{{ end }}
+          <li>
+            <a href="#data">
+              <span class="icon is-small">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+              </span>
+              <span>Data</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <hr />
+    </div>
 	  
 	  <div class="container">
-        <div class="columns">
-          <div class="column is-narrow">
-            <div class="content">
-			  <h3>Summary</h3>
-			  <table class="table">
-				<tbody>
-			      <tr>
-					<th>Count</th>
-					<td>{{ .Count }}</td>
-				  </tr>
-				  <tr>
-				    <th>Total</th>
-				    <td>{{ formatMilli .Total.Seconds }} ms</td>
-				  </tr>
-				  <tr>
-				    <th>Slowest</th>
-					<td>{{ formatMilli .Slowest.Seconds }} ms</td>
-				  </tr>
-				  <tr>
-				    <th>Fastest</th>
-				    <td>{{ formatMilli .Fastest.Seconds }} ms</td>
-				  </tr>
-				  <tr>
-				    <th>Average</th>
-				    <td>{{ formatMilli .Average.Seconds }} ms</td>
-				  </tr>
-				  <tr>
-				    <th>Requests / sec</th>
-				    <td>{{ formatSeconds .Rps }}</td>
-				  </tr>
-				</tbody>
-			  </table>
-			</div>
+			<div class="columns">
+				<div class="column is-narrow">
+					<div class="content">
+						<a name="summary">
+							<h3>Summary</h3>
+						</a>
+						<table class="table">
+							<tbody>
+								<tr>
+							<th>Count</th>
+							<td>{{ .Count }}</td>
+							</tr>
+							<tr>
+								<th>Total</th>
+								<td>{{ formatMilli .Total.Seconds }} ms</td>
+							</tr>
+							<tr>
+								<th>Slowest</th>
+							<td>{{ formatMilli .Slowest.Seconds }} ms</td>
+							</tr>
+							<tr>
+								<th>Fastest</th>
+								<td>{{ formatMilli .Fastest.Seconds }} ms</td>
+							</tr>
+							<tr>
+								<th>Average</th>
+								<td>{{ formatMilli .Average.Seconds }} ms</td>
+							</tr>
+							<tr>
+								<th>Requests / sec</th>
+								<td>{{ formatSeconds .Rps }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 		  </div>
 		</div>
 	  </div>
@@ -206,7 +266,9 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 	  <br />
 		<div class="container">
 			<div class="content">
-				<h3>Historam</h3>
+				<a name="historam">
+					<h3>Historam</h3>
+				</a>
 				<p>
 					<div class="js-bar-container"></div>
 				</p>
@@ -216,7 +278,9 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 	  <br />
 		<div class="container">
 			<div class="content">
-				<h3>Latency distribution</h3>
+				<a name="latency">
+					<h3>Latency distribution</h3>
+				</a>
 				<table class="table is-fullwidth">
 					<thead>
 						<tr>
@@ -241,7 +305,9 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 			<div class="columns">
 				<div class="column is-narrow">
 					<div class="content">
-						<h3>Status distribution</h3>
+						<a name="status">
+							<h3>Status distribution</h3>
+						</a>
 						<table class="table is-hoverable">
 							<thead>
 								<tr>
@@ -270,7 +336,9 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 					<div class="columns">
 						<div class="column is-narrow">
 							<div class="content">
-								<h3>Errors</h3>
+								<a name="errors">
+									<h3>Errors</h3>
+								</a>
 								<table class="table is-hoverable">
 									<thead>
 										<tr>
@@ -293,6 +361,32 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 					</div>
 
 			{{ end }}
+
+			<br />
+      <div class="container">
+        <div class="columns">
+          <div class="column is-narrow">
+            <div class="content">
+              <a name="data">
+                <h3>Data</h3>
+              </a>
+              
+              <a class="button" id="dlJSON">JSON</a>
+              <a class="button" id="dlCSV">CSV</a>
+            </div>
+          </div>
+        </div>
+			</div>
+			
+			<div class="container">
+        <hr />
+        <div class="content has-text-centered">
+          <p>
+            Generated by <strong>ghz</strong>
+          </p>
+          <a href="https://github.com/bojand/grpcannon"><i class="icon is-medium fab fa-github"></i></a>
+        </div>
+      </div>
 		
 		</section>
 
@@ -301,6 +395,8 @@ duration (ms),status,error{{ range $i, $v := .Details }}
   <script>
 
 	const count = {{ .Count }};
+
+	const rawData = {{ jsonify .Details }};
 
 	const data = [
 		{{ range .Histogram }}
@@ -336,7 +432,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 				.colorSchema(britecharts.colors.colorSchemas.teal)
 				.width(containerWidth)
 				.yAxisPaddingBetweenChart(20)
-				.height(300)
+				.height(400)
 				// .hasPercentage(true)
 				.enableLabels(true)
 				.labelsNumberFormat('')
@@ -356,13 +452,41 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 			})
 
 			barContainer.datum(dataset).call(barChart);
+
 			tooltipContainer = d3.select('.js-bar-container .bar-chart .metadata-group');
 			tooltipContainer.datum([]).call(tooltip);
 		}
 	}
 
+	function setJSONDownloadLink () {
+		var filename = "data.json";
+		var btn = document.getElementById('dlJSON');
+		var jsonData = JSON.stringify(rawData)
+		var blob = new Blob([jsonData], { type: 'text/json;charset=utf-8;' });
+		var url = URL.createObjectURL(blob);
+		btn.setAttribute("href", url);
+		btn.setAttribute("download", filename);
+	}
+
+	function setCSVDownloadLink () {
+		var filename = "data.csv";
+		var btn = document.getElementById('dlCSV');
+		var csv = Papa.unparse(rawData)
+		var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+		var url = URL.createObjectURL(blob);
+		btn.setAttribute("href", url);
+		btn.setAttribute("download", filename);
+	}
+
 	createHorizontalBarChart();
+
+	setJSONDownloadLink();
+
+	setCSVDownloadLink();
+	
 	</script>
+
+	<script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
 	
 </html>
 `
