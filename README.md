@@ -53,6 +53,7 @@ Options:
       "csv" outputs the response metrics in comma-separated values format.
       "json" outputs the metrics report in JSON format.
       "pretty" outputs the metrics report in pretty JSON format.
+      "html" outputs the metrics report as HTML.
 
   -i  Comma separated list of proto import paths. The current working directory and the directory
 	  of the protocol buffer file are automatically added to the import list.
@@ -185,6 +186,10 @@ duration (ms),status,error
 0.32,OK,
 ...
 ```
+
+HTML output can be generated using `html` as format in the `-O` option. See [sample output](http://bojand.github.io/sample.html).
+
+Using `-O json` outputs JSON data, and `-O pretty` outputs JSON in pretty format.
 
 ## Credit
 
