@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bojand/grpcannon"
-	"github.com/bojand/grpcannon/config"
-	"github.com/bojand/grpcannon/printer"
-	"github.com/bojand/grpcannon/protodesc"
+	"github.com/bojand/ghz"
+	"github.com/bojand/ghz/config"
+	"github.com/bojand/ghz/printer"
+	"github.com/bojand/ghz/protodesc"
 	"github.com/jhump/protoreflect/desc"
 )
 
@@ -51,10 +51,10 @@ var (
 
 	v = flag.Bool("v", false, "Print the version.")
 
-	localConfigName = "grpcannon.json"
+	localConfigName = "ghz.json"
 )
 
-var usage = `Usage: grpcannon [options...] <host>
+var usage = `Usage: ghz [options...] <host>
 Options:
   -proto	The protocol buffer file.
   -protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
@@ -186,13 +186,13 @@ func usageAndExit(msg string) {
 	os.Exit(1)
 }
 
-func runTest(config *config.Config) (*grpcannon.Report, error) {
+func runTest(config *config.Config) (*ghz.Report, error) {
 	mtd, err := getMethodDesc(config)
 	if err != nil {
 		return nil, err
 	}
 
-	opts := &grpcannon.Options{
+	opts := &ghz.Options{
 		Host:          config.Host,
 		Cert:          config.Cert,
 		CName:         config.CName,
@@ -207,7 +207,7 @@ func runTest(config *config.Config) (*grpcannon.Report, error) {
 		Metadata:      config.Metadata,
 	}
 
-	reqr, err := grpcannon.New(mtd, opts)
+	reqr, err := ghz.New(mtd, opts)
 	if err != nil {
 		return nil, err
 	}

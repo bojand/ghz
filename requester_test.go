@@ -1,4 +1,4 @@
-package grpcannon
+package ghz
 
 import (
 	"net"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bojand/grpcannon/internal/helloworld"
-	"github.com/bojand/grpcannon/protodesc"
+	"github.com/bojand/ghz/internal/helloworld"
+	"github.com/bojand/ghz/protodesc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

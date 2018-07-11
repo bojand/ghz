@@ -1,6 +1,6 @@
 build:
-  main: cmd/grpcannon/main.go
-  binary: grpcannon
+  main: cmd/ghz/main.go
+  binary: ghz
   goos:
     - darwin
     - linux

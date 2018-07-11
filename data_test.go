@@ -1,9 +1,9 @@
-package grpcannon
+package ghz
 
 import (
 	"testing"
 
-	"github.com/bojand/grpcannon/protodesc"
+	"github.com/bojand/ghz/protodesc"
 
 	"github.com/stretchr/testify/assert"
 )
