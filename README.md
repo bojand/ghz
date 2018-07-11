@@ -11,10 +11,6 @@
 
 Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [hey](https://github.com/rakyll/hey/) and [grpcurl](https://github.com/fullstorydev/grpcurl).
 
-## Demo
-
-![demo](ghz.gif)
-
 ## Install
 
 Download a prebuilt executable binary from the [releases page](https://github.com/bojand/ghz/releases).
