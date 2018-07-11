@@ -1,5 +1,5 @@
-// Package grpcannon provides gRPC benchmarking functionality
-package grpcannon
+// Package ghz provides gRPC benchmarking functionality
+package ghz
 
 import (
 	"context"

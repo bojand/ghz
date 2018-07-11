@@ -13,5 +13,5 @@
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
-cmd/grpcannon/grpcannon
+cmd/ghz/ghz
 dist

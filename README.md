@@ -4,25 +4,25 @@
 	<br>
 </div>
 
-# grpcannon
+# ghz
 
-[![build status](https://img.shields.io/travis/bojand/grpcannon/master.svg?style=flat-square)](https://travis-ci.org/bojand/grpcannon)
-[![Go Report Card](https://goreportcard.com/badge/github.com/bojand/grpcannon?style=flat-square)](https://goreportcard.com/report/github.com/bojand/grpcannon)
+[![build status](https://img.shields.io/travis/bojand/ghz/master.svg?style=flat-square)](https://travis-ci.org/bojand/ghz)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bojand/ghz?style=flat-square)](https://goreportcard.com/report/github.com/bojand/ghz)
 
 Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [hey](https://github.com/rakyll/hey/) and [grpcurl](https://github.com/fullstorydev/grpcurl).
 
 ## Demo
 
-![demo](grpcannon.gif)
+![demo](ghz.gif)
 
 ## Install
 
-Download a prebuilt executable binary from the [releases page](https://github.com/bojand/grpcannon/releases).
+Download a prebuilt executable binary from the [releases page](https://github.com/bojand/ghz/releases).
 
 ## Usage
 
 ```
-Usage: grpcannon [options...] <host>
+Usage: ghz [options...] <host>
 Options:
   -proto	The protocol buffer file.
   -protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
@@ -66,26 +66,26 @@ Options:
   -v  Print the version.
 ```
 
-Alternatively all settings can be set via `grpcannon.json` file if present in the same path as the `grpcannon` executable. A custom configuration file can be specified using `-config` option.
+Alternatively all settings can be set via `ghz.json` file if present in the same path as the `ghz` executable. A custom configuration file can be specified using `-config` option.
 
 ## Examples
 
 A simple unary call:
 
 ```sh
-grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' 0.0.0.0:50051
+ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' 0.0.0.0:50051
 ```
 
 Custom number of requests and concurrency:
 
 ```sh
-grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' -n 2000 -c 20 0.0.0.0:50051
+ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' -n 2000 -c 20 0.0.0.0:50051
 ```
 
 Client streaming data can be sent as an array, each element representing a single message:
 
 ```sh
-grpcannon -proto ./greeter.proto -call helloworld.Greeter.SayHelloCS -d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]' 0.0.0.0:50051
+ghz -proto ./greeter.proto -call helloworld.Greeter.SayHelloCS -d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]' 0.0.0.0:50051
 ```
 
 If a single object is given for data it is sent as every message.
@@ -98,10 +98,10 @@ Create a protoset
 protoc --proto_path=. --descriptor_set_out=bundle.protoset *.proto
 ```
 
-And then use it as input to `grpcannon` with `-protoset` option:
+And then use it as input to `ghz` with `-protoset` option:
 
 ```
-./grpcannon -protoset ./bundle.protoset -call helloworld.Greeter.SayHello -d '{"name":"Bob"}' -n 1000 -c 10 0.0.0.0:50051
+./ghz -protoset ./bundle.protoset -call helloworld.Greeter.SayHello -d '{"name":"Bob"}' -n 1000 -c 10 0.0.0.0:50051
 ```
 
 Note that only one of `-proto` or `-protoset` options will be used. `-proto` takes precedence.
@@ -109,10 +109,10 @@ Note that only one of `-proto` or `-protoset` options will be used. `-proto` tak
 Using a custom config file:
 
 ```sh
-grpcannon -config ./config.json
+ghz -config ./config.json
 ```
 
-Example `grpcannon.json`
+Example `ghz.json`
 
 ```json
 {

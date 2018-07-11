@@ -1,11 +1,11 @@
-package grpcannon
+package ghz
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/bojand/grpcannon/internal/helloworld"
+	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )

@@ -246,8 +246,8 @@ func TestConfig_Default(t *testing.T) {
 func TestConfig_ReadConfig(t *testing.T) {
 	os.Chdir("../testdata/")
 
-	t.Run("grpcannon.json", func(t *testing.T) {
-		c, err := ReadConfig("../testdata/grpcannon.json")
+	t.Run("ghz.json", func(t *testing.T) {
+		c, err := ReadConfig("../testdata/ghz.json")
 
 		assert.NoError(t, err)
 		assert.NotNil(t, c)

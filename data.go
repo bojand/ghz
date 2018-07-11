@@ -1,4 +1,4 @@
-package grpcannon
+package ghz
 
 import (
 	"encoding/json"
