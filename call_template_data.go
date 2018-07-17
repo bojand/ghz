@@ -34,29 +34,23 @@ func newCallTemplateData(mtd *desc.MethodDescriptor, reqNum int64) *callTemplate
 }
 
 func (td *callTemplateData) execute(data string) (*bytes.Buffer, error) {
-	var err error
-
-	t := template.New("call_template_data")
-	t, err = t.Parse(data)
-	if err != nil {
-		return nil, err
-	}
+	t := template.Must(template.New("call_template_data").Parse(data))
 
 	var tpl bytes.Buffer
-	err = t.Execute(&tpl, td)
+	err := t.Execute(&tpl, td)
 	return &tpl, err
 }
 
 func (td *callTemplateData) executeData(data string) (interface{}, error) {
 
-	var tpl *bytes.Buffer
-	var err error
-	if tpl, err = td.execute(data); err != nil {
-		return nil, err
+	input := []byte(data)
+	tpl, err := td.execute(data)
+	if err == nil {
+		input = tpl.Bytes()
 	}
 
 	var dataMap interface{}
-	err = json.Unmarshal(tpl.Bytes(), &dataMap)
+	err = json.Unmarshal(input, &dataMap)
 	if err != nil {
 		return nil, err
 	}
@@ -65,14 +59,14 @@ func (td *callTemplateData) executeData(data string) (interface{}, error) {
 }
 
 func (td *callTemplateData) executeMetadata(metadata string) (*map[string]string, error) {
-	var tpl *bytes.Buffer
-	var err error
-	if tpl, err = td.execute(metadata); err != nil {
-		return nil, err
+	input := []byte(metadata)
+	tpl, err := td.execute(metadata)
+	if err == nil {
+		input = tpl.Bytes()
 	}
 
 	var mdMap map[string]string
-	err = json.Unmarshal(tpl.Bytes(), &mdMap)
+	err = json.Unmarshal(input, &mdMap)
 	if err != nil {
 		return nil, err
 	}
