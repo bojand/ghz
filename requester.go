@@ -73,14 +73,14 @@ func New(mtd *desc.MethodDescriptor, c *Options) (*Requester, error) {
 		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
 	}
 
-	// we need data and metadata in string format so
+	// we need data in string format so
 	// we can do template evaluation on it for every call
 	dataJSON, err := json.Marshal(c.Data)
 	if err != nil {
 		return nil, err
 	}
 
-	// we need data and metadata in string format so
+	// we need metadata in string format so
 	// we can do template evaluation on it for every call
 	mdJSON, err := json.Marshal(c.Metadata)
 	if err != nil {
