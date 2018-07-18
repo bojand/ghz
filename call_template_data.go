@@ -4,23 +4,28 @@ import (
 	"bytes"
 	"encoding/json"
 	"text/template"
+	"time"
 
 	"github.com/jhump/protoreflect/desc"
 )
 
+// call template data
 type callTemplateData struct {
-	RequestNumber      int64
-	FullyQualifiedName string
-	MethodName         string
-	ServiceName        string
-	InputName          string
-	OutputName         string
-	IsClientStreaming  bool
-	IsServerStreaming  bool
+	RequestNumber      int64  // unique request number for each request
+	FullyQualifiedName string // fully-qualified name of the method call
+	MethodName         string // shorter call method name
+	ServiceName        string // the service name
+	InputName          string // name of the input message type
+	OutputName         string // name of the output message type
+	IsClientStreaming  bool   // whether this call is client streaming
+	IsServerStreaming  bool   // whether this call is server streaming
+	Timestamp          string // timestamp of the call in RFC3339 format
+	TimestampUnix      int64  // timestamp of the call as unix time
 }
 
 // newCallTemplateData returns new call template data
 func newCallTemplateData(mtd *desc.MethodDescriptor, reqNum int64) *callTemplateData {
+	now := time.Now()
 	return &callTemplateData{
 		RequestNumber:      reqNum,
 		FullyQualifiedName: mtd.GetFullyQualifiedName(),
@@ -30,6 +35,8 @@ func newCallTemplateData(mtd *desc.MethodDescriptor, reqNum int64) *callTemplate
 		OutputName:         mtd.GetOutputType().GetName(),
 		IsClientStreaming:  mtd.IsClientStreaming(),
 		IsServerStreaming:  mtd.IsServerStreaming(),
+		Timestamp:          now.Format(time.RFC3339),
+		TimestampUnix:      now.Unix(),
 	}
 }
 
