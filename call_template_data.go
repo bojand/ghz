@@ -11,7 +11,7 @@ import (
 
 // call template data
 type callTemplateData struct {
-	RequestNumber      int64  // unique request number for each request
+	RequestNumber      int64  // unique incrememnted request number for each request
 	FullyQualifiedName string // fully-qualified name of the method call
 	MethodName         string // shorter call method name
 	ServiceName        string // the service name
@@ -26,6 +26,7 @@ type callTemplateData struct {
 // newCallTemplateData returns new call template data
 func newCallTemplateData(mtd *desc.MethodDescriptor, reqNum int64) *callTemplateData {
 	now := time.Now()
+
 	return &callTemplateData{
 		RequestNumber:      reqNum,
 		FullyQualifiedName: mtd.GetFullyQualifiedName(),
@@ -42,14 +43,12 @@ func newCallTemplateData(mtd *desc.MethodDescriptor, reqNum int64) *callTemplate
 
 func (td *callTemplateData) execute(data string) (*bytes.Buffer, error) {
 	t := template.Must(template.New("call_template_data").Parse(data))
-
 	var tpl bytes.Buffer
 	err := t.Execute(&tpl, td)
 	return &tpl, err
 }
 
 func (td *callTemplateData) executeData(data string) (interface{}, error) {
-
 	input := []byte(data)
 	tpl, err := td.execute(data)
 	if err == nil {

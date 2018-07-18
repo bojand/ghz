@@ -64,12 +64,40 @@ Options:
 
 Alternatively all settings can be set via `ghz.json` file if present in the same path as the `ghz` executable. A custom configuration file can be specified using `-config` option.
 
+## Call Template Data
+
+Data and metadata can specify [template actions](https://golang.org/pkg/text/template/) that will be parsed and evaluated at every request. Each request gets a new instance of the data. The available variables / actions are:
+
+```go
+// call template data
+type callTemplateData struct {
+	RequestNumber      int64  // unique incrememnted request number for each request
+	FullyQualifiedName string // fully-qualified name of the method call
+	MethodName         string // shorter call method name
+	ServiceName        string // the service name
+	InputName          string // name of the input message type
+	OutputName         string // name of the output message type
+	IsClientStreaming  bool   // whether this call is client streaming
+	IsServerStreaming  bool   // whether this call is server streaming
+	Timestamp          string // timestamp of the call in RFC3339 format
+	TimestampUnix      int64  // timestamp of the call as unix time
+}
+```
+
+This can be useful to inject variable information into the data or metadata payload for each request, such as timestamp or unique request number. See examples below.
+
 ## Examples
 
 A simple unary call:
 
 ```sh
 ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' 0.0.0.0:50051
+```
+
+A simple unary call with metadata using template actions:
+
+```sh
+ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' -m '{"trace_id":"{{.RequestNumber}}","timestamp":"{{.TimestampUnix}}"}' 0.0.0.0:50051
 ```
 
 Custom number of requests and concurrency:
@@ -119,11 +147,17 @@ Example `ghz.json`
     "d": {
         "name": "Joe"
     },
+    "m": {
+        "foo": "bar",
+        "trace_id": "{{.RequestNumber}}",
+        "timestamp": "{{.TimestampUnix}}"
+    },
     "i": [
         "/path/to/protos"
     ],
     "n": 4000,
     "c": 40,
+    "x": "10s",
     "host": "0.0.0.0:50051"
 }
 ```
