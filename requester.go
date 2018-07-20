@@ -3,10 +3,12 @@ package ghz
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/jhump/protoreflect/desc"
@@ -23,7 +25,7 @@ import (
 type Options struct {
 	Host          string
 	Cert          string
-	CName		  string
+	CName         string
 	N             int
 	C             int
 	QPS           int
@@ -47,18 +49,20 @@ type callResult struct {
 
 // Requester is used for doing the requests
 type Requester struct {
-	cc          *grpc.ClientConn
-	stub        grpcdynamic.Stub
-	mtd         *desc.MethodDescriptor
-	input       *dynamic.Message
-	streamInput *[]*dynamic.Message
-	reqMD       *metadata.MD
-	reporter    *Reporter
+	cc       *grpc.ClientConn
+	stub     grpcdynamic.Stub
+	mtd      *desc.MethodDescriptor
+	reporter *Reporter
+
+	data     string
+	metadata string
 
 	config  *Options
 	results chan *callResult
 	stopCh  chan bool
 	start   time.Time
+
+	reqCounter int64
 }
 
 // New creates new Requester
@@ -69,22 +73,27 @@ func New(mtd *desc.MethodDescriptor, c *Options) (*Requester, error) {
 		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
 	}
 
-	input, streamInput, err := createPayloads(c.Data, mtd)
+	// we need data in string format so
+	// we can do template evaluation on it for every call
+	dataJSON, err := json.Marshal(c.Data)
 	if err != nil {
 		return nil, err
 	}
 
-	// metadata
-	var reqMD *metadata.MD
-	if c.Metadata != nil && len(*c.Metadata) > 0 {
-		md := metadata.New(*c.Metadata)
-		reqMD = &md
+	// we need metadata in string format so
+	// we can do template evaluation on it for every call
+	mdJSON, err := json.Marshal(c.Metadata)
+	if err != nil {
+		return nil, err
 	}
 
-	return &Requester{config: c,
-		input:       input,
-		streamInput: streamInput,
-		reqMD:       reqMD, mtd: mtd}, nil
+	reqr := &Requester{
+		config:   c,
+		data:     string(dataJSON),
+		metadata: string(mdJSON),
+		mtd:      mtd}
+
+	return reqr, nil
 }
 
 // Run makes all the requests and returns a report of results
@@ -195,12 +204,39 @@ func (b *Requester) runWorker(n int) {
 			if b.config.QPS > 0 {
 				<-throttle
 			}
+
 			b.makeRequest()
 		}
 	}
 }
 
 func (b *Requester) makeRequest() {
+
+	reqNum := atomic.AddInt64(&b.reqCounter, 1)
+
+	ctd := newCallTemplateData(b.mtd, reqNum)
+
+	dataMap, err := ctd.executeData(b.data)
+	if err != nil {
+		return
+	}
+
+	mdMap, err := ctd.executeMetadata(b.metadata)
+	if err != nil {
+		return
+	}
+
+	var reqMD *metadata.MD
+	if mdMap != nil && len(*mdMap) > 0 {
+		md := metadata.New(*mdMap)
+		reqMD = &md
+	}
+
+	input, streamInput, err := createPayloads(dataMap, b.mtd)
+	if err != nil {
+		return
+	}
+
 	ctx := context.Background()
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -210,28 +246,28 @@ func (b *Requester) makeRequest() {
 	ctx, _ = context.WithTimeout(ctx, timeout)
 
 	// include the metadata
-	if b.reqMD != nil {
-		ctx = metadata.NewOutgoingContext(ctx, *b.reqMD)
+	if reqMD != nil {
+		ctx = metadata.NewOutgoingContext(ctx, *reqMD)
 	}
 
 	if b.mtd.IsClientStreaming() && b.mtd.IsServerStreaming() {
-		b.makeBidiRequest(&ctx)
+		b.makeBidiRequest(&ctx, streamInput)
 	} else if b.mtd.IsClientStreaming() {
-		b.makeClientStreamingRequest(&ctx)
+		b.makeClientStreamingRequest(&ctx, streamInput)
 	} else if b.mtd.IsServerStreaming() {
-		b.makeServerStreamingRequest(&ctx)
+		b.makeServerStreamingRequest(&ctx, input)
 	} else {
-		b.stub.InvokeRpc(ctx, b.mtd, b.input)
+		b.stub.InvokeRpc(ctx, b.mtd, input)
 	}
 }
 
-func (b *Requester) makeClientStreamingRequest(ctx *context.Context) {
+func (b *Requester) makeClientStreamingRequest(ctx *context.Context, input *[]*dynamic.Message) {
 	str, err := b.stub.InvokeRpcClientStream(*ctx, b.mtd)
 	counter := 0
 	for err == nil {
-		streamInput := *b.streamInput
+		streamInput := *input
 		inputLen := len(streamInput)
-		if b.streamInput == nil || inputLen == 0 {
+		if input == nil || inputLen == 0 {
 			str.CloseAndReceive()
 			break
 		}
@@ -253,8 +289,8 @@ func (b *Requester) makeClientStreamingRequest(ctx *context.Context) {
 	}
 }
 
-func (b *Requester) makeServerStreamingRequest(ctx *context.Context) {
-	str, err := b.stub.InvokeRpcServerStream(*ctx, b.mtd, b.input)
+func (b *Requester) makeServerStreamingRequest(ctx *context.Context, input *dynamic.Message) {
+	str, err := b.stub.InvokeRpcServerStream(*ctx, b.mtd, input)
 	for err == nil {
 		_, err := str.RecvMsg()
 		if err != nil {
@@ -266,13 +302,13 @@ func (b *Requester) makeServerStreamingRequest(ctx *context.Context) {
 	}
 }
 
-func (b *Requester) makeBidiRequest(ctx *context.Context) {
+func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Message) {
 	str, err := b.stub.InvokeRpcBidiStream(*ctx, b.mtd)
 	counter := 0
 	for err == nil {
-		streamInput := *b.streamInput
+		streamInput := *input
 		inputLen := len(streamInput)
-		if b.streamInput == nil || inputLen == 0 {
+		if input == nil || inputLen == 0 {
 			str.CloseSend()
 			break
 		}

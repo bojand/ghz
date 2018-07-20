@@ -1,0 +1,14 @@
+{
+  "x": "7s",
+  "n": 50000,
+  "c": 50,
+  "proto": "../../testdata/greeter.proto",
+  "call": "helloworld.Greeter.SayHellos",
+  "d": {
+    "name": "Bob {{.TimestampUnix}}"
+  },
+  "m": {
+    "rn": "{{.RequestNumber}}"
+  },
+  "host": "0.0.0.0:50051"
+}
