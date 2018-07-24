@@ -34,7 +34,7 @@ var (
 	z = flag.Duration("z", 0, "Duration of application to send requests.")
 	x = flag.Duration("x", 0, "Maximum duration of application to send requests.")
 
-	data     = flag.String("d", "", "The call data as stringified JSON.")
+	data     = flag.String("d", "", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
 	dataPath = flag.String("D", "", "Path for call data JSON file.")
 	md       = flag.String("m", "", "Request metadata as stringified JSON.")
 	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
@@ -63,8 +63,8 @@ Options:
   -cname	An override of the expect Server Cname presented by the server.
   -config	Path to the config JSON file.
 
-  -c  Number of requests to run concurrently. Total number of requests cannot
-	  be smaller than the concurrency level. Default is 50.
+  -c  Number of requests to run concurrently. Total number of requests cannot 
+      be smaller than the concurrency level. Default is 50.
   -n  Number of requests to run. Default is 200.
   -q  Rate limit, in queries per second (QPS). Default is no rate limit.
   -t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
@@ -75,7 +75,8 @@ Options:
       If duration is reached before n requests are completed, application stops and exits.
       Examples: -x 10s -x 3m.
   
-  -d  The call data as stringified JSON.
+  -d  The call data as stringified JSON. 
+      If the value is '@' then the request contents are read from stdin.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
   -m  Request metadata as stringified JSON.
   -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
@@ -233,7 +234,7 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 func getMethodDesc(config *config.Config) (*desc.MethodDescriptor, error) {
 	if config.Proto != "" {
 		return protodesc.GetMethodDescFromProto(config.Call, config.Proto, config.ImportPaths)
-	} else {
-		return protodesc.GetMethodDescFromProtoSet(config.Call, config.Protoset)
 	}
+
+	return protodesc.GetMethodDescFromProtoSet(config.Call, config.Protoset)
 }
