@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -65,6 +66,14 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 		DialTimeout:   dialTimout,
 		KeepaliveTime: keepaliveTime,
 		CPUs:          cpus}
+
+	if data == "@" {
+		b, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return nil, err
+		}
+		data = string(b)
+	}
 
 	err := cfg.setData(data)
 	if err != nil {
