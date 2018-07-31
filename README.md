@@ -28,7 +28,7 @@ Options:
   -config	Path to the config JSON file.
 
   -c  Number of requests to run concurrently. Total number of requests cannot
-	  be smaller than the concurrency level. Default is 50.
+      be smaller than the concurrency level. Default is 50.
   -n  Number of requests to run. Default is 200.
   -q  Rate limit, in queries per second (QPS). Default is no rate limit.
   -t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
@@ -40,6 +40,7 @@ Options:
       Examples: -x 10s -x 3m.
 
   -d  The call data as stringified JSON.
+      If the value is '@' then the request contents are read from stdin.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
   -m  Request metadata as stringified JSON.
   -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
