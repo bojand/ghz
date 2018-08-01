@@ -1,6 +1,7 @@
 package ghz
 
 import (
+	"encoding/json"
 	"sort"
 	"time"
 )
@@ -23,6 +24,8 @@ type Reporter struct {
 
 // Report holds the data for the full test
 type Report struct {
+	Date time.Time `json:"date"`
+
 	Count   uint64        `json:"count"`
 	Total   time.Duration `json:"total"`
 	Average time.Duration `json:"average"`
@@ -36,6 +39,18 @@ type Report struct {
 	LatencyDistribution []LatencyDistribution `json:"latencyDistribution"`
 	Histogram           []Bucket              `json:"histogram"`
 	Details             []ResultDetail        `json:"details"`
+}
+
+// MarshalJSON is custom marshal for report to properly format the date
+func (r Report) MarshalJSON() ([]byte, error) {
+	type Alias Report
+	return json.Marshal(&struct {
+		Date string `json:"date"`
+		*Alias
+	}{
+		Date:  r.Date.Format(time.RFC3339),
+		Alias: (*Alias)(&r),
+	})
 }
 
 // LatencyDistribution holds latency distribution data
@@ -107,6 +122,7 @@ func (r *Reporter) Finalize(total time.Duration) *Report {
 	rps := float64(r.totalCount) / total.Seconds()
 
 	rep := &Report{
+		Date:           time.Now(),
 		Count:          r.totalCount,
 		Total:          total,
 		Average:        avgDuration,
