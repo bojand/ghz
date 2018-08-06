@@ -23,18 +23,18 @@ import (
 
 // Options represents the request options
 type Options struct {
-	Host          string
-	Cert          string
-	CName         string
-	N             int
-	C             int
-	QPS           int
-	Z             time.Duration
-	Timeout       int
-	DialTimtout   int
-	KeepaliveTime int
-	Data          interface{}
-	Metadata      *map[string]string
+	Host          string             `json:"host,omitempty"`
+	Cert          string             `json:"cert,omitempty"`
+	CName         string             `json:"cname,omitempty"`
+	N             int                `json:"n,omitempty"`
+	C             int                `json:"c,omitempty"`
+	QPS           int                `json:"qps,omitempty"`
+	Z             time.Duration      `json:"z,omitempty"`
+	Timeout       int                `json:"timeout,omitempty"`
+	DialTimtout   int                `json:"dialTimeout,omitempty"`
+	KeepaliveTime int                `json:"keepAlice,omitempty"`
+	Data          interface{}        `json:"data,omitempty"`
+	Metadata      *map[string]string `json:"metadata,omitempty"`
 }
 
 // Max size of the buffer of result channel.
@@ -113,7 +113,7 @@ func (b *Requester) Run() (*Report, error) {
 
 	b.stub = grpcdynamic.NewStub(cc)
 
-	b.reporter = newReporter(b.results, b.config.N)
+	b.reporter = newReporter(b.results, b.config)
 
 	go func() {
 		b.reporter.Run()

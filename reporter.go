@@ -8,6 +8,7 @@ import (
 
 // Reporter gethers all the results
 type Reporter struct {
+	options *Options
 	results chan *callResult
 	done    chan bool
 
@@ -24,7 +25,8 @@ type Reporter struct {
 
 // Report holds the data for the full test
 type Report struct {
-	Date time.Time `json:"date"`
+	Options *Options  `json:"options,omitempty"`
+	Date    time.Time `json:"date"`
 
 	Count   uint64        `json:"count"`
 	Total   time.Duration `json:"total"`
@@ -78,9 +80,10 @@ type ResultDetail struct {
 	Status  string        `json:"status"`
 }
 
-func newReporter(results chan *callResult, n int) *Reporter {
-	cap := min(n, maxResult)
+func newReporter(results chan *callResult, options *Options) *Reporter {
+	cap := min(options.N, maxResult)
 	return &Reporter{
+		options:        options,
 		results:        results,
 		done:           make(chan bool, 1),
 		statusCodeDist: make(map[string]int),
@@ -122,6 +125,7 @@ func (r *Reporter) Finalize(total time.Duration) *Report {
 	rps := float64(r.totalCount) / total.Seconds()
 
 	rep := &Report{
+		Options:        r.options,
 		Date:           time.Now(),
 		Count:          r.totalCount,
 		Total:          total,
