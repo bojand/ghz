@@ -85,9 +85,19 @@ var tmplFuncMap = template.FuncMap{
 	"formatPercent": formatPercent,
 }
 
-func jsonify(v interface{}) string {
+func jsonify(v interface{}, pretty bool) string {
 	d, _ := json.Marshal(v)
-	return string(d)
+	if !pretty {
+		return string(d)
+	}
+
+	var out bytes.Buffer
+	err := json.Indent(&out, d, "", "  ")
+	if err != nil {
+		return string(d)
+	}
+
+	return string(out.Bytes())
 }
 
 func formatMilli(duration float64) string {
@@ -172,7 +182,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 		<section class="section">
 		
 		<div class="container">
-        <nav class="breadcrumb has-bullet-separator" aria-label="breadcrumbs">
+      <nav class="breadcrumb has-bullet-separator" aria-label="breadcrumbs">
         <ul>
           <li>
             <a href="#summary">
@@ -239,34 +249,46 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 						<table class="table">
 							<tbody>
 								<tr>
-							<th>Count</th>
-							<td>{{ .Count }}</td>
-							</tr>
-							<tr>
-								<th>Total</th>
-								<td>{{ formatMilli .Total.Seconds }} ms</td>
-							</tr>
-							<tr>
-								<th>Slowest</th>
-							<td>{{ formatMilli .Slowest.Seconds }} ms</td>
-							</tr>
-							<tr>
-								<th>Fastest</th>
-								<td>{{ formatMilli .Fastest.Seconds }} ms</td>
-							</tr>
-							<tr>
-								<th>Average</th>
-								<td>{{ formatMilli .Average.Seconds }} ms</td>
-							</tr>
-							<tr>
-								<th>Requests / sec</th>
-								<td>{{ formatSeconds .Rps }}</td>
-							</tr>
-						</tbody>
-					</table>
+								<th>Count</th>
+								<td>{{ .Count }}</td>
+								</tr>
+								<tr>
+									<th>Total</th>
+									<td>{{ formatMilli .Total.Seconds }} ms</td>
+								</tr>
+								<tr>
+									<th>Slowest</th>
+								<td>{{ formatMilli .Slowest.Seconds }} ms</td>
+								</tr>
+								<tr>
+									<th>Fastest</th>
+									<td>{{ formatMilli .Fastest.Seconds }} ms</td>
+								</tr>
+								<tr>
+									<th>Average</th>
+									<td>{{ formatMilli .Average.Seconds }} ms</td>
+								</tr>
+								<tr>
+									<th>Requests / sec</th>
+									<td>{{ formatSeconds .Rps }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				</div>
-		  </div>
-		</div>
+				<div class="column">
+					<div class="content">
+						<span class="title is-5">
+							<strong>Options</strong>
+						</span>
+						<article class="message">
+  						<div class="message-body">
+								<pre style="background-color: transparent;">{{ jsonify .Options true }}</pre>
+							</div>
+						</article>
+					</div>
+				</div>
+			</div>
 	  </div>
 
 	  <br />
@@ -406,7 +428,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 
 	const count = {{ .Count }};
 
-	const rawData = {{ jsonify .Details }};
+	const rawData = {{ jsonify .Details false }};
 
 	const data = [
 		{{ range .Histogram }}
