@@ -193,7 +193,14 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 		return nil, err
 	}
 
+	input := config.Proto
+	if config.Protoset != "" {
+		input = config.Protoset
+	}
+
 	opts := &ghz.Options{
+		Proto:         input,
+		Call:          config.Call,
 		Host:          config.Host,
 		Cert:          config.Cert,
 		CName:         config.CName,

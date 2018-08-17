@@ -23,6 +23,8 @@ import (
 
 // Options represents the request options
 type Options struct {
+	Call          string             `json:"call,omitempty"`
+	Proto         string             `json:"proto,omitempty"`
 	Host          string             `json:"host,omitempty"`
 	Cert          string             `json:"cert,omitempty"`
 	CName         string             `json:"cname,omitempty"`
