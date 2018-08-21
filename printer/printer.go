@@ -71,19 +71,43 @@ func (rp *ReportPrinter) Print(format string) {
 		rp.printf(buf.String())
 	case "influx-summary":
 		rp.printf(rp.getInfluxLine())
+	case "influx-details":
+		rp.printInfluxDetails()
 	}
 }
 
 func (rp *ReportPrinter) getInfluxLine() string {
 	measurement := "ghz_run"
-	tags := rp.getInfluxTags()
+	tags := rp.getInfluxTags(true)
 	fields := rp.getInfluxFields()
 	timestamp := rp.Report.Date.Nanosecond()
 
 	return fmt.Sprintf("%v,%v %v %v", measurement, tags, fields, timestamp)
 }
 
-func (rp *ReportPrinter) getInfluxTags() string {
+func (rp *ReportPrinter) printInfluxDetails() {
+	measurement := "ghz_detail"
+	tags := rp.getInfluxTags(false)
+
+	for _, v := range rp.Report.Details {
+		values := make([]string, 3)
+		values[0] = fmt.Sprintf("latency=%v", v.Latency.Nanoseconds())
+		values[1] = fmt.Sprintf("error=%v", v.Error)
+		values[2] = fmt.Sprintf("status=%v", v.Status)
+
+		if v.Error != "" {
+			tags = tags + ",hasErrors=true"
+		}
+
+		timestamp := v.Timestamp.Nanosecond()
+
+		fields := strings.Join(values, ",")
+
+		fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v", measurement, tags, fields, timestamp))
+	}
+}
+
+func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 	s := make([]string, 0, 10)
 	s = append(s, fmt.Sprintf(`proto="%v"`, rp.Report.Options.Proto))
 	s = append(s, fmt.Sprintf(`call="%v"`, rp.Report.Options.Call))
