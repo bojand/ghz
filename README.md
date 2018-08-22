@@ -15,10 +15,27 @@
 
 Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [hey](https://github.com/rakyll/hey/) and [grpcurl](https://github.com/fullstorydev/grpcurl).
 
+## Documentation
+
+- [Intall](#install)
+- [Usage](#usage)
+- [Call Template Data](#call_template_data)
+- [Examples](#examples)
+- [Usage](#usage)
+- [Output](#output)
+    * [Summary](#output-summary)
+    * [CSV](#output-csv)
+    * [HTML](#output-html)
+    * [JSON](#output-json)
+    * [InfluxDB Line Protocol](#output-influx)
+- [Extras](#extras)
+
+<a name="install"></a>
 ## Install
 
 Download a prebuilt executable binary from the [releases page](https://github.com/bojand/ghz/releases).
 
+<a name="usage"></a>
 ## Usage
 
 ```
@@ -71,6 +88,7 @@ Options:
 
 Alternatively all settings can be set via `ghz.json` file if present in the same path as the `ghz` executable. A custom configuration file can be specified using `-config` option.
 
+<a name="call_template_data"></a>
 ## Call Template Data
 
 Data and metadata can specify [template actions](https://golang.org/pkg/text/template/) that will be parsed and evaluated at every request. Each request gets a new instance of the data. The available variables / actions are:
@@ -93,6 +111,7 @@ type callTemplateData struct {
 
 This can be useful to inject variable information into the data or metadata payload for each request, such as timestamp or unique request number. See examples below.
 
+<a name="examples"></a>
 ## Examples
 
 A simple unary call:
@@ -169,9 +188,11 @@ Example `ghz.json`
 }
 ```
 
+<a name="output"></a>
 ## Output
 
-### Simple Summary
+<a name="output-summary"></a>
+### Summary
 
 Sample standard output of summary of the results:
 
@@ -209,6 +230,7 @@ Status code distribution:
   [OK]	2000 responses
 ```
 
+<a name="output-csv"></a>
 ### CSV
 
 Alternatively with `-O csv` flag we can get detailed listing in csv format:
@@ -228,14 +250,17 @@ duration (ms),status,error
 ...
 ```
 
+<a name="output-html"></a>
 ### HTML
 
 HTML output can be generated using `html` as format in the `-O` option. See [sample output](http://bojand.github.io/sample.html).
 
+<a name="output-json"></a>
 ### JSON
 
 Using `-O json` outputs JSON data, and `-O pretty` outputs JSON in pretty format.
 
+<a name="output-influx"></a>
 ### InfluxDB Line Protocol
 
 Using `-O influx-summary` outputs the summary data as [InfluxDB Line Protocol](https://docs.influxdata.com/influxdb/v1.6/concepts/glossary/#line-protocol). Sample output:
@@ -251,15 +276,19 @@ ghz_detail,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",ho
 ghz_detail,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=1000,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"{{.InputName}}\"}",metadata="{\"rn\":\"{{.RequestNumber}}\"}",hasError=false latency=4990499,error=,status=OK 681029613
 ```
 
+## Extras
+
 For conveniance we include prebuilt [Grafana](http://grafana.com/) dashboards for [summary](extras/influx-summary-grafana-dashboard.json) and [details](extras/influx-details-grafana-dashboard.json).
 
-Screenshots:
+Summary Grafana Dashboard:
 
 <div align="center">
 	<br>
 	<img src="extras/influx-summary-grafana-dashboard.png" alt="Summary Grafana Dashboard">
 	<br>
 </div>
+
+Details Grafana Dashboard:
 
 <div align="center">
 	<br>
