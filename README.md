@@ -21,7 +21,6 @@ Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [h
 - [Usage](#usage)
 - [Call Template Data](#call_template_data)
 - [Examples](#examples)
-- [Usage](#usage)
 - [Output](#output)
     * [Summary](#output-summary)
     * [CSV](#output-csv)
@@ -287,6 +286,7 @@ Summary Grafana Dashboard:
 	<img src="extras/influx-summary-grafana-dashboard.png" alt="Summary Grafana Dashboard">
 	<br>
 </div>
+
 
 Details Grafana Dashboard:
 
