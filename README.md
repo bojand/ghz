@@ -22,11 +22,6 @@ Simple [gRPC](http://grpc.io/) benchmarking and load testing tool inspired by [h
 - [Call Template Data](#call_template_data)
 - [Examples](#examples)
 - [Output](#output)
-    * [Summary](#output-summary)
-    * [CSV](#output-csv)
-    * [HTML](#output-html)
-    * [JSON](#output-json)
-    * [InfluxDB Line Protocol](#output-influx)
 - [Extras](#extras)
 
 <a name="install"></a>
