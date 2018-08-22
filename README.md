@@ -251,19 +251,19 @@ ghz_detail,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",ho
 ghz_detail,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=1000,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"{{.InputName}}\"}",metadata="{\"rn\":\"{{.RequestNumber}}\"}",hasError=false latency=4990499,error=,status=OK 681029613
 ```
 
-For conveniance we include prebuilt [Grafana](http://grafana.com/) dashboards for [summary](extras/inlfux-summary-grafana-dashboard.json) and [details](extras/inlfux-details-grafana-dashboard.json).
+For conveniance we include prebuilt [Grafana](http://grafana.com/) dashboards for [summary](extras/influx-summary-grafana-dashboard.json) and [details](extras/influx-details-grafana-dashboard.json).
 
 Screenshots:
 
 <div align="center">
 	<br>
-	<img src="extras/inlfux-summary-grafana-dashboard.png" alt="Summary Grafana Dashboard">
+	<img src="extras/influx-summary-grafana-dashboard.png" alt="Summary Grafana Dashboard">
 	<br>
 </div>
 
 <div align="center">
 	<br>
-	<img src="extras/inlfux-details-grafana-dashboard.png" alt="Details Grafana Dashboard">
+	<img src="extras/influx-details-grafana-dashboard.png" alt="Details Grafana Dashboard">
 	<br>
 </div>
 
