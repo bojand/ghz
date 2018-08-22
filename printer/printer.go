@@ -87,7 +87,7 @@ func (rp *ReportPrinter) getInfluxLine() string {
 
 func (rp *ReportPrinter) printInfluxDetails() {
 	measurement := "ghz_detail"
-	tags := rp.getInfluxTags(false)
+	commonTags := rp.getInfluxTags(false)
 
 	for _, v := range rp.Report.Details {
 		values := make([]string, 3)
@@ -95,15 +95,19 @@ func (rp *ReportPrinter) printInfluxDetails() {
 		values[1] = fmt.Sprintf("error=%v", v.Error)
 		values[2] = fmt.Sprintf("status=%v", v.Status)
 
+		tags := commonTags
+
 		if v.Error != "" {
-			tags = tags + ",hasErrors=true"
+			tags = tags + ",hasError=true"
+		} else {
+			tags = tags + ",hasError=false"
 		}
 
 		timestamp := v.Timestamp.Nanosecond()
 
 		fields := strings.Join(values, ",")
 
-		fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v", measurement, tags, fields, timestamp))
+		fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v\n", measurement, tags, fields, timestamp))
 	}
 }
 
@@ -129,7 +133,7 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 		}
 	}
 
-	s = append(s, fmt.Sprintf("keepalive=%s", dataStr))
+	s = append(s, fmt.Sprintf("data=%s", dataStr))
 
 	mdStr := ""
 	mdBytes, err := json.Marshal(rp.Report.Options.Metadata)
@@ -140,23 +144,25 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 		}
 	}
 
-	s = append(s, fmt.Sprintf("keepalive=%s", mdStr))
+	s = append(s, fmt.Sprintf("metadata=%s", mdStr))
 
-	errCount := 0
-	if len(rp.Report.ErrorDist) > 0 {
-		for _, v := range rp.Report.ErrorDist {
-			errCount += v
+	if addErrors {
+		errCount := 0
+		if len(rp.Report.ErrorDist) > 0 {
+			for _, v := range rp.Report.ErrorDist {
+				errCount += v
+			}
 		}
+
+		s = append(s, fmt.Sprintf("errors=%v", errCount))
+
+		hasErrors := false
+		if errCount > 0 {
+			hasErrors = true
+		}
+
+		s = append(s, fmt.Sprintf("has_errors=%v", hasErrors))
 	}
-
-	s = append(s, fmt.Sprintf("errors=%v", errCount))
-
-	hasErrors := false
-	if errCount > 0 {
-		hasErrors = true
-	}
-
-	s = append(s, fmt.Sprintf("has_errors=%v", hasErrors))
 
 	return strings.Join(s, ",")
 }
