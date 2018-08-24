@@ -29,7 +29,8 @@ Options:
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
   -cname	An override of the expect Server Cname presented by the server.
-  -config	Path to the config JSON file.
+  -config	Path to the config JSON file
+  -insecure     Specify for non TLS connection
 
   -c  Number of requests to run concurrently. Total number of requests cannot
       be smaller than the concurrency level. Default is 50.
