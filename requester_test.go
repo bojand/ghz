@@ -70,6 +70,7 @@ func TestRequesterUnary(t *testing.T) {
 			Timeout:     20,
 			DialTimtout: 20,
 			Data:        data,
+			Insecure:    true,
 		})
 		assert.NoError(t, err)
 
@@ -93,6 +94,7 @@ func TestRequesterUnary(t *testing.T) {
 			Timeout:     20,
 			DialTimtout: 20,
 			Data:        data,
+			Insecure:    true,
 		})
 		assert.NoError(t, err)
 
@@ -119,6 +121,7 @@ func TestRequesterUnary(t *testing.T) {
 			Timeout:     20,
 			DialTimtout: 20,
 			Data:        data,
+			Insecure:    true,
 		})
 		assert.NoError(t, err)
 
@@ -165,6 +168,7 @@ func TestRequesterServerStreaming(t *testing.T) {
 		Timeout:     20,
 		DialTimtout: 20,
 		Data:        data,
+		Insecure:    true,
 	})
 	assert.NoError(t, err)
 
@@ -211,6 +215,7 @@ func TestRequesterClientStreaming(t *testing.T) {
 		Timeout:     20,
 		DialTimtout: 20,
 		Data:        data,
+		Insecure:    true,
 	})
 	assert.NoError(t, err)
 
@@ -259,6 +264,7 @@ func TestRequesterBidi(t *testing.T) {
 		Timeout:     20,
 		DialTimtout: 20,
 		Data:        data,
+		Insecure:    true,
 	})
 	assert.NoError(t, err)
 
