@@ -35,6 +35,7 @@ type Options struct {
 	KeepaliveTime int                `json:"keepAlice,omitempty"`
 	Data          interface{}        `json:"data,omitempty"`
 	Metadata      *map[string]string `json:"metadata,omitempty"`
+	Insecure      bool               `json:"insecure,omitempty"`
 }
 
 // Max size of the buffer of result channel.
@@ -335,15 +336,21 @@ func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Mess
 }
 
 func createClientCredOption(config *Options) (grpc.DialOption, error) {
-	credOptions := grpc.WithInsecure()
+	if config.Insecure {
+		credOptions := grpc.WithInsecure()
+		return credOptions, nil
+	}
+
 	if strings.TrimSpace(config.Cert) != "" {
 		creds, err := credentials.NewClientTLSFromFile(config.Cert, config.CName)
 		if err != nil {
 			return nil, err
 		}
-		credOptions = grpc.WithTransportCredentials(creds)
+		credOptions := grpc.WithTransportCredentials(creds)
+		return credOptions, nil
 	}
 
+	credOptions := grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, ""))
 	return credOptions, nil
 }
 

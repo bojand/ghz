@@ -38,12 +38,13 @@ type Config struct {
 	KeepaliveTime int                `json:"L"`
 	CPUs          int                `json:"cpus"`
 	ImportPaths   []string           `json:"i,omitempty"`
+	Insecure      bool               `json:"insecure,omitempty"`
 }
 
 // New creates a new config
 func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Duration, x time.Duration,
 	timeout int, data, dataPath, metadata, mdPath, output, format, host string,
-	dialTimout, keepaliveTime, cpus int, importPaths []string) (*Config, error) {
+	dialTimout, keepaliveTime, cpus int, importPaths []string, insecure bool) (*Config, error) {
 
 	cfg := &Config{
 		Proto:         proto,
@@ -65,7 +66,8 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 		ImportPaths:   importPaths,
 		DialTimeout:   dialTimout,
 		KeepaliveTime: keepaliveTime,
-		CPUs:          cpus}
+		CPUs:          cpus,
+		Insecure:      insecure}
 
 	if data == "@" {
 		b, err := ioutil.ReadAll(os.Stdin)

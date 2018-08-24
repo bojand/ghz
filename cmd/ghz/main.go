@@ -26,6 +26,7 @@ var (
 	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
 	cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs.")
 	cPath    = flag.String("config", "", "Path to the config JSON file.")
+	insecure = flag.Bool("insecure", false, "Specify for non TLS connection")
 
 	c = flag.Int("c", 50, "Number of requests to run concurrently.")
 	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
@@ -61,9 +62,10 @@ Options:
   -call		A fully-qualified method name in 'service/method' or 'service.method' format.
   -cert		The file containing the CA root cert file.
   -cname	An override of the expect Server Cname presented by the server.
-  -config	Path to the config JSON file.
+  -config	Path to the config JSON file
+  -insecure     Specify for non TLS connection
 
-  -c  Number of requests to run concurrently. Total number of requests cannot 
+  -c  Number of requests to run concurrently. Total number of requests cannot
       be smaller than the concurrency level. Default is 50.
   -n  Number of requests to run. Default is 200.
   -q  Rate limit, in queries per second (QPS). Default is no rate limit.
@@ -74,23 +76,23 @@ Options:
   -x  Maximum duration of application to send requests with n setting respected.
       If duration is reached before n requests are completed, application stops and exits.
       Examples: -x 10s -x 3m.
-  
-  -d  The call data as stringified JSON. 
+
+  -d  The call data as stringified JSON.
       If the value is '@' then the request contents are read from stdin.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
   -m  Request metadata as stringified JSON.
   -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
- 
+
   -o  Output path. If none provided stdout is used.
   -O  Output type. If none provided, a summary is printed.
       "csv" outputs the response metrics in comma-separated values format.
       "json" outputs the metrics report in JSON format.
       "pretty" outputs the metrics report in pretty JSON format.
       "html" outputs the metrics report as HTML.
-	  
+
   -i  Comma separated list of proto import paths. The current working directory and the directory
 	  of the protocol buffer file are automatically added to the import list.
-	  
+
   -T  Connection timeout in seconds for the initial connection dial. Default is 10.
   -L  Keepalive time in seconds. Only used if present and above 0.
 
@@ -140,7 +142,7 @@ func main() {
 		}
 
 		cfg, err = config.New(*proto, *protoset, *call, *cert, *cname, *n, *c, *q, *z, *x, *t,
-			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths)
+			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths, *insecure)
 		if err != nil {
 			errAndExit(err.Error())
 		}
@@ -206,6 +208,7 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 		KeepaliveTime: config.KeepaliveTime,
 		Data:          config.Data,
 		Metadata:      config.Metadata,
+		Insecure:      config.Insecure,
 	}
 
 	reqr, err := ghz.New(mtd, opts)
