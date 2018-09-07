@@ -161,8 +161,6 @@ Example `ghz.json`
     "i": [
         "/path/to/protos"
     ],
-    "n": 4000,
-    "c": 40,
     "x": "10s",
     "host": "0.0.0.0:50051"
 }
