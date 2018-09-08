@@ -349,10 +349,6 @@ func minValue(v int, min int) error {
 	return nil
 }
 
-func parseConfigString(s string) (*Config, error) {
-	return parseConfig([]byte(s))
-}
-
 func parseConfig(b []byte) (*Config, error) {
 	c := &Config{}
 
