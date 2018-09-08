@@ -69,7 +69,136 @@ func (rp *ReportPrinter) Print(format string) {
 		}
 
 		rp.printf(buf.String())
+	case "influx-summary":
+		rp.printf(rp.getInfluxLine())
+	case "influx-details":
+		rp.printInfluxDetails()
 	}
+}
+
+func (rp *ReportPrinter) getInfluxLine() string {
+	measurement := "ghz_run"
+	tags := rp.getInfluxTags(true)
+	fields := rp.getInfluxFields()
+	timestamp := rp.Report.Date.Nanosecond()
+
+	return fmt.Sprintf("%v,%v %v %v", measurement, tags, fields, timestamp)
+}
+
+func (rp *ReportPrinter) printInfluxDetails() {
+	measurement := "ghz_detail"
+	commonTags := rp.getInfluxTags(false)
+
+	for _, v := range rp.Report.Details {
+		values := make([]string, 3)
+		values[0] = fmt.Sprintf("latency=%v", v.Latency.Nanoseconds())
+		values[1] = fmt.Sprintf("error=%v", v.Error)
+		values[2] = fmt.Sprintf("status=%v", v.Status)
+
+		tags := commonTags
+
+		if v.Error != "" {
+			tags = tags + ",hasError=true"
+		} else {
+			tags = tags + ",hasError=false"
+		}
+
+		timestamp := v.Timestamp.Nanosecond()
+
+		fields := strings.Join(values, ",")
+
+		fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v\n", measurement, tags, fields, timestamp))
+	}
+}
+
+func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
+	s := make([]string, 0, 10)
+	s = append(s, fmt.Sprintf(`proto="%v"`, rp.Report.Options.Proto))
+	s = append(s, fmt.Sprintf(`call="%v"`, rp.Report.Options.Call))
+	s = append(s, fmt.Sprintf(`host="%v"`, rp.Report.Options.Host))
+	s = append(s, fmt.Sprintf("n=%v", rp.Report.Options.N))
+	s = append(s, fmt.Sprintf("c=%v", rp.Report.Options.C))
+	s = append(s, fmt.Sprintf("qps=%v", rp.Report.Options.QPS))
+	s = append(s, fmt.Sprintf("z=%v", rp.Report.Options.Z.Nanoseconds()))
+	s = append(s, fmt.Sprintf("timeout=%v", rp.Report.Options.Timeout))
+	s = append(s, fmt.Sprintf("dial_timeout=%v", rp.Report.Options.DialTimtout))
+	s = append(s, fmt.Sprintf("keepalive=%v", rp.Report.Options.KeepaliveTime))
+
+	dataStr := ""
+	dataBytes, err := json.Marshal(rp.Report.Options.Data)
+	if err == nil {
+		dataBytes, err = json.Marshal(string(dataBytes))
+		if err == nil {
+			dataStr = string(dataBytes)
+		}
+	}
+
+	s = append(s, fmt.Sprintf("data=%s", dataStr))
+
+	mdStr := ""
+	mdBytes, err := json.Marshal(rp.Report.Options.Metadata)
+	if err == nil {
+		mdBytes, err = json.Marshal(string(mdBytes))
+		if err == nil {
+			mdStr = string(mdBytes)
+		}
+	}
+
+	s = append(s, fmt.Sprintf("metadata=%s", mdStr))
+
+	if addErrors {
+		errCount := 0
+		if len(rp.Report.ErrorDist) > 0 {
+			for _, v := range rp.Report.ErrorDist {
+				errCount += v
+			}
+		}
+
+		s = append(s, fmt.Sprintf("errors=%v", errCount))
+
+		hasErrors := false
+		if errCount > 0 {
+			hasErrors = true
+		}
+
+		s = append(s, fmt.Sprintf("has_errors=%v", hasErrors))
+	}
+
+	return strings.Join(s, ",")
+}
+
+func (rp *ReportPrinter) getInfluxFields() string {
+	s := make([]string, 0, 5)
+
+	s = append(s, fmt.Sprintf("count=%v", rp.Report.Count))
+	s = append(s, fmt.Sprintf("total=%v", rp.Report.Total.Nanoseconds()))
+	s = append(s, fmt.Sprintf("average=%v", rp.Report.Average.Nanoseconds()))
+	s = append(s, fmt.Sprintf("fastest=%v", rp.Report.Fastest.Nanoseconds()))
+	s = append(s, fmt.Sprintf("slowest=%v", rp.Report.Slowest.Nanoseconds()))
+	s = append(s, fmt.Sprintf("rps=%4.2f", rp.Report.Rps))
+
+	if len(rp.Report.LatencyDistribution) > 0 {
+		for _, v := range rp.Report.LatencyDistribution {
+			if v.Percentage == 50 {
+				s = append(s, fmt.Sprintf("median=%v", v.Latency.Nanoseconds()))
+			}
+
+			if v.Percentage == 95 {
+				s = append(s, fmt.Sprintf("p95=%v", v.Latency.Nanoseconds()))
+			}
+		}
+	}
+
+	errCount := 0
+	if len(rp.Report.ErrorDist) > 0 {
+		for _, v := range rp.Report.ErrorDist {
+			errCount += v
+		}
+	}
+
+	s = append(s, fmt.Sprintf("errors=%v", errCount))
+
+	return strings.Join(s, ",")
 }
 
 func (rp *ReportPrinter) printf(s string, v ...interface{}) {

@@ -14,9 +14,10 @@ type Reporter struct {
 
 	avgTotal float64
 
-	lats     []float64
-	errors   []string
-	statuses []string
+	lats       []float64
+	errors     []string
+	statuses   []string
+	timestamps []time.Time
 
 	errorDist      map[string]int
 	statusCodeDist map[string]int
@@ -75,9 +76,10 @@ type Bucket struct {
 
 // ResultDetail data for each result
 type ResultDetail struct {
-	Latency time.Duration `json:"latency"`
-	Error   string        `json:"error"`
-	Status  string        `json:"status"`
+	Timestamp time.Time     `json:"timestamp"`
+	Latency   time.Duration `json:"latency"`
+	Error     string        `json:"error"`
+	Status    string        `json:"status"`
 }
 
 func newReporter(results chan *callResult, options *Options) *Reporter {
@@ -112,6 +114,7 @@ func (r *Reporter) Run() {
 				r.lats = append(r.lats, res.duration.Seconds())
 				r.errors = append(r.errors, "")
 				r.statuses = append(r.statuses, res.status)
+				r.timestamps = append(r.timestamps, time.Now())
 			}
 		}
 	}
@@ -151,7 +154,12 @@ func (r *Reporter) Finalize(total time.Duration) *Report {
 		rep.Details = make([]ResultDetail, len(r.lats))
 		for i, num := range r.lats {
 			lat := time.Duration(num * float64(time.Second))
-			rep.Details[i] = ResultDetail{Latency: lat, Error: r.errors[i], Status: r.statuses[i]}
+			rep.Details[i] = ResultDetail{
+				Latency:   lat,
+				Error:     r.errors[i],
+				Status:    r.statuses[i],
+				Timestamp: r.timestamps[i],
+			}
 		}
 	}
 
