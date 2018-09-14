@@ -262,7 +262,7 @@ Using `-O influx-summary` outputs the summary data as [InfluxDB Line Protocol](h
 ghz_run,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=1000,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"{{.InputName}}\"}",metadata="{\"rn\":\"{{.RequestNumber}}\"}",errors=74,has_errors=true count=1000,total=50000556,average=1771308,fastest=248603,slowest=7241944,rps=19999.78,median=1715940,p95=4354194,errors=74 128802790
 ```
 
-Use `-O influx-summary` to get the individual details for each request:
+Use `-O influx-details` to get the individual details for each request:
 
 ```
 ghz_detail,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=1000,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"{{.InputName}}\"}",metadata="{\"rn\":\"{{.RequestNumber}}\"}",hasError=false latency=5157328,error=,status=OK 681023506
