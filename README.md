@@ -57,6 +57,7 @@ Options:
 
   -d  The call data as stringified JSON.
       If the value is '@' then the request contents are read from stdin.
+  -b  Name of field inside JSON to be converted to type []byte.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
   -m  Request metadata as stringified JSON.
   -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.

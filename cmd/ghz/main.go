@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -35,10 +36,11 @@ var (
 	z = flag.Duration("z", 0, "Duration of application to send requests.")
 	x = flag.Duration("x", 0, "Maximum duration of application to send requests.")
 
-	data     = flag.String("d", "", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
-	dataPath = flag.String("D", "", "Path for call data JSON file.")
-	md       = flag.String("m", "", "Request metadata as stringified JSON.")
-	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
+	data      = flag.String("d", "", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
+	byteField = flag.String("b", "", "Name of field inside JSON to be converted to type []byte.")
+	dataPath  = flag.String("D", "", "Path for call data JSON file.")
+	md        = flag.String("m", "", "Request metadata as stringified JSON.")
+	mdPath    = flag.String("M", "", "Path for call metadata JSON file.")
 
 	paths = flag.String("i", "", "Comma separated list of proto import paths")
 
@@ -79,6 +81,7 @@ Options:
 
   -d  The call data as stringified JSON.
       If the value is '@' then the request contents are read from stdin.
+  -b  Name of field inside JSON to be converted to type []byte.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
   -m  Request metadata as stringified JSON.
   -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
@@ -200,6 +203,21 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 	input := config.Proto
 	if config.Protoset != "" {
 		input = config.Protoset
+	}
+
+	bf := *byteField
+	if bf != "" {
+		var data interface{} = config.Data
+		mapData, ok := data.(map[string]interface{})
+		if mapData[bf] != nil && ok {
+			fieldValue := mapData[bf]
+			fieldValueInBytes, err := json.Marshal(fieldValue)
+			if err != nil {
+				errAndExit(err.Error())
+			}
+			mapData[bf] = fieldValueInBytes
+			data = mapData
+		}
 	}
 
 	opts := &ghz.Options{
