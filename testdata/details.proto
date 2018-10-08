@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package userdetails;
+
+service UserDetails {
+  rpc GetUserDetails (UserDetailsRequest) returns (UserDetailsReply) {}
+}
+
+// The request message asking for the user's details with default values.
+message UserDetailsRequest {
+  bytes Properties = 1;
+}
+
+// The response message containing the user details
+message UserDetailsReply {
+  bytes Details = 1;
+}
