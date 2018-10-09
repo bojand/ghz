@@ -147,7 +147,7 @@ func main() {
 		}
 
 		cfg, err = config.New(*proto, *protoset, *call, *cert, *cname, *n, *c, *q, *z, *x, *t,
-			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths, *insecure)
+			*data, *byteFields, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths, *insecure)
 		if err != nil {
 			errAndExit(err.Error())
 		}
@@ -205,10 +205,15 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 		input = config.Protoset
 	}
 
-	bfs := *byteFields
+	var bfs string
+	if len(*byteFields) > 0 {
+		bfs = *byteFields
+	} else if len(config.ByteFields) > 0 {
+		bfs = config.ByteFields
+	}
+
 	var data interface{} = config.Data
 	mapData, ok := data.(map[string]interface{})
-
 	if len(bfs) > 0 && ok {
 		fields := strings.Split(bfs, ",")
 		for _, bf := range fields {

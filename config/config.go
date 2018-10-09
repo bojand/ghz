@@ -28,6 +28,7 @@ type Config struct {
 	X             time.Duration      `json:"x"`
 	Timeout       int                `json:"t"`
 	Data          interface{}        `json:"d,omitempty"`
+	ByteFields    string             `json:"b"`
 	DataPath      string             `json:"D"`
 	Metadata      *map[string]string `json:"m,omitempty"`
 	MetadataPath  string             `json:"M"`
@@ -43,7 +44,7 @@ type Config struct {
 
 // New creates a new config
 func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Duration, x time.Duration,
-	timeout int, data, dataPath, metadata, mdPath, output, format, host string,
+	timeout int, data, byteFields, dataPath, metadata, mdPath, output, format, host string,
 	dialTimout, keepaliveTime, cpus int, importPaths []string, insecure bool) (*Config, error) {
 
 	cfg := &Config{
@@ -58,6 +59,7 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 		Z:             z,
 		X:             x,
 		Timeout:       timeout,
+		ByteFields:    byteFields,
 		DataPath:      dataPath,
 		MetadataPath:  mdPath,
 		Output:        output,
