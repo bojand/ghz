@@ -123,6 +123,12 @@ A simple unary call with metadata using template actions:
 ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' -m '{"trace_id":"{{.RequestNumber}}","timestamp":"{{.TimestampUnix}}"}' 0.0.0.0:50051
 ```
 
+Using binary data file (see [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message)):
+
+```sh
+ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -B ./hello_request_data.bin 0.0.0.0:50051
+```
+
 Custom number of requests and concurrency:
 
 ```sh

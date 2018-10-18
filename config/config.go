@@ -185,7 +185,7 @@ func (c *Config) Validate() error {
 	}
 
 	if strings.TrimSpace(c.DataPath) == "" {
-		if c.Data == nil {
+		if strings.TrimSpace(c.BinDataPath) == "" && len(c.BinData) == 0 && c.Data == nil {
 			return errors.New("data: is required")
 		}
 	}
@@ -253,12 +253,15 @@ func (c *Config) initData() error {
 		}
 
 		return json.Unmarshal(d, &c.Data)
+	} else if c.BinData != nil {
+		return nil
 	} else if strings.TrimSpace(c.BinDataPath) != "" {
-		d, err := ioutil.ReadFile(c.DataPath)
+		d, err := ioutil.ReadFile(c.BinDataPath)
 		if err != nil {
 			return err
 		}
 		c.BinData = d
+		return nil
 	}
 
 	return errors.New("No data specified")

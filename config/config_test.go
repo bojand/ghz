@@ -388,6 +388,12 @@ func TestConfig_Validate(t *testing.T) {
 		err := c.Validate()
 		assert.NoError(t, err)
 	})
+
+	t.Run("BinDataPath", func(t *testing.T) {
+		c := &Config{Proto: "asdf.proto", Call: "call", Cert: "cert", BinDataPath: "asdf"}
+		err := c.Validate()
+		assert.NoError(t, err)
+	})
 }
 
 func TestConfig_initData(t *testing.T) {
@@ -417,6 +423,24 @@ func TestConfig_initData(t *testing.T) {
 		err = c.initData()
 		assert.NoError(t, err)
 		assert.Equal(t, c.Data, data)
+	})
+
+	t.Run("with bin data", func(t *testing.T) {
+		in, err := ioutil.ReadFile("../testdata/hello_request_data.bin")
+		assert.NoError(t, err)
+		c := &Config{BinData: in}
+		err = c.initData()
+		assert.NoError(t, err)
+		assert.Equal(t, c.BinData, in)
+	})
+
+	t.Run("with bin data file", func(t *testing.T) {
+		in, err := ioutil.ReadFile("../testdata/hello_request_data.bin")
+		assert.NoError(t, err)
+		c := &Config{BinDataPath: "../testdata/hello_request_data.bin"}
+		err = c.initData()
+		assert.NoError(t, err)
+		assert.Equal(t, c.BinData, in)
 	})
 }
 
