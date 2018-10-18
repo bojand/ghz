@@ -36,6 +36,8 @@ type Options struct {
 	DialTimtout   int                `json:"dialTimeout,omitempty"`
 	KeepaliveTime int                `json:"keepAlice,omitempty"`
 	Data          interface{}        `json:"data,omitempty"`
+	Binary        bool               `json:"binary"`
+	BinData       []byte             `json:"-"`
 	Metadata      *map[string]string `json:"metadata,omitempty"`
 	Insecure      bool               `json:"insecure,omitempty"`
 }
@@ -59,6 +61,7 @@ type Requester struct {
 
 	data     string
 	metadata string
+	binData  []byte
 
 	config  *Options
 	results chan *callResult
@@ -94,6 +97,7 @@ func New(mtd *desc.MethodDescriptor, c *Options) (*Requester, error) {
 		config:   c,
 		data:     string(dataJSON),
 		metadata: string(mdJSON),
+		binData:  c.BinData,
 		mtd:      mtd}
 
 	return reqr, nil
@@ -219,9 +223,24 @@ func (b *Requester) makeRequest() {
 
 	ctd := newCallTemplateData(b.mtd, reqNum)
 
-	dataMap, err := ctd.executeData(b.data)
-	if err != nil {
-		return
+	var input *dynamic.Message
+	var streamInput *[]*dynamic.Message
+
+	if len(b.data) > 0 && len(b.binData) == 0 {
+		dataMap, err := ctd.executeData(b.data)
+		if err != nil {
+			return
+		}
+		input, streamInput, err = createPayloads(dataMap, b.mtd)
+		if err != nil {
+			return
+		}
+	} else {
+		var err error
+		input, streamInput, err = createPayloadsFromBin(b.binData, b.mtd)
+		if err != nil {
+			return
+		}
 	}
 
 	mdMap, err := ctd.executeMetadata(b.metadata)
@@ -233,11 +252,6 @@ func (b *Requester) makeRequest() {
 	if mdMap != nil && len(*mdMap) > 0 {
 		md := metadata.New(*mdMap)
 		reqMD = &md
-	}
-
-	input, streamInput, err := createPayloads(dataMap, b.mtd)
-	if err != nil {
-		return
 	}
 
 	ctx := context.Background()

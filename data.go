@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 )
@@ -90,6 +91,25 @@ func createPayloads(data interface{}, mtd *desc.MethodDescriptor) (*dynamic.Mess
 	if !mtd.IsClientStreaming() && input == nil && len(streamInput) > 0 {
 		input = streamInput[0]
 		streamInput = nil
+	}
+
+	return input, &streamInput, nil
+}
+
+func createPayloadsFromBin(binData []byte, mtd *desc.MethodDescriptor) (*dynamic.Message, *[]*dynamic.Message, error) {
+	md := mtd.GetInputType()
+	input := dynamic.NewMessage(md)
+	streamInput := make([]*dynamic.Message, 1)
+
+	err := proto.Unmarshal(binData, input)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if mtd.IsClientStreaming() && input != nil {
+		streamInput = make([]*dynamic.Message, 1)
+		streamInput[0] = input
+		input = nil
 	}
 
 	return input, &streamInput, nil

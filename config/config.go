@@ -29,6 +29,8 @@ type Config struct {
 	Timeout       int                `json:"t"`
 	Data          interface{}        `json:"d,omitempty"`
 	DataPath      string             `json:"D"`
+	BinData       []byte             `json:"-"`
+	BinDataPath   string             `json:"B"`
 	Metadata      *map[string]string `json:"m,omitempty"`
 	MetadataPath  string             `json:"M"`
 	Output        string             `json:"o"`
@@ -43,7 +45,7 @@ type Config struct {
 
 // New creates a new config
 func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Duration, x time.Duration,
-	timeout int, data, dataPath, metadata, mdPath, output, format, host string,
+	timeout int, data, dataPath string, binData bool, binPath, metadata, mdPath, output, format, host string,
 	dialTimout, keepaliveTime, cpus int, importPaths []string, insecure bool) (*Config, error) {
 
 	cfg := &Config{
@@ -59,6 +61,7 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 		X:             x,
 		Timeout:       timeout,
 		DataPath:      dataPath,
+		BinDataPath:   binPath,
 		MetadataPath:  mdPath,
 		Output:        output,
 		Format:        format,
@@ -80,6 +83,14 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 	err := cfg.setData(data)
 	if err != nil {
 		return nil, err
+	}
+
+	if binData {
+		b, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return nil, err
+		}
+		cfg.BinData = b
 	}
 
 	err = cfg.setMetadata(metadata)
@@ -242,6 +253,12 @@ func (c *Config) initData() error {
 		}
 
 		return json.Unmarshal(d, &c.Data)
+	} else if strings.TrimSpace(c.BinDataPath) != "" {
+		d, err := ioutil.ReadFile(c.DataPath)
+		if err != nil {
+			return err
+		}
+		c.BinData = d
 	}
 
 	return errors.New("No data specified")
