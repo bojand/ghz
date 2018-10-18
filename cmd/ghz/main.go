@@ -82,6 +82,8 @@ Options:
   -d  The call data as stringified JSON.
       If the value is '@' then the request contents are read from stdin.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
+  -b  The call data comes as serialized binary message read from stdin.
+  -B  Path for the call data as serialized binary message.
   -m  Request metadata as stringified JSON.
   -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
 
