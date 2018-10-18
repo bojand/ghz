@@ -129,6 +129,12 @@ Using binary data file (see [writing a message](https://developers.google.com/pr
 ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -B ./hello_request_data.bin 0.0.0.0:50051
 ```
 
+Or using binary from stdin:
+
+```sh
+ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -b 0.0.0.0:50051 < ./hello_request_data.bin
+```
+
 Custom number of requests and concurrency:
 
 ```sh
