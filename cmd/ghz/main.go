@@ -37,6 +37,8 @@ var (
 
 	data     = flag.String("d", "", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
 	dataPath = flag.String("D", "", "Path for call data JSON file.")
+	binData  = flag.Bool("b", false, "The call data as serialized binary message read from stdin.")
+	binPath  = flag.String("B", "", "The call data as serialized binary message read from a file.")
 	md       = flag.String("m", "", "Request metadata as stringified JSON.")
 	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
 
@@ -80,6 +82,8 @@ Options:
   -d  The call data as stringified JSON.
       If the value is '@' then the request contents are read from stdin.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
+  -b  The call data comes as serialized binary message read from stdin.
+  -B  Path for the call data as serialized binary message.
   -m  Request metadata as stringified JSON.
   -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
 
@@ -144,7 +148,9 @@ func main() {
 		}
 
 		cfg, err = config.New(*proto, *protoset, *call, *cert, *cname, *n, *c, *q, *z, *x, *t,
-			*data, *dataPath, *md, *mdPath, *output, *format, host, *ct, *kt, *cpus, iPaths, *insecure)
+			*data, *dataPath, *binData, *binPath, *md, *mdPath, *output, *format, host,
+			*ct, *kt, *cpus, iPaths, *insecure)
+
 		if err != nil {
 			errAndExit(err.Error())
 		}
@@ -202,6 +208,11 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 		input = config.Protoset
 	}
 
+	binary := false
+	if len(config.BinData) > 0 {
+		binary = true
+	}
+
 	opts := &ghz.Options{
 		Proto:         input,
 		Call:          config.Call,
@@ -216,6 +227,8 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 		DialTimtout:   config.DialTimeout,
 		KeepaliveTime: config.KeepaliveTime,
 		Data:          config.Data,
+		BinData:       config.BinData,
+		Binary:        binary,
 		Metadata:      config.Metadata,
 		Insecure:      config.Insecure,
 	}

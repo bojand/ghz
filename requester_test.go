@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/bojand/ghz/internal/helloworld"
@@ -141,6 +142,36 @@ func TestRequesterUnary(t *testing.T) {
 		}()
 		wg.Wait()
 	})
+
+	t.Run("test report binary", func(t *testing.T) {
+		gs.ResetCounters()
+
+		msg := &helloworld.HelloRequest{}
+		msg.Name = "bob"
+
+		binData, err := proto.Marshal(msg)
+
+		reqr, err := New(md, &Options{
+			Host:        localhost,
+			N:           5,
+			C:           1,
+			Timeout:     20,
+			DialTimtout: 20,
+			BinData:     binData,
+			Binary:      true,
+			Insecure:    true,
+		})
+		assert.NoError(t, err)
+
+		report, err := reqr.Run()
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+		assert.Equal(t, 5, int(report.Count))
+		assert.Len(t, report.ErrorDist, 0)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 5, count)
+	})
 }
 
 func TestRequesterServerStreaming(t *testing.T) {
@@ -229,6 +260,50 @@ func TestRequesterClientStreaming(t *testing.T) {
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 16, count)
+}
+
+func TestRequesterClientStreamingBinary(t *testing.T) {
+	callType := helloworld.ClientStream
+
+	gs, s, err := startServer(false)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter.SayHelloCS", "./testdata/greeter.proto", []string{})
+
+	msg := &helloworld.HelloRequest{}
+	msg.Name = "bob"
+
+	binData, err := proto.Marshal(msg)
+
+	gs.ResetCounters()
+
+	reqr, err := New(md, &Options{
+		Host:        localhost,
+		N:           24,
+		C:           4,
+		Timeout:     20,
+		DialTimtout: 20,
+		BinData:     binData,
+		Binary:      true,
+		Insecure:    true,
+	})
+	assert.NoError(t, err)
+
+	report, err := reqr.Run()
+	assert.NoError(t, err)
+	assert.NotNil(t, report)
+	assert.Equal(t, 24, int(report.Count))
+	assert.True(t, len(report.LatencyDistribution) > 1)
+	assert.True(t, len(report.Histogram) > 1)
+	assert.Len(t, report.ErrorDist, 0)
+
+	count := gs.GetCount(callType)
+	assert.Equal(t, 24, count)
 }
 
 func TestRequesterBidi(t *testing.T) {

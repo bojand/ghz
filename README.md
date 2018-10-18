@@ -58,6 +58,8 @@ Options:
   -d  The call data as stringified JSON.
       If the value is '@' then the request contents are read from stdin.
   -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
+  -b  The call data comes as serialized binary message read from stdin.
+  -B  Path for the call data as serialized binary message.
   -m  Request metadata as stringified JSON.
   -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
 
@@ -119,6 +121,18 @@ A simple unary call with metadata using template actions:
 
 ```sh
 ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' -m '{"trace_id":"{{.RequestNumber}}","timestamp":"{{.TimestampUnix}}"}' 0.0.0.0:50051
+```
+
+Using binary data file (see [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message)):
+
+```sh
+ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -B ./hello_request_data.bin 0.0.0.0:50051
+```
+
+Or using binary from stdin:
+
+```sh
+ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -b 0.0.0.0:50051 < ./hello_request_data.bin
 ```
 
 Custom number of requests and concurrency:
