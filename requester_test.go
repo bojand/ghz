@@ -2,6 +2,7 @@ package ghz
 
 import (
 	"net"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -15,11 +16,11 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-const port = ":50051"
-const localhost = "localhost:50051"
+var port string
+var localhost string
 
 func startServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", ":0")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -39,9 +40,14 @@ func startServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 	gs := helloworld.NewGreeter()
 	helloworld.RegisterGreeterServer(s, gs)
 	// reflection.Register(s)
+
+	port = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
+	localhost = "localhost:" + port
+
 	go func() {
 		s.Serve(lis)
 	}()
+
 	return gs, s, err
 }
 

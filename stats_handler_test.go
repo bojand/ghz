@@ -10,8 +10,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const address = "localhost:50051"
-
 func TestStatsHandler(t *testing.T) {
 	_, s, err := startServer(false)
 
@@ -32,7 +30,7 @@ func TestStatsHandler(t *testing.T) {
 		done <- true
 	}()
 
-	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithStatsHandler(&statsHandler{rChan}))
+	conn, err := grpc.Dial(localhost, grpc.WithInsecure(), grpc.WithStatsHandler(&statsHandler{rChan}))
 
 	if err != nil {
 		assert.FailNow(t, err.Error())

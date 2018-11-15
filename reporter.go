@@ -83,7 +83,9 @@ type ResultDetail struct {
 }
 
 func newReporter(results chan *callResult, options *Options) *Reporter {
+
 	cap := min(options.N, maxResult)
+
 	return &Reporter{
 		options:        options,
 		results:        results,
@@ -123,7 +125,7 @@ func (r *Reporter) Run() {
 
 // Finalize all the gathered data into a final report
 func (r *Reporter) Finalize(total time.Duration) *Report {
-	average := r.avgTotal / float64(r.totalCount)
+	average := r.avgTotal / float64(len(r.lats))
 	avgDuration := time.Duration(average * float64(time.Second))
 	rps := float64(r.totalCount) / total.Seconds()
 
