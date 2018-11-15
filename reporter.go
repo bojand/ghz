@@ -26,6 +26,8 @@ type Reporter struct {
 
 // Report holds the data for the full test
 type Report struct {
+	Name string `json:"name,omitempty"`
+
 	Options *Options  `json:"options,omitempty"`
 	Date    time.Time `json:"date"`
 
@@ -130,6 +132,7 @@ func (r *Reporter) Finalize(total time.Duration) *Report {
 	rps := float64(r.totalCount) / total.Seconds()
 
 	rep := &Report{
+		Name:           r.options.Name,
 		Options:        r.options,
 		Date:           time.Now(),
 		Count:          r.totalCount,

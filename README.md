@@ -78,7 +78,9 @@ Options:
   -T  Connection timeout in seconds for the initial connection dial. Default is 10.
   -L  Keepalive time in seconds. Only used if present and above 0.
 
-  -cpus		Number of used cpu cores. (default for current machine is 8 cores)
+  -name  Name of the test.
+
+  -cpus  Number of used cpu cores. (default for current machine is 8 cores)
 
   -v  Print the version.
 ```

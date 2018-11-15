@@ -113,6 +113,11 @@ func (rp *ReportPrinter) printInfluxDetails() {
 
 func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 	s := make([]string, 0, 10)
+
+	if rp.Report.Name != "" {
+		s = append(s, fmt.Sprintf(`name="%v"`, rp.Report.Name))
+	}
+
 	s = append(s, fmt.Sprintf(`proto="%v"`, rp.Report.Options.Proto))
 	s = append(s, fmt.Sprintf(`call="%v"`, rp.Report.Options.Call))
 	s = append(s, fmt.Sprintf(`host="%v"`, rp.Report.Options.Host))
@@ -268,7 +273,8 @@ func formatMarkMs(m float64) string {
 var (
 	defaultTmpl = `
 Summary:
-  Count:	{{ .Count }}
+{{ if .Name }}  Name:		{{ .Name }}
+{{ end }}  Count:	{{ .Count }}
   Total:	{{ formatMilli .Total.Seconds }} ms
   Slowest:	{{ formatMilli .Slowest.Seconds }} ms
   Fastest:	{{ formatMilli .Fastest.Seconds }} ms
@@ -296,7 +302,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Results</title>
+    <title>ghz{{ if .Name }} - {{ .Name }}{{end}}</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/papaparse@4.5.0/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/britecharts@2/dist/bundled/britecharts.min.js"></script>
@@ -377,9 +383,15 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 						</a>
 						<table class="table">
 							<tbody>
+							  {{ if .Name }}
 								<tr>
-								<th>Count</th>
-								<td>{{ .Count }}</td>
+									<th>Name</th>
+									<td>{{ .Name }}</td>
+								</tr>
+								{{ end }}
+								<tr>
+									<th>Count</th>
+									<td>{{ .Count }}</td>
 								</tr>
 								<tr>
 									<th>Total</th>

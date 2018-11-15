@@ -41,12 +41,13 @@ type Config struct {
 	CPUs          int                `json:"cpus"`
 	ImportPaths   []string           `json:"i,omitempty"`
 	Insecure      bool               `json:"insecure,omitempty"`
+	Name          string             `json:"name,omitempty"`
 }
 
 // New creates a new config
 func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Duration, x time.Duration,
 	timeout int, data, dataPath string, binData bool, binPath, metadata, mdPath, output, format, host string,
-	dialTimout, keepaliveTime, cpus int, importPaths []string, insecure bool) (*Config, error) {
+	dialTimout, keepaliveTime, cpus int, importPaths []string, insecure bool, name string) (*Config, error) {
 
 	cfg := &Config{
 		Proto:         proto,
@@ -70,7 +71,8 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 		DialTimeout:   dialTimout,
 		KeepaliveTime: keepaliveTime,
 		CPUs:          cpus,
-		Insecure:      insecure}
+		Insecure:      insecure,
+		Name:          name}
 
 	if data == "@" {
 		b, err := ioutil.ReadAll(os.Stdin)
@@ -109,6 +111,8 @@ func New(proto, protoset, call, cert, cName string, n, c, qps int, z time.Durati
 // Default sets the defaults values for some of the properties
 // that need to have valid values
 func (c *Config) Default() {
+	c.Name = strings.TrimSpace(c.Name)
+
 	if c.N == 0 {
 		c.N = 200
 	}
@@ -308,6 +312,7 @@ func (c *Config) initDurations() {
 }
 
 func (c *Config) init() error {
+
 	err := c.initData()
 	if err != nil {
 		return err

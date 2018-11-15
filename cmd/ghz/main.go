@@ -50,6 +50,8 @@ var (
 	ct = flag.Int("T", 10, "Connection timeout in seconds for the initial connection dial.")
 	kt = flag.Int("L", 0, "Keepalive time in seconds.")
 
+	name = flag.String("name", "", "Name of the test.")
+
 	cpus = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
 
 	v = flag.Bool("v", false, "Print the version.")
@@ -102,7 +104,9 @@ Options:
   -T  Connection timeout in seconds for the initial connection dial. Default is 10.
   -L  Keepalive time in seconds. Only used if present and above 0.
 
-  -cpus		Number of used cpu cores. (default for current machine is %d cores)
+  -name  Name of the test.
+
+  -cpus  Number of used cpu cores. (default for current machine is %d cores)
 
   -v  Print the version.
 `
@@ -149,7 +153,7 @@ func main() {
 
 		cfg, err = config.New(*proto, *protoset, *call, *cert, *cname, *n, *c, *q, *z, *x, *t,
 			*data, *dataPath, *binData, *binPath, *md, *mdPath, *output, *format, host,
-			*ct, *kt, *cpus, iPaths, *insecure)
+			*ct, *kt, *cpus, iPaths, *insecure, *name)
 
 		if err != nil {
 			errAndExit(err.Error())
@@ -231,6 +235,7 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 		Binary:        binary,
 		Metadata:      config.Metadata,
 		Insecure:      config.Insecure,
+		Name:          config.Name,
 	}
 
 	reqr, err := ghz.New(mtd, opts)

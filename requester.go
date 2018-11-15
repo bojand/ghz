@@ -40,6 +40,7 @@ type Options struct {
 	BinData       []byte             `json:"-"`
 	Metadata      *map[string]string `json:"metadata,omitempty"`
 	Insecure      bool               `json:"insecure,omitempty"`
+	Name          string             `json:"name,omitempty"`
 }
 
 // Max size of the buffer of result channel.
