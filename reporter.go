@@ -127,22 +127,23 @@ func (r *Reporter) Run() {
 
 // Finalize all the gathered data into a final report
 func (r *Reporter) Finalize(total time.Duration) *Report {
-	average := r.avgTotal / float64(len(r.lats))
-	avgDuration := time.Duration(average * float64(time.Second))
-	rps := float64(r.totalCount) / total.Seconds()
-
 	rep := &Report{
 		Name:           r.options.Name,
 		Options:        r.options,
 		Date:           time.Now(),
 		Count:          r.totalCount,
 		Total:          total,
-		Average:        avgDuration,
-		Rps:            rps,
 		ErrorDist:      r.errorDist,
 		StatusCodeDist: r.statusCodeDist}
 
 	if len(r.lats) > 0 {
+		average := r.avgTotal / float64(len(r.lats))
+		avgDuration := time.Duration(average * float64(time.Second))
+		rep.Average = avgDuration
+
+		rps := float64(r.totalCount) / total.Seconds()
+		rep.Rps = rps
+
 		lats := make([]float64, len(r.lats))
 		copy(lats, r.lats)
 		sort.Float64s(lats)
