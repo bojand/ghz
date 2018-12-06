@@ -95,7 +95,7 @@ Data and metadata can specify [template actions](https://golang.org/pkg/text/tem
 ```go
 // call template data
 type callTemplateData struct {
-	RequestNumber      int64  // unique incrememnted request number for each request
+	RequestNumber      int64  // unique incremented request number for each request
 	FullyQualifiedName string // fully-qualified name of the method call
 	MethodName         string // shorter call method name
 	ServiceName        string // the service name
@@ -151,7 +151,7 @@ ghz -proto ./greeter.proto -call helloworld.Greeter.SayHelloCS -d '[{"name":"Joe
 
 If a single object is given for data it is sent as every message.
 
-We can also use `.protoset` files which can bundle multiple protoco buffer files into one binary file.
+We can also use `.protoset` files which can bundle multiple protocol buffer files into one binary file.
 
 Create a protoset
 
