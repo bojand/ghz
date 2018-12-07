@@ -15,9 +15,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t, false, c.insecure)
-		assert.Equal(t, 200, c.n)
-		assert.Equal(t, 50, c.c)
-		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, uint(200), c.n)
+		assert.Equal(t, uint(50), c.c)
+		assert.Equal(t, uint(0), c.qps)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(0), c.z)
 		assert.Equal(t, time.Duration(0), c.keepaliveTime)
@@ -44,6 +44,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithCPUs(4),
 			WithDataFromJSON(`{"name":"bob"}`),
 			WithMetadataFromJSON(`{"request-id":"123"}`),
+			WithProtoFile("testdata/data.proto", []string{}),
 		)
 
 		assert.NoError(t, err)
@@ -51,9 +52,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, true, c.insecure)
 		assert.Equal(t, "certfile", c.cert)
 		assert.Equal(t, "somecname", c.cname)
-		assert.Equal(t, 100, c.n)
-		assert.Equal(t, 20, c.c)
-		assert.Equal(t, 5, c.qps)
+		assert.Equal(t, uint(100), c.n)
+		assert.Equal(t, uint(20), c.c)
+		assert.Equal(t, uint(5), c.qps)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(5*time.Minute), c.z)
 		assert.Equal(t, time.Duration(60*time.Second), c.keepaliveTime)
@@ -63,9 +64,12 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "asdf", c.name)
 		assert.Equal(t, `{"name":"bob"}`, string(c.data))
 		assert.Equal(t, `{"request-id":"123"}`, string(c.metadata))
+		assert.Equal(t, "testdata/data.proto", string(c.proto))
+		assert.Equal(t, "", string(c.protoset))
+		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
 	})
 
-	t.Run("with binary data", func(t *testing.T) {
+	t.Run("with binary data and protoset", func(t *testing.T) {
 		c, err := newConfig(
 			WithCertificate("certfile", "somecname"),
 			WithInsecure,
@@ -80,6 +84,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithCPUs(4),
 			WithBinaryData([]byte("asdf1234foobar")),
 			WithMetadataFromJSON(`{"request-id":"123"}`),
+			WithProtoset("testdata/bundle.protoset"),
 		)
 
 		assert.NoError(t, err)
@@ -87,9 +92,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, true, c.insecure)
 		assert.Equal(t, "certfile", c.cert)
 		assert.Equal(t, "somecname", c.cname)
-		assert.Equal(t, 100, c.n)
-		assert.Equal(t, 20, c.c)
-		assert.Equal(t, 5, c.qps)
+		assert.Equal(t, uint(100), c.n)
+		assert.Equal(t, uint(20), c.c)
+		assert.Equal(t, uint(5), c.qps)
 		assert.Equal(t, true, c.binary)
 		assert.Equal(t, time.Duration(5*time.Minute), c.z)
 		assert.Equal(t, time.Duration(60*time.Second), c.keepaliveTime)
@@ -99,6 +104,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "asdf", c.name)
 		assert.Equal(t, []byte("asdf1234foobar"), c.data)
 		assert.Equal(t, `{"request-id":"123"}`, string(c.metadata))
+		assert.Equal(t, "", string(c.proto))
+		assert.Equal(t, "testdata/bundle.protoset", string(c.protoset))
 	})
 
 	t.Run("with data interface and metadata map", func(t *testing.T) {
@@ -139,9 +146,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, true, c.insecure)
 		assert.Equal(t, "certfile", c.cert)
 		assert.Equal(t, "somecname", c.cname)
-		assert.Equal(t, 100, c.n)
-		assert.Equal(t, 20, c.c)
-		assert.Equal(t, 5, c.qps)
+		assert.Equal(t, uint(100), c.n)
+		assert.Equal(t, uint(20), c.c)
+		assert.Equal(t, uint(5), c.qps)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(5*time.Minute), c.z)
 		assert.Equal(t, time.Duration(60*time.Second), c.keepaliveTime)

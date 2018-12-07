@@ -2,29 +2,49 @@ package ghz
 
 import (
 	"encoding/json"
+	"fmt"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/bojand/hri"
+	"github.com/pkg/errors"
 )
 
 // RunConfig represents the request Configs
 type RunConfig struct {
-	cert          string
-	cname         string
-	insecure      bool
-	n             int
-	c             int
-	qps           int
+	// call settings
+	call        string
+	host        string
+	proto       string
+	importPaths []string
+	protoset    string
+
+	// securit settings
+	cert     string
+	cname    string
+	insecure bool
+
+	// test
+	n   uint
+	c   uint
+	qps uint
+
+	// timeouts
 	z             time.Duration
 	timeout       time.Duration
 	dialTimeout   time.Duration
 	keepaliveTime time.Duration
-	data          []byte
-	binary        bool
-	metadata      []byte
-	name          string
-	cpus          int
+
+	// data
+	data     []byte
+	binary   bool
+	metadata []byte
+
+	// misc
+	name string
+	cpus int
 }
 
 // Option controls some aspect of run
@@ -33,6 +53,11 @@ type Option func(*RunConfig) error
 // WithCertificate specifies the certificate options for the run
 func WithCertificate(cert string, cname string) Option {
 	return func(o *RunConfig) error {
+		cert = strings.TrimSpace(cert)
+		if cert == "" {
+			return errors.Errorf(fmt.Sprintf("cert required"))
+		}
+
 		o.cert = cert
 		o.cname = cname
 
@@ -47,7 +72,7 @@ func WithInsecure(o *RunConfig) error {
 }
 
 // WithN specifies the N (number of total requests) Config
-func WithN(n int) Option {
+func WithN(n uint) Option {
 	return func(o *RunConfig) error {
 		o.n = n
 
@@ -56,7 +81,7 @@ func WithN(n int) Option {
 }
 
 // WithC specifies the N (number of concurrent requests) Config
-func WithC(c int) Option {
+func WithC(c uint) Option {
 	return func(o *RunConfig) error {
 		o.c = c
 
@@ -65,7 +90,7 @@ func WithC(c int) Option {
 }
 
 // WithQPS specifies the QPS (queries per second) limit Config
-func WithQPS(qps int) Option {
+func WithQPS(qps uint) Option {
 	return func(o *RunConfig) error {
 		o.qps = qps
 
@@ -171,6 +196,11 @@ func WithMetadata(md *map[string]string) Option {
 // WithName sets the name of the test run
 func WithName(name string) Option {
 	return func(o *RunConfig) error {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			return errors.Errorf(fmt.Sprintf("name required"))
+		}
+
 		o.name = name
 
 		return nil
@@ -181,6 +211,50 @@ func WithName(name string) Option {
 func WithCPUs(c int) Option {
 	return func(o *RunConfig) error {
 		o.cpus = c
+
+		return nil
+	}
+}
+
+// WithProtoFile specified proto file path and optionally import paths
+// We will automatically add the proto file path's directory and the current directory
+func WithProtoFile(proto string, importPaths []string) Option {
+	return func(o *RunConfig) error {
+		proto = strings.TrimSpace(proto)
+		if proto == "" {
+			return errors.Errorf(fmt.Sprintf("proto path required"))
+		}
+
+		if filepath.Ext(proto) != ".proto" {
+			return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
+		}
+
+		o.proto = proto
+
+		dir := filepath.Dir(proto)
+		if dir != "." {
+			o.importPaths = append(o.importPaths, dir)
+		}
+
+		o.importPaths = append(o.importPaths, ".")
+
+		if len(importPaths) > 0 {
+			o.importPaths = append(o.importPaths, importPaths...)
+		}
+
+		return nil
+	}
+}
+
+// WithProtoset specified protoset file path
+func WithProtoset(protoset string) Option {
+	return func(o *RunConfig) error {
+		protoset = strings.TrimSpace(protoset)
+		if protoset == "" {
+			return errors.Errorf(fmt.Sprintf("protoset path required"))
+		}
+
+		o.protoset = protoset
 
 		return nil
 	}
@@ -205,4 +279,12 @@ func newConfig(options ...Option) (*RunConfig, error) {
 	}
 
 	return c, nil
+}
+
+func minValue(v int, min int) error {
+	if v < min {
+		return errors.Errorf(fmt.Sprintf("must be at least %d", min))
+	}
+
+	return nil
 }
