@@ -1,6 +1,9 @@
 package ghz
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // Options represents the request options
 type Options struct {
@@ -14,12 +17,13 @@ type Options struct {
 	QPS           int                `json:"qps,omitempty"`
 	Z             time.Duration      `json:"z,omitempty"`
 	Timeout       time.Duration      `json:"timeout,omitempty"`
-	DialTimtout   time.Duration      `json:"dialTimeout,omitempty"`
+	DialTimeout   time.Duration      `json:"dialTimeout,omitempty"`
 	KeepaliveTime time.Duration      `json:"keepAlice,omitempty"`
 	Data          interface{}        `json:"data,omitempty"`
 	Binary        bool               `json:"binary"`
 	Metadata      *map[string]string `json:"metadata,omitempty"`
 	Insecure      bool               `json:"insecure,omitempty"`
+	CPUs          int                `json:"CPUs"`
 	Name          string             `json:"name,omitempty"`
 }
 
@@ -31,16 +35,34 @@ type Report struct {
 	Date    time.Time `json:"date"`
 }
 
-func (r *Report) init(call, proto, host string, c *RunConfig) {
+func newReport(call, proto, host string, c *RunConfig) *Report {
 
-	r.Name = c.name
-
-	r.Options = &Options{
-		Call:  call,
-		Proto: proto,
-		Host:  host,
-		Cert:  c.cert,
-		CName: c.cname,
+	r := &Report{
+		Name: c.name,
 	}
 
+	r.Options = &Options{
+		Call:          call,
+		Proto:         proto,
+		Host:          host,
+		Cert:          c.cert,
+		CName:         c.cname,
+		N:             c.n,
+		C:             c.c,
+		QPS:           c.qps,
+		Z:             c.z,
+		Timeout:       c.timeout,
+		DialTimeout:   c.dialTimeout,
+		KeepaliveTime: c.keepaliveTime,
+		Binary:        c.binary,
+		Insecure:      c.insecure,
+		CPUs:          c.cpus,
+		Name:          c.name,
+	}
+
+	_ = json.Unmarshal(c.data, &r.Options.Data)
+
+	_ = json.Unmarshal(c.metadata, &r.Options.Metadata)
+
+	return r
 }

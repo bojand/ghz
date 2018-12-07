@@ -18,28 +18,13 @@ type RunConfig struct {
 	qps           int
 	z             time.Duration
 	timeout       time.Duration
-	dialTimtout   time.Duration
+	dialTimeout   time.Duration
 	keepaliveTime time.Duration
 	data          []byte
 	binary        bool
 	metadata      []byte
 	name          string
 	cpus          int
-}
-
-// NewConfig creates Configs for a new run
-func NewConfig() *RunConfig {
-	o := &RunConfig{
-		insecure:    true,
-		n:           200,
-		c:           50,
-		timeout:     time.Duration(20 * time.Second),
-		dialTimtout: 10,
-		cpus:        runtime.GOMAXPROCS(-1),
-		name:        hri.Random(),
-	}
-
-	return o
 }
 
 // Option controls some aspect of run
@@ -109,7 +94,7 @@ func WithTimeout(timeout time.Duration) Option {
 // WithDialTimeout specifies the inital connection dial timeout
 func WithDialTimeout(dt time.Duration) Option {
 	return func(o *RunConfig) error {
-		o.dialTimtout = dt
+		o.dialTimeout = dt
 
 		return nil
 	}
@@ -138,7 +123,7 @@ func WithBinaryData(data []byte) Option {
 func WithDataFromJSON(data string) Option {
 	return func(o *RunConfig) error {
 		o.data = []byte(data)
-		o.binary = true
+		o.binary = false
 
 		return nil
 	}
@@ -199,4 +184,25 @@ func WithCPUs(c int) Option {
 
 		return nil
 	}
+}
+
+func newConfig(options ...Option) (*RunConfig, error) {
+	c := &RunConfig{
+		n:           200,
+		c:           50,
+		timeout:     time.Duration(20 * time.Second),
+		dialTimeout: time.Duration(10 * time.Second),
+		cpus:        runtime.GOMAXPROCS(-1),
+		name:        hri.Random(),
+	}
+
+	for _, option := range options {
+		err := option(c)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
 }
