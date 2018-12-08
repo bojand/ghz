@@ -75,7 +75,7 @@ func TestRequesterUnary(t *testing.T) {
 			N:           1,
 			C:           1,
 			Timeout:     20,
-			DialTimtout: 20,
+			DialTimeout: 20,
 			Data:        data,
 			Insecure:    true,
 		})
@@ -99,7 +99,7 @@ func TestRequesterUnary(t *testing.T) {
 			N:           12,
 			C:           2,
 			Timeout:     20,
-			DialTimtout: 20,
+			DialTimeout: 20,
 			Data:        data,
 			Insecure:    true,
 		})
@@ -126,7 +126,7 @@ func TestRequesterUnary(t *testing.T) {
 			C:           2,
 			QPS:         1,
 			Timeout:     20,
-			DialTimtout: 20,
+			DialTimeout: 20,
 			Data:        data,
 			Insecure:    true,
 		})
@@ -162,7 +162,7 @@ func TestRequesterUnary(t *testing.T) {
 			N:           5,
 			C:           1,
 			Timeout:     20,
-			DialTimtout: 20,
+			DialTimeout: 20,
 			BinData:     binData,
 			Binary:      true,
 			Insecure:    true,
@@ -203,7 +203,7 @@ func TestRequesterServerStreaming(t *testing.T) {
 		N:           15,
 		C:           3,
 		Timeout:     20,
-		DialTimtout: 20,
+		DialTimeout: 20,
 		Data:        data,
 		Insecure:    true,
 	})
@@ -250,7 +250,7 @@ func TestRequesterClientStreaming(t *testing.T) {
 		N:           16,
 		C:           4,
 		Timeout:     20,
-		DialTimtout: 20,
+		DialTimeout: 20,
 		Data:        data,
 		Insecure:    true,
 	})
@@ -293,7 +293,7 @@ func TestRequesterClientStreamingBinary(t *testing.T) {
 		N:           24,
 		C:           4,
 		Timeout:     20,
-		DialTimtout: 20,
+		DialTimeout: 20,
 		BinData:     binData,
 		Binary:      true,
 		Insecure:    true,
@@ -343,7 +343,7 @@ func TestRequesterBidi(t *testing.T) {
 		N:           20,
 		C:           4,
 		Timeout:     20,
-		DialTimtout: 20,
+		DialTimeout: 20,
 		Data:        data,
 		Insecure:    true,
 	})
@@ -384,7 +384,7 @@ func TestRequesterUnarySecure(t *testing.T) {
 		N:           18,
 		C:           3,
 		Timeout:     20,
-		DialTimtout: 20,
+		DialTimeout: 20,
 		Data:        data,
 		Cert:        "./testdata/localhost.crt",
 	})

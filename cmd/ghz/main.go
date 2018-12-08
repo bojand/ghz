@@ -228,7 +228,7 @@ func runTest(config *config.Config) (*ghz.Report, error) {
 		QPS:           config.QPS,
 		Z:             config.Z,
 		Timeout:       config.Timeout,
-		DialTimtout:   config.DialTimeout,
+		DialTimeout:   config.DialTimeout,
 		KeepaliveTime: config.KeepaliveTime,
 		Data:          config.Data,
 		BinData:       config.BinData,

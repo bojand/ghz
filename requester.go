@@ -33,7 +33,7 @@ type Options struct {
 	QPS           int                `json:"qps,omitempty"`
 	Z             time.Duration      `json:"z,omitempty"`
 	Timeout       int                `json:"timeout,omitempty"`
-	DialTimtout   int                `json:"dialTimeout,omitempty"`
+	DialTimeout   int                `json:"dialTimeout,omitempty"`
 	KeepaliveTime int                `json:"keepAlice,omitempty"`
 	Data          interface{}        `json:"data,omitempty"`
 	Binary        bool               `json:"binary"`
@@ -163,7 +163,7 @@ func (b *Requester) connect() (*grpc.ClientConn, error) {
 	opts = append(opts, credOptions)
 
 	ctx := context.Background()
-	dialTime := time.Duration(b.config.DialTimtout * int(time.Second))
+	dialTime := time.Duration(b.config.DialTimeout * int(time.Second))
 	ctx, _ = context.WithTimeout(ctx, dialTime)
 	// cancel is ignored here as connection.Close() is used.
 	// See https://godoc.org/google.golang.org/grpc#DialContext

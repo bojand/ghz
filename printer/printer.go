@@ -126,7 +126,7 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 	s = append(s, fmt.Sprintf("qps=%v", rp.Report.Options.QPS))
 	s = append(s, fmt.Sprintf("z=%v", rp.Report.Options.Z.Nanoseconds()))
 	s = append(s, fmt.Sprintf("timeout=%v", rp.Report.Options.Timeout))
-	s = append(s, fmt.Sprintf("dial_timeout=%v", rp.Report.Options.DialTimtout))
+	s = append(s, fmt.Sprintf("dial_timeout=%v", rp.Report.Options.DialTimeout))
 	s = append(s, fmt.Sprintf("keepalive=%v", rp.Report.Options.KeepaliveTime))
 
 	dataStr := ""
