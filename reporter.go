@@ -2,6 +2,7 @@ package ghz
 
 import (
 	"encoding/json"
+	"fmt"
 	"sort"
 	"time"
 )
@@ -111,7 +112,7 @@ type ResultDetail struct {
 
 func newReporter(results chan *callResult, c *RunConfig) *Reporter {
 
-	cap := min(int(c.n), maxResult)
+	cap := min(c.n, maxResult)
 
 	return &Reporter{
 		config:         c,
@@ -152,6 +153,7 @@ func (r *Reporter) Run() {
 
 // Finalize all the gathered data into a final report
 func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report {
+	fmt.Println("Finalizing")
 	rep := &Report{
 		Name:           r.config.name,
 		EndReason:      stopReason,
@@ -168,9 +170,9 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		Host:          r.config.host,
 		Cert:          r.config.cert,
 		CName:         r.config.cname,
-		N:             r.config.n,
-		C:             r.config.c,
-		QPS:           r.config.qps,
+		N:             uint(r.config.n),
+		C:             uint(r.config.c),
+		QPS:           uint(r.config.qps),
 		Z:             r.config.z,
 		Timeout:       r.config.timeout,
 		DialTimeout:   r.config.dialTimeout,

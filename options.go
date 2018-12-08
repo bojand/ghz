@@ -27,9 +27,9 @@ type RunConfig struct {
 	insecure bool
 
 	// test
-	n   uint
-	c   uint
-	qps uint
+	n   int
+	c   int
+	qps int
 
 	// timeouts
 	z             time.Duration
@@ -74,7 +74,7 @@ func WithInsecure(o *RunConfig) error {
 // WithN specifies the N (number of total requests) Config
 func WithN(n uint) Option {
 	return func(o *RunConfig) error {
-		o.n = n
+		o.n = int(n)
 
 		return nil
 	}
@@ -83,7 +83,7 @@ func WithN(n uint) Option {
 // WithC specifies the N (number of concurrent requests) Config
 func WithC(c uint) Option {
 	return func(o *RunConfig) error {
-		o.c = c
+		o.c = int(c)
 
 		return nil
 	}
@@ -92,7 +92,7 @@ func WithC(c uint) Option {
 // WithQPS specifies the QPS (queries per second) limit Config
 func WithQPS(qps uint) Option {
 	return func(o *RunConfig) error {
-		o.qps = qps
+		o.qps = int(qps)
 
 		return nil
 	}
@@ -208,9 +208,9 @@ func WithName(name string) Option {
 }
 
 // WithCPUs specifies the number of CPU's to be used
-func WithCPUs(c int) Option {
+func WithCPUs(c uint) Option {
 	return func(o *RunConfig) error {
-		o.cpus = c
+		o.cpus = int(c)
 
 		return nil
 	}

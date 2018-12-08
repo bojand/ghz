@@ -1,12 +1,12 @@
 package ghz
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/bojand/ghz/protodesc"
+	"github.com/pkg/errors"
 
 	"github.com/jhump/protoreflect/desc"
 )
@@ -22,6 +22,10 @@ func Run(call, host string, options ...Option) (*Report, error) {
 	c.call = call
 	c.host = host
 
+	if c.proto == "" && c.protoset == "" {
+		return nil, errors.New("Must provide proto or protoset")
+	}
+
 	var mtd *desc.MethodDescriptor
 	if c.proto != "" {
 		mtd, err = protodesc.GetMethodDescFromProto(call, c.proto, c.importPaths)
@@ -32,8 +36,6 @@ func Run(call, host string, options ...Option) (*Report, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(mtd)
 
 	reqr, err := newRequester(mtd, c)
 
@@ -52,7 +54,6 @@ func Run(call, host string, options ...Option) (*Report, error) {
 		go func() {
 			time.Sleep(c.z)
 			reqr.Stop(ReasonTimeout)
-			fmt.Printf("Stopped due to test timeout after %+v\n", c.z)
 		}()
 	}
 

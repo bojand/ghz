@@ -49,32 +49,38 @@ func (td *callTemplateData) execute(data string) (*bytes.Buffer, error) {
 }
 
 func (td *callTemplateData) executeData(data string) (interface{}, error) {
-	input := []byte(data)
-	tpl, err := td.execute(data)
-	if err == nil {
-		input = tpl.Bytes()
-	}
-
 	var dataMap interface{}
-	err = json.Unmarshal(input, &dataMap)
-	if err != nil {
-		return nil, err
+
+	if len(data) > 0 {
+		input := []byte(data)
+		tpl, err := td.execute(data)
+		if err == nil {
+			input = tpl.Bytes()
+		}
+
+		err = json.Unmarshal(input, &dataMap)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return dataMap, nil
 }
 
 func (td *callTemplateData) executeMetadata(metadata string) (*map[string]string, error) {
-	input := []byte(metadata)
-	tpl, err := td.execute(metadata)
-	if err == nil {
-		input = tpl.Bytes()
-	}
-
 	var mdMap map[string]string
-	err = json.Unmarshal(input, &mdMap)
-	if err != nil {
-		return nil, err
+
+	if len(metadata) > 0 {
+		input := []byte(metadata)
+		tpl, err := td.execute(metadata)
+		if err == nil {
+			input = tpl.Bytes()
+		}
+
+		err = json.Unmarshal(input, &mdMap)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &mdMap, nil

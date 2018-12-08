@@ -54,8 +54,9 @@ func newRequester(mtd *desc.MethodDescriptor, c *RunConfig) (*Requester, error) 
 	}
 
 	reqr := &Requester{
-		config: c,
-		mtd:    mtd}
+		config:     c,
+		mtd:        mtd,
+		stopReason: ReasonNormalEnd}
 
 	return reqr, nil
 }
@@ -63,7 +64,7 @@ func newRequester(mtd *desc.MethodDescriptor, c *RunConfig) (*Requester, error) 
 // Run makes all the requests and returns a report of results
 // It blocks until all work is done.
 func (b *Requester) Run() (*Report, error) {
-	b.results = make(chan *callResult, min(int(b.config.c*1000), maxResult))
+	b.results = make(chan *callResult, min(b.config.c*1000, maxResult))
 	b.stopCh = make(chan bool, b.config.c)
 	b.start = time.Now()
 
@@ -93,8 +94,7 @@ func (b *Requester) Run() (*Report, error) {
 // Stop stops the test
 func (b *Requester) Stop(reason StopReason) {
 	// Send stop signal so that workers can stop gracefully.
-	total := int(b.config.c)
-	for i := 0; i < total; i++ {
+	for i := 0; i < b.config.c; i++ {
 		b.stopCh <- true
 	}
 
@@ -143,11 +143,10 @@ func (b *Requester) connect() (*grpc.ClientConn, error) {
 
 func (b *Requester) runWorkers() {
 	var wg sync.WaitGroup
-	wg.Add(int(b.config.c))
+	wg.Add(b.config.c)
 
 	// Ignore the case where b.N % b.C != 0.
-	total := int(b.config.c)
-	for i := 0; i < total; i++ {
+	for i := 0; i < b.config.c; i++ {
 		go func() {
 			defer wg.Done()
 
@@ -157,13 +156,13 @@ func (b *Requester) runWorkers() {
 	wg.Wait()
 }
 
-func (b *Requester) runWorker(n uint) {
+func (b *Requester) runWorker(n int) {
 	var throttle <-chan time.Time
 	if b.config.qps > 0 {
 		throttle = time.Tick(time.Duration(1e6/(b.config.qps)) * time.Microsecond)
 	}
 
-	for i := uint(0); i < n; i++ {
+	for i := 0; i < n; i++ {
 		// Check if application is stopped. Do not send into a closed channel.
 		select {
 		case <-b.stopCh:
