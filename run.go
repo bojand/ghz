@@ -6,24 +6,16 @@ import (
 	"time"
 
 	"github.com/bojand/ghz/protodesc"
-	"github.com/pkg/errors"
 
 	"github.com/jhump/protoreflect/desc"
 )
 
 // Run executes the test
 func Run(call, host string, options ...Option) (*Report, error) {
-	c, err := newConfig(options...)
+	c, err := newConfig(call, host, options...)
 
 	if err != nil {
 		return nil, err
-	}
-
-	c.call = call
-	c.host = host
-
-	if c.proto == "" && c.protoset == "" {
-		return nil, errors.New("Must provide proto or protoset")
 	}
 
 	var mtd *desc.MethodDescriptor

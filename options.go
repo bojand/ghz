@@ -260,8 +260,13 @@ func WithProtoset(protoset string) Option {
 	}
 }
 
-func newConfig(options ...Option) (*RunConfig, error) {
+func newConfig(call, host string, options ...Option) (*RunConfig, error) {
+	call = strings.TrimSpace(call)
+	host = strings.TrimSpace(host)
+
 	c := &RunConfig{
+		call:        call,
+		host:        host,
 		n:           200,
 		c:           50,
 		timeout:     time.Duration(20 * time.Second),
@@ -276,6 +281,18 @@ func newConfig(options ...Option) (*RunConfig, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if c.call == "" {
+		return nil, errors.New("Call required")
+	}
+
+	if c.host == "" {
+		return nil, errors.New("Host required")
+	}
+
+	if c.proto == "" && c.protoset == "" {
+		return nil, errors.New("Must provide proto or protoset")
 	}
 
 	return c, nil

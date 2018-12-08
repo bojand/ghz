@@ -2,7 +2,6 @@ package ghz
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"time"
 )
@@ -153,7 +152,6 @@ func (r *Reporter) Run() {
 
 // Finalize all the gathered data into a final report
 func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report {
-	fmt.Println("Finalizing")
 	rep := &Report{
 		Name:           r.config.name,
 		EndReason:      stopReason,
