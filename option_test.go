@@ -57,6 +57,42 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Nil(t, c)
 	})
 
+	t.Run("fail with empty cert", func(t *testing.T) {
+		c, err := newConfig("call", "localhost:50050",
+			WithCertificate("  ", ""),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("fail with empty JSON data", func(t *testing.T) {
+		c, err := newConfig("call", "localhost:50050",
+			WithData("  "),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("fail with empty name", func(t *testing.T) {
+		c, err := newConfig("call", "localhost:50050",
+			WithName("  "),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("fail with invalid JSON data", func(t *testing.T) {
+		c, err := newConfig("call", "localhost:50050",
+			WithData(`asdf:{"foo"}`),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
 	t.Run("without any options should have defaults", func(t *testing.T) {
 		c, err := newConfig("  call  ", "  localhost:50050  ",
 			WithProtoFile("testdata/data.proto", []string{}),
@@ -100,7 +136,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithCPUs(4),
 			WithDataFromJSON(`{"name":"bob"}`),
 			WithMetadataFromJSON(`{"request-id":"123"}`),
-			WithProtoFile("testdata/data.proto", []string{}),
+			WithProtoFile("testdata/data.proto", []string{"/home/protos"}),
 		)
 
 		assert.NoError(t, err)
@@ -124,7 +160,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, `{"request-id":"123"}`, string(c.metadata))
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
-		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+		assert.Equal(t, []string{"testdata", ".", "/home/protos"}, c.importPaths)
 	})
 
 	t.Run("with binary data and protoset", func(t *testing.T) {
