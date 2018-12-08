@@ -9,8 +9,56 @@ import (
 )
 
 func TestRunConfig_newRunConfig(t *testing.T) {
-	t.Run("without any options should have defaults", func(t *testing.T) {
+	t.Run("fail with empty call", func(t *testing.T) {
+		c, err := newConfig("  ", "localhost:50050")
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("fail with empty host ", func(t *testing.T) {
+		c, err := newConfig("  call ", "   ")
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("fail without proto or protoset", func(t *testing.T) {
+		c, err := newConfig("call", "localhost:50050")
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("fail with empty proto", func(t *testing.T) {
 		c, err := newConfig("call", "localhost:50050",
+			WithProtoFile("  ", []string{}),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("fail with invalid extension", func(t *testing.T) {
+		c, err := newConfig("call", "localhost:50050",
+			WithProtoFile("testdata/data.bin", []string{}),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("fail with empty protoset", func(t *testing.T) {
+		c, err := newConfig("call", "localhost:50050",
+			WithProtoset("  "),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("without any options should have defaults", func(t *testing.T) {
+		c, err := newConfig("  call  ", "  localhost:50050  ",
 			WithProtoFile("testdata/data.proto", []string{}),
 		)
 

@@ -297,11 +297,3 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 
 	return c, nil
 }
-
-func minValue(v int, min int) error {
-	if v < min {
-		return errors.Errorf(fmt.Sprintf("must be at least %d", min))
-	}
-
-	return nil
-}

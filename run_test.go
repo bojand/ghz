@@ -499,3 +499,57 @@ func TestRunUnarySecure(t *testing.T) {
 	count := gs.GetCount(callType)
 	assert.Equal(t, 18, count)
 }
+
+func TestRunUnaryProtoset(t *testing.T) {
+	callType := helloworld.Unary
+
+	gs, s, err := startServer(false)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	gs.ResetCounters()
+
+	data := make(map[string]interface{})
+	data["name"] = "bob"
+
+	report, err := Run(
+		"helloworld.Greeter.SayHello",
+		localhost,
+		WithProtoset("./testdata/bundle.protoset"),
+		WithN(21),
+		WithC(3),
+		WithTimeout(time.Duration(20*time.Second)),
+		WithDialTimeout(time.Duration(20*time.Second)),
+		WithData(data),
+		WithInsecure,
+	)
+
+	assert.NoError(t, err)
+
+	assert.NotNil(t, report)
+
+	assert.Equal(t, 21, int(report.Count))
+	assert.NotZero(t, report.Average)
+	assert.NotZero(t, report.Fastest)
+	assert.NotZero(t, report.Slowest)
+	assert.NotZero(t, report.Rps)
+	assert.NotEmpty(t, report.Name)
+	assert.NotEmpty(t, report.Date)
+	assert.NotEmpty(t, report.Details)
+	assert.NotEmpty(t, report.Options)
+	assert.NotEmpty(t, report.LatencyDistribution)
+	assert.Equal(t, ReasonNormalEnd, report.EndReason)
+	assert.Equal(t, true, report.Options.Insecure)
+	assert.Empty(t, report.ErrorDist)
+
+	assert.NotEqual(t, report.Average, report.Slowest)
+	assert.NotEqual(t, report.Average, report.Fastest)
+	assert.NotEqual(t, report.Slowest, report.Fastest)
+
+	count := gs.GetCount(callType)
+	assert.Equal(t, 21, count)
+}

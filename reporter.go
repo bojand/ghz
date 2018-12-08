@@ -43,7 +43,7 @@ type Options struct {
 	Data          interface{}        `json:"data,omitempty"`
 	Binary        bool               `json:"binary"`
 	Metadata      *map[string]string `json:"metadata,omitempty"`
-	Insecure      bool               `json:"insecure,omitempty"`
+	Insecure      bool               `json:"insecure"`
 	CPUs          int                `json:"CPUs"`
 	Name          string             `json:"name,omitempty"`
 }
