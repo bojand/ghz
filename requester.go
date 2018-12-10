@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -317,7 +316,7 @@ func createClientCredOption(config *RunConfig) (grpc.DialOption, error) {
 		return credOptions, nil
 	}
 
-	if strings.TrimSpace(config.cert) != "" {
+	if config.cert != "" {
 		creds, err := credentials.NewClientTLSFromFile(config.cert, config.cname)
 		if err != nil {
 			return nil, err

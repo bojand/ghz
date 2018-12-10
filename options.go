@@ -3,6 +3,8 @@ package ghz
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -54,9 +56,6 @@ type Option func(*RunConfig) error
 func WithCertificate(cert string, cname string) Option {
 	return func(o *RunConfig) error {
 		cert = strings.TrimSpace(cert)
-		if cert == "" {
-			return errors.Errorf(fmt.Sprintf("cert required"))
-		}
 
 		o.cert = cert
 		o.cname = cname
@@ -66,13 +65,16 @@ func WithCertificate(cert string, cname string) Option {
 }
 
 // WithInsecure specifies that this run should be done using insecure mode
-func WithInsecure(o *RunConfig) error {
-	o.insecure = true
-	return nil
+func WithInsecure(insec bool) Option {
+	return func(o *RunConfig) error {
+		o.insecure = insec
+
+		return nil
+	}
 }
 
-// WithN specifies the N (number of total requests) Config
-func WithN(n uint) Option {
+// WithTotalRequests specifies the N (number of total requests) setting
+func WithTotalRequests(n uint) Option {
 	return func(o *RunConfig) error {
 		o.n = int(n)
 
@@ -80,8 +82,8 @@ func WithN(n uint) Option {
 	}
 }
 
-// WithC specifies the N (number of concurrent requests) Config
-func WithC(c uint) Option {
+// WithConcurrency specifies the C (number of concurrent requests) option
+func WithConcurrency(c uint) Option {
 	return func(o *RunConfig) error {
 		o.c = int(c)
 
@@ -89,7 +91,7 @@ func WithC(c uint) Option {
 	}
 }
 
-// WithQPS specifies the QPS (queries per second) limit Config
+// WithQPS specifies the QPS (queries per second) limit option
 func WithQPS(qps uint) Option {
 	return func(o *RunConfig) error {
 		o.qps = int(qps)
@@ -98,8 +100,8 @@ func WithQPS(qps uint) Option {
 	}
 }
 
-// WithZ specifies the Z (total test duration) Config
-func WithZ(z time.Duration) Option {
+// WithRunDuration specifies the Z (total test duration) option
+func WithRunDuration(z time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.z = z
 
@@ -144,6 +146,21 @@ func WithBinaryData(data []byte) Option {
 	}
 }
 
+// WithBinaryDataFromFile specifies the binary data
+func WithBinaryDataFromFile(path string) Option {
+	return func(o *RunConfig) error {
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		o.data = data
+		o.binary = true
+
+		return nil
+	}
+}
+
 // WithDataFromJSON loads JSON data from string
 func WithDataFromJSON(data string) Option {
 	return func(o *RunConfig) error {
@@ -164,6 +181,36 @@ func WithData(data interface{}) Option {
 		}
 
 		o.data = dataJSON
+		o.binary = false
+
+		return nil
+	}
+}
+
+// WithDataFromReader loads JSON data from reader
+func WithDataFromReader(r io.Reader) Option {
+	return func(o *RunConfig) error {
+		data, err := ioutil.ReadAll(r)
+		if err != nil {
+			return err
+		}
+
+		o.data = data
+		o.binary = false
+
+		return nil
+	}
+}
+
+// WithDataFromFile loads JSON data from file
+func WithDataFromFile(path string) Option {
+	return func(o *RunConfig) error {
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		o.data = data
 		o.binary = false
 
 		return nil
@@ -193,15 +240,27 @@ func WithMetadata(md *map[string]string) Option {
 	}
 }
 
+// WithMetadataFromFile loads JSON metadata from file
+func WithMetadataFromFile(path string) Option {
+	return func(o *RunConfig) error {
+		mdJSON, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		o.metadata = mdJSON
+
+		return nil
+	}
+}
+
 // WithName sets the name of the test run
 func WithName(name string) Option {
 	return func(o *RunConfig) error {
 		name = strings.TrimSpace(name)
-		if name == "" {
-			return errors.Errorf(fmt.Sprintf("name required"))
+		if name != "" {
+			o.name = name
 		}
-
-		o.name = name
 
 		return nil
 	}
@@ -221,25 +280,23 @@ func WithCPUs(c uint) Option {
 func WithProtoFile(proto string, importPaths []string) Option {
 	return func(o *RunConfig) error {
 		proto = strings.TrimSpace(proto)
-		if proto == "" {
-			return errors.Errorf(fmt.Sprintf("proto path required"))
-		}
+		if proto != "" {
+			if filepath.Ext(proto) != ".proto" {
+				return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
+			}
 
-		if filepath.Ext(proto) != ".proto" {
-			return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
-		}
+			o.proto = proto
 
-		o.proto = proto
+			dir := filepath.Dir(proto)
+			if dir != "." {
+				o.importPaths = append(o.importPaths, dir)
+			}
 
-		dir := filepath.Dir(proto)
-		if dir != "." {
-			o.importPaths = append(o.importPaths, dir)
-		}
+			o.importPaths = append(o.importPaths, ".")
 
-		o.importPaths = append(o.importPaths, ".")
-
-		if len(importPaths) > 0 {
-			o.importPaths = append(o.importPaths, importPaths...)
+			if len(importPaths) > 0 {
+				o.importPaths = append(o.importPaths, importPaths...)
+			}
 		}
 
 		return nil
@@ -250,10 +307,6 @@ func WithProtoFile(proto string, importPaths []string) Option {
 func WithProtoset(protoset string) Option {
 	return func(o *RunConfig) error {
 		protoset = strings.TrimSpace(protoset)
-		if protoset == "" {
-			return errors.Errorf(fmt.Sprintf("protoset path required"))
-		}
-
 		o.protoset = protoset
 
 		return nil

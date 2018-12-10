@@ -31,12 +31,12 @@ func TestRunUnary(t *testing.T) {
 			"helloworld.Greeter.SayHello",
 			localhost,
 			WithProtoFile("./testdata/greeter.proto", []string{}),
-			WithN(1),
-			WithC(1),
+			WithTotalRequests(1),
+			WithConcurrency(1),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithData(data),
-			WithInsecure,
+			WithInsecure(true),
 		)
 
 		assert.NoError(t, err)
@@ -74,13 +74,13 @@ func TestRunUnary(t *testing.T) {
 			"helloworld.Greeter.SayHello",
 			localhost,
 			WithProtoFile("./testdata/greeter.proto", []string{}),
-			WithN(12),
-			WithC(2),
+			WithTotalRequests(12),
+			WithConcurrency(2),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithData(data),
 			WithName("test123"),
-			WithInsecure,
+			WithInsecure(true),
 		)
 
 		assert.NoError(t, err)
@@ -129,13 +129,13 @@ func TestRunUnary(t *testing.T) {
 				"helloworld.Greeter.SayHello",
 				localhost,
 				WithProtoFile("./testdata/greeter.proto", []string{}),
-				WithN(10),
-				WithC(2),
+				WithTotalRequests(10),
+				WithConcurrency(2),
 				WithQPS(1),
 				WithTimeout(time.Duration(20*time.Second)),
 				WithDialTimeout(time.Duration(20*time.Second)),
 				WithData(data),
-				WithInsecure,
+				WithInsecure(true),
 			)
 
 			assert.NoError(t, err)
@@ -178,12 +178,12 @@ func TestRunUnary(t *testing.T) {
 			"helloworld.Greeter.SayHello",
 			localhost,
 			WithProtoFile("./testdata/greeter.proto", []string{}),
-			WithN(5),
-			WithC(1),
+			WithTotalRequests(5),
+			WithConcurrency(1),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithBinaryData(binData),
-			WithInsecure,
+			WithInsecure(true),
 		)
 
 		assert.NoError(t, err)
@@ -232,12 +232,12 @@ func TestRunServerStreaming(t *testing.T) {
 		"helloworld.Greeter.SayHellos",
 		localhost,
 		WithProtoFile("./testdata/greeter.proto", []string{}),
-		WithN(15),
-		WithC(3),
+		WithTotalRequests(15),
+		WithConcurrency(3),
 		WithTimeout(time.Duration(20*time.Second)),
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithData(data),
-		WithInsecure,
+		WithInsecure(true),
 	)
 
 	assert.NoError(t, err)
@@ -294,12 +294,12 @@ func TestRunClientStreaming(t *testing.T) {
 		"helloworld.Greeter.SayHelloCS",
 		localhost,
 		WithProtoFile("./testdata/greeter.proto", []string{}),
-		WithN(16),
-		WithC(4),
+		WithTotalRequests(16),
+		WithConcurrency(4),
 		WithTimeout(time.Duration(20*time.Second)),
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithData(data),
-		WithInsecure,
+		WithInsecure(true),
 	)
 
 	assert.NoError(t, err)
@@ -350,12 +350,12 @@ func TestRunClientStreamingBinary(t *testing.T) {
 		"helloworld.Greeter.SayHelloCS",
 		localhost,
 		WithProtoFile("./testdata/greeter.proto", []string{}),
-		WithN(24),
-		WithC(4),
+		WithTotalRequests(24),
+		WithConcurrency(4),
 		WithTimeout(time.Duration(20*time.Second)),
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithBinaryData(binData),
-		WithInsecure,
+		WithInsecure(true),
 	)
 
 	assert.NoError(t, err)
@@ -412,12 +412,12 @@ func TestRunBidi(t *testing.T) {
 		"helloworld.Greeter.SayHelloBidi",
 		localhost,
 		WithProtoFile("./testdata/greeter.proto", []string{}),
-		WithN(20),
-		WithC(4),
+		WithTotalRequests(20),
+		WithConcurrency(4),
 		WithTimeout(time.Duration(20*time.Second)),
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithData(data),
-		WithInsecure,
+		WithInsecure(true),
 	)
 
 	assert.NoError(t, err)
@@ -466,8 +466,8 @@ func TestRunUnarySecure(t *testing.T) {
 		"helloworld.Greeter.SayHello",
 		localhost,
 		WithProtoFile("./testdata/greeter.proto", []string{}),
-		WithN(18),
-		WithC(3),
+		WithTotalRequests(18),
+		WithConcurrency(3),
 		WithTimeout(time.Duration(20*time.Second)),
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithData(data),
@@ -520,12 +520,12 @@ func TestRunUnaryProtoset(t *testing.T) {
 		"helloworld.Greeter.SayHello",
 		localhost,
 		WithProtoset("./testdata/bundle.protoset"),
-		WithN(21),
-		WithC(3),
+		WithTotalRequests(21),
+		WithConcurrency(3),
 		WithTimeout(time.Duration(20*time.Second)),
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithData(data),
-		WithInsecure,
+		WithInsecure(true),
 	)
 
 	assert.NoError(t, err)
