@@ -113,10 +113,10 @@ This can be useful to inject variable information into the data or metadata payl
 <a name="examples"></a>
 ## Examples
 
-A simple unary call:
+A simple insecure unary call:
 
 ```sh
-ghz -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' 0.0.0.0:50051
+ghz -insecure -proto ./greeter.proto -call helloworld.Greeter.SayHello -d '{"name":"Joe"}' 0.0.0.0:50051
 ```
 
 A simple unary call with metadata using template actions:
