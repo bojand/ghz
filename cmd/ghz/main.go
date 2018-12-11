@@ -20,7 +20,6 @@ var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
 
-	host     = flag.String("host", "", `The target host`)
 	proto    = flag.String("proto", "", `The .proto file.`)
 	protoset = flag.String("protoset", "", `The .protoset file.`)
 	call     = flag.String("call", "", `A fully-qualified symbol name.`)
