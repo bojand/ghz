@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bojand/hri"
 	"github.com/pkg/errors"
 )
 
@@ -327,7 +326,6 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		timeout:     time.Duration(20 * time.Second),
 		dialTimeout: time.Duration(10 * time.Second),
 		cpus:        runtime.GOMAXPROCS(-1),
-		name:        hri.Random(),
 	}
 
 	for _, option := range options {

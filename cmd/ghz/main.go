@@ -56,8 +56,6 @@ var (
 	cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "")
 
 	v = flag.Bool("v", false, "Print the version.")
-
-	localConfigName = "ghz.json"
 )
 
 var usage = `Usage: ghz [options...] host
@@ -127,18 +125,11 @@ func main() {
 
 	cfgPath := strings.TrimSpace(*cPath)
 
-	fileToLoad := ""
-	if cfgPath != "" {
-		fileToLoad = cfgPath
-	} else if _, err := os.Stat(localConfigName); err == nil {
-		fileToLoad = localConfigName
-	}
-
 	var cfg *config
 
-	if fileToLoad != "" {
+	if cfgPath != "" {
 		var conf config
-		err := configor.Load(&conf, fileToLoad)
+		err := configor.Load(&conf, cfgPath)
 		if err != nil {
 			errAndExit(err.Error())
 		}

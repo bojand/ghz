@@ -112,7 +112,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, time.Duration(20*time.Second), c.timeout)
 		assert.Equal(t, time.Duration(10*time.Second), c.dialTimeout)
 		assert.Equal(t, runtime.GOMAXPROCS(-1), c.cpus)
-		assert.NotEmpty(t, c.name)
+		assert.Empty(t, c.name)
 		assert.Empty(t, c.data)
 		assert.Empty(t, c.metadata)
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
