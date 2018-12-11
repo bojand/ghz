@@ -157,9 +157,9 @@ func main() {
 	}
 
 	// init / fix up durations
-	if cfg.X > 0 {
-		cfg.Z = cfg.X
-	} else if cfg.Z > 0 {
+	if cfg.X.Duration > 0 {
+		cfg.Z.Duration = cfg.X.Duration
+	} else if cfg.Z.Duration > 0 {
 		cfg.N = math.MaxInt32
 	}
 
@@ -175,7 +175,7 @@ func main() {
 		ghz.WithTotalRequests(cfg.N),
 		ghz.WithQPS(cfg.QPS),
 		ghz.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
-		ghz.WithRunDuration(cfg.Z),
+		ghz.WithRunDuration(cfg.Z.Duration),
 		ghz.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
 		ghz.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
 		ghz.WithName(cfg.Name),
@@ -287,8 +287,8 @@ func createConfigFromArgs() (*config, error) {
 		N:             *n,
 		C:             *c,
 		QPS:           *q,
-		Z:             *z,
-		X:             *x,
+		Z:             duration{*z},
+		X:             duration{*x},
 		Timeout:       *t,
 		Data:          dataObj,
 		DataPath:      *dataPath,
