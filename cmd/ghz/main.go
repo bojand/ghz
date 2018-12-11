@@ -1,61 +1,61 @@
 package main
 
 import (
-"encoding/json"
-"flag"
-"fmt"
-"io/ioutil"
-"math"
-"os"
-"runtime"
-"strings"
-"time"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"math"
+	"os"
+	"runtime"
+	"strings"
+	"time"
 
-"github.com/bojand/ghz"
-"github.com/bojand/ghz/printer"
-"github.com/jinzhu/configor"
+	"github.com/bojand/ghz"
+	"github.com/bojand/ghz/printer"
+	"github.com/jinzhu/configor"
 )
 
 var (
-// set by goreleaser with -ldflags="-X main.version=..."
-version = "dev"
+	// set by goreleaser with -ldflags="-X main.version=..."
+	version = "dev"
 
-host     = flag.String("host", "", `The target host`)
-proto    = flag.String("proto", "", `The .proto file.`)
-protoset = flag.String("protoset", "", `The .protoset file.`)
-call     = flag.String("call", "", `A fully-qualified symbol name.`)
-cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
-cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs.")
-cPath    = flag.String("config", "", "Path to the config JSON file.")
-insecure = flag.Bool("insecure", false, "Specify for non TLS connection")
+	host     = flag.String("host", "", `The target host`)
+	proto    = flag.String("proto", "", `The .proto file.`)
+	protoset = flag.String("protoset", "", `The .protoset file.`)
+	call     = flag.String("call", "", `A fully-qualified symbol name.`)
+	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
+	cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs.")
+	cPath    = flag.String("config", "", "Path to the config JSON file.")
+	insecure = flag.Bool("insecure", false, "Specify for non TLS connection")
 
-c = flag.Uint("c", 50, "Number of requests to run concurrently.")
-n = flag.Uint("n", 200, "Number of requests to run. Default is 200.")
-q = flag.Uint("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
-t = flag.Uint("t", 20, "Timeout for each request in seconds.")
-z = flag.Duration("z", 0, "Duration of application to send requests.")
-x = flag.Duration("x", 0, "Maximum duration of application to send requests.")
+	c = flag.Uint("c", 50, "Number of requests to run concurrently.")
+	n = flag.Uint("n", 200, "Number of requests to run. Default is 200.")
+	q = flag.Uint("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
+	t = flag.Uint("t", 20, "Timeout for each request in seconds.")
+	z = flag.Duration("z", 0, "Duration of application to send requests.")
+	x = flag.Duration("x", 0, "Maximum duration of application to send requests.")
 
-data     = flag.String("d", "", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
-dataPath = flag.String("D", "", "Path for call data JSON file.")
-binData  = flag.Bool("b", false, "The call data as serialized binary message read from stdin.")
-binPath  = flag.String("B", "", "The call data as serialized binary message read from a file.")
-md       = flag.String("m", "", "Request metadata as stringified JSON.")
-mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
+	data     = flag.String("d", "", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
+	dataPath = flag.String("D", "", "Path for call data JSON file.")
+	binData  = flag.Bool("b", false, "The call data as serialized binary message read from stdin.")
+	binPath  = flag.String("B", "", "The call data as serialized binary message read from a file.")
+	md       = flag.String("m", "", "Request metadata as stringified JSON.")
+	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
 
-paths = flag.String("i", "", "Comma separated list of proto import paths")
+	paths = flag.String("i", "", "Comma separated list of proto import paths")
 
-output = flag.String("o", "", "Output path")
-format = flag.String("O", "", "Output format")
+	output = flag.String("o", "", "Output path")
+	format = flag.String("O", "", "Output format")
 
-ct = flag.Uint("T", 10, "Connection timeout in seconds for the initial connection dial.")
-kt = flag.Uint("L", 0, "Keepalive time in seconds.")
+	ct = flag.Uint("T", 10, "Connection timeout in seconds for the initial connection dial.")
+	kt = flag.Uint("L", 0, "Keepalive time in seconds.")
 
-name = flag.String("name", "", "Name of the test.")
+	name = flag.String("name", "", "Name of the test.")
 
-cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "")
+	cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "")
 
-v = flag.Bool("v", false, "Print the version.")
+	v = flag.Bool("v", false, "Print the version.")
 )
 
 var usage = `Usage: ghz [options...] host
@@ -112,190 +112,190 @@ of the protocol buffer file are automatically added to the import list.
 `
 
 func main() {
-flag.Usage = func() {
-fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
-}
+	flag.Usage = func() {
+		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
+	}
 
-flag.Parse()
+	flag.Parse()
 
-if *v {
-fmt.Println(version)
-os.Exit(0)
-}
+	if *v {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
-cfgPath := strings.TrimSpace(*cPath)
+	cfgPath := strings.TrimSpace(*cPath)
 
-var cfg *config
+	var cfg *config
 
-if cfgPath != "" {
-var conf config
-err := configor.Load(&conf, cfgPath)
-if err != nil {
-errAndExit(err.Error())
-}
+	if cfgPath != "" {
+		var conf config
+		err := configor.Load(&conf, cfgPath)
+		if err != nil {
+			errAndExit(err.Error())
+		}
 
-cfg = &conf
-} else {
-if flag.NArg() < 1 {
-usageAndExit("")
-}
+		cfg = &conf
+	} else {
+		if flag.NArg() < 1 {
+			usageAndExit("")
+		}
 
-var err error
-cfg, err = createConfigFromArgs()
-if err != nil {
-errAndExit(err.Error())
-}
-}
+		var err error
+		cfg, err = createConfigFromArgs()
+		if err != nil {
+			errAndExit(err.Error())
+		}
+	}
 
-// init / fix up durations
-if cfg.X.Duration > 0 {
-cfg.Z.Duration = cfg.X.Duration
-} else if cfg.Z.Duration > 0 {
-cfg.N = math.MaxInt32
-}
+	// init / fix up durations
+	if cfg.X.Duration > 0 {
+		cfg.Z.Duration = cfg.X.Duration
+	} else if cfg.Z.Duration > 0 {
+		cfg.N = math.MaxInt32
+	}
 
-// set up all the options
-options := make([]ghz.Option, 0, 15)
+	// set up all the options
+	options := make([]ghz.Option, 0, 15)
 
-options = append(options,
-ghz.WithProtoFile(cfg.Proto, cfg.ImportPaths),
-ghz.WithProtoset(cfg.Protoset),
-ghz.WithCertificate(cfg.Cert, cfg.CName),
-ghz.WithInsecure(cfg.Insecure),
-ghz.WithConcurrency(cfg.C),
-ghz.WithTotalRequests(cfg.N),
-ghz.WithQPS(cfg.QPS),
-ghz.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
-ghz.WithRunDuration(cfg.Z.Duration),
-ghz.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
-ghz.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
-ghz.WithName(cfg.Name),
-ghz.WithCPUs(cfg.CPUs),
-ghz.WithMetadata(cfg.Metadata),
-)
+	options = append(options,
+		ghz.WithProtoFile(cfg.Proto, cfg.ImportPaths),
+		ghz.WithProtoset(cfg.Protoset),
+		ghz.WithCertificate(cfg.Cert, cfg.CName),
+		ghz.WithInsecure(cfg.Insecure),
+		ghz.WithConcurrency(cfg.C),
+		ghz.WithTotalRequests(cfg.N),
+		ghz.WithQPS(cfg.QPS),
+		ghz.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
+		ghz.WithRunDuration(cfg.Z.Duration),
+		ghz.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
+		ghz.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
+		ghz.WithName(cfg.Name),
+		ghz.WithCPUs(cfg.CPUs),
+		ghz.WithMetadata(cfg.Metadata),
+	)
 
-if strings.TrimSpace(cfg.MetadataPath) != "" {
-options = append(options, ghz.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
-}
+	if strings.TrimSpace(cfg.MetadataPath) != "" {
+		options = append(options, ghz.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
+	}
 
-// data
-if dataStr, ok := cfg.Data.(string); ok && dataStr == "@" {
-options = append(options, ghz.WithDataFromReader(os.Stdin))
-} else if strings.TrimSpace(cfg.DataPath) != "" {
-options = append(options, ghz.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
-} else {
-options = append(options, ghz.WithData(cfg.Data))
-}
+	// data
+	if dataStr, ok := cfg.Data.(string); ok && dataStr == "@" {
+		options = append(options, ghz.WithDataFromReader(os.Stdin))
+	} else if strings.TrimSpace(cfg.DataPath) != "" {
+		options = append(options, ghz.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
+	} else {
+		options = append(options, ghz.WithData(cfg.Data))
+	}
 
-// or binary data
-if len(cfg.BinData) > 0 {
-options = append(options, ghz.WithBinaryData(cfg.BinData))
-}
-if len(cfg.BinDataPath) > 0 {
-options = append(options, ghz.WithBinaryDataFromFile(cfg.BinDataPath))
-}
+	// or binary data
+	if len(cfg.BinData) > 0 {
+		options = append(options, ghz.WithBinaryData(cfg.BinData))
+	}
+	if len(cfg.BinDataPath) > 0 {
+		options = append(options, ghz.WithBinaryDataFromFile(cfg.BinDataPath))
+	}
 
-report, err := ghz.Run(cfg.Call, cfg.Host, options...)
-if err != nil {
-errAndExit(err.Error())
-}
+	report, err := ghz.Run(cfg.Call, cfg.Host, options...)
+	if err != nil {
+		errAndExit(err.Error())
+	}
 
-output := os.Stdout
-outputPath := strings.TrimSpace(cfg.Output)
-if outputPath != "" {
-f, err := os.Create(outputPath)
-if err != nil {
-errAndExit(err.Error())
-}
-defer f.Close()
-output = f
-}
+	output := os.Stdout
+	outputPath := strings.TrimSpace(cfg.Output)
+	if outputPath != "" {
+		f, err := os.Create(outputPath)
+		if err != nil {
+			errAndExit(err.Error())
+		}
+		defer f.Close()
+		output = f
+	}
 
-p := printer.ReportPrinter{
-Report: report,
-Out:    output}
+	p := printer.ReportPrinter{
+		Report: report,
+		Out:    output}
 
-p.Print(cfg.Format)
+	p.Print(cfg.Format)
 }
 
 func errAndExit(msg string) {
-fmt.Fprintf(os.Stderr, msg)
-fmt.Fprintf(os.Stderr, "\n")
-os.Exit(1)
+	fmt.Fprintf(os.Stderr, msg)
+	fmt.Fprintf(os.Stderr, "\n")
+	os.Exit(1)
 }
 
 func usageAndExit(msg string) {
-if msg != "" {
-fmt.Fprintf(os.Stderr, msg)
-fmt.Fprintf(os.Stderr, "\n\n")
-}
-flag.Usage()
-fmt.Fprintf(os.Stderr, "\n")
-os.Exit(1)
+	if msg != "" {
+		fmt.Fprintf(os.Stderr, msg)
+		fmt.Fprintf(os.Stderr, "\n\n")
+	}
+	flag.Usage()
+	fmt.Fprintf(os.Stderr, "\n")
+	os.Exit(1)
 }
 
 func createConfigFromArgs() (*config, error) {
-host := flag.Args()[0]
+	host := flag.Args()[0]
 
-iPaths := []string{}
-pathsTrimmed := strings.TrimSpace(*paths)
-if pathsTrimmed != "" {
-iPaths = strings.Split(pathsTrimmed, ",")
-}
+	iPaths := []string{}
+	pathsTrimmed := strings.TrimSpace(*paths)
+	if pathsTrimmed != "" {
+		iPaths = strings.Split(pathsTrimmed, ",")
+	}
 
-var binaryData []byte
-if *binData {
-b, err := ioutil.ReadAll(os.Stdin)
-if err != nil {
-return nil, err
-}
+	var binaryData []byte
+	if *binData {
+		b, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return nil, err
+		}
 
-binaryData = b
-}
+		binaryData = b
+	}
 
-var metadata *map[string]string
-*md = strings.TrimSpace(*md)
-if *md != "" {
-if err := json.Unmarshal([]byte(*md), metadata); err != nil {
-return nil, err
-}
-}
+	var metadata *map[string]string
+	*md = strings.TrimSpace(*md)
+	if *md != "" {
+		if err := json.Unmarshal([]byte(*md), metadata); err != nil {
+			return nil, err
+		}
+	}
 
-var dataObj interface{}
-if *data != "@" && strings.TrimSpace(*data) != "" {
-if err := json.Unmarshal([]byte(*data), dataObj); err != nil {
-return nil, err
-}
-}
+	var dataObj interface{}
+	if *data != "@" && strings.TrimSpace(*data) != "" {
+		if err := json.Unmarshal([]byte(*data), dataObj); err != nil {
+			return nil, err
+		}
+	}
 
-cfg := &config{
-Host:          host,
-Proto:         *proto,
-Protoset:      *protoset,
-Call:          *call,
-Cert:          *cert,
-CName:         *cname,
-N:             *n,
-C:             *c,
-QPS:           *q,
-Z:             duration{*z},
-X:             duration{*x},
-Timeout:       *t,
-Data:          dataObj,
-DataPath:      *dataPath,
-BinData:       binaryData,
-BinDataPath:   *binPath,
-Metadata:      metadata,
-MetadataPath:  *mdPath,
-Output:        *output,
-Format:        *format,
-ImportPaths:   iPaths,
-DialTimeout:   *ct,
-KeepaliveTime: *kt,
-CPUs:          *cpus,
-Insecure:      *insecure,
-Name:          *name,
-}
+	cfg := &config{
+		Host:          host,
+		Proto:         *proto,
+		Protoset:      *protoset,
+		Call:          *call,
+		Cert:          *cert,
+		CName:         *cname,
+		N:             *n,
+		C:             *c,
+		QPS:           *q,
+		Z:             duration{*z},
+		X:             duration{*x},
+		Timeout:       *t,
+		Data:          dataObj,
+		DataPath:      *dataPath,
+		BinData:       binaryData,
+		BinDataPath:   *binPath,
+		Metadata:      metadata,
+		MetadataPath:  *mdPath,
+		Output:        *output,
+		Format:        *format,
+		ImportPaths:   iPaths,
+		DialTimeout:   *ct,
+		KeepaliveTime: *kt,
+		CPUs:          *cpus,
+		Insecure:      *insecure,
+		Name:          *name,
+	}
 
-return cfg, nil
+	return cfg, nil
 }
