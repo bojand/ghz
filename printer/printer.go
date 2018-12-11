@@ -435,8 +435,8 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 	  <br />
 		<div class="container">
 			<div class="content">
-				<a name="historam">
-					<h3>Historam</h3>
+				<a name="histogram">
+					<h3>Histogram</h3>
 				</a>
 				<p>
 					<div class="js-bar-container"></div>
