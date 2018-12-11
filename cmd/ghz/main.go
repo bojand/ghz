@@ -134,88 +134,36 @@ func main() {
 		fileToLoad = localConfigName
 	}
 
-	var cfg config
+	var cfg *config
 
 	if fileToLoad != "" {
-		err := configor.Load(&cfg, fileToLoad)
+		var conf config
+		err := configor.Load(&conf, fileToLoad)
 		if err != nil {
 			errAndExit(err.Error())
 		}
+
+		cfg = &conf
 	} else {
 		if flag.NArg() < 1 {
 			usageAndExit("")
 		}
 
-		host := flag.Args()[0]
-
-		iPaths := []string{}
-		pathsTrimmed := strings.TrimSpace(*paths)
-		if pathsTrimmed != "" {
-			iPaths = strings.Split(pathsTrimmed, ",")
-		}
-
-		var binaryData []byte
-
-		if *binData {
-			b, err := ioutil.ReadAll(os.Stdin)
-			if err != nil {
-				errAndExit(err.Error())
-			}
-
-			binaryData = b
-		}
-
-		var metadata *map[string]string
-		*md = strings.TrimSpace(*md)
-		if *md != "" {
-			if err := json.Unmarshal([]byte(*md), metadata); err != nil {
-				errAndExit(err.Error())
-			}
-		}
-
-		var dataObj interface{}
-		if strings.TrimSpace(*data) != "@" && strings.TrimSpace(*data) != "" {
-			if err := json.Unmarshal([]byte(*data), dataObj); err != nil {
-				errAndExit(err.Error())
-			}
-		}
-
-		cfg = config{
-			Host:          host,
-			Proto:         *proto,
-			Protoset:      *protoset,
-			Call:          *call,
-			Cert:          *cert,
-			CName:         *cname,
-			N:             *n,
-			C:             *c,
-			QPS:           *q,
-			Z:             *z,
-			X:             *x,
-			Timeout:       *t,
-			Data:          dataObj,
-			DataPath:      *dataPath,
-			BinData:       binaryData,
-			BinDataPath:   *binPath,
-			Metadata:      metadata,
-			MetadataPath:  *mdPath,
-			Output:        *output,
-			Format:        *format,
-			ImportPaths:   iPaths,
-			DialTimeout:   *ct,
-			KeepaliveTime: *kt,
-			CPUs:          *cpus,
-			Insecure:      *insecure,
-			Name:          *name,
+		var err error
+		cfg, err = createConfigFromArgs()
+		if err != nil {
+			errAndExit(err.Error())
 		}
 	}
 
+	// init / fix up durations
 	if cfg.X > 0 {
 		cfg.Z = cfg.X
 	} else if cfg.Z > 0 {
 		cfg.N = math.MaxInt32
 	}
 
+	// set up all the options
 	options := make([]ghz.Option, 0, 15)
 
 	options = append(options,
@@ -235,7 +183,12 @@ func main() {
 		ghz.WithMetadata(cfg.Metadata),
 	)
 
-	if strings.TrimSpace(*data) == "@" {
+	if strings.TrimSpace(cfg.MetadataPath) != "" {
+		options = append(options, ghz.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
+	}
+
+	// data
+	if dataStr, ok := cfg.Data.(string); ok && dataStr == "@" {
 		options = append(options, ghz.WithDataFromReader(os.Stdin))
 	} else if strings.TrimSpace(cfg.DataPath) != "" {
 		options = append(options, ghz.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
@@ -243,15 +196,12 @@ func main() {
 		options = append(options, ghz.WithData(cfg.Data))
 	}
 
+	// or binary data
 	if len(cfg.BinData) > 0 {
 		options = append(options, ghz.WithBinaryData(cfg.BinData))
 	}
 	if len(cfg.BinDataPath) > 0 {
 		options = append(options, ghz.WithBinaryDataFromFile(cfg.BinDataPath))
-	}
-
-	if strings.TrimSpace(cfg.MetadataPath) != "" {
-		options = append(options, ghz.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
 	}
 
 	report, err := ghz.Run(cfg.Call, cfg.Host, options...)
@@ -291,4 +241,70 @@ func usageAndExit(msg string) {
 	flag.Usage()
 	fmt.Fprintf(os.Stderr, "\n")
 	os.Exit(1)
+}
+
+func createConfigFromArgs() (*config, error) {
+	host := flag.Args()[0]
+
+	iPaths := []string{}
+	pathsTrimmed := strings.TrimSpace(*paths)
+	if pathsTrimmed != "" {
+		iPaths = strings.Split(pathsTrimmed, ",")
+	}
+
+	var binaryData []byte
+	if *binData {
+		b, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return nil, err
+		}
+
+		binaryData = b
+	}
+
+	var metadata *map[string]string
+	*md = strings.TrimSpace(*md)
+	if *md != "" {
+		if err := json.Unmarshal([]byte(*md), metadata); err != nil {
+			return nil, err
+		}
+	}
+
+	var dataObj interface{}
+	if *data != "@" && strings.TrimSpace(*data) != "" {
+		if err := json.Unmarshal([]byte(*data), dataObj); err != nil {
+			return nil, err
+		}
+	}
+
+	cfg := &config{
+		Host:          host,
+		Proto:         *proto,
+		Protoset:      *protoset,
+		Call:          *call,
+		Cert:          *cert,
+		CName:         *cname,
+		N:             *n,
+		C:             *c,
+		QPS:           *q,
+		Z:             *z,
+		X:             *x,
+		Timeout:       *t,
+		Data:          dataObj,
+		DataPath:      *dataPath,
+		BinData:       binaryData,
+		BinDataPath:   *binPath,
+		Metadata:      metadata,
+		MetadataPath:  *mdPath,
+		Output:        *output,
+		Format:        *format,
+		ImportPaths:   iPaths,
+		DialTimeout:   *ct,
+		KeepaliveTime: *kt,
+		CPUs:          *cpus,
+		Insecure:      *insecure,
+		Name:          *name,
+	}
+
+	return cfg, nil
 }

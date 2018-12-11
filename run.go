@@ -3,6 +3,7 @@ package ghz
 import (
 	"os"
 	"os/signal"
+	"runtime"
 	"time"
 
 	"github.com/bojand/ghz/protodesc"
@@ -29,6 +30,10 @@ func Run(call, host string, options ...Option) (*Report, error) {
 		return nil, err
 	}
 
+	oldCPUs := runtime.NumCPU()
+
+	runtime.GOMAXPROCS(c.cpus)
+
 	reqr, err := newRequester(mtd, c)
 
 	if err != nil {
@@ -49,5 +54,10 @@ func Run(call, host string, options ...Option) (*Report, error) {
 		}()
 	}
 
-	return reqr.Run()
+	rep, err := reqr.Run()
+
+	// reset
+	runtime.GOMAXPROCS(oldCPUs)
+
+	return rep, err
 }
