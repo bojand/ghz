@@ -186,11 +186,11 @@ func (b *Requester) makeRequest() {
 	var streamInput *[]*dynamic.Message
 
 	if !b.config.binary {
-		dataMap, err := ctd.executeData(string(b.config.data))
+		data, err := ctd.executeData(string(b.config.data))
 		if err != nil {
 			return
 		}
-		input, streamInput, err = createPayloads(dataMap, b.mtd)
+		input, streamInput, err = createPayloads(string(data), b.mtd)
 		if err != nil {
 			return
 		}

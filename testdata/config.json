@@ -10,5 +10,6 @@
   "m": {
     "rn": "{{.RequestNumber}}"
   },
-  "host": "0.0.0.0:50051"
+  "host": "0.0.0.0:50051",
+  "insecure": true
 }

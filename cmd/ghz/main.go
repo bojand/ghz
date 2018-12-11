@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/bojand/ghz"
-	"github.com/bojand/ghz/config"
+	"github.com/bojand/ghz/printer"
 	"github.com/jinzhu/configor"
 )
 
@@ -127,15 +127,17 @@ func main() {
 
 	cfgPath := strings.TrimSpace(*cPath)
 
-	var cfg *config.Config
-
+	fileToLoad := ""
 	if cfgPath != "" {
-		err := configor.Load(cfg, cfgPath)
-		if err != nil {
-			errAndExit(err.Error())
-		}
+		fileToLoad = cfgPath
 	} else if _, err := os.Stat(localConfigName); err == nil {
-		err := configor.Load(cfg, localConfigName)
+		fileToLoad = localConfigName
+	}
+
+	var cfg config
+
+	if fileToLoad != "" {
+		err := configor.Load(&cfg, fileToLoad)
 		if err != nil {
 			errAndExit(err.Error())
 		}
@@ -178,7 +180,7 @@ func main() {
 			}
 		}
 
-		cfg := &config.Config{
+		cfg = config{
 			Host:          host,
 			Proto:         *proto,
 			Protoset:      *protoset,
@@ -206,38 +208,73 @@ func main() {
 			Insecure:      *insecure,
 			Name:          *name,
 		}
-
-		if cfg.X > 0 {
-			cfg.Z = cfg.X
-		} else if cfg.Z > 0 {
-			cfg.N = math.MaxInt32
-		}
 	}
 
-	options := make([]ghz.Option, 0, 10)
+	if cfg.X > 0 {
+		cfg.Z = cfg.X
+	} else if cfg.Z > 0 {
+		cfg.N = math.MaxInt32
+	}
+
+	options := make([]ghz.Option, 0, 15)
 
 	options = append(options,
-		ghz.WithProtoFile(*proto, cfg.ImportPaths),
-		ghz.WithProtoset(*protoset),
-		ghz.WithCertificate(*cert, *cname),
-		ghz.WithInsecure(*insecure),
-		ghz.WithConcurrency(*c),
-		ghz.WithTotalRequests(*n),
-		ghz.WithQPS(*q),
-		ghz.WithTimeout(time.Duration(*t)*time.Second),
-		ghz.WithRunDuration(*z),
-		ghz.WithDataFromJSON(*data),
+		ghz.WithProtoFile(cfg.Proto, cfg.ImportPaths),
+		ghz.WithProtoset(cfg.Protoset),
+		ghz.WithCertificate(cfg.Cert, cfg.CName),
+		ghz.WithInsecure(cfg.Insecure),
+		ghz.WithConcurrency(cfg.C),
+		ghz.WithTotalRequests(cfg.N),
+		ghz.WithQPS(cfg.QPS),
+		ghz.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
+		ghz.WithRunDuration(cfg.Z),
+		ghz.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
+		ghz.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
+		ghz.WithName(cfg.Name),
+		ghz.WithCPUs(cfg.CPUs),
+		ghz.WithMetadata(cfg.Metadata),
 	)
 
 	if strings.TrimSpace(*data) == "@" {
 		options = append(options, ghz.WithDataFromReader(os.Stdin))
 	} else if strings.TrimSpace(cfg.DataPath) != "" {
-		options = append(options, ghz.WithDataFromFile(cfg.DataPath))
+		options = append(options, ghz.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
 	} else {
-		options = append(options, ghz.WithDataFromFile(cfg.DataPath))
+		options = append(options, ghz.WithData(cfg.Data))
 	}
 
-	ghz.Run(*call, *host, options...)
+	if len(cfg.BinData) > 0 {
+		options = append(options, ghz.WithBinaryData(cfg.BinData))
+	}
+	if len(cfg.BinDataPath) > 0 {
+		options = append(options, ghz.WithBinaryDataFromFile(cfg.BinDataPath))
+	}
+
+	if strings.TrimSpace(cfg.MetadataPath) != "" {
+		options = append(options, ghz.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
+	}
+
+	report, err := ghz.Run(cfg.Call, cfg.Host, options...)
+	if err != nil {
+		errAndExit(err.Error())
+	}
+
+	output := os.Stdout
+	outputPath := strings.TrimSpace(cfg.Output)
+	if outputPath != "" {
+		f, err := os.Create(outputPath)
+		if err != nil {
+			errAndExit(err.Error())
+		}
+		defer f.Close()
+		output = f
+	}
+
+	p := printer.ReportPrinter{
+		Report: report,
+		Out:    output}
+
+	p.Print(cfg.Format)
 }
 
 func errAndExit(msg string) {
@@ -254,54 +291,4 @@ func usageAndExit(msg string) {
 	flag.Usage()
 	fmt.Fprintf(os.Stderr, "\n")
 	os.Exit(1)
-}
-
-func customParse() (bool, string, []string) {
-
-	givenArgs := os.Args[1:]
-	nArgs := len(givenArgs)
-	args := make([]string, nArgs)
-
-	v := false
-	var cfgPath string
-	for i, f := range givenArgs {
-		if f == "-v" {
-			v = true
-		} else if f == "-config" && nArgs > i+1 {
-			cfgPath = givenArgs[i+1]
-		} else {
-			args = append(args, f)
-		}
-	}
-
-	return v, cfgPath, args
-}
-
-func printArgs() {
-	fmt.Println("proto:", *proto)
-	fmt.Println("protoset:", *protoset)
-	fmt.Println("call:", *call)
-	fmt.Println("cert:", *cert)
-	fmt.Println("cname:", *cname)
-	fmt.Printf("n: %+v\n", *n)
-	fmt.Println("c:", *c)
-	fmt.Println("q:", *q)
-	fmt.Println("z:", *z)
-	fmt.Println("x:", *x)
-	fmt.Println("t:", *t)
-	fmt.Println("data:", *data)
-	fmt.Println("dataPath:", *dataPath)
-	fmt.Println("binData:", *binData)
-	fmt.Println("binPath:", *binPath)
-	fmt.Println("md:", *md)
-	fmt.Println("mdPath:", *mdPath)
-	fmt.Println("output:", *output)
-	fmt.Println("format:", *format)
-	fmt.Println("host:", *host)
-	fmt.Println("ct:", *ct)
-	fmt.Println("kt:", *kt)
-	fmt.Println("cpus:", *cpus)
-	fmt.Println("insecure:", *insecure)
-	fmt.Println("name:", *name)
-	fmt.Println("paths:", *paths)
 }

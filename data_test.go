@@ -1,6 +1,7 @@
 package ghz
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/bojand/ghz/protodesc"
@@ -191,11 +192,11 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mtdTestUnaryTwo)
 
-	t.Run("fail when nil", func(t *testing.T) {
-		single, streaming, err := createPayloads(nil, mtdUnary)
-		assert.Error(t, err)
+	t.Run("get nil, emtpy when empty", func(t *testing.T) {
+		single, streaming, err := createPayloads("", mtdUnary)
+		assert.NoError(t, err)
 		assert.Nil(t, single)
-		assert.Nil(t, streaming)
+		assert.Empty(t, streaming)
 	})
 
 	t.Run("fail for invalid data shape", func(t *testing.T) {
@@ -203,7 +204,9 @@ func TestData_createPayloads(t *testing.T) {
 		m1["name"] = "bob"
 		m1["unknown"] = "field"
 
-		single, streaming, err := createPayloads(m1, mtdUnary)
+		jsonData, _ := json.Marshal(m1)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
 		assert.Error(t, err)
 		assert.Nil(t, single)
 		assert.Nil(t, streaming)
@@ -213,7 +216,9 @@ func TestData_createPayloads(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
-		single, streaming, err := createPayloads(m1, mtdUnary)
+		jsonData, _ := json.Marshal(m1)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, single)
 		assert.Empty(t, streaming)
@@ -223,7 +228,9 @@ func TestData_createPayloads(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
-		single, streaming, err := createPayloads(m1, mtdClientStreaming)
+		jsonData, _ := json.Marshal(m1)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
 		assert.Nil(t, single)
 		assert.NotNil(t, streaming)
@@ -239,7 +246,9 @@ func TestData_createPayloads(t *testing.T) {
 
 		s := []interface{}{m1, m2}
 
-		single, streaming, err := createPayloads(s, mtdClientStreaming)
+		jsonData, _ := json.Marshal(s)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
 		assert.Nil(t, single)
 		assert.NotNil(t, streaming)
@@ -259,7 +268,9 @@ func TestData_createPayloads(t *testing.T) {
 
 		s := []interface{}{m1, m2, m3}
 
-		single, streaming, err := createPayloads(s, mtdClientStreaming)
+		jsonData, _ := json.Marshal(s)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
 		assert.Error(t, err)
 		assert.Nil(t, single)
 		assert.Nil(t, streaming)
@@ -277,7 +288,9 @@ func TestData_createPayloads(t *testing.T) {
 
 		s := []interface{}{m1, m2, m3}
 
-		single, streaming, err := createPayloads(s, mtdUnary)
+		jsonData, _ := json.Marshal(s)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, single)
 		assert.Empty(t, streaming)
@@ -287,7 +300,9 @@ func TestData_createPayloads(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["paramOne"] = "bob"
 
-		single, streaming, err := createPayloads(m1, mtdTestUnary)
+		jsonData, _ := json.Marshal(m1)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, single)
 		assert.Empty(t, streaming)
@@ -297,7 +312,9 @@ func TestData_createPayloads(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["param_one"] = "bob"
 
-		single, streaming, err := createPayloads(m1, mtdTestUnary)
+		jsonData, _ := json.Marshal(m1)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, single)
 		assert.Empty(t, streaming)
@@ -310,7 +327,9 @@ func TestData_createPayloads(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["nestedProp"] = inner
 
-		single, streaming, err := createPayloads(m1, mtdTestUnaryTwo)
+		jsonData, _ := json.Marshal(m1)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
 		assert.NotNil(t, single)
 		assert.Empty(t, streaming)
@@ -323,7 +342,9 @@ func TestData_createPayloads(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["nested_prop"] = inner
 
-		single, streaming, err := createPayloads(m1, mtdTestUnaryTwo)
+		jsonData, _ := json.Marshal(m1)
+
+		single, streaming, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
 		assert.NotNil(t, single)
 		assert.Empty(t, streaming)

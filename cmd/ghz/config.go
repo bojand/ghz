@@ -1,9 +1,13 @@
-package config
+package main
 
-import "time"
+import (
+	"encoding/json"
+	"errors"
+	"time"
+)
 
 // Config for the run.
-type Config struct {
+type config struct {
 	Proto         string             `json:"proto"`
 	Protoset      string             `json:"protoset"`
 	Call          string             `json:"call" required:"true"`
@@ -30,4 +34,65 @@ type Config struct {
 	ImportPaths   []string           `json:"i,omitempty"`
 	Insecure      bool               `json:"insecure,omitempty"`
 	Name          string             `json:"name,omitempty"`
+}
+
+// UnmarshalJSON is our custom implementation to handle the Duration field Z
+// and validate data
+func (c *config) UnmarshalJSON(data []byte) error {
+	type Alias config
+	aux := &struct {
+		Z string `json:"z"`
+		X string `json:"x"`
+		*Alias
+	}{
+		Alias: (*Alias)(c),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.Data != nil {
+		err := checkData(aux.Data)
+		if err != nil {
+			return err
+		}
+	}
+
+	c.Z, _ = time.ParseDuration(aux.Z)
+	return nil
+}
+
+// MarshalJSON is our custom implementation to handle the Duration field Z
+func (c config) MarshalJSON() ([]byte, error) {
+	type Alias config
+	return json.Marshal(&struct {
+		*Alias
+		Z string `json:"z"`
+		X string `json:"x"`
+	}{
+		Alias: (*Alias)(&c),
+		Z:     c.Z.String(),
+	})
+}
+
+func checkData(data interface{}) error {
+	_, isObjData := data.(map[string]interface{})
+	if !isObjData {
+		arrData, isArrData := data.([]interface{})
+		if !isArrData {
+			return errors.New("Unsupported type for Data")
+		}
+		if len(arrData) == 0 {
+			return errors.New("Data array must not be empty")
+		}
+		for _, elem := range arrData {
+			_, isObjData = elem.(map[string]interface{})
+			if !isObjData {
+				return errors.New("Data array contains unsupported type")
+			}
+		}
+
+	}
+
+	return nil
 }

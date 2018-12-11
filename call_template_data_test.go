@@ -39,22 +39,22 @@ func TestCallTemplateData_ExecuteData(t *testing.T) {
 	var tests = []struct {
 		name        string
 		in          string
-		expected    interface{}
+		expected    []byte
 		expectError bool
 	}{
 		{"no template",
 			`{"name":"bob"}`,
-			map[string]interface{}{"name": "bob"},
+			[]byte(`{"name":"bob"}`),
 			false,
 		},
 		{"with template",
 			`{"name":"{{.RequestNumber}} bob {{.FullyQualifiedName}} {{.MethodName}} {{.ServiceName}} {{.InputName}} {{.OutputName}} {{.IsClientStreaming}} {{.IsServerStreaming}}"}`,
-			map[string]interface{}{"name": "200 bob helloworld.Greeter.SayHello SayHello Greeter HelloRequest HelloReply false false"},
+			[]byte(`{"name":"200 bob helloworld.Greeter.SayHello SayHello Greeter HelloRequest HelloReply false false"}`),
 			false,
 		},
 		{"with unknown action",
 			`{"name":"asdf {{.Something}} {{.MethodName}} bob"}`,
-			map[string]interface{}{"name": "asdf {{.Something}} {{.MethodName}} bob"},
+			[]byte(`{"name":"asdf {{.Something}} {{.MethodName}} bob"}`),
 			false,
 		},
 	}

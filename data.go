@@ -3,6 +3,7 @@ package ghz
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -49,7 +50,7 @@ func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error 
 	return nil
 }
 
-func createPayloads(data interface{}, mtd *desc.MethodDescriptor) (*dynamic.Message, *[]*dynamic.Message, error) {
+func createPayloadsOld(data interface{}, mtd *desc.MethodDescriptor) (*dynamic.Message, *[]*dynamic.Message, error) {
 	md := mtd.GetInputType()
 	var input *dynamic.Message
 	var streamInput []*dynamic.Message
@@ -80,6 +81,55 @@ func createPayloads(data interface{}, mtd *desc.MethodDescriptor) (*dynamic.Mess
 		}
 	} else {
 		return nil, nil, errors.New("Unsupported type for Data")
+	}
+
+	if mtd.IsClientStreaming() && len(streamInput) == 0 && input != nil {
+		streamInput = make([]*dynamic.Message, 1)
+		streamInput[0] = input
+		input = nil
+	}
+
+	if !mtd.IsClientStreaming() && input == nil && len(streamInput) > 0 {
+		input = streamInput[0]
+		streamInput = nil
+	}
+
+	return input, &streamInput, nil
+}
+
+func createPayloads(data string, mtd *desc.MethodDescriptor) (*dynamic.Message, *[]*dynamic.Message, error) {
+	md := mtd.GetInputType()
+	var input *dynamic.Message
+	var streamInput []*dynamic.Message
+
+	if len(data) > 0 {
+		if strings.IndexRune(data, '[') == 0 {
+			dataArray := make([]map[string]interface{}, 5)
+			err := json.Unmarshal([]byte(data), &dataArray)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			elems := len(dataArray)
+			if elems > 0 {
+				streamInput = make([]*dynamic.Message, elems)
+			}
+			for i, elem := range dataArray {
+				elemMsg := dynamic.NewMessage(md)
+				err := messageFromMap(elemMsg, &elem)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				streamInput[i] = elemMsg
+			}
+		} else {
+			input = dynamic.NewMessage(md)
+			err := jsonpb.UnmarshalString(data, input)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
 	}
 
 	if mtd.IsClientStreaming() && len(streamInput) == 0 && input != nil {

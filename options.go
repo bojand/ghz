@@ -269,7 +269,9 @@ func WithName(name string) Option {
 // WithCPUs specifies the number of CPU's to be used
 func WithCPUs(c uint) Option {
 	return func(o *RunConfig) error {
-		o.cpus = int(c)
+		if c > 0 {
+			o.cpus = int(c)
+		}
 
 		return nil
 	}
