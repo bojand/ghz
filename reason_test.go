@@ -70,3 +70,24 @@ func TestReason_UnmarshalJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestReason_MarshalJSON(t *testing.T) {
+	var tests = []struct {
+		name     string
+		in       StopReason
+		expected string
+	}{
+		{"normal", ReasonNormalEnd, `"normal"`},
+		{"cancel", ReasonCancel, `"cancel"`},
+		{"timeout", ReasonTimeout, `"timeout"`},
+		{"unknown", StopReason("foo"), `"normal"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual, err := json.Marshal(tt.in)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, string(actual))
+		})
+	}
+}

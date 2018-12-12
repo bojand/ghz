@@ -527,11 +527,16 @@ func TestRunUnaryProtoset(t *testing.T) {
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithData(data),
 		WithInsecure(true),
+		WithKeepalive(time.Duration(5*time.Minute)),
+		WithMetadataFromFile("testdata/metadata.json"),
 	)
 
 	assert.NoError(t, err)
 
 	assert.NotNil(t, report)
+
+	md := make(map[string]string)
+	md["request-id"] = "{{.RequestNumber}}"
 
 	assert.Equal(t, 21, int(report.Count))
 	assert.NotZero(t, report.Average)
@@ -542,6 +547,7 @@ func TestRunUnaryProtoset(t *testing.T) {
 	assert.NotEmpty(t, report.Date)
 	assert.NotEmpty(t, report.Details)
 	assert.NotEmpty(t, report.Options)
+	assert.Equal(t, md, *report.Options.Metadata)
 	assert.NotEmpty(t, report.LatencyDistribution)
 	assert.Equal(t, ReasonNormalEnd, report.EndReason)
 	assert.Equal(t, true, report.Options.Insecure)

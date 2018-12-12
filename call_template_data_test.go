@@ -57,6 +57,11 @@ func TestCallTemplateData_ExecuteData(t *testing.T) {
 			[]byte(`{"name":"asdf {{.Something}} {{.MethodName}} bob"}`),
 			false,
 		},
+		{"with empty string",
+			"",
+			[]byte{},
+			false,
+		},
 	}
 
 	for _, tt := range tests {

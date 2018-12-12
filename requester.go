@@ -121,16 +121,14 @@ func (b *Requester) connect() (*grpc.ClientConn, error) {
 	opts = append(opts, credOptions)
 
 	ctx := context.Background()
-	dialTime := time.Duration(b.config.dialTimeout)
-	ctx, _ = context.WithTimeout(ctx, dialTime)
+	ctx, _ = context.WithTimeout(ctx, b.config.dialTimeout)
 	// cancel is ignored here as connection.Close() is used.
 	// See https://godoc.org/google.golang.org/grpc#DialContext
 
 	if b.config.keepaliveTime > 0 {
-		timeout := time.Duration(b.config.keepaliveTime)
 		opts = append(opts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
-			Time:    timeout,
-			Timeout: timeout,
+			Time:    b.config.keepaliveTime,
+			Timeout: b.config.keepaliveTime,
 		}))
 	}
 
@@ -218,8 +216,7 @@ func (b *Requester) makeRequest() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	timeout := time.Duration(b.config.timeout)
-	ctx, _ = context.WithTimeout(ctx, timeout)
+	ctx, _ = context.WithTimeout(ctx, b.config.timeout)
 
 	// include the metadata
 	if reqMD != nil {
