@@ -52,6 +52,7 @@ type RunConfig struct {
 type Option func(*RunConfig) error
 
 // WithCertificate specifies the certificate options for the run
+//	WithCertificate("certfile.crt", "")
 func WithCertificate(cert string, cname string) Option {
 	return func(o *RunConfig) error {
 		cert = strings.TrimSpace(cert)
@@ -64,6 +65,7 @@ func WithCertificate(cert string, cname string) Option {
 }
 
 // WithInsecure specifies that this run should be done using insecure mode
+//	WithInsecure(true)
 func WithInsecure(insec bool) Option {
 	return func(o *RunConfig) error {
 		o.insecure = insec
@@ -73,6 +75,7 @@ func WithInsecure(insec bool) Option {
 }
 
 // WithTotalRequests specifies the N (number of total requests) setting
+//	WithTotalRequests(1000)
 func WithTotalRequests(n uint) Option {
 	return func(o *RunConfig) error {
 		o.n = int(n)
@@ -82,6 +85,7 @@ func WithTotalRequests(n uint) Option {
 }
 
 // WithConcurrency specifies the C (number of concurrent requests) option
+//	WithConcurrency(20)
 func WithConcurrency(c uint) Option {
 	return func(o *RunConfig) error {
 		o.c = int(c)
@@ -91,6 +95,7 @@ func WithConcurrency(c uint) Option {
 }
 
 // WithQPS specifies the QPS (queries per second) limit option
+//	WithQPS(10)
 func WithQPS(qps uint) Option {
 	return func(o *RunConfig) error {
 		o.qps = int(qps)
@@ -100,6 +105,7 @@ func WithQPS(qps uint) Option {
 }
 
 // WithRunDuration specifies the Z (total test duration) option
+//	WithRunDuration(time.Duration(2*time.Minute))
 func WithRunDuration(z time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.z = z
@@ -109,6 +115,7 @@ func WithRunDuration(z time.Duration) Option {
 }
 
 // WithTimeout specifies the timeout for each request
+//	WithTimeout(time.Duration(20*time.Second))
 func WithTimeout(timeout time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.timeout = timeout
@@ -118,6 +125,7 @@ func WithTimeout(timeout time.Duration) Option {
 }
 
 // WithDialTimeout specifies the inital connection dial timeout
+//	WithDialTimeout(time.Duration(20*time.Second))
 func WithDialTimeout(dt time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.dialTimeout = dt
@@ -127,6 +135,7 @@ func WithDialTimeout(dt time.Duration) Option {
 }
 
 // WithKeepalive specifies the keepalive timeout
+//	WithKeepalive(time.Duration(1*time.Minute))
 func WithKeepalive(k time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.keepaliveTime = k
@@ -136,6 +145,10 @@ func WithKeepalive(k time.Duration) Option {
 }
 
 // WithBinaryData specifies the binary data
+//	msg := &helloworld.HelloRequest{}
+//	msg.Name = "bob"
+//	binData, _ := proto.Marshal(msg)
+//	WithBinaryData(binData)
 func WithBinaryData(data []byte) Option {
 	return func(o *RunConfig) error {
 		o.data = data
@@ -146,6 +159,7 @@ func WithBinaryData(data []byte) Option {
 }
 
 // WithBinaryDataFromFile specifies the binary data
+//	WithBinaryDataFromFile("request_data.bin")
 func WithBinaryDataFromFile(path string) Option {
 	return func(o *RunConfig) error {
 		data, err := ioutil.ReadFile(path)
@@ -161,6 +175,7 @@ func WithBinaryDataFromFile(path string) Option {
 }
 
 // WithDataFromJSON loads JSON data from string
+//	WithDataFromJSON(`{"name":"bob"}`)
 func WithDataFromJSON(data string) Option {
 	return func(o *RunConfig) error {
 		o.data = []byte(data)
@@ -187,6 +202,8 @@ func WithData(data interface{}) Option {
 }
 
 // WithDataFromReader loads JSON data from reader
+// 	file, _ := os.Open("data.json")
+// 	WithDataFromReader(file)
 func WithDataFromReader(r io.Reader) Option {
 	return func(o *RunConfig) error {
 		data, err := ioutil.ReadAll(r)
@@ -202,6 +219,7 @@ func WithDataFromReader(r io.Reader) Option {
 }
 
 // WithDataFromFile loads JSON data from file
+//	WithDataFromFile("data.json")
 func WithDataFromFile(path string) Option {
 	return func(o *RunConfig) error {
 		data, err := ioutil.ReadFile(path)
@@ -217,6 +235,7 @@ func WithDataFromFile(path string) Option {
 }
 
 // WithMetadataFromJSON specifies the metadata to be read from JSON string
+//	WithMetadataFromJSON(`{"request-id":"123"}`)
 func WithMetadataFromJSON(md string) Option {
 	return func(o *RunConfig) error {
 		o.metadata = []byte(md)
@@ -226,6 +245,10 @@ func WithMetadataFromJSON(md string) Option {
 }
 
 // WithMetadata specifies the metadata to be used as a map
+// 	md := make(map[string]string)
+// 	md["token"] = "foobar"
+// 	md["request-id"] = "123"
+// 	WithMetadata(&md)
 func WithMetadata(md *map[string]string) Option {
 	return func(o *RunConfig) error {
 		mdJSON, err := json.Marshal(md)
@@ -240,6 +263,7 @@ func WithMetadata(md *map[string]string) Option {
 }
 
 // WithMetadataFromFile loads JSON metadata from file
+//	WithMetadataFromJSON("metadata.json")
 func WithMetadataFromFile(path string) Option {
 	return func(o *RunConfig) error {
 		mdJSON, err := ioutil.ReadFile(path)
@@ -254,6 +278,7 @@ func WithMetadataFromFile(path string) Option {
 }
 
 // WithName sets the name of the test run
+//	WithName("greeter service test")
 func WithName(name string) Option {
 	return func(o *RunConfig) error {
 		name = strings.TrimSpace(name)
@@ -266,6 +291,7 @@ func WithName(name string) Option {
 }
 
 // WithCPUs specifies the number of CPU's to be used
+//	WithCPUs(4)
 func WithCPUs(c uint) Option {
 	return func(o *RunConfig) error {
 		if c > 0 {
@@ -278,6 +304,7 @@ func WithCPUs(c uint) Option {
 
 // WithProtoFile specified proto file path and optionally import paths
 // We will automatically add the proto file path's directory and the current directory
+//	WithProtoFile("greeter.proto", []string{"/home/protos"})
 func WithProtoFile(proto string, importPaths []string) Option {
 	return func(o *RunConfig) error {
 		proto = strings.TrimSpace(proto)
@@ -305,6 +332,7 @@ func WithProtoFile(proto string, importPaths []string) Option {
 }
 
 // WithProtoset specified protoset file path
+//	WithProtoset("bundle.protoset")
 func WithProtoset(protoset string) Option {
 	return func(o *RunConfig) error {
 		protoset = strings.TrimSpace(protoset)

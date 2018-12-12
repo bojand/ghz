@@ -12,6 +12,14 @@ import (
 )
 
 // Run executes the test
+//
+//	report, err := ghz.Run(
+//		"helloworld.Greeter.SayHello",
+//		"localhost:50051",
+//		WithProtoFile("greeter.proto", []string{}),
+//		WithDataFromFile("data.json"),
+//		WithInsecure(true),
+//	)
 func Run(call, host string, options ...Option) (*Report, error) {
 	c, err := newConfig(call, host, options...)
 

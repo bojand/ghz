@@ -221,7 +221,6 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			Fruits: []string{"apple", "peach", "pear"}}
 
 		md := make(map[string]string)
-
 		md["token"] = "foobar"
 		md["request-id"] = "123"
 
@@ -270,7 +269,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with binary data from file", func(t *testing.T) {
 		c, err := newConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
-			WithBinaryDataFromFile("testdata/bundle.protoset"),
+			WithBinaryDataFromFile("testdata/hello_request_data.bin"),
 		)
 
 		assert.NoError(t, err)
