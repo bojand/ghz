@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bojand/ghz"
 	"github.com/bojand/ghz/printer"
+	"github.com/bojand/ghz/runner"
 	"github.com/jinzhu/configor"
 )
 
@@ -154,47 +154,47 @@ func main() {
 	}
 
 	// set up all the options
-	options := make([]ghz.Option, 0, 15)
+	options := make([]runner.Option, 0, 15)
 
 	options = append(options,
-		ghz.WithProtoFile(cfg.Proto, cfg.ImportPaths),
-		ghz.WithProtoset(cfg.Protoset),
-		ghz.WithCertificate(cfg.Cert, cfg.CName),
-		ghz.WithInsecure(cfg.Insecure),
-		ghz.WithConcurrency(cfg.C),
-		ghz.WithTotalRequests(cfg.N),
-		ghz.WithQPS(cfg.QPS),
-		ghz.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
-		ghz.WithRunDuration(cfg.Z.Duration),
-		ghz.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
-		ghz.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
-		ghz.WithName(cfg.Name),
-		ghz.WithCPUs(cfg.CPUs),
-		ghz.WithMetadata(cfg.Metadata),
+		runner.WithProtoFile(cfg.Proto, cfg.ImportPaths),
+		runner.WithProtoset(cfg.Protoset),
+		runner.WithCertificate(cfg.Cert, cfg.CName),
+		runner.WithInsecure(cfg.Insecure),
+		runner.WithConcurrency(cfg.C),
+		runner.WithTotalRequests(cfg.N),
+		runner.WithQPS(cfg.QPS),
+		runner.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
+		runner.WithRunDuration(cfg.Z.Duration),
+		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
+		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
+		runner.WithName(cfg.Name),
+		runner.WithCPUs(cfg.CPUs),
+		runner.WithMetadata(cfg.Metadata),
 	)
 
 	if strings.TrimSpace(cfg.MetadataPath) != "" {
-		options = append(options, ghz.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
+		options = append(options, runner.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
 	}
 
 	// data
 	if dataStr, ok := cfg.Data.(string); ok && dataStr == "@" {
-		options = append(options, ghz.WithDataFromReader(os.Stdin))
+		options = append(options, runner.WithDataFromReader(os.Stdin))
 	} else if strings.TrimSpace(cfg.DataPath) != "" {
-		options = append(options, ghz.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
+		options = append(options, runner.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
 	} else {
-		options = append(options, ghz.WithData(cfg.Data))
+		options = append(options, runner.WithData(cfg.Data))
 	}
 
 	// or binary data
 	if len(cfg.BinData) > 0 {
-		options = append(options, ghz.WithBinaryData(cfg.BinData))
+		options = append(options, runner.WithBinaryData(cfg.BinData))
 	}
 	if len(cfg.BinDataPath) > 0 {
-		options = append(options, ghz.WithBinaryDataFromFile(cfg.BinDataPath))
+		options = append(options, runner.WithBinaryDataFromFile(cfg.BinDataPath))
 	}
 
-	report, err := ghz.Run(cfg.Call, cfg.Host, options...)
+	report, err := runner.Run(cfg.Call, cfg.Host, options...)
 	if err != nil {
 		errAndExit(err.Error())
 	}

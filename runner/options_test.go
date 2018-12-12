@@ -1,4 +1,4 @@
-package ghz
+package runner
 
 import (
 	"os"
@@ -181,7 +181,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithName("asdf"),
 			WithCPUs(4),
 			WithBinaryData([]byte("asdf1234foobar")),
-			WithMetadataFromFile("testdata/metadata.json"),
+			WithMetadataFromFile("../testdata/metadata.json"),
 			WithProtoset("testdata/bundle.protoset"),
 		)
 
@@ -269,7 +269,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with binary data from file", func(t *testing.T) {
 		c, err := newConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
-			WithBinaryDataFromFile("testdata/hello_request_data.bin"),
+			WithBinaryDataFromFile("../testdata/hello_request_data.bin"),
 		)
 
 		assert.NoError(t, err)
@@ -297,7 +297,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with data from file", func(t *testing.T) {
 		c, err := newConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
-			WithDataFromFile("testdata/data.json"),
+			WithDataFromFile("../testdata/data.json"),
 		)
 
 		assert.NoError(t, err)
@@ -325,7 +325,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 	t.Run("with data from reader", func(t *testing.T) {
 
-		file, _ := os.Open("testdata/data.json")
+		file, _ := os.Open("../testdata/data.json")
 
 		c, err := newConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),

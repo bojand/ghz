@@ -1,4 +1,4 @@
-package ghz
+package runner
 
 import (
 	"net"
@@ -22,7 +22,7 @@ func startServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 	var opts []grpc.ServerOption
 
 	if secure {
-		creds, err := credentials.NewServerTLSFromFile("./testdata/localhost.crt", "./testdata/localhost.key")
+		creds, err := credentials.NewServerTLSFromFile("../testdata/localhost.crt", "../testdata/localhost.key")
 		if err != nil {
 			return nil, nil, err
 		}

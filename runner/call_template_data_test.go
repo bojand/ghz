@@ -1,4 +1,4 @@
-package ghz
+package runner
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestCallTemplateData_New(t *testing.T) {
-	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "./testdata/greeter.proto", []string{})
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "../testdata/greeter.proto", []string{})
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
@@ -28,7 +28,7 @@ func TestCallTemplateData_New(t *testing.T) {
 }
 
 func TestCallTemplateData_ExecuteData(t *testing.T) {
-	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "./testdata/greeter.proto", []string{})
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "../testdata/greeter.proto", []string{})
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
@@ -79,7 +79,7 @@ func TestCallTemplateData_ExecuteData(t *testing.T) {
 }
 
 func TestCallTemplateData_ExecuteMetadata(t *testing.T) {
-	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "./testdata/greeter.proto", []string{})
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "../testdata/greeter.proto", []string{})
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 

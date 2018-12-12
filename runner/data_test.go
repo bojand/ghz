@@ -1,4 +1,4 @@
-package ghz
+package runner
 
 import (
 	"encoding/json"
@@ -162,7 +162,7 @@ func TestData_isMapData(t *testing.T) {
 func TestData_createPayloads(t *testing.T) {
 	mtdUnary, err := protodesc.GetMethodDescFromProto(
 		"helloworld.Greeter.SayHello",
-		"./testdata/greeter.proto",
+		"../testdata/greeter.proto",
 		nil)
 
 	assert.NoError(t, err)
@@ -170,7 +170,7 @@ func TestData_createPayloads(t *testing.T) {
 
 	mtdClientStreaming, err := protodesc.GetMethodDescFromProto(
 		"helloworld.Greeter.SayHelloCS",
-		"./testdata/greeter.proto",
+		"../testdata/greeter.proto",
 		nil)
 
 	assert.NoError(t, err)
@@ -178,7 +178,7 @@ func TestData_createPayloads(t *testing.T) {
 
 	mtdTestUnary, err := protodesc.GetMethodDescFromProto(
 		"data.DataTestService.TestCall",
-		"./testdata/data.proto",
+		"../testdata/data.proto",
 		nil)
 
 	assert.NoError(t, err)
@@ -186,7 +186,7 @@ func TestData_createPayloads(t *testing.T) {
 
 	mtdTestUnaryTwo, err := protodesc.GetMethodDescFromProto(
 		"data.DataTestService.TestCallTwo",
-		"./testdata/data.proto",
+		"../testdata/data.proto",
 		nil)
 
 	assert.NoError(t, err)

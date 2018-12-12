@@ -1,4 +1,4 @@
-package ghz
+package runner
 
 import (
 	"sync"
@@ -30,7 +30,7 @@ func TestRunUnary(t *testing.T) {
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
 			localhost,
-			WithProtoFile("./testdata/greeter.proto", []string{}),
+			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(1),
 			WithConcurrency(1),
 			WithTimeout(time.Duration(20*time.Second)),
@@ -73,7 +73,7 @@ func TestRunUnary(t *testing.T) {
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
 			localhost,
-			WithProtoFile("./testdata/greeter.proto", []string{}),
+			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(12),
 			WithConcurrency(2),
 			WithTimeout(time.Duration(20*time.Second)),
@@ -128,7 +128,7 @@ func TestRunUnary(t *testing.T) {
 			report, err := Run(
 				"helloworld.Greeter.SayHello",
 				localhost,
-				WithProtoFile("./testdata/greeter.proto", []string{}),
+				WithProtoFile("../testdata/greeter.proto", []string{}),
 				WithTotalRequests(10),
 				WithConcurrency(2),
 				WithQPS(1),
@@ -177,7 +177,7 @@ func TestRunUnary(t *testing.T) {
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
 			localhost,
-			WithProtoFile("./testdata/greeter.proto", []string{}),
+			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(5),
 			WithConcurrency(1),
 			WithTimeout(time.Duration(20*time.Second)),
@@ -231,7 +231,7 @@ func TestRunServerStreaming(t *testing.T) {
 	report, err := Run(
 		"helloworld.Greeter.SayHellos",
 		localhost,
-		WithProtoFile("./testdata/greeter.proto", []string{}),
+		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(15),
 		WithConcurrency(3),
 		WithTimeout(time.Duration(20*time.Second)),
@@ -294,7 +294,7 @@ func TestRunClientStreaming(t *testing.T) {
 	report, err := Run(
 		"helloworld.Greeter.SayHelloCS",
 		localhost,
-		WithProtoFile("./testdata/greeter.proto", []string{}),
+		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(16),
 		WithConcurrency(4),
 		WithTimeout(time.Duration(20*time.Second)),
@@ -350,7 +350,7 @@ func TestRunClientStreamingBinary(t *testing.T) {
 	report, err := Run(
 		"helloworld.Greeter.SayHelloCS",
 		localhost,
-		WithProtoFile("./testdata/greeter.proto", []string{}),
+		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(24),
 		WithConcurrency(4),
 		WithTimeout(time.Duration(20*time.Second)),
@@ -412,7 +412,7 @@ func TestRunBidi(t *testing.T) {
 	report, err := Run(
 		"helloworld.Greeter.SayHelloBidi",
 		localhost,
-		WithProtoFile("./testdata/greeter.proto", []string{}),
+		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(20),
 		WithConcurrency(4),
 		WithTimeout(time.Duration(20*time.Second)),
@@ -466,13 +466,13 @@ func TestRunUnarySecure(t *testing.T) {
 	report, err := Run(
 		"helloworld.Greeter.SayHello",
 		localhost,
-		WithProtoFile("./testdata/greeter.proto", []string{}),
+		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(18),
 		WithConcurrency(3),
 		WithTimeout(time.Duration(20*time.Second)),
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithData(data),
-		WithCertificate("./testdata/localhost.crt", ""),
+		WithCertificate("../testdata/localhost.crt", ""),
 	)
 
 	assert.NoError(t, err)
@@ -520,7 +520,7 @@ func TestRunUnaryProtoset(t *testing.T) {
 	report, err := Run(
 		"helloworld.Greeter.SayHello",
 		localhost,
-		WithProtoset("./testdata/bundle.protoset"),
+		WithProtoset("../testdata/bundle.protoset"),
 		WithTotalRequests(21),
 		WithConcurrency(3),
 		WithTimeout(time.Duration(20*time.Second)),
@@ -528,7 +528,7 @@ func TestRunUnaryProtoset(t *testing.T) {
 		WithData(data),
 		WithInsecure(true),
 		WithKeepalive(time.Duration(5*time.Minute)),
-		WithMetadataFromFile("testdata/metadata.json"),
+		WithMetadataFromFile("../testdata/metadata.json"),
 	)
 
 	assert.NoError(t, err)

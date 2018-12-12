@@ -1,4 +1,4 @@
-package ghz
+package runner
 
 import (
 	"bytes"

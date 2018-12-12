@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/template"
-	"github.com/bojand/ghz"
+	"github.com/bojand/ghz/runner"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 // ReportPrinter is used for printing the report
 type ReportPrinter struct {
 	Out    io.Writer
-	Report *ghz.Report
+	Report *runner.Report
 }
 
 // Print the report using the given format
@@ -247,7 +247,7 @@ func formatPercent(num int, total uint64) string {
 	return fmt.Sprintf("%.2f", p*100)
 }
 
-func histogram(buckets []ghz.Bucket) string {
+func histogram(buckets []runner.Bucket) string {
 	max := 0
 	for _, b := range buckets {
 		if v := b.Count; v > max {
