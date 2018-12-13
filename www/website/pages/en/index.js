@@ -36,9 +36,9 @@ class HomeSplash extends React.Component {
     );
 
     const Logo = props => (
-      <div className="projectLogo">
-        {/* <img src={props.img_src} alt="Project Logo" /> */}
-        <img src={imgUrl('ghz_cobalt_plain.png')} alt="ghz" />
+      <div>
+        <br />
+        <img src={props.img_src} alt="Logo" width="100" />
       </div>
     );
 
@@ -66,10 +66,9 @@ class HomeSplash extends React.Component {
 
     return (
       <SplashContainer>
-        {/* <Logo img_src={`${baseUrl}img/green_fwd2.svg`} /> */}
+        <Logo img_src={`${baseUrl}img/green_fwd2.png`} />
         <div className="inner">
           <ProjectTitle siteConfig={siteConfig} />
-          <img src={imgUrl('ghz_cobalt_plain.png')} alt="ghz" />
           <PromoSection>
             <Button href={docUrl('intro.html')}>Get Started</Button>
             <Button href={`${siteConfig.repoUrl}`}>GitHub</Button>
@@ -87,7 +86,7 @@ class Index extends React.Component {
 
     const Block = props => (
       <Container
-        padding={[ 'bottom', 'top' ]}
+        padding={[ 'top' ]}
         id={props.id}
         background={props.background}>
         <GridBlock
@@ -152,12 +151,20 @@ class Index extends React.Component {
       </div>
     );
 
+    const Description = () => (
+      <div className="productShowcaseSection" style={{ textAlign: 'center' }}>
+        <br />
+        <img src={imgUrl('ghz_cobalt_plain.png')} alt="ghz" />
+      </div>
+    )
+
     return (
       <div>
         <HomeSplash siteConfig={siteConfig} language={language} />
         <div className="mainContainer">
           <Badges />
           <Features />
+          <Description />
           {/* <FeatureCallout />
           <LearnHow />
           <TryOut />
