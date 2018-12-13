@@ -16,4 +16,6 @@
 cmd/ghz/ghz
 dist
 
+node_modules
+
 coverage.html
