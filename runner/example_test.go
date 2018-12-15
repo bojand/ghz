@@ -14,8 +14,8 @@ func ExampleRun() {
 	report, err := runner.Run(
 		"helloworld.Greeter.SayHello",
 		"localhost:50051",
-		runner.WithProtoFile("../testdata/greeter.proto", []string{}),
-		runner.WithDataFromFile("../testdata/data.json"),
+		runner.WithProtoFile("greeter.proto", []string{}),
+		runner.WithDataFromFile("data.json"),
 		runner.WithInsecure(true),
 	)
 
