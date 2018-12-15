@@ -1,37 +1,37 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"math"
 	"os"
-	"os/signal"
 	"runtime"
 	"strings"
 	"time"
 
-	"github.com/bojand/ghz"
-	"github.com/bojand/ghz/config"
 	"github.com/bojand/ghz/printer"
-	"github.com/bojand/ghz/protodesc"
-	"github.com/jhump/protoreflect/desc"
+	"github.com/bojand/ghz/runner"
+	"github.com/jinzhu/configor"
 )
 
 var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
 
-	proto    = flag.String("proto", "", `The .proto file.`)
+	proto    = flag.String("proto", "", `The Protocol Buffer .proto file.`)
 	protoset = flag.String("protoset", "", `The .protoset file.`)
 	call     = flag.String("call", "", `A fully-qualified symbol name.`)
 	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
-	cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs.")
-	cPath    = flag.String("config", "", "Path to the config JSON file.")
+	cname    = flag.String("cname", "", "Server name override - useful for self signed certs.")
 	insecure = flag.Bool("insecure", false, "Specify for non TLS connection")
+	cPath    = flag.String("config", "", "Path to the config JSON file.")
 
-	c = flag.Int("c", 50, "Number of requests to run concurrently.")
-	n = flag.Int("n", 200, "Number of requests to run. Default is 200.")
-	q = flag.Int("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
-	t = flag.Int("t", 20, "Timeout for each request in seconds.")
+	c = flag.Uint("c", 50, "Number of requests to run concurrently.")
+	n = flag.Uint("n", 200, "Number of requests to run. Default is 200.")
+	q = flag.Uint("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
+	t = flag.Uint("t", 20, "Timeout for each request in seconds.")
 	z = flag.Duration("z", 0, "Duration of application to send requests.")
 	x = flag.Duration("x", 0, "Maximum duration of application to send requests.")
 
@@ -47,68 +47,68 @@ var (
 	output = flag.String("o", "", "Output path")
 	format = flag.String("O", "", "Output format")
 
-	ct = flag.Int("T", 10, "Connection timeout in seconds for the initial connection dial.")
-	kt = flag.Int("L", 0, "Keepalive time in seconds.")
+	ct = flag.Uint("T", 10, "Connection timeout in seconds for the initial connection dial.")
+	kt = flag.Uint("L", 0, "Keepalive time in seconds.")
 
-	name = flag.String("name", "", "Name of the test.")
+	name = flag.String("name", "", "User specified name for the test.")
 
-	cpus = flag.Int("cpus", runtime.GOMAXPROCS(-1), "")
+	cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "")
 
 	v = flag.Bool("v", false, "Print the version.")
-
-	localConfigName = "ghz.json"
 )
 
-var usage = `Usage: ghz [options...] <host>
+var usage = `Usage: ghz [options...] host
 Options:
-  -proto	The protocol buffer file.
-  -protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
-  -call		A fully-qualified method name in 'service/method' or 'service.method' format.
-  -cert		The file containing the CA root cert file.
-  -cname	An override of the expect Server Cname presented by the server.
-  -config	Path to the config JSON file
-  -insecure     Specify for non TLS connection
 
-  -c  Number of requests to run concurrently. Total number of requests cannot
-      be smaller than the concurrency level. Default is 50.
-  -n  Number of requests to run. Default is 200.
-  -q  Rate limit, in queries per second (QPS). Default is no rate limit.
-  -t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
-  -z  Duration of application to send requests. When duration is reached,
-      application stops and exits. If duration is specified, n is ignored.
-      Examples: -z 10s -z 3m.
-  -x  Maximum duration of application to send requests with n setting respected.
-      If duration is reached before n requests are completed, application stops and exits.
-      Examples: -x 10s -x 3m.
+-proto		The Protocol Buffer .proto file.
+-protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
+-call		A fully-qualified method name in 'package/service/method' or 'package.service.method' format.
+-cert		The file containing the CA root cert file. Ignored if -insecure is specified.
+-cname		An server name override.
+-insecure	Specify for non TLS connection.
+-config		Path to the JSON or TOML config file that specifies all the test settings.
 
-  -d  The call data as stringified JSON.
-      If the value is '@' then the request contents are read from stdin.
-  -D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
-  -b  The call data comes as serialized binary message read from stdin.
-  -B  Path for the call data as serialized binary message.
-  -m  Request metadata as stringified JSON.
-  -M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
 
-  -o  Output path. If none provided stdout is used.
-  -O  Output type. If none provided, a summary is printed.
-      "csv" outputs the response metrics in comma-separated values format.
-      "json" outputs the metrics report in JSON format.
-      "pretty" outputs the metrics report in pretty JSON format.
-      "html" outputs the metrics report as HTML.
-      "influx-summary" outputs the metrics summary as influxdb line protocol.
-      "influx-details" outputs the metrics details as influxdb line protocol.
+-c  Number of requests to run concurrently. 
+    Total number of requests cannot be smaller than the concurrency level. Default is 50.
+-n  Number of requests to run. Default is 200.
+-q  Rate limit, in queries per second (QPS). Default is no rate limit.
+-t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
+-z  Duration of application to send requests. When duration is reached,
+	application stops and exits. If duration is specified, n is ignored.
+	Examples: -z 10s -z 3m.
+-x  Maximum duration of application to send requests with n setting respected.
+    If duration is reached before n requests are completed, application stops and exits.
+    Examples: -x 10s -x 3m.
 
-  -i  Comma separated list of proto import paths. The current working directory and the directory
-	  of the protocol buffer file are automatically added to the import list.
+-d  The call data as stringified JSON.
+    If the value is '@' then the request contents are read from stdin.
+-D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
+-b  The call data comes as serialized binary message read from stdin.
+-B  Path for the call data as serialized binary message.
+-m  Request metadata as stringified JSON.
+-M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
 
-  -T  Connection timeout in seconds for the initial connection dial. Default is 10.
-  -L  Keepalive time in seconds. Only used if present and above 0.
+-o  Output path. If none provided stdout is used.
+-O  Output type. If none provided, a summary is printed.
+    "csv" outputs the response metrics in comma-separated values format.
+    "json" outputs the metrics report in JSON format.
+    "pretty" outputs the metrics report in pretty JSON format.
+    "html" outputs the metrics report as HTML.
+    "influx-summary" outputs the metrics summary as influxdb line protocol.
+    "influx-details" outputs the metrics details as influxdb line protocol.
 
-  -name  Name of the test.
+-i  Comma separated list of proto import paths. The current working directory and the directory
+    of the protocol buffer file are automatically added to the import list.
 
-  -cpus  Number of used cpu cores. (default for current machine is %d cores)
+-T  Connection timeout in seconds for the initial connection dial. Default is 10.
+-L  Keepalive time in seconds. Only used if present and above 0.
 
-  -v  Print the version.
+-name  User specified name for the test.
+
+-cpus  Number of used cpu cores. (default for current machine is %d cores)
+
+-v  Print the version.
 `
 
 func main() {
@@ -123,46 +123,79 @@ func main() {
 		os.Exit(0)
 	}
 
-	var cfg *config.Config
-
 	cfgPath := strings.TrimSpace(*cPath)
 
+	var cfg *config
+
 	if cfgPath != "" {
-		var err error
-		cfg, err = config.ReadConfig(cfgPath)
+		var conf config
+		err := configor.Load(&conf, cfgPath)
 		if err != nil {
 			errAndExit(err.Error())
 		}
-	} else if _, err := os.Stat(localConfigName); err == nil {
-		cfg, err = config.ReadConfig(localConfigName)
-		if err != nil {
-			errAndExit(err.Error())
-		}
+
+		cfg = &conf
 	} else {
 		if flag.NArg() < 1 {
 			usageAndExit("")
 		}
 
-		host := flag.Args()[0]
-
-		iPaths := []string{}
-		pathsTrimmed := strings.TrimSpace(*paths)
-		if pathsTrimmed != "" {
-			iPaths = strings.Split(pathsTrimmed, ",")
-		}
-
-		cfg, err = config.New(*proto, *protoset, *call, *cert, *cname, *n, *c, *q, *z, *x, *t,
-			*data, *dataPath, *binData, *binPath, *md, *mdPath, *output, *format, host,
-			*ct, *kt, *cpus, iPaths, *insecure, *name)
-
+		var err error
+		cfg, err = createConfigFromArgs()
 		if err != nil {
 			errAndExit(err.Error())
 		}
 	}
 
-	runtime.GOMAXPROCS(cfg.CPUs)
+	// init / fix up durations
+	if cfg.X.Duration > 0 {
+		cfg.Z.Duration = cfg.X.Duration
+	} else if cfg.Z.Duration > 0 {
+		cfg.N = math.MaxInt32
+	}
 
-	report, err := runTest(cfg)
+	// set up all the options
+	options := make([]runner.Option, 0, 15)
+
+	options = append(options,
+		runner.WithProtoFile(cfg.Proto, cfg.ImportPaths),
+		runner.WithProtoset(cfg.Protoset),
+		runner.WithCertificate(cfg.Cert, cfg.CName),
+		runner.WithInsecure(cfg.Insecure),
+		runner.WithConcurrency(cfg.C),
+		runner.WithTotalRequests(cfg.N),
+		runner.WithQPS(cfg.QPS),
+		runner.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
+		runner.WithRunDuration(cfg.Z.Duration),
+		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
+		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
+		runner.WithName(cfg.Name),
+		runner.WithCPUs(cfg.CPUs),
+		runner.WithMetadata(cfg.Metadata),
+	)
+
+	if strings.TrimSpace(cfg.MetadataPath) != "" {
+		options = append(options, runner.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
+	}
+
+	// data
+	if dataStr, ok := cfg.Data.(string); ok && dataStr == "@" {
+		options = append(options, runner.WithDataFromReader(os.Stdin))
+	} else if strings.TrimSpace(cfg.DataPath) != "" {
+		options = append(options, runner.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
+	} else {
+		options = append(options, runner.WithData(cfg.Data))
+	}
+
+	// or binary data
+	if len(cfg.BinData) > 0 {
+		options = append(options, runner.WithBinaryData(cfg.BinData))
+	}
+	if len(cfg.BinDataPath) > 0 {
+		options = append(options, runner.WithBinaryDataFromFile(cfg.BinDataPath))
+	}
+
+	report, err := runner.Run(cfg.Call, cfg.Host, options...)
 	if err != nil {
 		errAndExit(err.Error())
 	}
@@ -201,70 +234,68 @@ func usageAndExit(msg string) {
 	os.Exit(1)
 }
 
-func runTest(config *config.Config) (*ghz.Report, error) {
-	mtd, err := getMethodDesc(config)
-	if err != nil {
-		return nil, err
+func createConfigFromArgs() (*config, error) {
+	host := flag.Args()[0]
+
+	iPaths := []string{}
+	pathsTrimmed := strings.TrimSpace(*paths)
+	if pathsTrimmed != "" {
+		iPaths = strings.Split(pathsTrimmed, ",")
 	}
 
-	input := config.Proto
-	if config.Protoset != "" {
-		input = config.Protoset
+	var binaryData []byte
+	if *binData {
+		b, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return nil, err
+		}
+
+		binaryData = b
 	}
 
-	binary := false
-	if len(config.BinData) > 0 {
-		binary = true
+	var metadata map[string]string
+	*md = strings.TrimSpace(*md)
+	if *md != "" {
+		if err := json.Unmarshal([]byte(*md), &metadata); err != nil {
+			return nil, fmt.Errorf("Error unmarshaling metadata '%v': %v", *md, err.Error())
+		}
 	}
 
-	opts := &ghz.Options{
-		Proto:         input,
-		Call:          config.Call,
-		Host:          config.Host,
-		Cert:          config.Cert,
-		CName:         config.CName,
-		N:             config.N,
-		C:             config.C,
-		QPS:           config.QPS,
-		Z:             config.Z,
-		Timeout:       config.Timeout,
-		DialTimeout:   config.DialTimeout,
-		KeepaliveTime: config.KeepaliveTime,
-		Data:          config.Data,
-		BinData:       config.BinData,
-		Binary:        binary,
-		Metadata:      config.Metadata,
-		Insecure:      config.Insecure,
-		Name:          config.Name,
+	var dataObj interface{}
+	if *data != "@" && strings.TrimSpace(*data) != "" {
+		if err := json.Unmarshal([]byte(*data), &dataObj); err != nil {
+			return nil, fmt.Errorf("Error unmarshaling data '%v': %v", *data, err.Error())
+		}
 	}
 
-	reqr, err := ghz.New(mtd, opts)
-	if err != nil {
-		return nil, err
+	cfg := &config{
+		Host:          host,
+		Proto:         *proto,
+		Protoset:      *protoset,
+		Call:          *call,
+		Cert:          *cert,
+		CName:         *cname,
+		N:             *n,
+		C:             *c,
+		QPS:           *q,
+		Z:             duration{*z},
+		X:             duration{*x},
+		Timeout:       *t,
+		Data:          dataObj,
+		DataPath:      *dataPath,
+		BinData:       binaryData,
+		BinDataPath:   *binPath,
+		Metadata:      &metadata,
+		MetadataPath:  *mdPath,
+		Output:        *output,
+		Format:        *format,
+		ImportPaths:   iPaths,
+		DialTimeout:   *ct,
+		KeepaliveTime: *kt,
+		CPUs:          *cpus,
+		Insecure:      *insecure,
+		Name:          *name,
 	}
 
-	cancel := make(chan os.Signal, 1)
-	signal.Notify(cancel, os.Interrupt)
-	go func() {
-		<-cancel
-		reqr.Stop()
-	}()
-
-	if config.Z > 0 {
-		go func() {
-			time.Sleep(config.Z)
-			reqr.Stop()
-			fmt.Printf("Stopped due to test timeout after %+v\n", config.Z)
-		}()
-	}
-
-	return reqr.Run()
-}
-
-func getMethodDesc(config *config.Config) (*desc.MethodDescriptor, error) {
-	if config.Proto != "" {
-		return protodesc.GetMethodDescFromProto(config.Call, config.Proto, config.ImportPaths)
-	}
-
-	return protodesc.GetMethodDescFromProtoSet(config.Call, config.Protoset)
+	return cfg, nil
 }

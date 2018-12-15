@@ -1,0 +1,13 @@
+x = "7s"
+n = 5000
+c = 50
+proto = "../../testdata/greeter.proto"
+call = "helloworld.Greeter.SayHello"
+host = "0.0.0.0:50051"
+insecure = true
+
+[d]
+name = "Bob {{.TimestampUnix}}"
+
+[m]
+rn = "{{.RequestNumber}}"

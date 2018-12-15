@@ -1,0 +1,16 @@
+{
+  "docs": {
+    "Guide": [
+      "intro",
+      "install",
+      "usage",
+      "options",
+      "calldata",
+      "example_call",
+      "example_config",
+      "output",
+      "extras",
+      "package"
+    ]
+  }
+}

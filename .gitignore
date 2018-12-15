@@ -14,4 +14,9 @@
 .glide/
 
 cmd/ghz/ghz
+
 dist
+build
+node_modules
+
+coverage.html
