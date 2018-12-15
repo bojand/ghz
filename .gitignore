@@ -15,3 +15,6 @@
 
 cmd/ghz/ghz
 dist
+www
+
+coverage.html
