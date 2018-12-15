@@ -13,7 +13,7 @@ import (
 
 // Run executes the test
 //
-//	report, err := ghz.Run(
+//	report, err := runner.Run(
 //		"helloworld.Greeter.SayHello",
 //		"localhost:50051",
 //		WithProtoFile("greeter.proto", []string{}),
