@@ -1,5 +1,7 @@
-build:
-  main: cmd/ghz/main.go
+builds:
+  - env:
+    - CGO_ENABLED=0
+  main: cmd/ghz/...
   binary: ghz
   goos:
     - darwin
