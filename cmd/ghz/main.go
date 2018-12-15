@@ -20,13 +20,13 @@ var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
 
-	proto    = flag.String("proto", "", `The .proto file.`)
+	proto    = flag.String("proto", "", `The Protocol Buffer .proto file.`)
 	protoset = flag.String("protoset", "", `The .protoset file.`)
 	call     = flag.String("call", "", `A fully-qualified symbol name.`)
 	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
-	cname    = flag.String("cname", "", "Server Cert CName Override - useful for self signed certs.")
-	cPath    = flag.String("config", "", "Path to the config JSON file.")
+	cname    = flag.String("cname", "", "Server name override - useful for self signed certs.")
 	insecure = flag.Bool("insecure", false, "Specify for non TLS connection")
+	cPath    = flag.String("config", "", "Path to the config JSON file.")
 
 	c = flag.Uint("c", 50, "Number of requests to run concurrently.")
 	n = flag.Uint("n", 200, "Number of requests to run. Default is 200.")
@@ -60,13 +60,14 @@ var (
 var usage = `Usage: ghz [options...] host
 Options:
 
--proto	The protocol buffer file.
+-proto	The Protocol Buffer .proto file.
 -protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
--call		A fully-qualified method name in 'service/method' or 'service.method' format.
--cert		The file containing the CA root cert file.
--cname	An override of the expect Server Cname presented by the server.
--config	Path to the config JSON file
--insecure     Specify for non TLS connection
+-call		A fully-qualified method name in 'package/service/method' or 'package.service.method' format.
+-cert		The file containing the CA root cert file. Ignored if -insecure is specified.
+-cname	An server name override.
+-insecure     Specify for non TLS connection.
+-config	Path to the JSON or TOML config file that specifies all the test settings.
+
 
 -c  Number of requests to run concurrently. Total number of requests cannot
 be smaller than the concurrency level. Default is 50.

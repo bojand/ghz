@@ -102,27 +102,23 @@ class Index extends React.Component {
         {[
           {
             content: 'Use proto files with import paths, or prebuilt protoset bundle files',
-            // image: `${baseUrl}img/green_fwd2.svg`,
             imageAlign: 'top',
             title: 'Proto and Protoset',
           },
           {
             content: 'View test results in various fomats including CLI, CSV, JSON, HTML and InfluxData',
-            // image: `${baseUrl}img/green_fwd2.svg`,
             imageAlign: 'top',
             title: 'Various Reports',
           },
           {
             content: 'Add custom data to requests using standard Go template variables',
-            // image: `${baseUrl}img/green_fwd2.svg`,
             imageAlign: 'top',
             title: 'Custom Data',
           },
           {
-            content: 'Test unary, streaming and duplex call types',
-            // image: `${baseUrl}img/green_fwd2.svg`,
+            content: 'Test unary, streaming and duplex call types using JSON or binary data',
             imageAlign: 'top',
-            title: 'Flexible and complete',
+            title: 'Flexible and featureful',
           }
         ]}
       </Block>
@@ -165,11 +161,6 @@ class Index extends React.Component {
           <Badges />
           <Features />
           <Description />
-          {/* <FeatureCallout />
-          <LearnHow />
-          <TryOut />
-          <Description />
-          <Showcase /> */}
         </div>
       </div>
     );
