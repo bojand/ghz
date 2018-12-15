@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Usage · ghz</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;pre&gt;&lt;code class=&quot;hljs css language-sh&quot;&gt;&lt;/code&gt;&lt;/pre&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Usage · ghz"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ghz.sh/index.html"/><meta property="og:description" content="&lt;pre&gt;&lt;code class=&quot;hljs css language-sh&quot;&gt;&lt;/code&gt;&lt;/pre&gt;
+"/><meta property="og:image" content="https://ghz.sh/img/green_fwd2.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://ghz.sh/img/green_fwd2.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><link rel="stylesheet" href="/css/main.css"/></head><body class="sideNavVisible"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/green_fwd2.svg" alt="ghz"/><h2 class="headerTitleWithLogo">ghz</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/intro" target="_self">Docs</a></li><li class=""><a href="https://godoc.org/github.com/bojand/ghz" target="_self">GoDoc</a></li><li class=""><a href="https://github.com/bojand/ghz" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><i></i></div><h2><i>›</i><span>Guide</span></h2></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Guide</h3><ul><li class="navListItem"><a class="navItem" href="/docs/intro">Introduction</a></li><li class="navListItem"><a class="navItem" href="/docs/install">Installation</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/usage">Usage</a></li><li class="navListItem"><a class="navItem" href="/docs/options">Options Reference</a></li><li class="navListItem"><a class="navItem" href="/docs/calldata">Call Template Data</a></li><li class="navListItem"><a class="navItem" href="/docs/example_call">Examples</a></li><li class="navListItem"><a class="navItem" href="/docs/example_config">Configuration Files</a></li><li class="navListItem"><a class="navItem" href="/docs/output">Output Formats</a></li><li class="navListItem"><a class="navItem" href="/docs/extras">Extras</a></li><li class="navListItem"><a class="navItem" href="/docs/package">Package</a></li></ul></div></div></section></div><script>
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Usage</h1></header><article><div><span><pre><code class="hljs css language-sh">Usage: ghz [options...] host
+Options:
+
+-proto      The Protocol Buffer .proto file.
+-protoset   The compiled protoset file. Alternative to proto. -proto takes precedence.
+-call       A fully-qualified method name <span class="hljs-keyword">in</span> <span class="hljs-string">'package/service/method'</span> or <span class="hljs-string">'package.service.method'</span> format.
+-cert       The file containing the CA root cert file. Ignored <span class="hljs-keyword">if</span> -insecure is specified.
+-cname      An server name override.
+-insecure   Specify <span class="hljs-keyword">for</span> non TLS connection.
+-config     Path to the JSON or TOML config file that specifies all the <span class="hljs-built_in">test</span> settings.
+
+
+-c  Number of requests to run concurrently.
+    Total number of requests cannot be smaller than the concurrency level. Default is 50.
+-n  Number of requests to run. Default is 200.
+-q  Rate <span class="hljs-built_in">limit</span>, <span class="hljs-keyword">in</span> queries per second (QPS). Default is no rate <span class="hljs-built_in">limit</span>.
+-t  Timeout <span class="hljs-keyword">for</span> each request <span class="hljs-keyword">in</span> seconds. Default is 20, use 0 <span class="hljs-keyword">for</span> infinite.
+-z  Duration of application to send requests. When duration is reached,
+    application stops and exits. If duration is specified, n is ignored.
+    Examples: -z 10s -z 3m.
+-x  Maximum duration of application to send requests with n setting respected.
+    If duration is reached before n requests are completed, application stops and exits.
+    Examples: -x 10s -x 3m.
+
+-d  The call data as stringified JSON.
+    If the value is <span class="hljs-string">'@'</span> <span class="hljs-keyword">then</span> the request contents are <span class="hljs-built_in">read</span> from stdin.
+-D  Path <span class="hljs-keyword">for</span> call data JSON file. For example, /home/user/file.json or ./file.json.
+-b  The call data comes as serialized binary message <span class="hljs-built_in">read</span> from stdin.
+-B  Path <span class="hljs-keyword">for</span> the call data as serialized binary message.
+-m  Request metadata as stringified JSON.
+-M  Path <span class="hljs-keyword">for</span> call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
+
+-o  Output path. If none provided stdout is used.
+-O  Output <span class="hljs-built_in">type</span>. If none provided, a summary is printed.
+    <span class="hljs-string">"csv"</span> outputs the response metrics <span class="hljs-keyword">in</span> comma-separated values format.
+    <span class="hljs-string">"json"</span> outputs the metrics report <span class="hljs-keyword">in</span> JSON format.
+    <span class="hljs-string">"pretty"</span> outputs the metrics report <span class="hljs-keyword">in</span> pretty JSON format.
+    <span class="hljs-string">"html"</span> outputs the metrics report as HTML.
+    <span class="hljs-string">"influx-summary"</span> outputs the metrics summary as influxdb line protocol.
+    <span class="hljs-string">"influx-details"</span> outputs the metrics details as influxdb line protocol.
+
+-i  Comma separated list of proto import paths. The current working directory and the directory
+    of the protocol buffer file are automatically added to the import list.
+
+-T  Connection timeout <span class="hljs-keyword">in</span> seconds <span class="hljs-keyword">for</span> the initial connection dial. Default is 10.
+-L  Keepalive time <span class="hljs-keyword">in</span> seconds. Only used <span class="hljs-keyword">if</span> present and above 0.
+
+-name  User specified name <span class="hljs-keyword">for</span> the <span class="hljs-built_in">test</span>.
+
+-cpus  Number of used cpu cores. (default <span class="hljs-keyword">for</span> current machine is 8 cores)
+
+-v  Print the version.
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/install"><span class="arrow-prev">← </span><span>Installation</span></a><a class="docs-next button" href="/docs/options"><span>Options Reference</span><span class="arrow-next"> →</span></a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2018 Bojan D.</section></footer></div></body></html>

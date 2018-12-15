@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Examples · ghz</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;A simple insecure unary call:&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Examples · ghz"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ghz.sh/index.html"/><meta property="og:description" content="&lt;p&gt;A simple insecure unary call:&lt;/p&gt;
+"/><meta property="og:image" content="https://ghz.sh/img/green_fwd2.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://ghz.sh/img/green_fwd2.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><link rel="stylesheet" href="/css/main.css"/></head><body class="sideNavVisible"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/green_fwd2.svg" alt="ghz"/><h2 class="headerTitleWithLogo">ghz</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/intro" target="_self">Docs</a></li><li class=""><a href="https://godoc.org/github.com/bojand/ghz" target="_self">GoDoc</a></li><li class=""><a href="https://github.com/bojand/ghz" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><i></i></div><h2><i>›</i><span>Guide</span></h2></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Guide</h3><ul><li class="navListItem"><a class="navItem" href="/docs/intro">Introduction</a></li><li class="navListItem"><a class="navItem" href="/docs/install">Installation</a></li><li class="navListItem"><a class="navItem" href="/docs/usage">Usage</a></li><li class="navListItem"><a class="navItem" href="/docs/options">Options Reference</a></li><li class="navListItem"><a class="navItem" href="/docs/calldata">Call Template Data</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/example_call">Examples</a></li><li class="navListItem"><a class="navItem" href="/docs/example_config">Configuration Files</a></li><li class="navListItem"><a class="navItem" href="/docs/output">Output Formats</a></li><li class="navListItem"><a class="navItem" href="/docs/extras">Extras</a></li><li class="navListItem"><a class="navItem" href="/docs/package">Package</a></li></ul></div></div></section></div><script>
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Examples</h1></header><article><div><span><p>A simple insecure unary call:</p>
+<pre><code class="hljs css language-sh">ghz -insecure \
+  -proto ./greeter.proto \
+  -call helloworld.Greeter.SayHello \
+  -d <span class="hljs-string">'{"name":"Joe"}'</span> \
+  0.0.0.0:50051
+</code></pre>
+<p>A simple unary call with metadata using template actions:</p>
+<pre><code class="hljs css language-sh">ghz -insecure \
+  -proto ./greeter.proto \
+  -call helloworld.Greeter.SayHello \
+  -d <span class="hljs-string">'{"name":"Joe"}'</span> \
+  -m <span class="hljs-string">'{"trace_id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}'</span> \
+  0.0.0.0:50051
+</code></pre>
+<p>Using binary data file (see <a href="https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message">writing a message</a>):</p>
+<pre><code class="hljs css language-sh">ghz -proto ./testdata/greeter.proto \
+  -call helloworld.Greeter.SayHello \
+  -B ./hello_request_data.bin \
+  0.0.0.0:50051
+</code></pre>
+<p>Or using binary from stdin:</p>
+<pre><code class="hljs css language-sh">ghz -proto ./greeter.proto \
+  -call helloworld.Greeter.SayHello \
+  0.0.0.0:50051 &lt; ./hello_request_data.bin
+</code></pre>
+<p>Custom number of requests and concurrency:</p>
+<pre><code class="hljs css language-sh">ghz -proto ./greeter.proto \
+  -call helloworld.Greeter.SayHello \
+  -d <span class="hljs-string">'{"name":"Joe"}'</span> \
+  -n 2000 \
+  -c 20 \
+  0.0.0.0:50051
+</code></pre>
+<p>Client streaming data can be sent as an array, each element representing a single message:</p>
+<pre><code class="hljs css language-sh">ghz -proto ./greeter.proto \
+  -call helloworld.Greeter.SayHelloCS \
+  -d <span class="hljs-string">'[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'</span> \
+  0.0.0.0:50051
+</code></pre>
+<p>If a single object is given for data it is sent as every message.</p>
+<p>We can also use <code>.protoset</code> files which can bundle multiple protocol buffer files into one binary file.</p>
+<p>Create a protoset</p>
+<pre><code class="hljs css language-sh">protoc --proto_path=. --descriptor_set_out=bundle.protoset *.proto
+</code></pre>
+<p>And then use it as input to <code>ghz</code> with <code>-protoset</code> option:</p>
+<pre><code class="hljs css language-sh">ghz -protoset ./bundle.protoset \
+  -call helloworld.Greeter.SayHello \
+  -d <span class="hljs-string">'{"name":"Bob"}'</span> \
+  -n 1000 -c 10 \
+  0.0.0.0:50051
+</code></pre>
+<p>Note that only one of <code>-proto</code> or <code>-protoset</code> options will be used. <code>-proto</code> takes precedence.</p>
+<p>Finally we can specify all settings, including the target host, conviniently in a JSON or TOML config file.</p>
+<pre><code class="hljs css language-sh">ghz -config ./config.json
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/calldata"><span class="arrow-prev">← </span><span>Call Template Data</span></a><a class="docs-next button" href="/docs/example_config"><span>Configuration Files</span><span class="arrow-next"> →</span></a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2018 Bojan D.</section></footer></div></body></html>

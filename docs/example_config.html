@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Configuration Files · ghz</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;All the call options can be specified in JSON or TOML config files and used as input via the &lt;code&gt;-config&lt;/code&gt; option.&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Configuration Files · ghz"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ghz.sh/index.html"/><meta property="og:description" content="&lt;p&gt;All the call options can be specified in JSON or TOML config files and used as input via the &lt;code&gt;-config&lt;/code&gt; option.&lt;/p&gt;
+"/><meta property="og:image" content="https://ghz.sh/img/green_fwd2.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://ghz.sh/img/green_fwd2.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><link rel="stylesheet" href="/css/main.css"/></head><body class="sideNavVisible"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/green_fwd2.svg" alt="ghz"/><h2 class="headerTitleWithLogo">ghz</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/intro" target="_self">Docs</a></li><li class=""><a href="https://godoc.org/github.com/bojand/ghz" target="_self">GoDoc</a></li><li class=""><a href="https://github.com/bojand/ghz" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><i></i></div><h2><i>›</i><span>Guide</span></h2></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Guide</h3><ul><li class="navListItem"><a class="navItem" href="/docs/intro">Introduction</a></li><li class="navListItem"><a class="navItem" href="/docs/install">Installation</a></li><li class="navListItem"><a class="navItem" href="/docs/usage">Usage</a></li><li class="navListItem"><a class="navItem" href="/docs/options">Options Reference</a></li><li class="navListItem"><a class="navItem" href="/docs/calldata">Call Template Data</a></li><li class="navListItem"><a class="navItem" href="/docs/example_call">Examples</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/example_config">Configuration Files</a></li><li class="navListItem"><a class="navItem" href="/docs/output">Output Formats</a></li><li class="navListItem"><a class="navItem" href="/docs/extras">Extras</a></li><li class="navListItem"><a class="navItem" href="/docs/package">Package</a></li></ul></div></div></section></div><script>
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Configuration Files</h1></header><article><div><span><p>All the call options can be specified in JSON or TOML config files and used as input via the <code>-config</code> option.
+An example JSON config file:</p>
+<pre><code class="hljs css language-json">{
+    <span class="hljs-attr">"proto"</span>: <span class="hljs-string">"/path/to/greeter.proto"</span>,
+    <span class="hljs-attr">"call"</span>: <span class="hljs-string">"helloworld.Greeter.SayHello"</span>,
+    <span class="hljs-attr">"n"</span>: <span class="hljs-number">2000</span>,
+    <span class="hljs-attr">"c"</span>: <span class="hljs-number">50</span>,
+    <span class="hljs-attr">"d"</span>: {
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Joe"</span>
+    },
+    <span class="hljs-attr">"m"</span>: {
+        <span class="hljs-attr">"foo"</span>: <span class="hljs-string">"bar"</span>,
+        <span class="hljs-attr">"trace_id"</span>: <span class="hljs-string">"{{.RequestNumber}}"</span>,
+        <span class="hljs-attr">"timestamp"</span>: <span class="hljs-string">"{{.TimestampUnix}}"</span>
+    },
+    <span class="hljs-attr">"i"</span>: [
+        <span class="hljs-string">"/path/to/protos"</span>
+    ],
+    <span class="hljs-attr">"x"</span>: <span class="hljs-string">"10s"</span>,
+    <span class="hljs-attr">"host"</span>: <span class="hljs-string">"0.0.0.0:50051"</span>
+}
+</code></pre>
+<p>An example TOML config file:</p>
+<pre><code class="hljs css language-toml"><span class="hljs-attr">x</span> = <span class="hljs-string">"7s"</span>
+<span class="hljs-attr">n</span> = <span class="hljs-number">5000</span>
+<span class="hljs-attr">c</span> = <span class="hljs-number">50</span>
+<span class="hljs-attr">proto</span> = <span class="hljs-string">"../../testdata/greeter.proto"</span>
+<span class="hljs-attr">call</span> = <span class="hljs-string">"helloworld.Greeter.SayHello"</span>
+<span class="hljs-attr">host</span> = <span class="hljs-string">"0.0.0.0:50051"</span>
+<span class="hljs-attr">insecure</span> = <span class="hljs-literal">true</span>
+<span class="hljs-attr">o</span> = <span class="hljs-string">"pretty.json"</span>
+<span class="hljs-attr">O</span> = <span class="hljs-string">"pretty"</span>
+<span class="hljs-section">
+[d]</span>
+<span class="hljs-attr">name</span> = <span class="hljs-string">"Bob {{.TimestampUnix}}"</span>
+<span class="hljs-section">
+[m]</span>
+<span class="hljs-attr">rn</span> = <span class="hljs-string">"{{.RequestNumber}}"</span>
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/example_call"><span class="arrow-prev">← </span><span>Examples</span></a><a class="docs-next button" href="/docs/output"><span>Output Formats</span><span class="arrow-next"> →</span></a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2018 Bojan D.</section></footer></div></body></html>
