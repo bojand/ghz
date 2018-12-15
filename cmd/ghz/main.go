@@ -50,7 +50,7 @@ var (
 	ct = flag.Uint("T", 10, "Connection timeout in seconds for the initial connection dial.")
 	kt = flag.Uint("L", 0, "Keepalive time in seconds.")
 
-	name = flag.String("name", "", "Name of the test.")
+	name = flag.String("name", "", "User specified name for the test.")
 
 	cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "")
 
@@ -104,7 +104,7 @@ of the protocol buffer file are automatically added to the import list.
 -T  Connection timeout in seconds for the initial connection dial. Default is 10.
 -L  Keepalive time in seconds. Only used if present and above 0.
 
--name  Name of the test.
+-name  User specified name for the test.
 
 -cpus  Number of used cpu cores. (default for current machine is %d cores)
 
@@ -253,18 +253,18 @@ func createConfigFromArgs() (*config, error) {
 		binaryData = b
 	}
 
-	var metadata *map[string]string
+	var metadata map[string]string
 	*md = strings.TrimSpace(*md)
 	if *md != "" {
-		if err := json.Unmarshal([]byte(*md), metadata); err != nil {
-			return nil, err
+		if err := json.Unmarshal([]byte(*md), &metadata); err != nil {
+			return nil, fmt.Errorf("Error unmarshaling metadata '%v': %v", *md, err.Error())
 		}
 	}
 
 	var dataObj interface{}
 	if *data != "@" && strings.TrimSpace(*data) != "" {
-		if err := json.Unmarshal([]byte(*data), dataObj); err != nil {
-			return nil, err
+		if err := json.Unmarshal([]byte(*data), &dataObj); err != nil {
+			return nil, fmt.Errorf("Error unmarshaling data '%v': %v", *data, err.Error())
 		}
 	}
 
@@ -285,7 +285,7 @@ func createConfigFromArgs() (*config, error) {
 		DataPath:      *dataPath,
 		BinData:       binaryData,
 		BinDataPath:   *binPath,
-		Metadata:      metadata,
+		Metadata:      &metadata,
 		MetadataPath:  *mdPath,
 		Output:        *output,
 		Format:        *format,

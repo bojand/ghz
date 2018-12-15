@@ -10,28 +10,6 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 )
 
-// checks if data is an array / slice of maps
-func isArrayData(data interface{}) bool {
-	arrData, isArrData := data.([]interface{})
-	if !isArrData {
-		return false
-	}
-
-	for _, elem := range arrData {
-		if !isMapData(elem) {
-			return false
-		}
-	}
-
-	return true
-}
-
-// checks that a data object is a map with string for keys
-func isMapData(data interface{}) bool {
-	_, isArrData := data.(map[string]interface{})
-	return isArrData
-}
-
 // creates a message from a map
 // marshal to JSON then use jsonb to marshal to message
 // this way we follow protobuf more closely and allow cammelCase properties.

@@ -17,10 +17,7 @@ Alternatively we use use compiled protoset file (containing compiled descriptors
 To create a protoset file, invoke `protoc` with the `*.proto` files that define the service. For example:
 
 ```sh
-protoc --proto_path=. \
-    --descriptor_set_out=myservice.protoset \
-    --include_imports \
-    my/custom/server/service.proto
+protoc --proto_path=. --descriptor_set_out=bundle.protoset *.proto
 ```
 
 ### `-call`
@@ -68,4 +65,66 @@ Duration of application to send requests. When duration is reached, application 
 Maximum duration of application to send requests with `n` setting respected. If duration is reached before `n` requests are completed, application stops and exits. Examples: `-x 10s` or `-x 3m`.
 
 ### `-d`
-The call data as stringified JSON. If the value is `@` then the request contents are read from standard input (stdin). Example: `-d '{"name":"Bob"}'`.
+
+The call data as stringified JSON. If the value is `@` then the request contents are read from standard input (stdin). Example: `-d '{"name":"Bob"}'`. For client streaming or bi-directional calls we can accept a JSON array of messages, and each element representing a single message within the stream call. For example: `-d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'` can be used as input for a client streaming call. In case of streaming calls if a single object is given for data then the it is sent as every message.
+
+### `-D`
+
+The path for call data JSON file. For example, `-D /home/user/file.json` or `-D ./file.json`.
+
+### `-b`
+
+The call data comes as serialized binary message read from standard input. See [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message) on how to generate a bianry file for usage.
+
+### `-B`
+
+Path for the call data as serialized binary message.
+
+### `-m`
+
+Request metadata as stringified JSON.
+
+### `-M`
+
+Path for call metadata JSON file. For example, `-M /home/user/metadata.json` or `-M ./metadata.json`.
+
+### `-o`
+
+Output path. If none is provided by default we print to standard output (stdout).
+
+### `-O`
+
+Output type. If none provided, a summary is printed.
+
+- `"csv"` - outputs the response metrics in comma-separated values format.
+- `"json"` - outputs the metrics report in JSON format.
+- `"pretty"` - outputs the metrics report in pretty JSON format.
+- `"html"` - outputs the metrics report as HTML.
+- `"influx-summary"` - outputs the metrics summary as InfluxDB line protocol.
+- `"influx-details"` - outputs the metrics details as InfluxDB line protocol.
+
+See [output](output.md) for details.
+
+### `-i`
+
+Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file specified using `-proto` are automatically added to the import list.
+
+### `-T`
+
+Connection timeout in seconds for the initial connection dial. Default is `10`.
+
+### `-L`
+
+Keepalive time in seconds. Only used if present and above `0`.
+
+### `-name`
+
+A user specified name for the test.
+
+### `-cpus`
+
+Number of used cpu cores to be used for the test. The default is the total number of logical CPUs on the local machine.
+
+### `-v`
+
+Print the version.

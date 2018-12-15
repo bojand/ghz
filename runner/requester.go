@@ -169,12 +169,15 @@ func (b *Requester) runWorker(n int) {
 				<-throttle
 			}
 
-			b.makeRequest()
+			err := b.makeRequest()
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 		}
 	}
 }
 
-func (b *Requester) makeRequest() {
+func (b *Requester) makeRequest() error {
 
 	reqNum := atomic.AddInt64(&b.reqCounter, 1)
 
@@ -186,23 +189,23 @@ func (b *Requester) makeRequest() {
 	if !b.config.binary {
 		data, err := ctd.executeData(string(b.config.data))
 		if err != nil {
-			return
+			return err
 		}
 		input, streamInput, err = createPayloads(string(data), b.mtd)
 		if err != nil {
-			return
+			return err
 		}
 	} else {
 		var err error
 		input, streamInput, err = createPayloadsFromBin(b.config.data, b.mtd)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
 	mdMap, err := ctd.executeMetadata(string(b.config.metadata))
 	if err != nil {
-		return
+		return err
 	}
 
 	var reqMD *metadata.MD
@@ -232,6 +235,8 @@ func (b *Requester) makeRequest() {
 	} else {
 		b.stub.InvokeRpc(ctx, b.mtd, input)
 	}
+
+	return nil
 }
 
 func (b *Requester) makeClientStreamingRequest(ctx *context.Context, input *[]*dynamic.Message) {

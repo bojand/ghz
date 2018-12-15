@@ -1,6 +1,6 @@
 ---
 id: output
-title: Output
+title: Output Formats
 ---
 
 ### Summary
