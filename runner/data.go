@@ -2,6 +2,7 @@ package runner
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -37,7 +38,7 @@ func createPayloads(data string, mtd *desc.MethodDescriptor) (*dynamic.Message, 
 			dataArray := make([]map[string]interface{}, 5)
 			err := json.Unmarshal([]byte(data), &dataArray)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, fmt.Errorf("Error unmarshalling payload. Data: '%v' Error: %v", data, err.Error())
 			}
 
 			elems := len(dataArray)
@@ -48,7 +49,7 @@ func createPayloads(data string, mtd *desc.MethodDescriptor) (*dynamic.Message, 
 				elemMsg := dynamic.NewMessage(md)
 				err := messageFromMap(elemMsg, &elem)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, fmt.Errorf("Error creating message: %v", err.Error())
 				}
 
 				streamInput[i] = elemMsg
@@ -57,7 +58,7 @@ func createPayloads(data string, mtd *desc.MethodDescriptor) (*dynamic.Message, 
 			input = dynamic.NewMessage(md)
 			err := jsonpb.UnmarshalString(data, input)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, fmt.Errorf("Error creating message from data. Data: '%v' Error: %v", data, err.Error())
 			}
 		}
 	}
@@ -83,7 +84,7 @@ func createPayloadsFromBin(binData []byte, mtd *desc.MethodDescriptor) (*dynamic
 
 	err := proto.Unmarshal(binData, input)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("Error creating message from binary data: %v", err.Error())
 	}
 
 	if mtd.IsClientStreaming() && input != nil {
