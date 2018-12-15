@@ -8,7 +8,7 @@ import (
 	"github.com/bojand/ghz/runner"
 )
 
-func main() {
+func ExampleRun() {
 	report, err := runner.Run(
 		"helloworld.Greeter.SayHello",
 		"localhost:50051",
