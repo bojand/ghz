@@ -1,4 +1,4 @@
-builds:
+build:
   main: cmd/ghz/main.go
   binary: ghz
   goos:
