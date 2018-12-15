@@ -8,6 +8,8 @@ import (
 	"github.com/bojand/ghz/runner"
 )
 
+// ExampleRun demonstrates how to use runner package to perform a gRPC load test programmatically.
+// We use the printer package to print the report in pretty JSON format.
 func ExampleRun() {
 	report, err := runner.Run(
 		"helloworld.Greeter.SayHello",
