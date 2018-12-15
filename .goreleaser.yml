@@ -25,3 +25,4 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+    - '^www:'
