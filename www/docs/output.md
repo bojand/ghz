@@ -62,7 +62,7 @@ duration (ms),status,error
 
 ### HTML
 
-HTML output can be generated using `html` as format in the `-O` option. See [sample output](http://bojand.github.io/sample.html).
+HTML output can be generated using `html` as format in the `-O` option. See [sample output](/extras/sample.html).
 
 ### JSON
 

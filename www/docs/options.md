@@ -103,7 +103,7 @@ Output type. If none provided, a summary is printed.
 - `"influx-summary"` - outputs the metrics summary as InfluxDB line protocol.
 - `"influx-details"` - outputs the metrics details as InfluxDB line protocol.
 
-See [output](output.md) for details.
+See [output formats page](output.md) for details.
 
 ### `-i`
 
