@@ -1,13 +1,4 @@
----
-id: package
-title: Package
----
-
-`ghz` can be used programatically as Go package within Go applications. See detailed [godoc](https://godoc.org/github.com/bojand/ghz) documentation. Example usage:
-
-
-```go
-package main
+package runner_test
 
 import (
 	"fmt"
@@ -21,13 +12,14 @@ func main() {
 	report, err := runner.Run(
 		"helloworld.Greeter.SayHello",
 		"localhost:50051",
-		runner.WithProtoFile("greeter.proto", []string{}),
-		runner.WithDataFromFile("data.json"),
+		runner.WithProtoFile("../testdata/greeter.proto", []string{}),
+		runner.WithDataFromFile("../testdata/data.json"),
 		runner.WithInsecure(true),
 	)
 
 	if err != nil {
 		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	printer := printer.ReportPrinter{
@@ -37,4 +29,3 @@ func main() {
 
 	printer.Print("pretty")
 }
-```
