@@ -1,14 +1,14 @@
-build:
-  main: cmd/ghz/...
-  binary: ghz
-  env:
-    - CGO_ENABLED=0
-  goos:
-    - darwin
-    - linux
-    - windows
-  goarch:
-    - amd64
+builds:
+  - main: ./cmd/ghz
+    binary: ghz
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
 archive:
   replacements:
     darwin: Darwin
