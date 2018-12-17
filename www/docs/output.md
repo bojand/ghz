@@ -1,6 +1,6 @@
 ---
 id: output
-title: Output Formats
+title: Output
 ---
 
 ### Summary
@@ -45,13 +45,13 @@ Error distribution:
   [3]	rpc error: code = Unavailable desc = Service unavialable.
 ```
 
-Some explanation of results:
+Explanation of the summary:
 
 - `count` - The total number of completed requests including successful and failed requests.
-- `total` - The total time spent running the test within `ghz` from start to finish. This is _not_ a sum of all individual requests but rather a single measurement from start of the test run to the completion of the final request of the test run.
-- `slowest` - The measurement of the slowest run.
-- `fastest` - The measurement of the fastest run.
-- `average` - The mathematical average computed by taking the _sum_ of the the _individual_ response times of _all_ requests and dividing it by the total number of requests.
+- `total` - The total time spent running the test within `ghz` from start to finish. This is a single measurement from start of the test run to the completion of the final request of the test run.
+- `slowest` - The measurement of the slowest request.
+- `fastest` - The measurement of the fastest request.
+- `average` - The mathematical average computed by taking the _sum_ of the _individual_ response times of _all_ requests and dividing it by the total number of requests.
 - `requests/sec` - Theoretical computed RPS computed by taking the total number of requests (successful and failed) and dividing it by the total duration of the test. That is: `count` / `total`.
 
 ### CSV
@@ -75,11 +75,11 @@ duration (ms),status,error
 
 ### HTML
 
-HTML output can be generated using `html` as format in the `-O` option. See [sample output](/sample.html).
+HTML output can be generated using `html` as format in the `-O` option. [Sample HTML output](/sample.html).
 
 ### JSON
 
-Using `-O json` outputs JSON data, and `-O pretty` outputs JSON in pretty format.
+Using `-O json` outputs JSON data, and `-O pretty` outputs JSON in pretty format. [Sample pretty JSON output](/pretty.json).
 
 ### InfluxDB Line Protocol
 
