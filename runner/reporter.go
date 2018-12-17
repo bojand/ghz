@@ -127,6 +127,7 @@ func newReporter(results chan *callResult, c *RunConfig) *Reporter {
 func (r *Reporter) Run() {
 	for res := range r.results {
 		r.totalCount++
+		r.avgTotal += res.duration.Seconds()
 		if res.err != nil {
 			errStr := res.err.Error()
 			r.errorDist[errStr]++
@@ -136,7 +137,6 @@ func (r *Reporter) Run() {
 				r.statuses = append(r.statuses, res.status)
 			}
 		} else {
-			r.avgTotal += res.duration.Seconds()
 			r.statusCodeDist[res.status]++
 
 			if len(r.lats) < maxResult {
@@ -186,7 +186,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 	_ = json.Unmarshal(r.config.metadata, &rep.Options.Metadata)
 
 	if len(r.lats) > 0 {
-		average := r.avgTotal / float64(len(r.lats))
+		average := r.avgTotal / float64(r.totalCount)
 		avgDuration := time.Duration(average * float64(time.Second))
 		rep.Average = avgDuration
 

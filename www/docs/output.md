@@ -9,37 +9,50 @@ Sample standard output of summary of the results:
 
 ```
 Summary:
-  Count:	2000
-  Total:	345.52 ms
-  Slowest:	15.41 ms
-  Fastest:	0.66 ms
-  Average:	6.83 ms
-  Requests/sec:	5788.35
+  Count:		200
+  Total:		181.57 ms
+  Slowest:		69.60 ms
+  Fastest:		26.09 ms
+  Average:		32.01 ms
+  Requests/sec:	1101.53
 
 Response time histogram:
-  0.664 [1]	    |
-  2.138 [36]	|∎
-  3.613 [14]	|
-  5.087 [65]	|∎∎
-  6.561 [1305]	|∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
-  8.035 [274]	|∎∎∎∎∎∎∎∎
-  9.509 [66]	|∎∎
-  10.983 [0]	|
-  12.458 [59]	|∎∎
-  13.932 [130]	|∎∎∎∎
-  15.406 [50]	|∎∎
+  26.093 [1]	|∎
+  30.444 [52]	|∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  34.794 [78]	|∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  39.145 [40]	|∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  43.495 [1]	|∎
+  47.846 [0]	|
+  52.196 [2]	|∎
+  56.547 [5]	|∎∎∎
+  60.897 [3]	|∎∎
+  65.248 [2]	|∎
+  69.598 [2]	|∎
 
 Latency distribution:
-  10% in 5.18 ms
-  25% in 5.51 ms
-  50% in 6.10 ms
-  75% in 6.72 ms
-  90% in 12.19 ms
-  95% in 13.26 ms
-  99% in 14.73 ms
+  10% in 28.48 ms
+  25% in 30.08 ms
+  50% in 33.23 ms
+  75% in 35.43 ms
+  90% in 38.89 ms
+  95% in 55.45 ms
+  99% in 69.60 ms
 Status code distribution:
-  [OK]	2000 responses
+  [OK]	186 responses
+Error distribution:
+  [8]	rpc error: code = Internal desc = Internal error.
+  [3]	rpc error: code = PermissionDenied desc = Permission denied.
+  [3]	rpc error: code = Unavailable desc = Service unavialable.
 ```
+
+Some explanation of results:
+
+- `count` - The total number of completed requests including successful and failed requests.
+- `total` - The total time spent running the test within `ghz` from start to finish. This is _not_ a sum of all individual requests but rather a single measurement from start of the test run to the completion of the final request of the test run.
+- `slowest` - The measurement of the slowest run.
+- `fastest` - The measurement of the fastest run.
+- `average` - The mathematical average computed by taking the _sum_ of the the _individual_ response times of _all_ requests and dividing it by the total number of requests.
+- `requests/sec` - Theoretical computed RPS computed by taking the total number of requests (successful and failed) and dividing it by the total duration of the test. That is: `count` / `total`.
 
 ### CSV
 
