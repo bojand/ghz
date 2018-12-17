@@ -40,6 +40,8 @@ type Requester struct {
 	stopCh  chan bool
 	start   time.Time
 
+	qpsTick time.Duration
+
 	reqCounter int64
 
 	stopReason StopReason
@@ -52,9 +54,15 @@ func newRequester(mtd *desc.MethodDescriptor, c *RunConfig) (*Requester, error) 
 		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
 	}
 
+	var qpsTick time.Duration
+	if c.qps > 0 {
+		qpsTick = time.Duration(1e6/(c.qps)) * time.Microsecond
+	}
+
 	reqr := &Requester{
 		config:     c,
 		mtd:        mtd,
+		qpsTick:    qpsTick,
 		stopReason: ReasonNormalEnd}
 
 	return reqr, nil
@@ -142,12 +150,14 @@ func (b *Requester) runWorkers() {
 	var wg sync.WaitGroup
 	wg.Add(b.config.c)
 
+	nReqPerWorker := b.config.n / b.config.c
+
 	// Ignore the case where b.N % b.C != 0.
 	for i := 0; i < b.config.c; i++ {
 		go func() {
 			defer wg.Done()
 
-			b.runWorker(b.config.n / b.config.c)
+			b.runWorker(nReqPerWorker)
 		}()
 	}
 	wg.Wait()
@@ -156,7 +166,7 @@ func (b *Requester) runWorkers() {
 func (b *Requester) runWorker(n int) {
 	var throttle <-chan time.Time
 	if b.config.qps > 0 {
-		throttle = time.Tick(time.Duration(1e6/(b.config.qps)) * time.Microsecond)
+		throttle = time.Tick(b.qpsTick)
 	}
 
 	for i := 0; i < n; i++ {

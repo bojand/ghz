@@ -50,7 +50,7 @@ An override of the expected server Cname presented by the server.
 
 ### `-q`
 
-Rate limit for each worker goroutine in queries per second (QPS). Default is no rate limit.
+Rate limit for each worker goroutine in queries per second (QPS). Default is no rate limit. This essentially spaces out the requests by adding a timeout to each worker before it attempts each call. 
 
 ### `-t`
 
