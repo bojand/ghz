@@ -135,13 +135,13 @@ class Index extends React.Component {
           <a href={"https://goreportcard.com/report/github.com/bojand/ghz"}>
             <img src={"https://goreportcard.com/badge/github.com/bojand/ghz?style=flat-square"} alt={"Go Report Card"} />
           </a>
-          <a href={"https://raw.githubusercontent.com/bojand/ghz/master/LICENSE"}>
+          <a href={"https://raw.githubusercontent.com/bojand/ghz/master/LICENSE"} style={{ margin: '5px' }}>
             <img src={"https://img.shields.io/github/license/bojand/ghz.svg?style=flat-square"} alt={"License"} />
           </a>
-          <a href={"https://www.paypal.me/bojandj"} style={{ margin: '5px' }}>
+          <a href={"https://www.paypal.me/bojandj"}>
             <img src={"https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat-square"} alt={"Donate"} />
           </a>
-          <a href={"https://www.buymeacoffee.com/bojand"}>
+          <a href={"https://www.buymeacoffee.com/bojand"} style={{ margin: '5px' }}>
             <img src={"https://img.shields.io/badge/buy%20me-a%20coffee-orange.svg?style=flat-square"} alt={"Buy me a coffee"} />
           </a>
       </div>
