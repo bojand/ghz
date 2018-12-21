@@ -18,5 +18,5 @@ cmd/ghz/ghz
 dist
 build
 node_modules
-
+.cache
 coverage.html

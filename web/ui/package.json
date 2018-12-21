@@ -1,0 +1,35 @@
+{
+  "name": "ghz-web-ui-evergreen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel src/index.html --open",
+    "build": "parcel build src/index.html"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "acorn": "^6.0.4",
+    "parcel-bundler": "^1.11.0",
+    "standard": "^12.0.1"
+  },
+  "dependencies": {
+    "@babel/runtime-corejs2": "^7.2.0",
+    "evergreen-ui": "^4.8.0",
+    "fuzzaldrin-plus": "^0.6.0",
+    "ky": "^0.5.1",
+    "lodash": "^4.17.11",
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0",
+    "unstated": "^2.1.1"
+  },
+  "standard": {
+    "env": {
+      "browser": true
+    }
+  }
+}
