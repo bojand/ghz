@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, Link, IconButton, Pane, Text } from 'evergreen-ui'
+import { Table, Heading, Link, IconButton, Pane, Icon } from 'evergreen-ui'
 import { filter } from 'fuzzaldrin-plus'
 
 import EditProjectDialog from './EditProjectDialog'
@@ -40,9 +40,9 @@ export default class ProjectList extends Component {
     // If the searchQuery is empty, return the profiles as is.
     if (searchQuery.length === 0) return projects
 
-    return projects.filter(profile => {
+    return projects.filter(p => {
       // Use the filter from fuzzaldrin-plus to filter by name.
-      const result = filter([profile.name], searchQuery)
+      const result = filter([p.name], searchQuery)
       return result.length === 1
     })
   }
@@ -58,12 +58,32 @@ export default class ProjectList extends Component {
     }
   }
 
+  getIconForStatus (status) {
+    switch (status) {
+      case 'OK':
+        return 'tick-circle'
+      default:
+        return 'error'
+    }
+  }
+
+  getColorForStatus (status) {
+    switch (status) {
+      case 'OK':
+        return 'success'
+      default:
+        return 'danger'
+    }
+  }
+
   handleFilterChange (value) {
     this.setState({ searchQuery: value })
   }
 
   render () {
     const { state: { projects } } = this.props.projectStore
+
+    const items = this.filter(projects)
 
     return (
       <Pane>
@@ -73,11 +93,9 @@ export default class ProjectList extends Component {
         </Pane>
         <Table marginY={24}>
           <Table.Head>
-            <Table.TextHeaderCell maxWidth={80}>
+            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               <Pane display='flex'>
-                <Text>
-                  ID
-                </Text>
+                ID
                 <IconButton
                   marginLeft={10}
                   icon={this.getIconForOrder(this.state.ordering)}
@@ -87,16 +105,22 @@ export default class ProjectList extends Component {
                 />
               </Pane>
             </Table.TextHeaderCell>
-            <Table.SearchHeaderCell maxWidth={250} />
+            <Table.SearchHeaderCell maxWidth={250}
+              onChange={v => this.handleFilterChange(v)}
+              value={this.state.searchQuery}
+            />
             <Table.TextHeaderCell textProps={{ size: 400 }}>
               Description
             </Table.TextHeaderCell>
             <Table.TextHeaderCell maxWidth={100} textProps={{ size: 400 }}>
               Reports
             </Table.TextHeaderCell>
+            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
+              Status
+            </Table.TextHeaderCell>
           </Table.Head>
           <Table.Body>
-            {projects.map(p => (
+            {items.map(p => (
               <Table.Row key={p.id} isSelectable onSelect={() => alert(p.name)}>
                 <Table.TextCell maxWidth={80} isNumber>
                   {p.id}
@@ -107,6 +131,13 @@ export default class ProjectList extends Component {
                 <Table.TextCell textProps={{ size: 400 }}>{p.description}</Table.TextCell>
                 <Table.TextCell maxWidth={100} isNumber>
                   {p.reports}
+                </Table.TextCell>
+                <Table.TextCell
+                  maxWidth={80}
+                  isNumber display='flex' textAlign='center'>
+                  <Icon
+                    icon={this.getIconForStatus(p.status)}
+                    color={this.getColorForStatus(p.status)} />
                 </Table.TextCell>
               </Table.Row>
             ))}

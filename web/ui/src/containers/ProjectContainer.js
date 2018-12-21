@@ -5,19 +5,22 @@ const projects = [
     id: 11,
     name: 'Product User API - Service User',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vel nibh interdum, rutrum mi non, elementum justo. Integer a massa maximus, facilisis sapien nec, pretium nunc. Donec maximus aliquam orci placerat venenatis. Mauris vel aliquet mauris. ',
-    reports: 4
+    reports: 4,
+    status: 'OK'
   },
   {
     id: 12,
     name: 'Project User API - Service Config',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vel nibh interdum, rutrum mi non, elementum justo. Integer a massa maximus, facilisis sapien nec, pretium nunc. Donec maximus aliquam orci placerat venenatis. Mauris vel aliquet mauris. ',
-    reports: 7
+    reports: 7,
+    status: 'FAIL'
   },
   {
     id: 13,
     name: 'Component Event API - Service Ticket',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vel nibh interdum, rutrum mi non, elementum justo. Integer a massa maximus, facilisis sapien nec, pretium nunc. Donec maximus aliquam orci placerat venenatis. Mauris vel aliquet mauris. ',
-    reports: 12
+    reports: 12,
+    status: 'OK'
   }
 ]
 
@@ -45,11 +48,13 @@ async function getProjects (existing, sort) {
 async function createProject (name, description) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      const id = getRandomInt(10000)
       const newProject = {
-        id: getRandomInt(100000),
+        id,
         name,
         description,
-        reports: 0
+        reports: 0,
+        status: id > 5000 ? 'FAIL' : 'OK'
       }
 
       resolve(newProject)
