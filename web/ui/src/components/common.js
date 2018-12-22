@@ -27,6 +27,8 @@ function getIconForStatus (status) {
 function getColorForStatus (status) {
   switch (status) {
     case 'OK':
+    case 'up_better':
+    case 'down_better':
       return 'success'
     default:
       return 'danger'
@@ -43,10 +45,24 @@ function getIconForMetricStatus (status) {
   }
 }
 
+function formatFloat (val, fixed) {
+  if (!Number.isInteger(fixed)) {
+    fixed = 2
+  }
+
+  return Number.parseFloat(val).toFixed(fixed)
+}
+
+function formatNano (val) {
+  return Number.parseFloat(val / 1000000).toFixed(2)
+}
+
 module.exports = {
   getIconForMetricStatus,
   getIconForOrder,
   getIconForStatus,
   getColorForStatus,
-  Order
+  Order,
+  formatFloat,
+  formatNano
 }

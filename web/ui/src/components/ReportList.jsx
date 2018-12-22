@@ -7,12 +7,9 @@ import {
   getIconForOrder,
   getIconForMetricStatus,
   getIconForStatus,
-  getColorForStatus
+  getColorForStatus,
+  formatNano
 } from './common'
-
-function formatNano (val) {
-  return Number.parseFloat(val / 1000000).toFixed(2)
-}
 
 export default class ReportList extends Component {
   constructor (props) {

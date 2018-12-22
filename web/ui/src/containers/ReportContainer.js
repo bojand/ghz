@@ -1,9 +1,18 @@
 import { Container } from 'unstated'
 import _ from 'lodash'
 
+const date1 = new Date()
+const date2 = new Date()
+const date3 = new Date()
+const date4 = new Date()
+
+date2.setMonth(date1.getMonth() - 1)
+date3.setMonth(date2.getMonth() - 1)
+date4.setMonth(date3.getMonth() - 1)
+
 const reports = [{
   id: 10,
-  date: new Date().toISOString(),
+  date: date1.toISOString(),
   projectId: 11,
   count: 100,
   total: 172959832,
@@ -25,7 +34,7 @@ const reports = [{
   status: 'FAIL'
 }, {
   id: 20,
-  date: new Date().toISOString(),
+  date: date2.toISOString(),
   projectId: 12,
   count: 200,
   total: 272959832,
@@ -37,6 +46,50 @@ const reports = [{
   slowestStatus: 'up_worse',
   rps: 2156.34,
   rpsStatus: 'up_better',
+  errorDistribution: {
+    'rpc error: code = Internal desc = Internal error.': 5,
+    'rpc error: code = PermissionDenied desc = Permission denied.': 4
+  },
+  statusCodeDistribution: {
+    'OK': 191
+  },
+  status: 'FAIL'
+}, {
+  id: 22,
+  date: date3.toISOString(),
+  projectId: 12,
+  count: 300,
+  total: 472959832,
+  average: 51877742,
+  averageStatus: 'up_worse',
+  fastest: 59404280,
+  fastestStatus: 'up_worse',
+  slowest: 58984994,
+  slowestStatus: 'up_worse',
+  rps: 1156.34,
+  rpsStatus: 'down_worse',
+  errorDistribution: {
+    'rpc error: code = Internal desc = Internal error.': 5,
+    'rpc error: code = PermissionDenied desc = Permission denied.': 4
+  },
+  statusCodeDistribution: {
+    'OK': 191
+  },
+  status: 'OK'
+}, {
+  id: 24,
+  date: date4.toISOString(),
+  projectId: 12,
+  count: 400,
+  total: 345959832,
+  average: 43277742,
+  averageStatus: 'up_better',
+  fastest: 54304280,
+  fastestStatus: 'down_better',
+  slowest: 66684994,
+  slowestStatus: 'up_better',
+  rps: 2256.34,
+  rpsStatus: 'down_worse',
   errorDistribution: {
     'rpc error: code = Internal desc = Internal error.': 5,
     'rpc error: code = PermissionDenied desc = Permission denied.': 4

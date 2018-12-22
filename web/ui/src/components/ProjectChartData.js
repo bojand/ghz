@@ -1,5 +1,7 @@
 import _ from 'lodash'
-import { colors } from './colors.js'
+
+import { colors } from './colors'
+import { formatFloat } from './common'
 
 function createChartData (reports) {
   let data = reports
@@ -27,12 +29,13 @@ function createChartData (reports) {
   }
 }
 
-function createLineChart (projects) {
-  if (!projects) {
+function createLineChart (reports) {
+  console.log(reports)
+  if (!reports) {
     return
   }
 
-  const chartData = this.createChartData()
+  const chartData = createChartData(reports)
   const dates = chartData.dates
   const avgData = []
   const fastData = []
@@ -44,23 +47,23 @@ function createLineChart (projects) {
     const d = new Date(v)
     avgData[i] = {
       x: d,
-      y: this.formatFloat(chartData.averate[i])
+      y: formatFloat(chartData.averate[i])
     }
     fastData[i] = {
       x: d,
-      y: this.formatFloat(chartData.fastest[i])
+      y: formatFloat(chartData.fastest[i])
     }
     slowData[i] = {
       x: d,
-      y: this.formatFloat(chartData.slowest[i])
+      y: formatFloat(chartData.slowest[i])
     }
     n5Data[i] = {
       x: d,
-      y: this.formatFloat(chartData.nine5[i])
+      y: formatFloat(chartData.nine5[i])
     }
     rpsData[i] = {
       x: d,
-      y: this.formatFloat(chartData.rps[i])
+      y: formatFloat(chartData.rps[i])
     }
   })
 

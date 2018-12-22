@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { Pane, Heading, Button, Paragraph, Icon } from 'evergreen-ui'
+import { toUpper } from 'lodash'
 
 import EditProjectDialog from './EditProjectDialog'
 
@@ -42,7 +43,7 @@ export default class ProjectDetailPane extends Component {
             marginRight={16}
             icon={getIconForStatus(currentProject.status)}
             color={getColorForStatus(currentProject.status)} />
-          <Heading size={500}>{currentProject.name}</Heading>
+          <Heading size={500}>{toUpper(currentProject.name)}</Heading>
           {this.state.editProjectVisible
             ? <EditProjectDialog
               projectStore={this.props.projectStore}
