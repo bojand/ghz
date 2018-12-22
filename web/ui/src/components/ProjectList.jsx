@@ -16,10 +16,7 @@ export default class ProjectList extends Component {
 
     this.state = {
       searchQuery: '',
-      orderedColumn: 1,
       ordering: Order.NONE,
-      column2Show: 'email',
-      projects: [],
       editProjectVisible: false,
       editProject: null
     }
@@ -154,7 +151,7 @@ export default class ProjectList extends Component {
                 </Table.TextCell>
                 <Table.TextCell
                   maxWidth={80}
-                  isNumber display='flex' textAlign='center'>
+                  display='flex' textAlign='center'>
                   <Icon
                     icon={this.getIconForStatus(p.status)}
                     color={this.getColorForStatus(p.status)} />

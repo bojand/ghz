@@ -3,7 +3,7 @@ import { Pane, Tab, Icon, Text } from 'evergreen-ui'
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom'
 
 import ProjectPage from './components/ProjectPage'
-import ReportsPage from './components/ReportsPage'
+import ReportPage from './components/ReportPage'
 
 export default class App extends Component {
   render () {
@@ -40,7 +40,7 @@ function Projects (props) {
 function Reports (props) {
   return (
     <Pane paddingX={24} paddingY={10} marginTop={6} >
-      <ReportsPage />
+      <ReportPage />
     </Pane>
   )
 }
