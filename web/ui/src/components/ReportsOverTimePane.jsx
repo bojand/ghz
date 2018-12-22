@@ -44,7 +44,9 @@ export default class ReportsOverTimePane extends Component {
         <Pane display='flex' alignItems='center' marginTop={6}>
           <Heading size={500}>HISTORY</Heading>
         </Pane>
-        {hasReports && <HistoryChart reports={reports} />}
+        {hasReports && <HistoryChart
+          reports={reports}
+          projectId={this.state.projectId} />}
       </Pane>
     )
   }

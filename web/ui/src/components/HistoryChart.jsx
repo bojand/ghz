@@ -1,33 +1,44 @@
 import React, { Component } from 'react'
 import { Pane } from 'evergreen-ui'
-import Chart from 'chart.js'
+import { Line } from 'react-chartjs-2'
 
 import {
   createLineChart
-} from './ProjectChartData'
+} from './projectChartData'
 
 export default class HistoryChart extends Component {
-  componentDidMount () {
-    console.log('HistoryChart: componentDidMount')
-    const node = this.node
-    const config = createLineChart(this.props.reports)
-    const myChart = new Chart(node, config)
+  constructor (props) {
+    super(props)
+
+    this.config = null
   }
 
-  componentDidUpdate () {
+  componentDidMount () {
+    console.log('HistoryChart: componentDidMount')
+    this.config = createLineChart(this.props.reports)
+  }
+
+  componentDidUpdate (prevProps) {
     console.log('HistoryChart: componentDidUpdate')
-    const node = this.node
-    const config = createLineChart(this.props.reports)
-    const myChart = new Chart(node, config)
+    console.log(prevProps)
+    console.log(this.props)
+    if (!this.config ||
+      (prevProps.projectId !== this.props.projectId)) {
+      this.config = createLineChart(this.props.reports)
+    }
   }
 
   render () {
+    console.log(this.config)
+    if (!this.config) {
+      return (
+        <Pane />
+      )
+    }
+
     return (
       <Pane>
-        <canvas
-          style={{ width: 800, height: 300 }}
-          ref={node => (this.node = node)}
-        />
+        <Line data={this.config.data} options={this.config.options} />
       </Pane>
     )
   }
