@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, Link, IconButton, Pane, Icon } from 'evergreen-ui'
+import { Table, Heading, Link, IconButton, Pane, Icon, Button } from 'evergreen-ui'
 import { filter } from 'fuzzaldrin-plus'
 
 import EditProjectDialog from './EditProjectDialog'
@@ -19,7 +19,9 @@ export default class ProjectList extends Component {
       orderedColumn: 1,
       ordering: Order.NONE,
       column2Show: 'email',
-      projects: []
+      projects: [],
+      editProjectVisible: false,
+      editProject: null
     }
   }
 
@@ -80,6 +82,14 @@ export default class ProjectList extends Component {
     this.setState({ searchQuery: value })
   }
 
+  handleEditProject (project) {
+    console.log(project)
+    this.setState({
+      editProject: project,
+      editProjectVisible: true
+    })
+  }
+
   render () {
     const { state: { projects } } = this.props.projectStore
 
@@ -89,8 +99,17 @@ export default class ProjectList extends Component {
       <Pane>
         <Pane display='flex' alignItems='center'>
           <Heading size={500}>PROJECTS</Heading>
-          <EditProjectDialog projectStore={this.props.projectStore} />
+          {this.state.editProjectVisible
+            ? <EditProjectDialog
+              projectStore={this.props.projectStore}
+              project={this.state.editProject}
+              isShown={this.state.editProjectVisible}
+              onDone={() => this.setState({ editProjectVisible: false })}
+            /> : null
+          }
+          <Button onClick={() => this.setState({ editProjectVisible: !this.state.editProjectVisible })} marginLeft={14} iconBefore='plus' appearance='minimal' intent='none'>NEW</Button>
         </Pane>
+
         <Table marginY={24}>
           <Table.Head>
             <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
@@ -105,7 +124,7 @@ export default class ProjectList extends Component {
                 />
               </Pane>
             </Table.TextHeaderCell>
-            <Table.SearchHeaderCell maxWidth={250}
+            <Table.SearchHeaderCell maxWidth={260}
               onChange={v => this.handleFilterChange(v)}
               value={this.state.searchQuery}
             />
@@ -118,14 +137,16 @@ export default class ProjectList extends Component {
             <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               Status
             </Table.TextHeaderCell>
+            <Table.HeaderCell maxWidth={40}>
+            </Table.HeaderCell>
           </Table.Head>
           <Table.Body>
             {items.map(p => (
-              <Table.Row key={p.id} isSelectable onSelect={() => alert(p.name)}>
+              <Table.Row key={p.id}>
                 <Table.TextCell maxWidth={80} isNumber>
                   {p.id}
                 </Table.TextCell>
-                <Table.TextCell maxWidth={250} textProps={{ size: 400 }}>
+                <Table.TextCell maxWidth={260} textProps={{ size: 400 }}>
                   <Link href='#'>{p.name}</Link>
                 </Table.TextCell>
                 <Table.TextCell textProps={{ size: 400 }}>{p.description}</Table.TextCell>
@@ -139,6 +160,9 @@ export default class ProjectList extends Component {
                     icon={this.getIconForStatus(p.status)}
                     color={this.getColorForStatus(p.status)} />
                 </Table.TextCell>
+                <Table.Cell maxWidth={40}>
+                  <IconButton icon='edit' height={24} appearance='minimal' onClick={ev => this.handleEditProject(p)} />
+                </Table.Cell>
               </Table.Row>
             ))}
           </Table.Body>

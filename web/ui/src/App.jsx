@@ -1,27 +1,15 @@
 import React, { Component } from 'react'
-import { Pane } from 'evergreen-ui'
-import { Provider, Subscribe } from 'unstated'
 
 import TopBar from './components/TopBar'
-import ProjectList from './components/ProjectList'
-
-import ProjectContainer from './containers/ProjectContainer'
+import ProjectPage from './components/ProjectPage'
 
 export default class App extends Component {
   render () {
     return (
-      <Provider>
-        <Subscribe to={[ProjectContainer]}>
-          {(projectStore) => (
-            <Pane>
-              <TopBar />
-              <Pane paddingX={24} paddingY={14} marginTop={6}>
-                <ProjectList projectStore={projectStore} />
-              </Pane>
-            </Pane>
-          )}
-        </Subscribe>
-      </Provider >
+      <div>
+        <TopBar />
+        <ProjectPage />
+      </div >
     )
   }
 }

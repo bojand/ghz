@@ -4,21 +4,21 @@ const projects = [
   {
     id: 11,
     name: 'Product User API - Service User',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vel nibh interdum, rutrum mi non, elementum justo. Integer a massa maximus, facilisis sapien nec, pretium nunc. Donec maximus aliquam orci placerat venenatis. Mauris vel aliquet mauris. ',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vel nibh interdum, rutrum mi non, elementum justo.',
     reports: 4,
     status: 'OK'
   },
   {
     id: 12,
     name: 'Project User API - Service Config',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vel nibh interdum, rutrum mi non, elementum justo. Integer a massa maximus, facilisis sapien nec, pretium nunc. Donec maximus aliquam orci placerat venenatis. Mauris vel aliquet mauris. ',
+    description: 'Etiam molestie rutrum eros, nec varius ligula vehicula at. Quisque malesuada placerat enim, id tempus libero venenatis in.',
     reports: 7,
     status: 'FAIL'
   },
   {
     id: 13,
     name: 'Component Event API - Service Ticket',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vel nibh interdum, rutrum mi non, elementum justo. Integer a massa maximus, facilisis sapien nec, pretium nunc. Donec maximus aliquam orci placerat venenatis. Mauris vel aliquet mauris. ',
+    description: 'Nulla purus turpis, laoreet vestibulum felis in, bibendum dignissim nisi. Sed a eros at elit pulvinar pretium.',
     reports: 12,
     status: 'OK'
   }
