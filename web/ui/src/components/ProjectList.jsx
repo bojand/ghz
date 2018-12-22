@@ -3,13 +3,14 @@ import { Table, Heading, IconButton, Pane, Icon, Button } from 'evergreen-ui'
 import { Link as RouterLink } from 'react-router-dom'
 import { filter } from 'fuzzaldrin-plus'
 
-import EditProjectDialog from './EditProjectDialog'
+import {
+  Order,
+  getIconForOrder,
+  getIconForStatus,
+  getColorForStatus
+} from './common'
 
-const Order = {
-  NONE: 'NONE',
-  ASC: 'ASC',
-  DESC: 'DESC'
-}
+import EditProjectDialog from './EditProjectDialog'
 
 export default class ProjectList extends Component {
   constructor (props) {
@@ -58,35 +59,6 @@ export default class ProjectList extends Component {
     })
   }
 
-  getIconForOrder (order) {
-    switch (order) {
-      case Order.ASC:
-        return 'arrow-up'
-      case Order.DESC:
-        return 'arrow-down'
-      default:
-        return 'arrow-down'
-    }
-  }
-
-  getIconForStatus (status) {
-    switch (status) {
-      case 'OK':
-        return 'tick-circle'
-      default:
-        return 'error'
-    }
-  }
-
-  getColorForStatus (status) {
-    switch (status) {
-      case 'OK':
-        return 'success'
-      default:
-        return 'danger'
-    }
-  }
-
   handleFilterChange (value) {
     this.setState({ searchQuery: value })
   }
@@ -125,7 +97,7 @@ export default class ProjectList extends Component {
                 ID
                 <IconButton
                   marginLeft={10}
-                  icon={this.getIconForOrder(this.state.ordering)}
+                  icon={getIconForOrder(this.state.ordering)}
                   appearance='minimal'
                   height={20}
                   onClick={() => this.sort()}
@@ -167,8 +139,8 @@ export default class ProjectList extends Component {
                   maxWidth={80}
                   display='flex' textAlign='center'>
                   <Icon
-                    icon={this.getIconForStatus(p.status)}
-                    color={this.getColorForStatus(p.status)} />
+                    icon={getIconForStatus(p.status)}
+                    color={getColorForStatus(p.status)} />
                 </Table.TextCell>
                 <Table.Cell maxWidth={40}>
                   <IconButton icon='edit' height={24} appearance='minimal' onClick={ev => this.handleEditProject(p)} />

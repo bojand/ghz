@@ -1,4 +1,5 @@
 import { Container } from 'unstated'
+import _ from 'lodash'
 
 const reports = [{
   id: 10,
@@ -67,11 +68,21 @@ async function getReports (existing, sort) {
   })
 }
 
+async function getReport (id) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const p = _.find(reports, p => p.id.toString() === id.toString())
+      resolve(p)
+    }, getRandomInt(800))
+  })
+}
+
 export default class ReportContainer extends Container {
   constructor (props) {
     super(props)
     this.state = {
       reports: [],
+      currentReport: {},
       isFetching: false
     }
   }
@@ -86,6 +97,24 @@ export default class ReportContainer extends Container {
 
       this.setState({
         reports: data,
+        isFetching: false
+      })
+    } catch (err) {
+      console.log('error: ', err)
+    }
+  }
+
+  async fetchReport (id) {
+    this.setState(state => {
+      return {
+        ...state, isFetching: true
+      }
+    })
+
+    try {
+      const r = await getReport(id)
+      this.setState({
+        currentReport: r,
         isFetching: false
       })
     } catch (err) {

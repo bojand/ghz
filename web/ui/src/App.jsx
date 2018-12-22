@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom'
 import ProjectListPage from './components/ProjectListPage'
 import ProjectDetailPage from './components/ProjectDetailPage'
 import ReportPage from './components/ReportPage'
+import ReportDetailPage from './components/ReportDetailPage'
 
 export default class App extends Component {
   render () {
@@ -25,6 +26,7 @@ export default class App extends Component {
             <Route exact path='/' component={Projects} />
             <Route path='/projects/:projectId' component={Projects} />
             <Route path='/projects' component={Projects} />
+            <Route path='/reports/:reportId' component={Reports} />
             <Route path='/reports' component={Reports} />
           </Switch>
         </div>
@@ -44,10 +46,13 @@ function Projects ({ match }) {
   )
 }
 
-function Reports (props) {
+function Reports ({ match }) {
   return (
     <Pane paddingX={24} paddingY={10} marginTop={6} >
-      <ReportPage />
+      {match.params.reportId
+        ? <ReportDetailPage projectId={match.params.reportId} />
+        : <ReportPage />
+      }
     </Pane>
   )
 }

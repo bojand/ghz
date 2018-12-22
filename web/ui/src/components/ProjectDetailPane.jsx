@@ -1,7 +1,12 @@
 import React, { Component } from 'react'
-import { Pane, Heading, Button, Paragraph } from 'evergreen-ui'
+import { Pane, Heading, Button, Paragraph, Icon } from 'evergreen-ui'
 
 import EditProjectDialog from './EditProjectDialog'
+
+import {
+  getIconForStatus,
+  getColorForStatus
+} from './common'
 
 export default class ProjectDetailPane extends Component {
   constructor (props) {
@@ -33,6 +38,10 @@ export default class ProjectDetailPane extends Component {
     return (
       <Pane>
         <Pane display='flex' alignItems='center' marginBottom={10}>
+          <Icon
+            marginRight={16}
+            icon={getIconForStatus(currentProject.status)}
+            color={getColorForStatus(currentProject.status)} />
           <Heading size={500}>{currentProject.name}</Heading>
           {this.state.editProjectVisible
             ? <EditProjectDialog

@@ -1,11 +1,14 @@
 import React, { Component } from 'react'
-import { Table, Heading, Link, IconButton, Pane, Icon } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Icon } from 'evergreen-ui'
+import { Link as RouterLink } from 'react-router-dom'
 
-const Order = {
-  NONE: 'NONE',
-  ASC: 'ASC',
-  DESC: 'DESC'
-}
+import {
+  Order,
+  getIconForOrder,
+  getIconForMetricStatus,
+  getIconForStatus,
+  getColorForStatus
+} from './common'
 
 function formatNano (val) {
   return Number.parseFloat(val / 1000000).toFixed(2)
@@ -43,47 +46,6 @@ export default class ReportList extends Component {
     this.setState({ ordering: order })
   }
 
-  getIconForOrder (order) {
-    switch (order) {
-      case Order.ASC:
-        return 'arrow-up'
-      case Order.DESC:
-        return 'arrow-down'
-      default:
-        return 'arrow-down'
-    }
-  }
-
-  getIconForStatus (status) {
-    switch (status) {
-      case 'OK':
-        return 'tick-circle'
-      default:
-        return 'error'
-    }
-  }
-
-  getIconForMetricStatus (status) {
-    switch (status) {
-      case 'up_better':
-      case 'up_worse':
-        return 'arrow-up'
-      default:
-        return 'arrow-down'
-    }
-  }
-
-  getColorForStatus (status) {
-    switch (status) {
-      case 'OK':
-      case 'up_better':
-      case 'down_better':
-        return 'success'
-      default:
-        return 'danger'
-    }
-  }
-
   render () {
     const { state: { reports } } = this.props.reportStore
 
@@ -100,7 +62,7 @@ export default class ReportList extends Component {
                 Date
                 <IconButton
                   marginLeft={10}
-                  icon={this.getIconForOrder(this.state.ordering)}
+                  icon={getIconForOrder(this.state.ordering)}
                   appearance='minimal'
                   height={20}
                   onClick={() => this.sort()}
@@ -132,8 +94,10 @@ export default class ReportList extends Component {
           <Table.Body>
             {reports.map(p => (
               <Table.Row key={p.id}>
-                <Table.TextCell minWidth={210} >
-                  <Link href='#'>{p.date}</Link>
+                <Table.TextCell minWidth={210} textProps={{ size: 400 }}>
+                  <RouterLink to={`/reports/${p.id}`}>
+                    {p.date}
+                  </RouterLink>
                 </Table.TextCell>
                 <Table.TextCell isNumber>
                   {p.count}
@@ -146,8 +110,8 @@ export default class ReportList extends Component {
                     {formatNano(p.average)} ms
                     <Icon
                       marginLeft={10}
-                      icon={this.getIconForMetricStatus(p.averageStatus)}
-                      color={this.getColorForStatus(p.averageStatus)} />
+                      icon={getIconForMetricStatus(p.averageStatus)}
+                      color={getColorForStatus(p.averageStatus)} />
                   </Pane>
                 </Table.TextCell>
                 <Table.TextCell isNumber>
@@ -155,8 +119,8 @@ export default class ReportList extends Component {
                     {formatNano(p.slowest)} ms
                     <Icon
                       marginLeft={10}
-                      icon={this.getIconForMetricStatus(p.slowestStatus)}
-                      color={this.getColorForStatus(p.slowestStatus)} />
+                      icon={getIconForMetricStatus(p.slowestStatus)}
+                      color={getColorForStatus(p.slowestStatus)} />
                   </Pane>
                 </Table.TextCell>
                 <Table.TextCell isNumber>
@@ -164,8 +128,8 @@ export default class ReportList extends Component {
                     {formatNano(p.fastest)} ms
                     <Icon
                       marginLeft={10}
-                      icon={this.getIconForMetricStatus(p.fastestStatus)}
-                      color={this.getColorForStatus(p.fastestStatus)} />
+                      icon={getIconForMetricStatus(p.fastestStatus)}
+                      color={getColorForStatus(p.fastestStatus)} />
                   </Pane>
                 </Table.TextCell>
                 <Table.TextCell isNumber>
@@ -173,15 +137,15 @@ export default class ReportList extends Component {
                     {p.rps}
                     <Icon
                       marginLeft={10}
-                      icon={this.getIconForMetricStatus(p.rpsStatus)}
-                      color={this.getColorForStatus(p.rpsStatus)} />
+                      icon={getIconForMetricStatus(p.rpsStatus)}
+                      color={getColorForStatus(p.rpsStatus)} />
                   </Pane>
                 </Table.TextCell>
                 <Table.TextCell
                   display='flex' textAlign='center' maxWidth={80}>
                   <Icon
-                    icon={this.getIconForStatus(p.status)}
-                    color={this.getColorForStatus(p.status)} />
+                    icon={getIconForStatus(p.status)}
+                    color={getColorForStatus(p.status)} />
                 </Table.TextCell>
               </Table.Row>
             ))}
