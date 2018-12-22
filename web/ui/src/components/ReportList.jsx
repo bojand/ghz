@@ -16,12 +16,25 @@ export default class ReportList extends Component {
     super(props)
 
     this.state = {
+      projectId: props.projectId || -1,
       ordering: Order.NONE
     }
   }
 
   componentDidMount () {
     this.props.reportStore.fetchReports()
+  }
+
+  componentDidUpdate (prevProps) {
+    if (prevProps.projectId === this.props.projectId &&
+      !this.props.reportStore.isFetching) {
+      const currentList = this.props.reportStore.state.reports
+      const prevList = prevProps.reportStore.state.reports
+
+      if (currentList.length === 0 && prevList.length > 0) {
+        this.props.reportStore.fetchReports()
+      }
+    }
   }
 
   sort () {
@@ -75,7 +88,7 @@ export default class ReportList extends Component {
     const { state: { reports } } = this.props.reportStore
 
     return (
-      <Pane {...this.props}>
+      <Pane>
         <Pane display='flex' alignItems='center' marginTop={6}>
           <Heading size={500}>REPORTS</Heading>
         </Pane>

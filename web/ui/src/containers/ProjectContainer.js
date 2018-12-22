@@ -1,4 +1,5 @@
 import { Container } from 'unstated'
+import _ from 'lodash'
 
 const projects = [
   {
@@ -45,6 +46,15 @@ async function getProjects (existing, sort) {
   })
 }
 
+async function getProject (id) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const p = _.find(projects, p => p.id.toString() === id.toString())
+      resolve(p)
+    }, getRandomInt(800))
+  })
+}
+
 async function createProject (name, description) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -67,7 +77,8 @@ export default class ProjectContainer extends Container {
     super(props)
     this.state = {
       projects: [],
-      isFetching: false
+      isFetching: false,
+      currentProject: {}
     }
   }
 
@@ -91,7 +102,7 @@ export default class ProjectContainer extends Container {
   async createProject (name, desc) {
     this.setState(state => {
       return {
-        ...this.state, isFetching: true
+        ...state, isFetching: true
       }
     })
 
@@ -99,6 +110,24 @@ export default class ProjectContainer extends Container {
       const newProject = await createProject(name, desc)
       this.setState({
         projects: [...this.state.projects, newProject],
+        isFetching: false
+      })
+    } catch (err) {
+      console.log('error: ', err)
+    }
+  }
+
+  async fetchProject (id) {
+    this.setState(state => {
+      return {
+        ...state, isFetching: true
+      }
+    })
+
+    try {
+      const project = await getProject(id)
+      this.setState({
+        currentProject: project,
         isFetching: false
       })
     } catch (err) {

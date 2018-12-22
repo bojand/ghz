@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { Table, Heading, Link, IconButton, Pane, Icon, Button } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Icon, Button } from 'evergreen-ui'
+import { Link as RouterLink } from 'react-router-dom'
 import { filter } from 'fuzzaldrin-plus'
 
 import EditProjectDialog from './EditProjectDialog'
@@ -24,6 +25,17 @@ export default class ProjectList extends Component {
 
   componentDidMount () {
     this.props.projectStore.fetchProjects()
+  }
+
+  componentDidUpdate (prevProps) {
+    if (!this.props.projectStore.isFetching) {
+      const currentList = this.props.projectStore.state.projects
+      const prevList = prevProps.projectStore.state.projects
+
+      if (currentList.length === 0 && prevList.length > 0) {
+        this.props.projectStore.fetchProjects()
+      }
+    }
   }
 
   sort () {
@@ -143,7 +155,9 @@ export default class ProjectList extends Component {
                   {p.id}
                 </Table.TextCell>
                 <Table.TextCell maxWidth={260} textProps={{ size: 400 }}>
-                  <Link href='#'>{p.name}</Link>
+                  <RouterLink to={`/projects/${p.id}`}>
+                    {p.name}
+                  </RouterLink>
                 </Table.TextCell>
                 <Table.TextCell textProps={{ size: 400 }}>{p.description}</Table.TextCell>
                 <Table.TextCell maxWidth={100} isNumber>

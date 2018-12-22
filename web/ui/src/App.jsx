@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
 import { Pane, Tab, Icon, Text } from 'evergreen-ui'
-import { BrowserRouter as Router, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom'
 
-import ProjectPage from './components/ProjectPage'
+import ProjectListPage from './components/ProjectListPage'
+import ProjectDetailPage from './components/ProjectDetailPage'
 import ReportPage from './components/ReportPage'
 
 export default class App extends Component {
@@ -20,19 +21,25 @@ export default class App extends Component {
               <Tab height={36} paddingX={14}><Icon icon='info-sign' marginRight={12} /><Text size={400}>ABOUT</Text></Tab>
             </Pane>
           </Pane>
-          <Route exact path='/' component={Projects} />
-          <Route path='/projects' component={Projects} />
-          <Route path='/reports' component={Reports} />
+          <Switch>
+            <Route exact path='/' component={Projects} />
+            <Route path='/projects/:projectId' component={Projects} />
+            <Route path='/projects' component={Projects} />
+            <Route path='/reports' component={Reports} />
+          </Switch>
         </div>
       </Router>
     )
   }
 }
 
-function Projects (props) {
+function Projects ({ match }) {
   return (
     <Pane paddingX={24} paddingY={10} marginTop={6} >
-      <ProjectPage />
+      {match.params.projectId
+        ? <ProjectDetailPage projectId={match.params.projectId} />
+        : <ProjectListPage />
+      }
     </Pane>
   )
 }

@@ -6,7 +6,7 @@ import ProjectList from './ProjectList'
 
 import ProjectContainer from '../containers/ProjectContainer'
 
-export default class ProjectPage extends Component {
+export default class ProjectListPage extends Component {
   render () {
     return (
       <Provider>
