@@ -41,7 +41,6 @@ export default class EditProjectDialog extends Component {
             this.setState({ ...this.state, isLoading: true })
             await this.props.projectStore.createProject(this.state.name, this.state.description)
             this.setState({ ...this.state, isLoading: false, isShown: false })
-            console.log(this.props.onDone)
             if (typeof this.props.onDone === 'function') {
               this.props.onDone()
             }

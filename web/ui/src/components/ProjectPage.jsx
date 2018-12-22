@@ -6,13 +6,13 @@ import ProjectList from './ProjectList'
 
 import ProjectContainer from '../containers/ProjectContainer'
 
-export default class ProjectPAge extends Component {
+export default class ProjectPage extends Component {
   render () {
     return (
       <Provider>
         <Subscribe to={[ProjectContainer]}>
           {(projectStore) => (
-            <Pane {...this.props}>
+            <Pane>
               <ProjectList projectStore={projectStore} />
             </Pane>
           )}

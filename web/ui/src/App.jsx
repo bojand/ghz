@@ -1,15 +1,58 @@
 import React, { Component } from 'react'
+import { Pane, Tab, Icon, Text } from 'evergreen-ui'
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom'
 
-import TopBar from './components/TopBar'
 import ProjectPage from './components/ProjectPage'
+import ReportsPage from './components/ReportsPage'
 
 export default class App extends Component {
   render () {
     return (
-      <div>
-        <TopBar />
-        <ProjectPage paddingX={24} paddingY={14} marginTop={6} />
-      </div >
+      <Router>
+        <div>
+          <Pane display='flex' paddingBottom={8} marginLeft={8} marginRight={8} borderBottom>
+            <Pane flex={1} alignItems='center' display='flex'>
+              <TabLink to='/projects' linkText='PROJECTS' icon='control' />
+              <TabLink to='/reports' linkText='REPORTS' icon='dashboard' />
+            </Pane>
+            <Pane>
+              <Tab height={36} paddingX={14}><Icon icon='manual' marginRight={12} /><Text size={400}>DOCS</Text></Tab>
+              <Tab height={36} paddingX={14}><Icon icon='info-sign' marginRight={12} /><Text size={400}>ABOUT</Text></Tab>
+            </Pane>
+          </Pane>
+          <Route exact path='/' component={Projects} />
+          <Route path='/projects' component={Projects} />
+          <Route path='/reports' component={Reports} />
+        </div>
+      </Router>
     )
   }
 }
+
+function Projects (props) {
+  return (
+    <Pane paddingX={24} paddingY={10} marginTop={6} >
+      <ProjectPage />
+    </Pane>
+  )
+}
+
+function Reports (props) {
+  return (
+    <Pane paddingX={24} paddingY={10} marginTop={6} >
+      <ReportsPage />
+    </Pane>
+  )
+}
+
+const TabLink = ({ to, linkText, icon, ...rest }) => (
+  <Route
+    path={to}
+    children={({ match }) => (
+      <Link to={to} {...rest} >
+        <Tab height={36} paddingX={14}><Icon icon={icon} marginRight={12} /><Text size={400}>{linkText}</Text></Tab>
+      </Link>
+    )
+    }
+  />
+)

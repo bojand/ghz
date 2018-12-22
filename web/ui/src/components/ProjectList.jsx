@@ -83,7 +83,6 @@ export default class ProjectList extends Component {
   }
 
   handleEditProject (project) {
-    console.log(project)
     this.setState({
       editProject: project,
       editProjectVisible: true
