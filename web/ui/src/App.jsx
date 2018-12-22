@@ -8,7 +8,7 @@ export default class App extends Component {
     return (
       <div>
         <TopBar />
-        <ProjectPage />
+        <ProjectPage paddingX={24} paddingY={14} marginTop={6} />
       </div >
     )
   }
