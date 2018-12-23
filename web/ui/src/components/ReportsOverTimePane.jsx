@@ -15,28 +15,22 @@ export default class ReportsOverTimePane extends Component {
 
   async componentDidMount () {
     await this.props.reportStore.fetchReports()
-    this.setState({
-      reports: this.props.reportStore.state.reports
-    })
   }
 
   async componentDidUpdate (prevProps) {
-    if (prevProps.projectId === this.props.projectId &&
-      !this.props.reportStore.isFetching) {
+    if (prevProps.projectId === this.props.projectId) {
       const currentList = this.props.reportStore.state.reports
       const prevList = prevProps.reportStore.state.reports
 
-      if (currentList.length === 0 && prevList.length > 0) {
+      if ((currentList.length === 0 && prevList.length > 0) &&
+        !this.props.reportStore.state.isFetching) {
         await this.props.reportStore.fetchReports()
-        this.setState({
-          reports: this.props.reportStore.state.reports
-        })
       }
     }
   }
 
   render () {
-    const reports = this.state.reports
+    const reports = this.props.reportStore.state.reports
     const hasReports = reports && reports.length > 0
 
     return (

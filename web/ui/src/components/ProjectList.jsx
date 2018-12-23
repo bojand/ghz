@@ -8,7 +8,7 @@ import {
   getIconForOrder,
   getIconForStatus,
   getColorForStatus
-} from './common'
+} from '../lib/common'
 
 import EditProjectDialog from './EditProjectDialog'
 
@@ -29,7 +29,7 @@ export default class ProjectList extends Component {
   }
 
   componentDidUpdate (prevProps) {
-    if (!this.props.projectStore.isFetching) {
+    if (!this.props.projectStore.state.isFetching) {
       const currentList = this.props.projectStore.state.projects
       const prevList = prevProps.projectStore.state.projects
 

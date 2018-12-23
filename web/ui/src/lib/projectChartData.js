@@ -30,7 +30,6 @@ function createChartData (reports) {
 }
 
 function createLineChart (reports) {
-  console.log(reports)
   if (!reports) {
     return
   }

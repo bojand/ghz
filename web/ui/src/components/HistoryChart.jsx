@@ -4,7 +4,7 @@ import { Line } from 'react-chartjs-2'
 
 import {
   createLineChart
-} from './projectChartData'
+} from '../lib/projectChartData'
 
 export default class HistoryChart extends Component {
   constructor (props) {
@@ -14,14 +14,10 @@ export default class HistoryChart extends Component {
   }
 
   componentDidMount () {
-    console.log('HistoryChart: componentDidMount')
     this.config = createLineChart(this.props.reports)
   }
 
   componentDidUpdate (prevProps) {
-    console.log('HistoryChart: componentDidUpdate')
-    console.log(prevProps)
-    console.log(this.props)
     if (!this.config ||
       (prevProps.projectId !== this.props.projectId)) {
       this.config = createLineChart(this.props.reports)
@@ -29,7 +25,6 @@ export default class HistoryChart extends Component {
   }
 
   render () {
-    console.log(this.config)
     if (!this.config) {
       return (
         <Pane />

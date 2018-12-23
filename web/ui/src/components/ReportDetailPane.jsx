@@ -4,7 +4,7 @@ import { Pane, Heading, Icon } from 'evergreen-ui'
 import {
   getIconForStatus,
   getColorForStatus
-} from './common'
+} from '../lib/common'
 
 export default class ProjectDetailPane extends Component {
   constructor (props) {
@@ -20,8 +20,8 @@ export default class ProjectDetailPane extends Component {
   }
 
   componentDidUpdate (prevProps) {
-    if (!this.props.reportStore.isFetching &&
-      this.props.reportId !== prevProps.reportId) {
+    if (!this.props.reportStore.state.isFetching &&
+      (this.props.reportId !== prevProps.reportId)) {
       this.props.reportStore.fetchReport(this.props.reportId)
     }
   }

@@ -9,7 +9,7 @@ import {
   getIconForStatus,
   getColorForStatus,
   formatNano
-} from './common'
+} from '../lib/common'
 
 export default class ReportList extends Component {
   constructor (props) {
@@ -26,8 +26,8 @@ export default class ReportList extends Component {
   }
 
   componentDidUpdate (prevProps) {
-    if (prevProps.projectId === this.props.projectId &&
-      !this.props.reportStore.isFetching) {
+    if ((prevProps.projectId === this.props.projectId) &&
+      !this.props.reportStore.state.isFetching) {
       const currentList = this.props.reportStore.state.reports
       const prevList = prevProps.reportStore.state.reports
 

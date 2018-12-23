@@ -7,7 +7,7 @@ import EditProjectDialog from './EditProjectDialog'
 import {
   getIconForStatus,
   getColorForStatus
-} from './common'
+} from '../lib/common'
 
 export default class ProjectDetailPane extends Component {
   constructor (props) {
@@ -24,8 +24,8 @@ export default class ProjectDetailPane extends Component {
   }
 
   componentDidUpdate (prevProps) {
-    if (!this.props.projectStore.isFetching &&
-      this.props.projectId !== prevProps.projectId) {
+    if (!this.props.projectStore.state.isFetching &&
+      (this.props.projectId !== prevProps.projectId)) {
       this.props.projectStore.fetchProject(this.props.projectId)
     }
   }
