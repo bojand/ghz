@@ -1,18 +1,19 @@
 import React, { Component } from 'react'
-import { Pane, Tab, Icon, Text } from 'evergreen-ui'
+import { Pane, Tab, Icon, Text, Strong, Link as ALink, Paragraph } from 'evergreen-ui'
 import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom'
 
 import ProjectListPage from './components/ProjectListPage'
 import ProjectDetailPage from './components/ProjectDetailPage'
 import ReportPage from './components/ReportPage'
 import ReportDetailPage from './components/ReportDetailPage'
+import Footer from './components/Footer'
 
 export default class App extends Component {
   render () {
     return (
       <Router>
-        <div>
-          <Pane display='flex' paddingBottom={8} marginLeft={8} marginRight={8} borderBottom>
+        <div style={{ marginTop: 8 }}>
+          <Pane display='flex' paddingBottom={8} marginLeft={16} marginRight={16} borderBottom>
             <Pane flex={1} alignItems='center' display='flex'>
               <TabLink to='/projects' linkText='PROJECTS' icon='control' />
               <TabLink to='/reports' linkText='REPORTS' icon='dashboard' />
@@ -29,6 +30,7 @@ export default class App extends Component {
             <Route path='/reports/:reportId' component={Reports} />
             <Route path='/reports' component={Reports} />
           </Switch>
+          <Footer />
         </div>
       </Router>
     )
@@ -37,7 +39,7 @@ export default class App extends Component {
 
 function Projects ({ match }) {
   return (
-    <Pane paddingX={24} paddingY={10} marginTop={6} >
+    <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
       {match.params.projectId
         ? <ProjectDetailPage projectId={match.params.projectId} />
         : <ProjectListPage />
@@ -48,7 +50,7 @@ function Projects ({ match }) {
 
 function Reports ({ match }) {
   return (
-    <Pane paddingX={24} paddingY={10} marginTop={6} >
+    <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
       {match.params.reportId
         ? <ReportDetailPage projectId={match.params.reportId} />
         : <ReportPage />
