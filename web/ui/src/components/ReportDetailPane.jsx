@@ -52,7 +52,7 @@ export default class ProjectDetailPane extends Component {
         </Pane>
 
         <Pane display='flex'>
-          <Pane flex={1} paddingX={16} paddingY={16}>
+          <Pane flex={1} paddingY={16}>
             <Heading>
               Summary
             </Heading>
@@ -109,7 +109,7 @@ export default class ProjectDetailPane extends Component {
           </Pane>
         </Pane>
 
-        <Pane paddingX={20} marginTop={24} marginBottom={24}>
+        <Pane marginTop={24} marginBottom={24}>
           <Pane display='flex' alignItems='center' marginTop={6}>
             <Heading size={500}>HISTOGTAM</Heading>
           </Pane>
@@ -117,6 +117,29 @@ export default class ProjectDetailPane extends Component {
             <HistogramChart report={currentReport} />
           </Pane>
         </Pane >
+
+        <Pane display='flex'>
+          <Pane flex={1} paddingY={16} maxWidth={230}>
+            <Heading>
+              Latency Distribution
+            </Heading>
+            {currentReport.latencyDistribution.map(p => (
+              <Table.Row>
+                <Table.TextCell maxWidth={60}>
+                  <Strong>{p.percentage} %</Strong>
+                </Table.TextCell>
+                <Table.TextCell isNumber>
+                  {formatNano(p.latency)} ms
+                </Table.TextCell>
+              </Table.Row>
+            ))}
+          </Pane>
+          <Pane flex={2} paddingY={16}>
+            <Heading>
+              Status Code Distribution
+            </Heading>
+          </Pane>
+        </Pane>
       </Pane>
     )
   }

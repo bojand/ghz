@@ -33,14 +33,19 @@ export default class ReportsOverTimePane extends Component {
     const reports = this.props.reportStore.state.reports
     const hasReports = reports && reports.length > 0
 
+    if (!hasReports) {
+      return (<Pane />)
+    }
+
     return (
-      <Pane>
+      <Pane marginTop={24} marginBottom={24}>
         <Pane display='flex' alignItems='center' marginTop={6}>
           <Heading size={500}>HISTORY</Heading>
         </Pane>
-        {hasReports && <HistoryChart
+        <Pane paddingX={20} paddingTop={20}><HistoryChart
           reports={reports}
-          projectId={this.state.projectId} />}
+          projectId={this.state.projectId} />
+        </Pane>
       </Pane>
     )
   }
