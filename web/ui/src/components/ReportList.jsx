@@ -5,7 +5,6 @@ import { Link as RouterLink } from 'react-router-dom'
 import {
   Order,
   getIconForOrder,
-  getIconForMetricStatus,
   getIconForStatus,
   getColorForStatus,
   formatNano
@@ -84,7 +83,7 @@ export default class ReportList extends Component {
             <Table.TextHeaderCell textProps={{ size: 400 }}>
               RPS
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell maxWidth={80}>
+            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               Status
             </Table.TextHeaderCell>
           </Table.Head>
@@ -96,50 +95,26 @@ export default class ReportList extends Component {
                     {p.date}
                   </RouterLink>
                 </Table.TextCell>
-                <Table.TextCell isNumber maxWidth={80}>
+                <Table.TextCell isNumber maxWidth={100}>
                   {p.count}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
                   {formatNano(p.total)} ms
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  <Pane display='flex'>
-                    {formatNano(p.average)} ms
-                    <Icon
-                      marginLeft={10}
-                      icon={getIconForMetricStatus(p.averageStatus)}
-                      color={getColorForStatus(p.averageStatus)} />
-                  </Pane>
+                  {formatNano(p.average)} ms
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  <Pane display='flex'>
-                    {formatNano(p.slowest)} ms
-                    <Icon
-                      marginLeft={10}
-                      icon={getIconForMetricStatus(p.slowestStatus)}
-                      color={getColorForStatus(p.slowestStatus)} />
-                  </Pane>
+                  {formatNano(p.slowest)} ms
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  <Pane display='flex'>
-                    {formatNano(p.fastest)} ms
-                    <Icon
-                      marginLeft={10}
-                      icon={getIconForMetricStatus(p.fastestStatus)}
-                      color={getColorForStatus(p.fastestStatus)} />
-                  </Pane>
+                  {formatNano(p.fastest)} ms
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  <Pane display='flex'>
-                    {p.rps}
-                    <Icon
-                      marginLeft={10}
-                      icon={getIconForMetricStatus(p.rpsStatus)}
-                      color={getColorForStatus(p.rpsStatus)} />
-                  </Pane>
+                  {p.rps}
                 </Table.TextCell>
                 <Table.TextCell
-                  display='flex' textAlign='center' maxWidth={100}>
+                  display='flex' textAlign='center' maxWidth={80}>
                   <Icon
                     icon={getIconForStatus(p.status)}
                     color={getColorForStatus(p.status)} />

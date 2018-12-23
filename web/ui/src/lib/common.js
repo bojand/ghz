@@ -27,21 +27,9 @@ function getIconForStatus (status) {
 function getColorForStatus (status) {
   switch (status) {
     case 'OK':
-    case 'up_better':
-    case 'down_better':
       return 'success'
     default:
       return 'danger'
-  }
-}
-
-function getIconForMetricStatus (status) {
-  switch (status) {
-    case 'up_better':
-    case 'up_worse':
-      return 'arrow-up'
-    default:
-      return 'arrow-down'
   }
 }
 
@@ -66,7 +54,6 @@ function pretty (value) {
 }
 
 module.exports = {
-  getIconForMetricStatus,
   getIconForOrder,
   getIconForStatus,
   getColorForStatus,

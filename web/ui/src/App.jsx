@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Pane, Tab, Icon, Text, Strong, Link as ALink, Paragraph } from 'evergreen-ui'
+import { Pane, Tab, Icon, Text } from 'evergreen-ui'
 import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom'
 
 import ProjectListPage from './components/ProjectListPage'

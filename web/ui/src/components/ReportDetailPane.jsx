@@ -2,9 +2,6 @@ import React, { Component } from 'react'
 import { Pane, Heading, Icon, Pre, Strong, Table } from 'evergreen-ui'
 
 import {
-  Order,
-  getIconForOrder,
-  getIconForMetricStatus,
   getIconForStatus,
   getColorForStatus,
   formatNano,
@@ -74,49 +71,25 @@ export default class ProjectDetailPane extends Component {
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Average</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  <Pane display='flex'>
-                    {formatNano(currentReport.average)} ms
-                    <Icon
-                      marginLeft={10}
-                      icon={getIconForMetricStatus(currentReport.averageStatus)}
-                      color={getColorForStatus(currentReport.averageStatus)} />
-                  </Pane>
+                  {formatNano(currentReport.average)} ms
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Slowest</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  <Pane display='flex'>
-                    {formatNano(currentReport.slowest)} ms
-                    <Icon
-                      marginLeft={10}
-                      icon={getIconForMetricStatus(currentReport.slowestStatus)}
-                      color={getColorForStatus(currentReport.slowestStatus)} />
-                  </Pane>
+                  {formatNano(currentReport.slowest)} ms
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Fastest</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  <Pane display='flex'>
-                    {formatNano(currentReport.fastest)} ms
-                    <Icon
-                      marginLeft={10}
-                      icon={getIconForMetricStatus(currentReport.fastestStatus)}
-                      color={getColorForStatus(currentReport.fastestStatus)} />
-                  </Pane>
+                  {formatNano(currentReport.fastest)} ms
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>RPS</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  <Pane display='flex'>
-                    {currentReport.rps}
-                    <Icon
-                      marginLeft={10}
-                      icon={getIconForMetricStatus(currentReport.rpsStatus)}
-                      color={getColorForStatus(currentReport.rpsStatus)} />
-                  </Pane>
+                  {currentReport.rps}
                 </Table.TextCell>
               </Table.Row>
             </Pane>
