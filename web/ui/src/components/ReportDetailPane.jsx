@@ -8,6 +8,8 @@ import {
   pretty
 } from '../lib/common'
 
+import HistogramChart from './HistogramChart'
+
 export default class ProjectDetailPane extends Component {
   constructor (props) {
     super(props)
@@ -31,7 +33,7 @@ export default class ProjectDetailPane extends Component {
   render () {
     const { state: { currentReport } } = this.props.reportStore
 
-    if (!currentReport) {
+    if (!currentReport || !currentReport.id) {
       return (<Pane />)
     }
 
@@ -48,6 +50,7 @@ export default class ProjectDetailPane extends Component {
             {currentReport.name || `REPORT: ${currentReport.id}`}
           </Heading>
         </Pane>
+
         <Pane display='flex'>
           <Pane flex={1} paddingX={16} paddingY={16}>
             <Heading>
@@ -103,10 +106,17 @@ export default class ProjectDetailPane extends Component {
                 {pretty(currentReport.options)}
               </Pre>
             </Pane>
-
           </Pane>
-
         </Pane>
+
+        <Pane paddingX={20} marginTop={24} marginBottom={24}>
+          <Pane display='flex' alignItems='center' marginTop={6}>
+            <Heading size={500}>HISTOGTAM</Heading>
+          </Pane>
+          <Pane paddingX={20} paddingY={20}>
+            <HistogramChart report={currentReport} />
+          </Pane>
+        </Pane >
       </Pane>
     )
   }

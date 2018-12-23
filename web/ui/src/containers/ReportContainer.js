@@ -46,7 +46,94 @@ const reports = [{
     'binary': false,
     'insecure': true,
     'CPUs': 8
-  }
+  },
+  'latencyDistribution': [
+    {
+      'percentage': 10,
+      'latency': 28213186
+    },
+    {
+      'percentage': 25,
+      'latency': 29888900
+    },
+    {
+      'percentage': 50,
+      'latency': 31946130
+    },
+    {
+      'percentage': 75,
+      'latency': 34774814
+    },
+    {
+      'percentage': 90,
+      'latency': 35910250
+    },
+    {
+      'percentage': 95,
+      'latency': 57698757
+    },
+    {
+      'percentage': 99,
+      'latency': 62984994
+    }
+  ],
+  'histogram': [
+    {
+      'mark': 0.02540428,
+      'count': 1,
+      'frequency': 0.005235602094240838
+    },
+    {
+      'mark': 0.0291623514,
+      'count': 34,
+      'frequency': 0.17801047120418848
+    },
+    {
+      'mark': 0.0329204228,
+      'count': 79,
+      'frequency': 0.41361256544502617
+    },
+    {
+      'mark': 0.0366784942,
+      'count': 61,
+      'frequency': 0.3193717277486911
+    },
+    {
+      'mark': 0.0404365656,
+      'count': 6,
+      'frequency': 0.031413612565445025
+    },
+    {
+      'mark': 0.044194637,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0479527084,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0517107798,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0554688512,
+      'count': 1,
+      'frequency': 0.005235602094240838
+    },
+    {
+      'mark': 0.0592269226,
+      'count': 5,
+      'frequency': 0.02617801047120419
+    },
+    {
+      'mark': 0.062984994,
+      'count': 4,
+      'frequency': 0.020942408376963352
+    }
+  ]
 }, {
   id: 20,
   date: date2.toISOString(),
@@ -83,7 +170,94 @@ const reports = [{
     'binary': false,
     'insecure': true,
     'CPUs': 8
-  }
+  },
+  'latencyDistribution': [
+    {
+      'percentage': 10,
+      'latency': 28213186
+    },
+    {
+      'percentage': 25,
+      'latency': 29888900
+    },
+    {
+      'percentage': 50,
+      'latency': 31946130
+    },
+    {
+      'percentage': 75,
+      'latency': 34774814
+    },
+    {
+      'percentage': 90,
+      'latency': 35910250
+    },
+    {
+      'percentage': 95,
+      'latency': 57698757
+    },
+    {
+      'percentage': 99,
+      'latency': 62984994
+    }
+  ],
+  'histogram': [
+    {
+      'mark': 0.02540428,
+      'count': 1,
+      'frequency': 0.005235602094240838
+    },
+    {
+      'mark': 0.0291623514,
+      'count': 34,
+      'frequency': 0.17801047120418848
+    },
+    {
+      'mark': 0.0329204228,
+      'count': 79,
+      'frequency': 0.41361256544502617
+    },
+    {
+      'mark': 0.0366784942,
+      'count': 61,
+      'frequency': 0.3193717277486911
+    },
+    {
+      'mark': 0.0404365656,
+      'count': 6,
+      'frequency': 0.031413612565445025
+    },
+    {
+      'mark': 0.044194637,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0479527084,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0517107798,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0554688512,
+      'count': 1,
+      'frequency': 0.005235602094240838
+    },
+    {
+      'mark': 0.0592269226,
+      'count': 5,
+      'frequency': 0.02617801047120419
+    },
+    {
+      'mark': 0.062984994,
+      'count': 4,
+      'frequency': 0.020942408376963352
+    }
+  ]
 }, {
   id: 22,
   date: date3.toISOString(),
@@ -120,7 +294,94 @@ const reports = [{
     'binary': false,
     'insecure': true,
     'CPUs': 8
-  }
+  },
+  'latencyDistribution': [
+    {
+      'percentage': 10,
+      'latency': 28213186
+    },
+    {
+      'percentage': 25,
+      'latency': 29888900
+    },
+    {
+      'percentage': 50,
+      'latency': 31946130
+    },
+    {
+      'percentage': 75,
+      'latency': 34774814
+    },
+    {
+      'percentage': 90,
+      'latency': 35910250
+    },
+    {
+      'percentage': 95,
+      'latency': 57698757
+    },
+    {
+      'percentage': 99,
+      'latency': 62984994
+    }
+  ],
+  'histogram': [
+    {
+      'mark': 0.02540428,
+      'count': 1,
+      'frequency': 0.005235602094240838
+    },
+    {
+      'mark': 0.0291623514,
+      'count': 34,
+      'frequency': 0.17801047120418848
+    },
+    {
+      'mark': 0.0329204228,
+      'count': 79,
+      'frequency': 0.41361256544502617
+    },
+    {
+      'mark': 0.0366784942,
+      'count': 61,
+      'frequency': 0.3193717277486911
+    },
+    {
+      'mark': 0.0404365656,
+      'count': 6,
+      'frequency': 0.031413612565445025
+    },
+    {
+      'mark': 0.044194637,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0479527084,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0517107798,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0554688512,
+      'count': 1,
+      'frequency': 0.005235602094240838
+    },
+    {
+      'mark': 0.0592269226,
+      'count': 5,
+      'frequency': 0.02617801047120419
+    },
+    {
+      'mark': 0.062984994,
+      'count': 4,
+      'frequency': 0.020942408376963352
+    }
+  ]
 }, {
   id: 24,
   date: date4.toISOString(),
@@ -157,7 +418,94 @@ const reports = [{
     'binary': false,
     'insecure': true,
     'CPUs': 8
-  }
+  },
+  'latencyDistribution': [
+    {
+      'percentage': 10,
+      'latency': 28213186
+    },
+    {
+      'percentage': 25,
+      'latency': 29888900
+    },
+    {
+      'percentage': 50,
+      'latency': 31946130
+    },
+    {
+      'percentage': 75,
+      'latency': 34774814
+    },
+    {
+      'percentage': 90,
+      'latency': 35910250
+    },
+    {
+      'percentage': 95,
+      'latency': 57698757
+    },
+    {
+      'percentage': 99,
+      'latency': 62984994
+    }
+  ],
+  'histogram': [
+    {
+      'mark': 0.02540428,
+      'count': 1,
+      'frequency': 0.005235602094240838
+    },
+    {
+      'mark': 0.0291623514,
+      'count': 34,
+      'frequency': 0.17801047120418848
+    },
+    {
+      'mark': 0.0329204228,
+      'count': 79,
+      'frequency': 0.41361256544502617
+    },
+    {
+      'mark': 0.0366784942,
+      'count': 61,
+      'frequency': 0.3193717277486911
+    },
+    {
+      'mark': 0.0404365656,
+      'count': 6,
+      'frequency': 0.031413612565445025
+    },
+    {
+      'mark': 0.044194637,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0479527084,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0517107798,
+      'count': 0,
+      'frequency': 0
+    },
+    {
+      'mark': 0.0554688512,
+      'count': 1,
+      'frequency': 0.005235602094240838
+    },
+    {
+      'mark': 0.0592269226,
+      'count': 5,
+      'frequency': 0.02617801047120419
+    },
+    {
+      'mark': 0.062984994,
+      'count': 4,
+      'frequency': 0.020942408376963352
+    }
+  ]
 }]
 
 function getRandomInt (max) {
