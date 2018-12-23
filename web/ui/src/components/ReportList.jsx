@@ -66,7 +66,7 @@ export default class ReportList extends Component {
                 />
               </Pane>
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell textProps={{ size: 400 }}>
+            <Table.TextHeaderCell textProps={{ size: 400 }} maxWidth={100}>
               Count
             </Table.TextHeaderCell>
             <Table.TextHeaderCell textProps={{ size: 400 }}>
@@ -96,7 +96,7 @@ export default class ReportList extends Component {
                     {p.date}
                   </RouterLink>
                 </Table.TextCell>
-                <Table.TextCell isNumber>
+                <Table.TextCell isNumber maxWidth={80}>
                   {p.count}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
@@ -139,7 +139,7 @@ export default class ReportList extends Component {
                   </Pane>
                 </Table.TextCell>
                 <Table.TextCell
-                  display='flex' textAlign='center' maxWidth={80}>
+                  display='flex' textAlign='center' maxWidth={100}>
                   <Icon
                     icon={getIconForStatus(p.status)}
                     color={getColorForStatus(p.status)} />

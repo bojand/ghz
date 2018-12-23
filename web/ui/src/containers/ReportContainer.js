@@ -31,7 +31,22 @@ const reports = [{
   statusCodeDistribution: {
     'OK': 191
   },
-  status: 'FAIL'
+  status: 'FAIL',
+  'options': {
+    'call': 'helloworld.Greeter.SayHello',
+    'proto': '../../testdata/greeter.proto',
+    'host': '0.0.0.0:50051',
+    'n': 200,
+    'c': 50,
+    'timeout': 20000000000,
+    'dialTimeout': 10000000000,
+    'data': {
+      'name': 'Joe'
+    },
+    'binary': false,
+    'insecure': true,
+    'CPUs': 8
+  }
 }, {
   id: 20,
   date: date2.toISOString(),
@@ -53,7 +68,22 @@ const reports = [{
   statusCodeDistribution: {
     'OK': 191
   },
-  status: 'FAIL'
+  status: 'FAIL',
+  'options': {
+    'call': 'helloworld.Greeter.SayHello',
+    'proto': '../../testdata/greeter.proto',
+    'host': '0.0.0.0:50051',
+    'n': 200,
+    'c': 50,
+    'timeout': 20000000000,
+    'dialTimeout': 10000000000,
+    'data': {
+      'name': 'Joe'
+    },
+    'binary': false,
+    'insecure': true,
+    'CPUs': 8
+  }
 }, {
   id: 22,
   date: date3.toISOString(),
@@ -75,7 +105,22 @@ const reports = [{
   statusCodeDistribution: {
     'OK': 191
   },
-  status: 'OK'
+  status: 'OK',
+  'options': {
+    'call': 'helloworld.Greeter.SayHello',
+    'proto': '../../testdata/greeter.proto',
+    'host': '0.0.0.0:50051',
+    'n': 200,
+    'c': 50,
+    'timeout': 20000000000,
+    'dialTimeout': 10000000000,
+    'data': {
+      'name': 'Joe'
+    },
+    'binary': false,
+    'insecure': true,
+    'CPUs': 8
+  }
 }, {
   id: 24,
   date: date4.toISOString(),
@@ -97,7 +142,22 @@ const reports = [{
   statusCodeDistribution: {
     'OK': 191
   },
-  status: 'OK'
+  status: 'OK',
+  'options': {
+    'call': 'helloworld.Greeter.SayHello',
+    'proto': '../../testdata/greeter.proto',
+    'host': '0.0.0.0:50051',
+    'n': 200,
+    'c': 50,
+    'timeout': 20000000000,
+    'dialTimeout': 10000000000,
+    'data': {
+      'name': 'Joe'
+    },
+    'binary': false,
+    'insecure': true,
+    'CPUs': 8
+  }
 }]
 
 function getRandomInt (max) {

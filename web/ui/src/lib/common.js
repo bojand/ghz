@@ -57,6 +57,14 @@ function formatNano (val) {
   return Number.parseFloat(val / 1000000).toFixed(2)
 }
 
+function pretty (value) {
+  let v = value
+  if (typeof v === 'string') {
+    v = JSON.parse(value)
+  }
+  return JSON.stringify(v, null, 2)
+}
+
 module.exports = {
   getIconForMetricStatus,
   getIconForOrder,
@@ -64,5 +72,6 @@ module.exports = {
   getColorForStatus,
   Order,
   formatFloat,
-  formatNano
+  formatNano,
+  pretty
 }
