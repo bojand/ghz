@@ -14,7 +14,7 @@ const reports = [{
   id: 10,
   date: date1.toISOString(),
   projectId: 11,
-  count: 100,
+  count: 200,
   total: 172959832,
   average: 31877742,
   averageStatus: 'down_better',
