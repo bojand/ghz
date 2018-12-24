@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Pane, Heading, Icon, Pre, Strong, Table } from 'evergreen-ui'
+import { Pane, Heading, Icon, Pre, Strong, Table, Tooltip, Text, Paragraph } from 'evergreen-ui'
 import _ from 'lodash'
 
 import {
@@ -10,6 +10,7 @@ import {
 } from '../lib/common'
 
 import HistogramChart from './HistogramChart'
+import StatusCodeChart from './ReportDistChart'
 
 export default class ProjectDetailPane extends Component {
   constructor (props) {
@@ -51,9 +52,12 @@ export default class ProjectDetailPane extends Component {
             {currentReport.name || `REPORT: ${currentReport.id}`}
           </Heading>
         </Pane>
+        <Text>
+          {currentReport.date}
+        </Text>
 
-        <Pane display='flex'>
-          <Pane flex={1} paddingY={16} minWidth={260} maxWidth={260}>
+        <Pane display='flex' paddingY={20}>
+          <Pane flex={1} minWidth={260} maxWidth={260}>
             <Heading>
               Summary
             </Heading>
@@ -98,7 +102,7 @@ export default class ProjectDetailPane extends Component {
               </Table.Row>
             </Pane>
           </Pane>
-          <Pane flex={2} paddingY={16} marginLeft={20}>
+          <Pane flex={2} marginLeft={20}>
             <Heading>
               Options
             </Heading>
@@ -115,7 +119,7 @@ export default class ProjectDetailPane extends Component {
             <Pane>
               <Heading size={500}>Histogram</Heading>
             </Pane>
-            <Pane paddingY={20}>
+            <Pane marginTop={20}>
               <HistogramChart report={currentReport} />
             </Pane>
           </Pane>
@@ -138,24 +142,70 @@ export default class ProjectDetailPane extends Component {
           </Pane>
         </Pane>
 
-        <Pane display='flex'>
-          <Pane flex={1} paddingY={16} paddingX={16} minWidth={250} maxWidth={250}>
-            <Heading>
-              Status Code Distribution
-            </Heading>
-            {_.map(currentReport.statusCodeDistribution, (v, k) => (
-              <Table.Row>
-                <Table.TextCell maxWidth={60}>
-                  <Strong>{k.toString()}</Strong>
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {v.toString() + ' (' + Number.parseFloat((v / currentReport.count) * 100).toFixed(2) + ' %)'}
-                </Table.TextCell>
-              </Table.Row>
-            ))}
+        <Pane>
+          <Heading>
+            Status Code Distribution
+          </Heading>
+          <Pane display='flex' marginTop={16} alignItems='left'>
+            <Pane minWidth={400} maxWidth={500} alignItems='left'>
+              <StatusCodeChart
+                report={currentReport}
+                label='Status Code'
+                dataMapKey='statusCodeDistribution'
+              />
+            </Pane>
+            <Pane flex={1} minWidth={250} maxWidth={250} marginLeft={16}>
+              {_.map(currentReport.statusCodeDistribution, (v, k) => (
+                <Table.Row>
+                  <Table.TextCell maxWidth={60}>
+                    <Strong>{k.toString()}</Strong>
+                  </Table.TextCell>
+                  <Table.TextCell isNumber>
+                    {v.toString()}
+                    <Tooltip content='Percent of all calls'>
+                      <Text marginLeft={8} textDecoration='underline dotted'>
+                        {'(' + Number.parseFloat((v / currentReport.count) * 100).toFixed(2) + ' %)'}
+                      </Text>
+                    </Tooltip>
+                  </Table.TextCell>
+                </Table.Row>
+              ))}
+            </Pane>
           </Pane>
-          <Pane flex={3} paddingY={16} />
         </Pane>
+
+        <Pane marginTop={30}>
+          <Heading>
+            Error Distribution
+          </Heading>
+          <Pane display='flex' marginTop={16} alignItems='left'>
+            <Pane minWidth={400} maxWidth={500} alignItems='left'>
+              <StatusCodeChart
+                report={currentReport}
+                label='Error Distribution'
+                dataMapKey='errorDistribution'
+              />
+            </Pane>
+            <Pane flex={1} marginLeft={16}>
+              {_.map(currentReport.errorDistribution, (v, k) => (
+                <Table.Row>
+                  <Table.TextCell textProps={{ size: 400 }}>
+                    {k.toString()}
+                  </Table.TextCell>
+                  <Table.TextCell isNumber maxWidth={120}>
+                    {v.toString()}
+                    <Tooltip content='Percent of all calls'>
+                      <Text marginLeft={8} textDecoration='underline dotted'>
+                        {'(' + Number.parseFloat((v / currentReport.count) * 100).toFixed(2) + ' %)'}
+                      </Text>
+                    </Tooltip>
+                  </Table.TextCell>
+                </Table.Row>
+              ))}
+            </Pane>
+          </Pane>
+        </Pane>
+
       </Pane>
     )
   }

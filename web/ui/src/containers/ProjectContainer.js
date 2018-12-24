@@ -1,6 +1,8 @@
 import { Container } from 'unstated'
 import _ from 'lodash'
 
+import { getRandomInt } from '../lib/common'
+
 const projects = [
   {
     id: 11,
@@ -24,10 +26,6 @@ const projects = [
     status: 'OK'
   }
 ]
-
-function getRandomInt (max) {
-  return Math.floor(Math.random() * Math.floor(max))
-}
 
 async function getProjects (existing, sort) {
   return new Promise((resolve, reject) => {

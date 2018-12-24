@@ -53,6 +53,10 @@ function pretty (value) {
   return JSON.stringify(v, null, 2)
 }
 
+function getRandomInt (max) {
+  return Math.floor(Math.random() * Math.floor(max))
+}
+
 module.exports = {
   getIconForOrder,
   getIconForStatus,
@@ -60,5 +64,6 @@ module.exports = {
   Order,
   formatFloat,
   formatNano,
-  pretty
+  pretty,
+  getRandomInt
 }

@@ -1,6 +1,8 @@
 import { Container } from 'unstated'
 import _ from 'lodash'
 
+import { getRandomInt } from '../lib/common'
+
 const date1 = new Date()
 const date2 = new Date()
 const date3 = new Date()
@@ -507,10 +509,6 @@ const reports = [{
     }
   ]
 }]
-
-function getRandomInt (max) {
-  return Math.floor(Math.random() * Math.floor(max))
-}
 
 async function getReports (existing, sort) {
   return new Promise((resolve, reject) => {

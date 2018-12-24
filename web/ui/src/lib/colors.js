@@ -1,3 +1,5 @@
+import { getRandomInt } from '../lib/common'
+
 const colors = {
   red: 'rgb(255, 99, 132)',
   orange: 'rgb(255, 159, 64)',
@@ -8,6 +10,15 @@ const colors = {
   grey: 'rgb(201, 203, 207)'
 }
 
+function randomColor () {
+  const r = getRandomInt(255)
+  const g = getRandomInt(255)
+  const b = getRandomInt(255)
+
+  return `rgb(${r}, ${g}, ${b})`
+}
+
 module.exports = {
-  colors
+  colors,
+  randomColor
 }
