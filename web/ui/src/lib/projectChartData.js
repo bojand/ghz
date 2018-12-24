@@ -69,7 +69,7 @@ function createLineChart (reports) {
   const datasets = [
     {
       label: 'Average',
-      backgroundColor: colors.blue,
+      backgroundColor: colors.skyBlue,
       borderColor: colors.blue,
       fill: false,
       data: avgData,

@@ -41,6 +41,9 @@ export default class ProjectDetailPane extends Component {
 
     const maxWidthLabel = 100
 
+    const date = new Date(currentReport.date + '')
+    const dateStr = date.toLocaleString()
+
     return (
       <Pane>
         <Pane display='flex' marginTop={6} marginBottom={10}>
@@ -53,7 +56,7 @@ export default class ProjectDetailPane extends Component {
           </Heading>
         </Pane>
         <Text>
-          {currentReport.date}
+          {dateStr}
         </Text>
 
         <Pane display='flex' paddingY={20}>
@@ -154,11 +157,11 @@ export default class ProjectDetailPane extends Component {
                 dataMapKey='statusCodeDistribution'
               />
             </Pane>
-            <Pane flex={1} minWidth={250} maxWidth={250} marginLeft={16}>
+            <Pane flex={1} marginLeft={16}>
               {_.map(currentReport.statusCodeDistribution, (v, k) => (
-                <Table.Row>
-                  <Table.TextCell maxWidth={60}>
-                    <Strong>{k.toString()}</Strong>
+                <Table.Row key={k}>
+                  <Table.TextCell textProps={{ size: 400 }} minWidth={200}>
+                    {k.toString().toUpperCase()}
                   </Table.TextCell>
                   <Table.TextCell isNumber>
                     {v.toString()}
@@ -171,6 +174,7 @@ export default class ProjectDetailPane extends Component {
                 </Table.Row>
               ))}
             </Pane>
+            <Pane flex={1} />
           </Pane>
         </Pane>
 
@@ -188,7 +192,7 @@ export default class ProjectDetailPane extends Component {
             </Pane>
             <Pane flex={1} marginLeft={16}>
               {_.map(currentReport.errorDistribution, (v, k) => (
-                <Table.Row>
+                <Table.Row key={k}>
                   <Table.TextCell textProps={{ size: 400 }}>
                     {k.toString()}
                   </Table.TextCell>

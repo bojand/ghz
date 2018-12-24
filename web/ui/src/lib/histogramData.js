@@ -15,10 +15,10 @@ export function createHistogramChart (report) {
     datasets: [
       {
         label: 'Count',
-        backgroundColor: color(colors.blue)
+        backgroundColor: color(colors.skyBlue)
           .alpha(0.5)
           .rgbString(),
-        borderColor: colors.blue,
+        borderColor: colors.skyBlue,
         borderWidth: 1,
         data: series
       }

@@ -5,10 +5,11 @@ import { colors, randomColor } from './colors'
 
 const staticColors = [
   colors.red,
+  colors.teal,
+  colors.orange,
   colors.blue,
-  colors.orage,
-  colors.yellow,
-  colors.purple
+  colors.purple,
+  colors.yellow
 ]
 
 export function createDoughnutChart (label, dataMap) {
@@ -52,23 +53,6 @@ export function createDoughnutChart (label, dataMap) {
     labels
   }
 
-  // const data = {
-  //   datasets: [{
-  //     data: [10, 20, 30],
-  //     backgroundColor: [
-  //       colors.red,
-  //       colors.orange,
-  //       randomColor()
-  //     ],
-  //     label: 'Status Codes'
-  //   }],
-  //   labels: [
-  //     'Red',
-  //     'Yellow',
-  //     'Blue'
-  //   ]
-  // }
-
   const options = {
     legend: {
       position: 'bottom'
@@ -79,8 +63,6 @@ export function createDoughnutChart (label, dataMap) {
     data,
     options
   }
-
-  console.log(data.datasets[0])
 
   return config
 }

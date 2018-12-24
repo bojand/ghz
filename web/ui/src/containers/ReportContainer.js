@@ -13,6 +13,7 @@ date3.setMonth(date2.getMonth() - 1)
 date4.setMonth(date3.getMonth() - 1)
 
 const reports = [{
+  name: 'staging-oss.eventapi.createEvent',
   id: 10,
   date: date1.toISOString(),
   projectId: 11,
@@ -27,11 +28,17 @@ const reports = [{
   rps: 1156.34,
   rpsStatus: 'up_better',
   errorDistribution: {
-    'rpc error: code = Internal desc = Internal error.': 5,
-    'rpc error: code = PermissionDenied desc = Permission denied.': 4
+    'rpc error: code = Internal desc = Internal error.': 7,
+    'rpc error: code = PermissionDenied desc = Permission denied.': 2,
+    'rpc error: code = Unauthorized desc = Unauthorized.': 1,
+    'rpc error: code = DeadlineExceeded desc = Deadline exceeded.': 3,
+    'rpc error: code = ResourceExhausted desc = Resource exhausted.': 4
   },
   statusCodeDistribution: {
-    'OK': 191
+    'OK': 191,
+    'Canceled': 7,
+    'Resource_Exhausted': 3,
+    'Failed_Precondition': 3
   },
   status: 'FAIL',
   'options': {
