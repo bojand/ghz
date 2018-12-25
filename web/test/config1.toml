@@ -1,0 +1,2 @@
+[database]
+type = "sqlite3"
