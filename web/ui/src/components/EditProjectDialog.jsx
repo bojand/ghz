@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Dialog, TextInputField, Textarea, Pane } from 'evergreen-ui'
+import { Dialog, TextInputField, Textarea, Pane, Label } from 'evergreen-ui'
 
 export default class EditProjectDialog extends Component {
   constructor (props) {
@@ -56,8 +56,15 @@ export default class EditProjectDialog extends Component {
             value={this.state.name}
             onChange={ev => this.onChangeText('name', ev.target.value)}
           />
+          <Label
+            htmlFor='projectDescriptionTextarea'
+            marginBottom={4}
+            display='block'
+          >
+            Description
+          </Label>
           <Textarea
-            label='Description'
+            id='projectDescriptionTextarea'
             placeholder='Description of the project'
             value={this.state.description}
             onChange={ev => this.onChangeText('description', ev.target.value)}
