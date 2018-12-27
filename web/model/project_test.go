@@ -37,6 +37,7 @@ func TestProject_Create(t *testing.T) {
 		assert.NotZero(t, p.ID)
 		assert.Equal(t, "Test Project 111", p.Name)
 		assert.Equal(t, "Test Description Asdf", p.Description)
+		assert.Equal(t, StatusOK, p.Status)
 		assert.NotNil(t, p.CreatedAt)
 		assert.NotNil(t, p.UpdatedAt)
 		assert.Nil(t, p.DeletedAt)
@@ -47,6 +48,7 @@ func TestProject_Create(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "Test Project 111", p2.Name)
 		assert.Equal(t, "Test Description Asdf", p2.Description)
+		assert.Equal(t, StatusOK, p2.Status)
 		assert.NotNil(t, p2.CreatedAt)
 		assert.NotNil(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
@@ -63,6 +65,7 @@ func TestProject_Create(t *testing.T) {
 		assert.NotZero(t, p.ID)
 		assert.NotEmpty(t, p.Name)
 		assert.Equal(t, "Test Description Asdf 2", p.Description)
+		assert.Equal(t, StatusOK, p.Status)
 		assert.NotNil(t, p.CreatedAt)
 		assert.NotNil(t, p.UpdatedAt)
 		assert.Nil(t, p.DeletedAt)
@@ -73,6 +76,7 @@ func TestProject_Create(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, p.Name, p2.Name)
 		assert.Equal(t, "Test Description Asdf 2", p2.Description)
+		assert.Equal(t, StatusOK, p2.Status)
 		assert.NotNil(t, p2.CreatedAt)
 		assert.NotNil(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
@@ -82,6 +86,7 @@ func TestProject_Create(t *testing.T) {
 		p := Project{
 			Name:        " FooProject ",
 			Description: " Bar Desc ",
+			Status:      StatusFail,
 		}
 		p.ID = 123
 
@@ -91,6 +96,7 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, uint(123), p.ID)
 		assert.Equal(t, "FooProject", p.Name)
 		assert.Equal(t, "Bar Desc", p.Description)
+		assert.Equal(t, StatusFail, p.Status)
 		assert.NotNil(t, p.CreatedAt)
 		assert.NotNil(t, p.UpdatedAt)
 		assert.Nil(t, p.DeletedAt)
@@ -102,6 +108,7 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, uint(123), p2.ID)
 		assert.Equal(t, "FooProject", p2.Name)
 		assert.Equal(t, "Bar Desc", p2.Description)
+		assert.Equal(t, StatusFail, p2.Status)
 		assert.NotNil(t, p.CreatedAt)
 		assert.NotNil(t, p.UpdatedAt)
 		assert.Nil(t, p.DeletedAt)

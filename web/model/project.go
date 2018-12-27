@@ -13,12 +13,17 @@ type Project struct {
 	Model
 	Name        string `json:"name" gorm:"not null"`
 	Description string `json:"description"`
+	Status      Status `json:"status" gorm:"not null"`
 }
 
 // BeforeCreate is a GORM hook called when a model is created
 func (p *Project) BeforeCreate() error {
 	if p.Name == "" {
 		p.Name = hri.Random()
+	}
+
+	if string(p.Status) == "" {
+		p.Status = StatusOK
 	}
 
 	return nil
@@ -33,7 +38,7 @@ func (p *Project) BeforeUpdate() error {
 	return nil
 }
 
-// BeforeSave is a GORM hook called when a model is created
+// BeforeSave is a GORM hook called when a model is created or updated
 func (p *Project) BeforeSave(scope *gorm.Scope) error {
 	p.Name = strings.TrimSpace(p.Name)
 	p.Description = strings.TrimSpace(p.Description)
@@ -41,6 +46,7 @@ func (p *Project) BeforeSave(scope *gorm.Scope) error {
 	if scope != nil {
 		scope.SetColumn("name", p.Name)
 		scope.SetColumn("description", p.Description)
+		scope.SetColumn("status", p.Status)
 	}
 
 	return nil
