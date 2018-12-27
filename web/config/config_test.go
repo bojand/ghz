@@ -28,7 +28,7 @@ func TestConfig_Read(t *testing.T) {
 			"../test/config3.toml",
 			&Config{
 				Server:   Server{Port: 3000},
-				Database: Database{Type: "postgres", Connection: "data/ghz.db"},
+				Database: Database{Type: "postgres", Connection: "host=localhost port=5432 dbname=ghz sslmode=disable"},
 				Log:      Log{Level: "debug", Path: ""}}},
 		{"config2.json",
 			"../test/config2.json",

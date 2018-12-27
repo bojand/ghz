@@ -1,8 +1,6 @@
 package database
 
 import (
-	"errors"
-
 	"github.com/bojand/ghz/web/model"
 )
 
@@ -44,13 +42,13 @@ func (d *Database) UpdateProjectStatus(pid uint, status model.Status) error {
 }
 
 // ListProjects lists projects using sorting
-func (d *Database) ListProjects(limit, page uint, sortField string, order Order) ([]*model.Project, error) {
+func (d *Database) ListProjects(limit, page uint, sortField, order string) ([]*model.Project, error) {
 	if sortField != "name" && sortField != "id" {
-		return nil, errors.New("Invalid sort parameters")
+		sortField = "id"
 	}
 
-	if order != OrderAsc && order != OrderDesc {
-		order = OrderAsc
+	if order != "asc" && order != "desc" {
+		order = "desc"
 	}
 
 	offset := uint(0)

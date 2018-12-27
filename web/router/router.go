@@ -38,18 +38,24 @@ func New(db *database.Database, conf *config.Config) (*echo.Echo, error) {
 
 	// Projects
 
-	projectHandler := api.ProjectAPI{DB: db}
-
 	projectGroup := apiRoot.Group("/projects")
-
-	// g.GET("/", projectHandler).Name = "ghz api: list projects"
-	projectGroup.POST("/", projectHandler.CreateProject).Name = "ghz api: create project"
+	setupProjectAPI(projectGroup, db)
 
 	// Frontend
 
 	s.Static("/", "ui/dist").Name = "ghz api: static"
 
 	return s, nil
+}
+
+func setupProjectAPI(g *echo.Group, db *database.Database) {
+	projectHandler := api.ProjectAPI{DB: db}
+
+	g.GET("/", projectHandler.ListProjects).Name = "ghz api: list projects"
+	g.POST("/", projectHandler.CreateProject).Name = "ghz api: create project"
+	g.GET("/:pid/", projectHandler.GetProject).Name = "ghz api: get project"
+	g.PUT("/:pid/", projectHandler.UpdateProject).Name = "ghz api: update project"
+	g.DELETE("/:pid/", projectHandler.DeleteProject).Name = "ghz api: delete project"
 }
 
 // CustomValidator is our validator for the API

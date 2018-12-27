@@ -318,10 +318,14 @@ func TestDatabase_ListProjects(t *testing.T) {
 		assert.Equal(t, uint(1), ps[9].ID)
 	})
 
-	t.Run("error on invalid param", func(t *testing.T) {
-		_, err := db.ListProjects(20, 0, "status", "asc")
+	t.Run("default to id on invalid param", func(t *testing.T) {
+		ps, err := db.ListProjects(20, 0, "status", "asc")
 
-		assert.Error(t, err)
+		assert.NoError(t, err)
+		assert.Len(t, ps, 10)
+
+		assert.Equal(t, uint(1), ps[0].ID)
+		assert.Equal(t, uint(10), ps[9].ID)
 	})
 
 	t.Run("default to asc on unknown order", func(t *testing.T) {
