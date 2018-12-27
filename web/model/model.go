@@ -14,5 +14,5 @@ type Model struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 
 	// The deleted time
-	DeletedAt *time.Time `json:"deletedAt"`
+	DeletedAt *time.Time `json:"deletedAt,omitempty"`
 }
