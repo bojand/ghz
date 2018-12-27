@@ -31,7 +31,7 @@ func TestCreateSqliteFolder(t *testing.T) {
 	assert.DirExists(t, "test/somepath")
 	db.Close()
 
-	assert.Nil(t, os.RemoveAll("test/somepath"))
+	assert.Nil(t, os.RemoveAll("test"))
 }
 
 func TestWithAlreadyExistingSqliteFolder(t *testing.T) {
@@ -44,5 +44,5 @@ func TestWithAlreadyExistingSqliteFolder(t *testing.T) {
 	assert.DirExists(t, "test/somepath")
 	db.Close()
 
-	assert.Nil(t, os.RemoveAll("test/somepath"))
+	assert.Nil(t, os.RemoveAll("test"))
 }

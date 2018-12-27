@@ -109,9 +109,9 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, "FooProject", p2.Name)
 		assert.Equal(t, "Bar Desc", p2.Description)
 		assert.Equal(t, StatusFail, p2.Status)
-		assert.NotNil(t, p.CreatedAt)
-		assert.NotNil(t, p.UpdatedAt)
-		assert.Nil(t, p.DeletedAt)
+		assert.NotNil(t, p2.CreatedAt)
+		assert.NotNil(t, p2.UpdatedAt)
+		assert.Nil(t, p2.DeletedAt)
 	})
 
 	t.Run("should fail with same ID", func(t *testing.T) {

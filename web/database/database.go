@@ -12,6 +12,8 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"   // enable the sqlite3 dialect
 )
 
+const dbName = "../test/test.db"
+
 // New creates a new wrapper for the gorm database framework.
 func New(dialect, connection string) (*Database, error) {
 	createDirectoryIfSqlite(dialect, connection)

@@ -46,7 +46,6 @@ func (p *Project) BeforeSave(scope *gorm.Scope) error {
 	if scope != nil {
 		scope.SetColumn("name", p.Name)
 		scope.SetColumn("description", p.Description)
-		scope.SetColumn("status", p.Status)
 	}
 
 	return nil

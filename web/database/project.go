@@ -31,34 +31,26 @@ func (d *Database) CreateProject(p *model.Project) error {
 
 // UpdateProject creates a new project
 func (d *Database) UpdateProject(p *model.Project) error {
-	return d.DB.Create(p).Error
+	return d.DB.Save(p).Error
 }
 
 // UpdateProjectStatus updates the project's status
 func (d *Database) UpdateProjectStatus(pid uint, status model.Status) error {
 	p := new(model.Project)
 	p.ID = pid
-	return d.DB.Model(p).Update("status", status).Error
+
+	// use UpdateColumn to circumvent update hooks and not modify updated at time
+	return d.DB.Model(p).UpdateColumn("status", status).Error
 }
 
-// ListProjects lists projects
-func (d *Database) ListProjects(limit, page uint) ([]*model.Project, error) {
-	offset := uint(0)
-	if page >= 0 && limit >= 0 {
-		offset = page * limit
-	}
-
-	s := make([]*model.Project, limit)
-
-	err := d.DB.Offset(offset).Limit(limit).Order("name desc").Find(&s).Error
-
-	return s, err
-}
-
-// ListProjectsSorted lists projects using sorting
-func (d *Database) ListProjectsSorted(limit, page uint, sortField string, order Order) ([]*model.Project, error) {
+// ListProjects lists projects using sorting
+func (d *Database) ListProjects(limit, page uint, sortField string, order Order) ([]*model.Project, error) {
 	if sortField != "name" && sortField != "id" {
 		return nil, errors.New("Invalid sort parameters")
+	}
+
+	if order != OrderAsc && order != OrderDesc {
+		order = OrderAsc
 	}
 
 	offset := uint(0)
