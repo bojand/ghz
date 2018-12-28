@@ -1,7 +1,9 @@
 {
-  "plugins": [
-    ["@babel/plugin-transform-runtime", {
-      "corejs": 2
+  "presets": [
+    ["env", {
+      "targets": {
+        "browsers": ["last 2 Chrome versions"]
+      }
     }]
   ]
 }

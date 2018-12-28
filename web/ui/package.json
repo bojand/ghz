@@ -14,6 +14,7 @@
     "@babel/core": "^7.2.2",
     "@babel/plugin-transform-runtime": "^7.2.0",
     "acorn": "^6.0.4",
+    "babel-preset-env": "^1.7.0",
     "parcel-bundler": "^1.11.0",
     "standard": "^12.0.1"
   },

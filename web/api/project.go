@@ -111,7 +111,7 @@ func (api *ProjectAPI) ListProjects(ctx echo.Context) error {
 		page = 0
 	}
 
-	if sort = ctx.QueryParam("page"); sort == "" {
+	if sort = ctx.QueryParam("sort"); sort == "" {
 		sort = "desc"
 	}
 
@@ -139,7 +139,7 @@ func (api *ProjectAPI) ListProjects(ctx echo.Context) error {
 	go func() {
 		var projects []*model.Project
 		var err error
-		projects, err = api.DB.ListProjects(limit, uint(page), sort, order)
+		projects, err = api.DB.ListProjects(limit, uint(page), order, sort)
 		errCh <- err
 		dataCh <- projects
 		close(dataCh)

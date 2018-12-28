@@ -40,8 +40,8 @@ export default class ProjectList extends Component {
   }
 
   sort () {
-    this.props.projectStore.fetchProjects(true)
     const order = this.state.ordering === Order.ASC ? Order.DESC : Order.ASC
+    this.props.projectStore.fetchProjects(order)
     this.setState({ ordering: order })
   }
 
