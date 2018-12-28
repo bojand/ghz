@@ -37,8 +37,8 @@ const reports = [{
   statusCodeDistribution: {
     'OK': 191,
     'Canceled': 7,
-    'Resource_Exhausted': 3,
-    'Failed_Precondition': 3
+    'ResourceExhausted': 3,
+    'FailedPrecondition': 3
   },
   status: 'FAIL',
   'options': {
@@ -142,7 +142,11 @@ const reports = [{
       'count': 4,
       'frequency': 0.020942408376963352
     }
-  ]
+  ],
+  tags: {
+    env: 'staging',
+    'created by': 'Joe Developer'
+  }
 }, {
   id: 20,
   date: date2.toISOString(),

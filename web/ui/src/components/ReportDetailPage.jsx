@@ -6,7 +6,7 @@ import ReportDetailPane from './ReportDetailPane'
 
 import ReportContainer from '../containers/ReportContainer'
 
-export default class ProjectDetailPage extends Component {
+export default class ReportDetailPage extends Component {
   render () {
     return (
       <Provider>

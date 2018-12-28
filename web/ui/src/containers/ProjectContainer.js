@@ -16,15 +16,15 @@ export default class ProjectContainer extends Container {
     }
   }
 
-  async fetchProjects (sort = 'desc', page = 0) {
+  async fetchProjects (order = 'desc', page = 0) {
     this.setState({
       isFetching: true
     })
 
     const searchParams = new URLSearchParams()
 
-    if (sort) {
-      searchParams.append('sort', sort)
+    if (order) {
+      searchParams.append('order', order)
       searchParams.append('page', page)
     }
 

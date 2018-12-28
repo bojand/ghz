@@ -37,8 +37,10 @@ func (api *ProjectAPI) CreateProject(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if err := ctx.Validate(p); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	if ctx.Echo().Validator != nil {
+		if err := ctx.Validate(p); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
 	}
 
 	err := api.DB.CreateProject(p)
@@ -69,8 +71,10 @@ func (api *ProjectAPI) UpdateProject(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if err := ctx.Validate(newVal); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	if ctx.Echo().Validator != nil {
+		if err := ctx.Validate(newVal); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
 	}
 
 	project.Name = newVal.Name
@@ -90,7 +94,12 @@ func (api *ProjectAPI) GetProject(ctx echo.Context) error {
 	var project *model.Project
 	var err error
 
-	if id, err = strconv.ParseUint(ctx.Param("pid"), 10, 32); err != nil {
+	pid := ctx.Param("pid")
+	if pid == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "")
+	}
+
+	if id, err = strconv.ParseUint(pid, 10, 32); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
@@ -112,11 +121,11 @@ func (api *ProjectAPI) ListProjects(ctx echo.Context) error {
 	}
 
 	if sort = ctx.QueryParam("sort"); sort == "" {
-		sort = "desc"
+		sort = "id"
 	}
 
 	if order = ctx.QueryParam("order"); order == "" {
-		order = "id"
+		order = "desc"
 	}
 
 	sort = strings.ToLower(sort)
@@ -139,7 +148,7 @@ func (api *ProjectAPI) ListProjects(ctx echo.Context) error {
 	go func() {
 		var projects []*model.Project
 		var err error
-		projects, err = api.DB.ListProjects(limit, uint(page), order, sort)
+		projects, err = api.DB.ListProjects(limit, uint(page), sort, order)
 		errCh <- err
 		dataCh <- projects
 		close(dataCh)

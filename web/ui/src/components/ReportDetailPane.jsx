@@ -12,7 +12,7 @@ import {
 import HistogramChart from './HistogramChart'
 import StatusCodeChart from './ReportDistChart'
 
-export default class ProjectDetailPane extends Component {
+export default class ReportDetailPane extends Component {
   constructor (props) {
     super(props)
 
@@ -44,6 +44,11 @@ export default class ProjectDetailPane extends Component {
     const date = new Date(currentReport.date + '')
     const dateStr = date.toLocaleString()
 
+    let statusKey = 0
+    let errKey = 0
+    let latKey = 0
+    let tagKey = 0
+
     return (
       <Pane>
         <Pane display='flex' marginTop={6} marginBottom={10}>
@@ -58,11 +63,16 @@ export default class ProjectDetailPane extends Component {
         <Text>
           {dateStr}
         </Text>
-        <Pane marginTop={10}>
-          <Badge color='blue' marginRight={8}>Env: staging</Badge>
-          <Badge color='blue' marginRight={8}>Created by: Bojand</Badge>
-          <Badge color='blue' marginRight={8}>For: miz</Badge>
-        </Pane>
+        {currentReport.tags && _.keys(currentReport.tags).length
+          ? <Pane marginTop={10}>
+            {_.map(currentReport.tags, (v, k) => (
+              <Badge color='blue' marginRight={8} key={'tag-' + tagKey++}>
+                {`${k}: ${v}`}
+              </Badge>
+            ))}
+          </Pane>
+          : <Pane />
+        }
 
         <Pane display='flex' paddingY={20}>
           <Pane flex={1} minWidth={260} maxWidth={260}>
@@ -137,7 +147,7 @@ export default class ProjectDetailPane extends Component {
             </Heading>
             <Pane paddingY={10}>
               {currentReport.latencyDistribution.map(p => (
-                <Table.Row>
+                <Table.Row key={'lat-' + latKey++}>
                   <Table.TextCell maxWidth={60}>
                     <Strong>{p.percentage} %</Strong>
                   </Table.TextCell>
@@ -164,7 +174,7 @@ export default class ProjectDetailPane extends Component {
             </Pane>
             <Pane flex={1} marginLeft={16}>
               {_.map(currentReport.statusCodeDistribution, (v, k) => (
-                <Table.Row key={k}>
+                <Table.Row key={'status-' + statusKey++}>
                   <Table.TextCell textProps={{ size: 400 }} minWidth={200}>
                     {k.toString().toUpperCase()}
                   </Table.TextCell>
@@ -197,7 +207,7 @@ export default class ProjectDetailPane extends Component {
             </Pane>
             <Pane flex={1} marginLeft={16}>
               {_.map(currentReport.errorDistribution, (v, k) => (
-                <Table.Row key={k}>
+                <Table.Row key={'error-' + errKey++}>
                   <Table.TextCell textProps={{ size: 400 }}>
                     {k.toString()}
                   </Table.TextCell>
