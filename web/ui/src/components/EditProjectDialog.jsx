@@ -22,27 +22,37 @@ export default class EditProjectDialog extends Component {
   }
 
   render () {
+    const editId = this.props.project && this.props.project.id
     return (
       <Pane>
         <Dialog
           isShown={this.state.isShown}
-          title='New Project'
+          title={editId ? `Edit Project (ID: ${editId})` : 'New Project'}
           onCloseComplete={() => {
-            this.setState({ ...this.state, isShown: false, isLoading: false })
+            this.setState({ isShown: false, isLoading: false })
             if (typeof this.props.onDone === 'function') {
               this.props.onDone()
             }
           }}
           onConfirm={async () => {
             if (this.state.name.trim() === '') {
-              this.setState({ ...this.state, isInvalid: true })
+              this.setState({ isInvalid: true })
               return
             }
-            this.setState({ ...this.state, isLoading: true })
-            await this.props.projectStore.createProject(this.state.name, this.state.description)
+            this.setState({ isLoading: true })
+
+            let newProject = null
+
+            if (editId) {
+              newProject = await this.props.projectStore.updateProject(
+                editId, this.state.name, this.state.description)
+            } else {
+              newProject = await this.props.projectStore.createProject(this.state.name, this.state.description)
+            }
+
             this.setState({ ...this.state, isLoading: false, isShown: false })
             if (typeof this.props.onDone === 'function') {
-              this.props.onDone()
+              this.props.onDone(newProject)
             }
           }}
           isConfirmLoading={this.state.isLoading}

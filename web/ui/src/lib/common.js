@@ -7,17 +7,18 @@ const Order = {
 function getIconForOrder (order) {
   switch (order) {
     case Order.ASC:
-      return 'arrow-up'
+      return 'sort-asc'
     case Order.DESC:
-      return 'arrow-down'
+      return 'sort-desc'
     default:
-      return 'arrow-down'
+      return 'sort-desc'
   }
 }
 
 function getIconForStatus (status) {
   switch (status) {
     case 'OK':
+    case 'ok':
       return 'tick-circle'
     default:
       return 'error'
@@ -27,6 +28,7 @@ function getIconForStatus (status) {
 function getColorForStatus (status) {
   switch (status) {
     case 'OK':
+    case 'ok':
       return 'success'
     default:
       return 'danger'

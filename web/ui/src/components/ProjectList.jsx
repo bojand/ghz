@@ -18,7 +18,8 @@ export default class ProjectList extends Component {
 
     this.state = {
       searchQuery: '',
-      ordering: Order.NONE,
+      ordering: Order.DESC,
+      page: 0,
       editProjectVisible: false,
       editProject: null
     }
@@ -34,15 +35,26 @@ export default class ProjectList extends Component {
       const prevList = prevProps.projectStore.state.projects
 
       if (currentList.length === 0 && prevList.length > 0) {
-        this.props.projectStore.fetchProjects()
+        this.setState({ page: 0 })
+        this.props.projectStore.fetchProjects(this.state.ordering, 0)
       }
     }
   }
 
   sort () {
     const order = this.state.ordering === Order.ASC ? Order.DESC : Order.ASC
-    this.props.projectStore.fetchProjects(order)
+    this.props.projectStore.fetchProjects(order, this.state.page)
     this.setState({ ordering: order })
+  }
+
+  fetchPage (page) {
+    if (page < 0) {
+      page = 0
+    }
+
+    this.setState({ page })
+
+    this.props.projectStore.fetchProjects(this.state.ordering, page)
   }
 
   // Filter the profiles based on the name property.
@@ -71,9 +83,11 @@ export default class ProjectList extends Component {
   }
 
   render () {
-    const { state: { projects } } = this.props.projectStore
+    const { state: { projects, totalProjects } } = this.props.projectStore
 
     const items = this.filter(projects)
+
+    const totalPerPage = 20
 
     return (
       <Pane>
@@ -84,10 +98,15 @@ export default class ProjectList extends Component {
               projectStore={this.props.projectStore}
               project={this.state.editProject}
               isShown={this.state.editProjectVisible}
-              onDone={() => this.setState({ editProjectVisible: false })}
+              onDone={() => {
+                this.setState({ editProjectVisible: false })
+              }}
             /> : null
           }
-          <Button onClick={() => this.setState({ editProjectVisible: !this.state.editProjectVisible })} marginLeft={14} iconBefore='plus' appearance='minimal' intent='none'>NEW</Button>
+          <Button marginLeft={14} iconBefore='plus' appearance='minimal' intent='none'
+            onClick={() => {
+              this.setState({ editProjectVisible: !this.state.editProjectVisible, editProject: null })
+            }}>NEW</Button>
         </Pane>
 
         <Table marginY={24}>
@@ -111,9 +130,6 @@ export default class ProjectList extends Component {
             <Table.TextHeaderCell textProps={{ size: 400 }}>
               Description
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell maxWidth={100} textProps={{ size: 400 }}>
-              Reports
-            </Table.TextHeaderCell>
             <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               Status
             </Table.TextHeaderCell>
@@ -132,9 +148,6 @@ export default class ProjectList extends Component {
                   </RouterLink>
                 </Table.TextCell>
                 <Table.TextCell textProps={{ size: 400 }}>{p.description}</Table.TextCell>
-                <Table.TextCell maxWidth={100} isNumber>
-                  {p.reports}
-                </Table.TextCell>
                 <Table.TextCell
                   maxWidth={80}
                   display='flex' textAlign='center'>
@@ -148,6 +161,19 @@ export default class ProjectList extends Component {
               </Table.Row>
             ))}
           </Table.Body>
+          <Pane justifyContent='right' marginTop={10} display='flex'>
+            <IconButton
+              disabled={totalProjects < totalPerPage || this.state.page === 0}
+              icon='chevron-left'
+              onClick={() => this.fetchPage(this.state.page - 1)}
+            />
+            <IconButton
+              disabled={totalProjects < totalPerPage || projects.length < totalPerPage}
+              marginLeft={10}
+              icon='chevron-right'
+              onClick={() => this.fetchPage(this.state.page + 1)}
+            />
+          </Pane>
         </Table>
       </Pane>
     )

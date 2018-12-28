@@ -1,5 +1,6 @@
 import { Container } from 'unstated'
 import ky from 'ky'
+import _ from 'lodash'
 import { toaster } from 'evergreen-ui'
 
 const api = ky.extend({ prefixUrl: 'http://localhost:3000/api/' })
@@ -8,13 +9,14 @@ export default class ProjectContainer extends Container {
   constructor (props) {
     super(props)
     this.state = {
+      totalProjects: 0,
       projects: [],
       isFetching: false,
       currentProject: {}
     }
   }
 
-  async fetchProjects (sort) {
+  async fetchProjects (sort = 'desc', page = 0) {
     this.setState({
       isFetching: true
     })
@@ -23,12 +25,14 @@ export default class ProjectContainer extends Container {
 
     if (sort) {
       searchParams.append('sort', sort)
+      searchParams.append('page', page)
     }
 
     try {
-      const { data } = await api.get('projects', { searchParams }).json()
+      const { data, total } = await api.get('projects', { searchParams }).json()
 
       this.setState({
+        totalProjects: total,
         projects: data,
         isFetching: false
       })
@@ -47,9 +51,38 @@ export default class ProjectContainer extends Container {
       const newProject = await api.post('projects', { json: { name, description } }).json()
       this.setState({
         projects: [newProject, ...this.state.projects],
+        totalProjects: this.state.totalProjects + 1,
         isFetching: false
       })
     } catch (err) {
+      toaster.danger(err.message)
+      console.log('error: ', err)
+    }
+  }
+
+  async updateProject (id, name, description) {
+    this.setState({
+      isFetching: true
+    })
+
+    try {
+      const newProject = await api.put(`projects/${id}`, { json: { name, description } }).json()
+
+      const index = _.findIndex(this.state.projects, p => p.id.toString() === id.toString())
+
+      let projects = this.state.projects
+      if (index >= 0) {
+        projects[index] = newProject
+      }
+
+      this.setState({
+        projects,
+        totalProjects: this.state.totalProjects + 1,
+        isFetching: false,
+        currentProject: newProject
+      })
+    } catch (err) {
+      toaster.danger(err.message)
       console.log('error: ', err)
     }
   }
@@ -66,6 +99,7 @@ export default class ProjectContainer extends Container {
         isFetching: false
       })
     } catch (err) {
+      toaster.danger(err.message)
       console.log('error: ', err)
     }
   }
