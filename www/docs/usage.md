@@ -15,7 +15,6 @@ Options:
 -insecure	Specify for non TLS connection.
 -config		Path to the JSON or TOML config file that specifies all the test settings.
 
-
 -c  Number of requests to run concurrently.
     Total number of requests cannot be smaller than the concurrency level. Default is 50.
 -n  Number of requests to run. Default is 200.
@@ -52,6 +51,7 @@ Options:
 -L  Keepalive time in seconds. Only used if present and above 0.
 
 -name  User specified name for the test.
+-tags  JSON representation of user-defined string tags.
 
 -cpus  Number of used cpu cores. (default for current machine is 8 cores)
 

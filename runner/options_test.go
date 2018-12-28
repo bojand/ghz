@@ -224,6 +224,10 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		md["token"] = "foobar"
 		md["request-id"] = "123"
 
+		tags := make(map[string]string)
+		tags["env"] = "staging"
+		tags["created by"] = "joe developer"
+
 		c, err := newConfig(
 			"call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
@@ -240,6 +244,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithCPUs(4),
 			WithData(d),
 			WithMetadata(&md),
+			WithTags(&tags),
 		)
 
 		assert.NoError(t, err)
@@ -261,6 +266,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "asdf", c.name)
 		assert.Equal(t, `{"name":"bob","age":11,"fruits":["apple","peach","pear"]}`, string(c.data))
 		assert.Equal(t, `{"request-id":"123","token":"foobar"}`, string(c.metadata))
+		assert.Equal(t, `{"created by":"joe developer","env":"staging"}`, string(c.tags))
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)

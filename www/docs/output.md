@@ -38,7 +38,10 @@ Latency distribution:
   95% in 55.45 ms
   99% in 69.60 ms
 Status code distribution:
-  [OK]	186 responses
+  [Unavailable]        3 responses
+  [PermissionDenied]   3 responses
+  [OK]                 186 responses
+  [Internal]           8 responses
 Error distribution:
   [8]	rpc error: code = Internal desc = Internal error.
   [3]	rpc error: code = PermissionDenied desc = Permission denied.

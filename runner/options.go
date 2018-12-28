@@ -46,6 +46,7 @@ type RunConfig struct {
 	// misc
 	name string
 	cpus int
+	tags []byte
 }
 
 // Option controls some aspect of run
@@ -285,6 +286,24 @@ func WithName(name string) Option {
 		if name != "" {
 			o.name = name
 		}
+
+		return nil
+	}
+}
+
+// WithTags specifies the user defined tags as a map
+// 	tags := make(map[string]string)
+// 	tags["env"] = "staging"
+// 	tags["created by"] = "joe developer"
+// 	WithTags(&tags)
+func WithTags(tags *map[string]string) Option {
+	return func(o *RunConfig) error {
+		tagsJSON, err := json.Marshal(tags)
+		if err != nil {
+			return err
+		}
+
+		o.tags = tagsJSON
 
 		return nil
 	}

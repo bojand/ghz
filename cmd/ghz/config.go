@@ -44,6 +44,7 @@ type config struct {
 	ImportPaths   []string           `json:"i,omitempty" toml:"i,omitempty" yaml:"i,omitempty"`
 	Insecure      bool               `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
 	Name          string             `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
+	Tags          *map[string]string `json:"tags,omitempty" toml:"tags,omitempty" yaml:"tags,omitempty"`
 }
 
 // UnmarshalJSON is our custom implementation to handle the Duration field Z
