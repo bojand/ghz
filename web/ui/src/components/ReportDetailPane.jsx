@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Pane, Heading, Icon, Pre, Strong, Table, Tooltip, Text, Paragraph } from 'evergreen-ui'
+import { Pane, Heading, Icon, Pre, Strong, Table, Tooltip, Text, Badge } from 'evergreen-ui'
 import _ from 'lodash'
 
 import {
@@ -58,6 +58,11 @@ export default class ProjectDetailPane extends Component {
         <Text>
           {dateStr}
         </Text>
+        <Pane marginTop={10}>
+          <Badge color='blue' marginRight={8}>Env: staging</Badge>
+          <Badge color='blue' marginRight={8}>Created by: Bojand</Badge>
+          <Badge color='blue' marginRight={8}>For: miz</Badge>
+        </Pane>
 
         <Pane display='flex' paddingY={20}>
           <Pane flex={1} minWidth={260} maxWidth={260}>
