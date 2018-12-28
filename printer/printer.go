@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/alecthomas/template"
 	"github.com/bojand/ghz/runner"
@@ -211,12 +212,14 @@ func (rp *ReportPrinter) printf(s string, v ...interface{}) {
 }
 
 var tmplFuncMap = template.FuncMap{
-	"formatMilli":   formatMilli,
-	"formatSeconds": formatSeconds,
-	"histogram":     histogram,
-	"jsonify":       jsonify,
-	"formatMark":    formatMarkMs,
-	"formatPercent": formatPercent,
+	"formatMilli":      formatMilli,
+	"formatSeconds":    formatSeconds,
+	"histogram":        histogram,
+	"jsonify":          jsonify,
+	"formatMark":       formatMarkMs,
+	"formatPercent":    formatPercent,
+	"formatStatusCode": formatStatusCode,
+	"formatErrorDist":  formatErrorDist,
 }
 
 func jsonify(v interface{}, pretty bool) string {
@@ -270,6 +273,28 @@ func formatMarkMs(m float64) string {
 	return fmt.Sprintf("'%4.3f ms'", m*1000)
 }
 
+func formatStatusCode(statusCodeDist map[string]int) string {
+	padding := 3
+	buf := &bytes.Buffer{}
+	w := tabwriter.NewWriter(buf, 0, 0, padding, ' ', 0)
+	for status, count := range statusCodeDist {
+		fmt.Fprintf(w, "  [%+s]\t%+v responses\t\n", status, count)
+	}
+	w.Flush()
+	return buf.String()
+}
+
+func formatErrorDist(errDist map[string]int) string {
+	padding := 3
+	buf := &bytes.Buffer{}
+	w := tabwriter.NewWriter(buf, 0, 0, padding, ' ', 0)
+	for status, count := range errDist {
+		fmt.Fprintf(w, "  [%+v]\t%+s\t\n", count, status)
+	}
+	w.Flush()
+	return buf.String()
+}
+
 var (
 	defaultTmpl = `
 Summary:
@@ -285,10 +310,10 @@ Response time histogram:
 {{ histogram .Histogram }}
 Latency distribution:{{ range .LatencyDistribution }}
   {{ .Percentage }}%% in {{ formatMilli .Latency.Seconds }} ms{{ end }}
-Status code distribution:{{ range $code, $num := .StatusCodeDist }}
-  [{{ $code }}]	{{ $num }} responses{{ end }}
-{{ if gt (len .ErrorDist) 0 }}Error distribution:{{ range $err, $num := .ErrorDist }}
-  [{{ $num }}]	{{ $err }}{{ end }}{{ end }}
+Status code distribution:
+{{ formatStatusCode .StatusCodeDist }}
+{{ if gt (len .ErrorDist) 0 }}Error distribution:
+{{ formatErrorDist .ErrorDist }}{{ end }}
 `
 
 	csvTmpl = `

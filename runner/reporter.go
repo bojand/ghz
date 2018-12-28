@@ -131,6 +131,7 @@ func (r *Reporter) Run() {
 		if res.err != nil {
 			errStr := res.err.Error()
 			r.errorDist[errStr]++
+			r.statusCodeDist[res.status]++
 
 			if len(r.errors) < maxResult {
 				r.errors = append(r.errors, errStr)
