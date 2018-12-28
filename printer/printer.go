@@ -397,7 +397,28 @@ duration (ms),status,error{{ range $i, $v := .Details }}
         </ul>
       </nav>
       <hr />
-    </div>
+		</div>
+		
+		{{ if gt (len .Tags) 0 }}
+
+			<div class="container">
+				<div class="field is-grouped">
+
+				{{ range $tag, $val := .Tags }}
+					
+					<div class="control">
+						<div class="tags has-addons">
+							<span class="tag is-dark">{{ $tag }}</span>
+							<span class="tag is-primary">{{ $val }}</span>
+						</div>
+					</div>
+
+				{{ end }}
+
+				</div>
+			</div>
+			<br />
+		{{ end }}
 	  
 	  <div class="container">
 			<div class="columns">

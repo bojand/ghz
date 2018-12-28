@@ -69,6 +69,8 @@ type Report struct {
 	LatencyDistribution []LatencyDistribution `json:"latencyDistribution"`
 	Histogram           []Bucket              `json:"histogram"`
 	Details             []ResultDetail        `json:"details"`
+
+	Tags *map[string]string `json:"tags,omitempty"`
 }
 
 // MarshalJSON is custom marshal for report to properly format the date
@@ -185,6 +187,8 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 	_ = json.Unmarshal(r.config.data, &rep.Options.Data)
 
 	_ = json.Unmarshal(r.config.metadata, &rep.Options.Metadata)
+
+	_ = json.Unmarshal(r.config.tags, &rep.Tags)
 
 	if len(r.lats) > 0 {
 		average := r.avgTotal / float64(r.totalCount)

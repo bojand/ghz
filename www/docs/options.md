@@ -121,6 +121,10 @@ Keepalive time in seconds. Only used if present and above `0`.
 
 A user specified name for the test.
 
+### `-tags`
+
+JSON string representation of user-defined string tags. This is mainly for reporting purpoces. For example `-tags '{"env":"staging","created by":"Joe Developer"}'`.
+
 ### `-cpus`
 
 Number of used cpu cores to be used for the test. The default is the total number of logical CPUs on the local machine.
