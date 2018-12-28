@@ -51,6 +51,7 @@ var (
 	kt = flag.Uint("L", 0, "Keepalive time in seconds.")
 
 	name = flag.String("name", "", "User specified name for the test.")
+	tags = flag.String("tags", "", "JSON representation of user-defined string tags.")
 
 	cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "")
 
@@ -67,7 +68,6 @@ Options:
 -cname		An server name override.
 -insecure	Specify for non TLS connection.
 -config		Path to the JSON or TOML config file that specifies all the test settings.
-
 
 -c  Number of requests to run concurrently. 
     Total number of requests cannot be smaller than the concurrency level. Default is 50.
@@ -105,6 +105,7 @@ Options:
 -L  Keepalive time in seconds. Only used if present and above 0.
 
 -name  User specified name for the test.
+-tags  JSON representation of user-defined string tags.
 
 -cpus  Number of used cpu cores. (default for current machine is %d cores)
 
@@ -172,6 +173,7 @@ func main() {
 		runner.WithName(cfg.Name),
 		runner.WithCPUs(cfg.CPUs),
 		runner.WithMetadata(cfg.Metadata),
+		runner.WithTags(cfg.Tags),
 	)
 
 	if strings.TrimSpace(cfg.MetadataPath) != "" {
@@ -268,6 +270,14 @@ func createConfigFromArgs() (*config, error) {
 		}
 	}
 
+	var tagsMap map[string]string
+	*tags = strings.TrimSpace(*tags)
+	if *tags != "" {
+		if err := json.Unmarshal([]byte(*tags), &tagsMap); err != nil {
+			return nil, fmt.Errorf("Error unmarshaling tags '%v': %v", *md, err.Error())
+		}
+	}
+
 	cfg := &config{
 		Host:          host,
 		Proto:         *proto,
@@ -295,6 +305,7 @@ func createConfigFromArgs() (*config, error) {
 		CPUs:          *cpus,
 		Insecure:      *insecure,
 		Name:          *name,
+		Tags:          &tagsMap,
 	}
 
 	return cfg, nil

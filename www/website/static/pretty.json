@@ -1,5 +1,6 @@
 {
   "date": "2018-12-17T16:52:55-04:00",
+  "name": "Greeter SayHello",
   "endReason": "normal",
   "options": {
     "call": "helloworld.Greeter.SayHello",
@@ -14,7 +15,8 @@
     },
     "binary": false,
     "insecure": true,
-    "CPUs": 8
+    "CPUs": 8,
+    "name": "Greeter SayHello"
   },
   "count": 200,
   "total": 172959832,
@@ -1263,5 +1265,9 @@
       "error": "",
       "status": "OK"
     }
-  ]
+  ],
+  "tags": {
+    "created by": "Joe Developer",
+    "env": "staging"
+  }
 }
