@@ -328,14 +328,14 @@ func TestDatabase_ListProjects(t *testing.T) {
 		assert.Equal(t, uint(10), ps[9].ID)
 	})
 
-	t.Run("default to asc on unknown order", func(t *testing.T) {
+	t.Run("default to desc on unknown order", func(t *testing.T) {
 		ps, err := db.ListProjects(20, 0, "id", "asdf")
 
 		assert.NoError(t, err)
 		assert.Len(t, ps, 10)
 
-		assert.Equal(t, uint(1), ps[0].ID)
-		assert.Equal(t, uint(10), ps[9].ID)
+		assert.Equal(t, uint(10), ps[0].ID)
+		assert.Equal(t, uint(1), ps[9].ID)
 	})
 
 	t.Run("list paged name desc", func(t *testing.T) {
