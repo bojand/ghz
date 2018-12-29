@@ -157,7 +157,9 @@ type Report struct {
 	ProjectID uint     `json:"projectID" gorm:"type:integer REFERENCES projects(id)"`
 	Project   *Project `json:"-"`
 
-	Date time.Time `json:"date"`
+	Name      string    `json:"name,omitempty"`
+	EndReason string    `json:"endReason,omitempty"`
+	Date      time.Time `json:"date"`
 
 	Count   uint64        `json:"count"`
 	Total   time.Duration `json:"total"`
@@ -173,8 +175,8 @@ type Report struct {
 	ErrorDist      StringIntMap `json:"errorDistribution,omitempty" gorm:"type:varchar(512)"`
 	StatusCodeDist StringIntMap `json:"statusCodeDistribution,omitempty" gorm:"type:varchar(512)"`
 
-	LatencyDistribution LatencyDistributionList `json:"latencyDistribution"`
-	Histogram           BucketList              `json:"histogram"`
+	LatencyDistribution LatencyDistributionList `json:"latencyDistribution" gorm:"type:varchar(512)"`
+	Histogram           BucketList              `json:"histogram"  gorm:"type:varchar(512)"`
 }
 
 // BeforeSave is called by GORM before save
