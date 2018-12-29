@@ -23,19 +23,18 @@ func New(dialect, connection string) (*Database, error) {
 		return nil, err
 	}
 
-	// We normally don't need that much connections, so we limit them. F.ex. mysql complains about
-	// "too many connections", while load testing Gotify.
+	// We normally don't need that much connections, so we limit them.
 	db.DB().SetMaxOpenConns(10)
 
 	if dialect == "sqlite3" {
-		// We use the database connection inside the handlers from the http
-		// framework, therefore concurrent access occurs. Sqlite cannot handle
-		// concurrent writes, so we limit sqlite to one connection.
-		// see https://github.com/mattn/go-sqlite3/issues/274
+		// Sqlite cannot handle concurrent operations well so limit to one connection.
 		db.DB().SetMaxOpenConns(1)
+
+		// Turn on foreign keys.
+		db.Exec("PRAGMA foreign_keys = ON;")
 	}
 
-	db.AutoMigrate(new(model.Project))
+	db.AutoMigrate(new(model.Project), new(model.Report), new(model.Detail))
 
 	return &Database{DB: db}, nil
 }

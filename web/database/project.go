@@ -27,7 +27,7 @@ func (d *Database) CreateProject(p *model.Project) error {
 	return d.DB.Create(p).Error
 }
 
-// UpdateProject creates a new project
+// UpdateProject update a project
 func (d *Database) UpdateProject(p *model.Project) error {
 	return d.DB.Save(p).Error
 }

@@ -45,9 +45,8 @@ func TestReport(t *testing.T) {
 
 	db.LogMode(true)
 
-	// Migrate the schema
-	db.AutoMigrate(&Project{}, &Report{}, &Detail{})
 	db.Exec("PRAGMA foreign_keys = ON;")
+	db.AutoMigrate(&Project{}, &Report{}, &Detail{})
 
 	var rid, pid uint
 
