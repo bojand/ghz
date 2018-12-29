@@ -10,11 +10,8 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// LatencyDistribution holds latency distribution data
-type LatencyDistribution runner.LatencyDistribution
-
 // LatencyDistributionList is a slice of LatencyDistribution pointers
-type LatencyDistributionList []*LatencyDistribution
+type LatencyDistributionList []*runner.LatencyDistribution
 
 // Value converts struct to a database value
 func (ld LatencyDistributionList) Value() (driver.Value, error) {
@@ -37,7 +34,7 @@ func (ld *LatencyDistributionList) Scan(src interface{}) error {
 		sourceByte = []byte(sourceStr)
 	}
 
-	var lds []LatencyDistribution
+	var lds []runner.LatencyDistribution
 	if err := json.Unmarshal(sourceByte, &lds); err != nil {
 		return err
 	}
@@ -49,11 +46,8 @@ func (ld *LatencyDistributionList) Scan(src interface{}) error {
 	return nil
 }
 
-// Bucket holds histogram data
-type Bucket runner.Bucket
-
 // BucketList is a slice of buckets
-type BucketList []*Bucket
+type BucketList []*runner.Bucket
 
 // Value converts struct to a database value
 func (bl BucketList) Value() (driver.Value, error) {
@@ -76,7 +70,7 @@ func (bl *BucketList) Scan(src interface{}) error {
 		sourceByte = []byte(sourceStr)
 	}
 
-	var buckets []Bucket
+	var buckets []runner.Bucket
 	if err := json.Unmarshal(sourceByte, &buckets); err != nil {
 		return err
 	}
@@ -150,6 +144,37 @@ func (m *StringIntMap) Scan(src interface{}) error {
 	return nil
 }
 
+// StringStringMap is a map of string keys to int values
+type StringStringMap map[string]string
+
+// Value converts map to database value
+func (m StringStringMap) Value() (driver.Value, error) {
+	v, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	return string(v), nil
+}
+
+// Scan converts database value to a map
+func (m *StringStringMap) Scan(src interface{}) error {
+	var sourceStr string
+	sourceByte, ok := src.([]byte)
+	if !ok {
+		sourceStr, ok = src.(string)
+		if !ok {
+			return errors.New("type assertion from string / byte")
+		}
+		sourceByte = []byte(sourceStr)
+	}
+
+	if err := json.Unmarshal(sourceByte, m); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Report represents a project
 type Report struct {
 	Model
@@ -176,7 +201,9 @@ type Report struct {
 	StatusCodeDist StringIntMap `json:"statusCodeDistribution,omitempty" gorm:"type:varchar(512)"`
 
 	LatencyDistribution LatencyDistributionList `json:"latencyDistribution" gorm:"type:varchar(512)"`
-	Histogram           BucketList              `json:"histogram"  gorm:"type:varchar(512)"`
+	Histogram           BucketList              `json:"histogram" gorm:"type:varchar(512)"`
+
+	Tags StringStringMap `json:"tags,omitempty" gorm:"type:varchar(512)"`
 }
 
 // BeforeSave is called by GORM before save

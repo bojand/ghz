@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bojand/ghz/runner"
 	"github.com/bojand/ghz/web/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,55 +66,55 @@ func TestDatabase_Report(t *testing.T) {
 			"Internal":         3,
 			"DeadlineExceeded": 2}
 
-		r.LatencyDistribution = []*model.LatencyDistribution{
-			&model.LatencyDistribution{
+		r.LatencyDistribution = []*runner.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 25,
 				Latency:    time.Duration(1 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 50,
 				Latency:    time.Duration(5 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 75,
 				Latency:    time.Duration(10 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 90,
 				Latency:    time.Duration(15 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 95,
 				Latency:    time.Duration(20 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 99,
 				Latency:    time.Duration(25 * time.Millisecond),
 			},
 		}
 
-		r.Histogram = []*model.Bucket{
-			&model.Bucket{
+		r.Histogram = []*runner.Bucket{
+			&runner.Bucket{
 				Mark:      0.01,
 				Count:     1,
 				Frequency: 0.005,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.02,
 				Count:     10,
 				Frequency: 0.01,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.03,
 				Count:     50,
 				Frequency: 0.1,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.05,
 				Count:     60,
 				Frequency: 0.15,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.1,
 				Count:     15,
 				Frequency: 0.07,
@@ -184,55 +185,55 @@ func TestDatabase_Report(t *testing.T) {
 			"Internal":         1,
 			"DeadlineExceeded": 4}
 
-		r.LatencyDistribution = []*model.LatencyDistribution{
-			&model.LatencyDistribution{
+		r.LatencyDistribution = []*runner.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 25,
 				Latency:    time.Duration(2 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 50,
 				Latency:    time.Duration(6 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 75,
 				Latency:    time.Duration(11 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 90,
 				Latency:    time.Duration(16 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 95,
 				Latency:    time.Duration(21 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 99,
 				Latency:    time.Duration(27 * time.Millisecond),
 			},
 		}
 
-		r.Histogram = []*model.Bucket{
-			&model.Bucket{
+		r.Histogram = []*runner.Bucket{
+			&runner.Bucket{
 				Mark:      0.02,
 				Count:     2,
 				Frequency: 0.006,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.02,
 				Count:     10,
 				Frequency: 0.01,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.03,
 				Count:     50,
 				Frequency: 0.1,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.05,
 				Count:     60,
 				Frequency: 0.15,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.15,
 				Count:     19,
 				Frequency: 0.08,
@@ -299,50 +300,50 @@ func TestDatabase_Report(t *testing.T) {
 			"Internal":         2,
 			"DeadlineExceeded": 2}
 
-		r.LatencyDistribution = []*model.LatencyDistribution{
-			&model.LatencyDistribution{
+		r.LatencyDistribution = []*runner.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 25,
 				Latency:    time.Duration(3 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 50,
 				Latency:    time.Duration(7 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 75,
 				Latency:    time.Duration(12 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 90,
 				Latency:    time.Duration(17 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 95,
 				Latency:    time.Duration(22 * time.Millisecond),
 			},
-			&model.LatencyDistribution{
+			&runner.LatencyDistribution{
 				Percentage: 99,
 				Latency:    time.Duration(30 * time.Millisecond),
 			},
 		}
 
-		r.Histogram = []*model.Bucket{
-			&model.Bucket{
+		r.Histogram = []*runner.Bucket{
+			&runner.Bucket{
 				Mark:      0.03,
 				Count:     3,
 				Frequency: 0.007,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.02,
 				Count:     10,
 				Frequency: 0.01,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.05,
 				Count:     60,
 				Frequency: 0.15,
 			},
-			&model.Bucket{
+			&runner.Bucket{
 				Mark:      0.17,
 				Count:     22,
 				Frequency: 0.11,
@@ -409,23 +410,23 @@ func TestDatabase_Report(t *testing.T) {
 
 		assert.NotNil(t, r.LatencyDistribution)
 		assert.Len(t, r.LatencyDistribution, 6)
-		assert.Equal(t, &model.LatencyDistribution{
+		assert.Equal(t, &runner.LatencyDistribution{
 			Percentage: 25,
 			Latency:    time.Duration(1 * time.Millisecond),
 		}, r.LatencyDistribution[0])
-		assert.Equal(t, &model.LatencyDistribution{
+		assert.Equal(t, &runner.LatencyDistribution{
 			Percentage: 99,
 			Latency:    time.Duration(25 * time.Millisecond),
 		}, r.LatencyDistribution[5])
 
 		assert.NotNil(t, r.Histogram)
 		assert.Len(t, r.Histogram, 5)
-		assert.Equal(t, &model.Bucket{
+		assert.Equal(t, &runner.Bucket{
 			Mark:      0.01,
 			Count:     1,
 			Frequency: 0.005,
 		}, r.Histogram[0])
-		assert.Equal(t, &model.Bucket{
+		assert.Equal(t, &runner.Bucket{
 			Mark:      0.1,
 			Count:     15,
 			Frequency: 0.07,
@@ -473,23 +474,23 @@ func TestDatabase_Report(t *testing.T) {
 
 		assert.NotNil(t, r.LatencyDistribution)
 		assert.Len(t, r.LatencyDistribution, 6)
-		assert.Equal(t, &model.LatencyDistribution{
+		assert.Equal(t, &runner.LatencyDistribution{
 			Percentage: 25,
 			Latency:    time.Duration(2 * time.Millisecond),
 		}, r.LatencyDistribution[0])
-		assert.Equal(t, &model.LatencyDistribution{
+		assert.Equal(t, &runner.LatencyDistribution{
 			Percentage: 99,
 			Latency:    time.Duration(27 * time.Millisecond),
 		}, r.LatencyDistribution[5])
 
 		assert.NotNil(t, r.Histogram)
 		assert.Len(t, r.Histogram, 5)
-		assert.Equal(t, &model.Bucket{
+		assert.Equal(t, &runner.Bucket{
 			Mark:      0.02,
 			Count:     2,
 			Frequency: 0.006,
 		}, r.Histogram[0])
-		assert.Equal(t, &model.Bucket{
+		assert.Equal(t, &runner.Bucket{
 			Mark:      0.15,
 			Count:     19,
 			Frequency: 0.08,
@@ -537,23 +538,23 @@ func TestDatabase_Report(t *testing.T) {
 
 		assert.NotNil(t, r.LatencyDistribution)
 		assert.Len(t, r.LatencyDistribution, 6)
-		assert.Equal(t, &model.LatencyDistribution{
+		assert.Equal(t, &runner.LatencyDistribution{
 			Percentage: 25,
 			Latency:    time.Duration(3 * time.Millisecond),
 		}, r.LatencyDistribution[0])
-		assert.Equal(t, &model.LatencyDistribution{
+		assert.Equal(t, &runner.LatencyDistribution{
 			Percentage: 99,
 			Latency:    time.Duration(30 * time.Millisecond),
 		}, r.LatencyDistribution[5])
 
 		assert.NotNil(t, r.Histogram)
 		assert.Len(t, r.Histogram, 4)
-		assert.Equal(t, &model.Bucket{
+		assert.Equal(t, &runner.Bucket{
 			Mark:      0.03,
 			Count:     3,
 			Frequency: 0.007,
 		}, r.Histogram[0])
-		assert.Equal(t, &model.Bucket{
+		assert.Equal(t, &runner.Bucket{
 			Mark:      0.17,
 			Count:     22,
 			Frequency: 0.11,
