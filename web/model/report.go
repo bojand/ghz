@@ -195,15 +195,15 @@ type Report struct {
 
 	Status Status `json:"status" gorm:"not null"`
 
-	Options *Options `json:"options,omitempty" gorm:"type:varchar(512)"`
+	Options *Options `json:"options,omitempty" gorm:"type:TEXT"`
 
-	ErrorDist      StringIntMap `json:"errorDistribution,omitempty" gorm:"type:varchar(512)"`
-	StatusCodeDist StringIntMap `json:"statusCodeDistribution,omitempty" gorm:"type:varchar(512)"`
+	ErrorDist      StringIntMap `json:"errorDistribution,omitempty" gorm:"type:TEXT"`
+	StatusCodeDist StringIntMap `json:"statusCodeDistribution,omitempty" gorm:"type:TEXT"`
 
-	LatencyDistribution LatencyDistributionList `json:"latencyDistribution" gorm:"type:varchar(512)"`
-	Histogram           BucketList              `json:"histogram" gorm:"type:varchar(512)"`
+	LatencyDistribution LatencyDistributionList `json:"latencyDistribution" gorm:"type:TEXT"`
+	Histogram           BucketList              `json:"histogram" gorm:"type:TEXT"`
 
-	Tags StringStringMap `json:"tags,omitempty" gorm:"type:varchar(512)"`
+	Tags StringStringMap `json:"tags,omitempty" gorm:"type:TEXT"`
 }
 
 // BeforeSave is called by GORM before save

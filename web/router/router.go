@@ -41,6 +41,10 @@ func New(db *database.Database, conf *config.Config) (*echo.Echo, error) {
 	projectGroup := apiRoot.Group("/projects")
 	setupProjectAPI(projectGroup, db)
 
+	// ingest
+	ingestAPI := api.IngestAPI{DB: db}
+	apiRoot.POST("/ingest/", ingestAPI.Ingest).Name = "ghz api: ingest"
+
 	// Frontend
 
 	s.Static("/", "ui/dist").Name = "ghz api: static"
