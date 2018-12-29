@@ -1,8 +1,6 @@
 package model
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -49,10 +47,11 @@ func TestReport(t *testing.T) {
 
 	// Migrate the schema
 	db.AutoMigrate(&Project{}, &Report{}, &Detail{})
+	db.Exec("PRAGMA foreign_keys = ON;")
 
 	var rid, pid uint
 
-	t.Run("test create", func(t *testing.T) {
+	t.Run("create", func(t *testing.T) {
 		p := Project{
 			Name:        "Test Project 111 ",
 			Description: "Test Description Asdf ",
@@ -171,12 +170,9 @@ func TestReport(t *testing.T) {
 		assert.Nil(t, p2.DeletedAt)
 	})
 
-	t.Run("test read", func(t *testing.T) {
+	t.Run("read", func(t *testing.T) {
 		r := new(Report)
 		err = db.First(r, rid).Error
-
-		bolB, _ := json.Marshal(r)
-		fmt.Println(string(bolB))
 
 		assert.NoError(t, err)
 
@@ -234,5 +230,57 @@ func TestReport(t *testing.T) {
 			Count:     15,
 			Frequency: 0.07,
 		}, r.Histogram[4])
+	})
+
+	t.Run("create with project id", func(t *testing.T) {
+		r := Report{
+			ProjectID: pid,
+			Name:      "Test report 2",
+			EndReason: "cancelled",
+			Date:      time.Now(),
+			Count:     300,
+			Total:     time.Duration(3 * time.Second),
+			Average:   time.Duration(11 * time.Millisecond),
+			Fastest:   time.Duration(2 * time.Millisecond),
+			Slowest:   time.Duration(120 * time.Millisecond),
+			Rps:       2100,
+		}
+
+		err := db.Create(&r).Error
+
+		assert.NoError(t, err)
+		assert.NotZero(t, r.ID)
+
+		r2 := new(Report)
+		err = db.First(r2, r.ID).Error
+
+		assert.NoError(t, err)
+		assert.Equal(t, r.Name, r2.Name)
+		assert.Equal(t, r.EndReason, r2.EndReason)
+		assert.Equal(t, StatusOK, r2.Status)
+		assert.NotNil(t, r2.CreatedAt)
+		assert.NotNil(t, r2.UpdatedAt)
+		assert.Nil(t, r2.DeletedAt)
+		assert.Equal(t, uint64(300), r2.Count)
+		assert.Equal(t, float64(2100), r2.Rps)
+	})
+
+	t.Run("fail with invalid project id", func(t *testing.T) {
+		r := Report{
+			ProjectID: 123432,
+			Name:      "Test report 2",
+			EndReason: "cancelled",
+			Date:      time.Now(),
+			Count:     300,
+			Total:     time.Duration(3 * time.Second),
+			Average:   time.Duration(11 * time.Millisecond),
+			Fastest:   time.Duration(2 * time.Millisecond),
+			Slowest:   time.Duration(120 * time.Millisecond),
+			Rps:       2100,
+		}
+
+		err := db.Create(&r).Error
+
+		assert.Error(t, err)
 	})
 }

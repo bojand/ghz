@@ -17,7 +17,7 @@ type Detail struct {
 	Report *Report `json:"-"`
 
 	// Run id
-	ReportID uint `json:"reportID" gorm:"type:integer REFERENCES reports(id)"`
+	ReportID uint `json:"reportID" gorm:"type:integer REFERENCES reports(id);not null"`
 
 	runner.ResultDetail
 }

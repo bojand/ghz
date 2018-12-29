@@ -1,10 +1,12 @@
 package model
 
 import (
+	"os"
 	"testing"
 	"time"
 
 	"github.com/bojand/ghz/runner"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,4 +69,124 @@ func TestDetail_UnmarshalJSON(t *testing.T) {
 			assert.Equal(t, tt.expected, &d)
 		})
 	}
+}
+
+func TestDetail(t *testing.T) {
+	defer os.Remove(dbName)
+
+	db, err := gorm.Open("sqlite3", dbName)
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+	defer db.Close()
+
+	db.LogMode(true)
+
+	// Migrate the schema
+	db.AutoMigrate(&Project{}, &Report{}, &Detail{})
+	db.Exec("PRAGMA foreign_keys = ON;")
+
+	var rid, did uint
+
+	t.Run("test create", func(t *testing.T) {
+		p := Project{
+			Name:        "Test Project 111 ",
+			Description: "Test Description Asdf ",
+		}
+
+		r := Report{
+			Project:   &p,
+			Name:      "Test report",
+			EndReason: "normal",
+			Date:      time.Now(),
+			Count:     200,
+			Total:     time.Duration(2 * time.Second),
+			Average:   time.Duration(10 * time.Millisecond),
+			Fastest:   time.Duration(1 * time.Millisecond),
+			Slowest:   time.Duration(100 * time.Millisecond),
+			Rps:       2000,
+		}
+
+		d := Detail{
+			Report: &r,
+			ResultDetail: runner.ResultDetail{
+				Timestamp: time.Now(),
+				Latency:   time.Duration(1 * time.Millisecond),
+				Status:    "OK",
+			},
+		}
+
+		err := db.Create(&d).Error
+
+		assert.NoError(t, err)
+		assert.NotZero(t, p.ID)
+		assert.NotZero(t, r.ID)
+		assert.NotZero(t, d.ID)
+
+		did = d.ID
+		rid = r.ID
+	})
+
+	t.Run("read", func(t *testing.T) {
+		d := new(Detail)
+		err = db.First(d, did).Error
+
+		assert.NoError(t, err)
+
+		assert.Equal(t, rid, d.ReportID)
+		assert.Equal(t, did, d.ID)
+		assert.Nil(t, d.Report)
+		assert.NotZero(t, d.Timestamp)
+		assert.Equal(t, time.Duration(1*time.Millisecond), d.Latency)
+		assert.NotNil(t, d.CreatedAt)
+		assert.NotNil(t, d.UpdatedAt)
+		assert.Nil(t, d.DeletedAt)
+		assert.Equal(t, "OK", d.Status)
+	})
+
+	t.Run("test create with report id", func(t *testing.T) {
+		detail := Detail{
+			ReportID: rid,
+			ResultDetail: runner.ResultDetail{
+				Timestamp: time.Now(),
+				Latency:   time.Duration(2 * time.Millisecond),
+				Status:    "CANCELED",
+			},
+		}
+
+		err := db.Create(&detail).Error
+
+		assert.NoError(t, err)
+		assert.NotZero(t, detail.ID)
+
+		d := new(Detail)
+		err = db.First(d, detail.ID).Error
+
+		assert.NoError(t, err)
+
+		assert.Equal(t, rid, d.ReportID)
+		assert.Equal(t, detail.ID, d.ID)
+		assert.Nil(t, d.Report)
+		assert.NotZero(t, d.Timestamp)
+		assert.Equal(t, time.Duration(2*time.Millisecond), d.Latency)
+		assert.NotNil(t, d.CreatedAt)
+		assert.NotNil(t, d.UpdatedAt)
+		assert.Nil(t, d.DeletedAt)
+		assert.Equal(t, "CANCELED", d.Status)
+	})
+
+	t.Run("fail create with unknown report id", func(t *testing.T) {
+		detail := Detail{
+			ReportID: 1233211,
+			ResultDetail: runner.ResultDetail{
+				Timestamp: time.Now(),
+				Latency:   time.Duration(2 * time.Millisecond),
+				Status:    "CANCELED",
+			},
+		}
+
+		err := db.Create(&detail).Error
+
+		assert.Error(t, err)
+	})
 }

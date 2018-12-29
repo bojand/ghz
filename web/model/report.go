@@ -154,7 +154,7 @@ func (m *StringIntMap) Scan(src interface{}) error {
 type Report struct {
 	Model
 
-	ProjectID uint     `json:"projectID" gorm:"type:integer REFERENCES projects(id)"`
+	ProjectID uint     `json:"projectID" gorm:"type:integer REFERENCES projects(id);not null"`
 	Project   *Project `json:"-"`
 
 	Name      string    `json:"name,omitempty"`

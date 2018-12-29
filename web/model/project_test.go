@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const dbName = "../test/project_test.db"
+const dbName = "../test/test.db"
 
 func TestProject_Create(t *testing.T) {
 	defer os.Remove(dbName)
@@ -24,6 +24,7 @@ func TestProject_Create(t *testing.T) {
 
 	// Migrate the schema
 	db.AutoMigrate(&Project{})
+	db.Exec("PRAGMA foreign_keys = ON;")
 
 	t.Run("test new", func(t *testing.T) {
 		p := Project{
