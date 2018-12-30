@@ -9,17 +9,17 @@ import {
   formatNano
 } from '../lib/common'
 
-import HistogramChart from './HistogramChart'
 import StatusCodeChart from './ReportDistChart'
 import OptionsPane from './OptionsPane'
 import LatencyPane from './LatencyPane'
+import HistogramPane from './HistogramPane'
 
 import HistogramContainer from '../containers/HistogramContainer'
 import OptionsContainer from '../containers/OptionsContainer'
 import LatencyContainer from '../containers/LatencyContainer'
 
 export default class ReportDetailPane extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this.state = {
@@ -52,7 +52,7 @@ export default class ReportDetailPane extends Component {
 
     let statusKey = 0
     let errKey = 0
-    
+
     let tagKey = 0
 
     return (
@@ -143,12 +143,17 @@ export default class ReportDetailPane extends Component {
 
         <Pane display='flex' alignItems='left' marginTop={24} marginBottom={24}>
           <Pane flex={4}>
-            <Pane>
-              <Heading size={500}>Histogram</Heading>
-            </Pane>
-            <Pane marginTop={20}>
-              <HistogramChart report={currentReport} />
-            </Pane>
+            <Provider>
+              <Subscribe to={[HistogramContainer]}>
+                {histogramStore => (
+                  <HistogramPane
+                    histogramStore={histogramStore}
+                    reportId={currentReport.id}
+                    count={currentReport.count}
+                  />
+                )}
+              </Subscribe>
+            </Provider>
           </Pane>
           <Pane flex={1} marginLeft={30} marginRight={16}>
             <Provider>
