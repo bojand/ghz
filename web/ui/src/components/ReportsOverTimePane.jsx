@@ -8,13 +8,13 @@ export default class ReportsOverTimePane extends Component {
     super(props)
 
     this.state = {
-      projectId: props.projectId || -1,
+      projectId: props.projectId || 0,
       reports: this.props.reportStore.state.reports
     }
   }
 
   async componentDidMount () {
-    await this.props.reportStore.fetchReports()
+    await this.props.reportStore.fetchReports('desc', 'date', 0, this.state.projectId)
   }
 
   async componentDidUpdate (prevProps) {
@@ -24,7 +24,9 @@ export default class ReportsOverTimePane extends Component {
 
       if ((currentList.length === 0 && prevList.length > 0) &&
         !this.props.reportStore.state.isFetching) {
-        await this.props.reportStore.fetchReports()
+        await this.props.reportStore.fetchReports(
+          'desc', 'date', 0, this.props.projectId
+        )
       }
     }
   }

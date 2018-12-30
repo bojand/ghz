@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Icon } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Icon, Tooltip } from 'evergreen-ui'
 import { Link as RouterLink } from 'react-router-dom'
 
 import {
@@ -7,7 +7,8 @@ import {
   getIconForOrder,
   getIconForStatus,
   getColorForStatus,
-  formatNano
+  formatNano,
+  formatFloat
 } from '../lib/common'
 
 export default class ReportList extends Component {
@@ -15,13 +16,16 @@ export default class ReportList extends Component {
     super(props)
 
     this.state = {
-      projectId: props.projectId || -1,
-      ordering: Order.NONE
+      projectId: props.projectId || 0,
+      ordering: Order.DESC,
+      sort: 'date',
+      page: 0
     }
   }
 
   componentDidMount () {
-    this.props.reportStore.fetchReports()
+    this.props.reportStore.fetchReports(
+      this.state.ordering, this.state.sort, this.state.page, this.state.projectId)
   }
 
   componentDidUpdate (prevProps) {
@@ -31,19 +35,34 @@ export default class ReportList extends Component {
       const prevList = prevProps.reportStore.state.reports
 
       if (currentList.length === 0 && prevList.length > 0) {
-        this.props.reportStore.fetchReports()
+        this.props.reportStore.fetchReports(
+          this.state.ordering, this.state.sort, this.state.page, this.props.projectId)
       }
     }
   }
 
   sort () {
-    this.props.reportStore.fetchReports(true)
     const order = this.state.ordering === Order.ASC ? Order.DESC : Order.ASC
+    this.props.reportStore.fetchReports(
+      order, this.state.sort, this.state.page, this.state.projectId)
     this.setState({ ordering: order })
   }
 
+  fetchPage (page) {
+    if (page < 0) {
+      page = 0
+    }
+
+    this.setState({ page })
+
+    this.props.reportStore.fetchReports(
+      this.state.ordering, this.state.sort, this.state.page, this.state.projectId)
+  }
+
   render () {
-    const { state: { reports } } = this.props.reportStore
+    const { state: { reports, total } } = this.props.reportStore
+
+    const totalPerPage = 20
 
     return (
       <Pane>
@@ -91,9 +110,19 @@ export default class ReportList extends Component {
             {reports.map(p => (
               <Table.Row key={p.id}>
                 <Table.TextCell minWidth={210} textProps={{ size: 400 }}>
-                  <RouterLink to={`/reports/${p.id}`}>
-                    {p.date}
-                  </RouterLink>
+                  {p.name
+                    ? (
+                      <Tooltip content={p.name}>
+                        <RouterLink to={`/reports/${p.id}`}>
+                          {p.date}
+                        </RouterLink>
+                      </Tooltip>
+                    )
+                    : (
+                      <RouterLink to={`/reports/${p.id}`}>
+                        {p.date}
+                      </RouterLink>
+                    )}
                 </Table.TextCell>
                 <Table.TextCell isNumber maxWidth={100}>
                   {p.count}
@@ -111,7 +140,7 @@ export default class ReportList extends Component {
                   {formatNano(p.fastest)} ms
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {p.rps}
+                  {formatFloat(p.rps)}
                 </Table.TextCell>
                 <Table.TextCell
                   display='flex' textAlign='center' maxWidth={80}>
@@ -122,6 +151,19 @@ export default class ReportList extends Component {
               </Table.Row>
             ))}
           </Table.Body>
+          <Pane justifyContent='right' marginTop={10} display='flex'>
+            <IconButton
+              disabled={total < totalPerPage || this.state.page === 0}
+              icon='chevron-left'
+              onClick={() => this.fetchPage(this.state.page - 1)}
+            />
+            <IconButton
+              disabled={total < totalPerPage || reports.length < totalPerPage}
+              marginLeft={10}
+              icon='chevron-right'
+              onClick={() => this.fetchPage(this.state.page + 1)}
+            />
+          </Pane>
         </Table>
       </Pane>
     )
