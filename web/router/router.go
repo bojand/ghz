@@ -15,7 +15,7 @@ import (
 )
 
 // New creates new server
-func New(db *database.Database, conf *config.Config) (*echo.Echo, error) {
+func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Config) (*echo.Echo, error) {
 	s := echo.New()
 
 	s.Logger.SetLevel(getLogLevel(conf))
@@ -72,6 +72,11 @@ func New(db *database.Database, conf *config.Config) (*echo.Echo, error) {
 
 	ingestAPI := api.IngestAPI{DB: db}
 	apiRoot.POST("/ingest/", ingestAPI.Ingest).Name = "ghz api: ingest"
+
+	// Info
+
+	infoAPI := api.InfoAPI{Info: *appInfo}
+	apiRoot.GET("/info/", infoAPI.GetApplicationInfo).Name = "ghz api: get info"
 
 	// Frontend
 

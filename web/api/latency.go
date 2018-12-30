@@ -13,12 +13,12 @@ type LatencyDatabase interface {
 	GetLatencyDistributionForReport(uint) (*model.LatencyDistribution, error)
 }
 
-// The LatencyAPI provides handlers for managing projects.
+// The LatencyAPI provides handlers.
 type LatencyAPI struct {
 	DB LatencyDatabase
 }
 
-// GetLatencyDistribution gets a project
+// GetLatencyDistribution gets latency distribution for a report
 func (api *LatencyAPI) GetLatencyDistribution(ctx echo.Context) error {
 	var id uint64
 	var ld *model.LatencyDistribution

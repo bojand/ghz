@@ -18,7 +18,7 @@ type ReportDatabase interface {
 	ListReportsForProject(pid, limit, page uint, sortField, order string) ([]*model.Report, error)
 }
 
-// The ReportAPI provides handlers for managing projects.
+// The ReportAPI provides handlers for managing reports.
 type ReportAPI struct {
 	DB ReportDatabase
 }
@@ -29,7 +29,7 @@ type ReportList struct {
 	Data  []*model.Report `json:"data"`
 }
 
-// ListReportsForProject gets a project
+// ListReportsForProject lists reports for a project
 func (api *ReportAPI) ListReportsForProject(ctx echo.Context) error {
 	var projectID uint64
 	var err error
@@ -46,7 +46,7 @@ func (api *ReportAPI) ListReportsForProject(ctx echo.Context) error {
 	return api.listReports(true, uint(projectID), ctx)
 }
 
-// ListReportsAll gets a project
+// ListReportsAll gets a list of all reports
 func (api *ReportAPI) ListReportsAll(ctx echo.Context) error {
 	return api.listReports(false, 0, ctx)
 }
@@ -118,7 +118,7 @@ func (api *ReportAPI) listReports(forProject bool, projectID uint, ctx echo.Cont
 	return ctx.JSON(http.StatusOK, rl)
 }
 
-// GetReport gets a project
+// GetReport gets a report
 func (api *ReportAPI) GetReport(ctx echo.Context) error {
 	var id uint64
 	var report *model.Report

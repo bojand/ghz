@@ -14,6 +14,7 @@
 .glide/
 
 cmd/ghz/ghz
+cmd/ghz-web/ghz-web
 cmd/server/server
 
 dist

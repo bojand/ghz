@@ -8,7 +8,9 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/bojand/ghz/web/api"
 	"github.com/bojand/ghz/web/config"
 	"github.com/bojand/ghz/web/database"
 	"github.com/bojand/ghz/web/router"
@@ -17,6 +19,7 @@ import (
 var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
+	date    = "unknown"
 	cPath   = flag.String("config", "", "Path to the config file.")
 	v       = flag.Bool("v", false, "Print the version.")
 )
@@ -52,7 +55,14 @@ func main() {
 	}
 	defer db.Close()
 
-	server, err := router.New(db, conf)
+	info := &api.ApplicationInfo{
+		Version:   version,
+		BuildDate: date,
+		GOVersion: runtime.Version(),
+		StartTime: time.Now(),
+	}
+
+	server, err := router.New(db, info, conf)
 	if err != nil {
 		panic(err)
 	}

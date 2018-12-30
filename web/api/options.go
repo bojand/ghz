@@ -13,12 +13,12 @@ type OptionsDatabase interface {
 	GetOptionsForReport(uint) (*model.Options, error)
 }
 
-// The OptionsAPI provides handlers for managing projects.
+// The OptionsAPI provides handlers
 type OptionsAPI struct {
 	DB OptionsDatabase
 }
 
-// GetHistogram gets a project
+// GetHistogram gets options for a report
 func (api *OptionsAPI) GetOptions(ctx echo.Context) error {
 	var id uint64
 	var o *model.Options

@@ -13,12 +13,12 @@ type HistogramDatabase interface {
 	GetHistogramForReport(uint) (*model.Histogram, error)
 }
 
-// The HistogramAPI provides handlers for managing projects.
+// The HistogramAPI provides handlers.
 type HistogramAPI struct {
 	DB HistogramDatabase
 }
 
-// GetHistogram gets a project
+// GetHistogram gets a histogram for the report
 func (api *HistogramAPI) GetHistogram(ctx echo.Context) error {
 	var id uint64
 	var h *model.Histogram
