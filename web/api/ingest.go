@@ -12,6 +12,8 @@ import (
 type IngestDatabase interface {
 	CreateProject(*model.Project) error
 	CreateReport(*model.Report) error
+	CreateLatencyDistribution(*model.LatencyDistribution) error
+	CreateHistogram(*model.Histogram) error
 	FindProjectByID(uint) (*model.Project, error)
 	CreateDetailsBatch(uint, []*model.Detail) (uint, uint)
 }
@@ -21,8 +23,14 @@ type IngestResponse struct {
 	// Created project
 	Project *model.Project `json:"project"`
 
-	// Created run
+	// Created report
 	Report *model.Report `json:"report"`
+
+	// Created LatencyDistribution
+	LatencyDistribution *model.LatencyDistribution `json:"latencyDistribution"`
+
+	// Created Histogram
+	Histogram *model.Histogram `json:"histogram"`
 
 	// The summary of created details
 	Details *DetailsCreated `json:"details"`
@@ -71,6 +79,32 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	ld := &model.LatencyDistribution{
+		ReportID: report.ID,
+	}
+
+	ld.List = make(model.LatencyDistributionList, len(ir.LatencyDistribution))
+	for i, v := range ir.LatencyDistribution {
+		ld.List[i] = &v
+	}
+
+	if err := api.DB.CreateLatencyDistribution(ld); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	h := &model.Histogram{
+		ReportID: report.ID,
+	}
+
+	h.Buckets = make(model.BucketList, len(ir.Histogram))
+	for i, v := range ir.Histogram {
+		h.Buckets[i] = &v
+	}
+
+	if err := api.DB.CreateHistogram(h); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	details := make([]*model.Detail, len(ir.Details))
 	for i, v := range ir.Details {
 		det := model.Detail{ReportID: report.ID, ResultDetail: v}
@@ -80,8 +114,10 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 	created, errored := api.DB.CreateDetailsBatch(report.ID, details)
 
 	rres := &IngestResponse{
-		Project: p,
-		Report:  report,
+		Project:             p,
+		Report:              report,
+		LatencyDistribution: ld,
+		Histogram:           h,
 		Details: &DetailsCreated{
 			Success: created,
 			Fail:    errored,
@@ -113,16 +149,6 @@ func convertIngestToReport(pid uint, ir *IngestRequest) *model.Report {
 	r.ErrorDist = ir.ErrorDist
 
 	r.StatusCodeDist = ir.StatusCodeDist
-
-	r.LatencyDistribution = make(model.LatencyDistributionList, len(ir.LatencyDistribution))
-	for i, v := range ir.LatencyDistribution {
-		r.LatencyDistribution[i] = &v
-	}
-
-	r.Histogram = make(model.BucketList, len(ir.Histogram))
-	for i, v := range ir.Histogram {
-		r.Histogram[i] = &v
-	}
 
 	r.Tags = ir.Tags
 

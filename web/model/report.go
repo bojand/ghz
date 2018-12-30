@@ -10,78 +10,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// LatencyDistributionList is a slice of LatencyDistribution pointers
-type LatencyDistributionList []*runner.LatencyDistribution
-
-// Value converts struct to a database value
-func (ld LatencyDistributionList) Value() (driver.Value, error) {
-	v, err := json.Marshal(ld)
-	if err != nil {
-		return nil, err
-	}
-	return string(v), nil
-}
-
-// Scan converts database value to a struct
-func (ld *LatencyDistributionList) Scan(src interface{}) error {
-	var sourceStr string
-	sourceByte, ok := src.([]byte)
-	if !ok {
-		sourceStr, ok = src.(string)
-		if !ok {
-			return errors.New("type assertion from string / byte")
-		}
-		sourceByte = []byte(sourceStr)
-	}
-
-	var lds []runner.LatencyDistribution
-	if err := json.Unmarshal(sourceByte, &lds); err != nil {
-		return err
-	}
-
-	for index := range lds {
-		*ld = append(*ld, &lds[index])
-	}
-
-	return nil
-}
-
-// BucketList is a slice of buckets
-type BucketList []*runner.Bucket
-
-// Value converts struct to a database value
-func (bl BucketList) Value() (driver.Value, error) {
-	v, err := json.Marshal(bl)
-	if err != nil {
-		return nil, err
-	}
-	return string(v), nil
-}
-
-// Scan converts database value to a struct
-func (bl *BucketList) Scan(src interface{}) error {
-	var sourceStr string
-	sourceByte, ok := src.([]byte)
-	if !ok {
-		sourceStr, ok = src.(string)
-		if !ok {
-			return errors.New("type assertion from string / byte")
-		}
-		sourceByte = []byte(sourceStr)
-	}
-
-	var buckets []runner.Bucket
-	if err := json.Unmarshal(sourceByte, &buckets); err != nil {
-		return err
-	}
-
-	for index := range buckets {
-		*bl = append(*bl, &buckets[index])
-	}
-
-	return nil
-}
-
 // Options represents the report options
 type Options runner.Options
 
@@ -199,9 +127,6 @@ type Report struct {
 
 	ErrorDist      StringIntMap `json:"errorDistribution,omitempty" gorm:"type:TEXT"`
 	StatusCodeDist StringIntMap `json:"statusCodeDistribution,omitempty" gorm:"type:TEXT"`
-
-	LatencyDistribution LatencyDistributionList `json:"latencyDistribution" gorm:"type:TEXT"`
-	Histogram           BucketList              `json:"histogram" gorm:"type:TEXT"`
 
 	Tags StringStringMap `json:"tags,omitempty" gorm:"type:TEXT"`
 }

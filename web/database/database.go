@@ -34,7 +34,13 @@ func New(dialect, connection string) (*Database, error) {
 		db.Exec("PRAGMA foreign_keys = ON;")
 	}
 
-	db.AutoMigrate(new(model.Project), new(model.Report), new(model.Detail))
+	db.AutoMigrate(
+		new(model.Project),
+		new(model.Report),
+		new(model.Detail),
+		new(model.Histogram),
+		new(model.LatencyDistribution),
+	)
 
 	return &Database{DB: db}, nil
 }
