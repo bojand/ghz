@@ -6,40 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/bojand/ghz/runner"
 	"github.com/jinzhu/gorm"
 )
-
-// Options represents the report options
-type Options runner.Options
-
-// Value converts options struct to a database value
-func (o Options) Value() (driver.Value, error) {
-	v, err := json.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return string(v), nil
-}
-
-// Scan converts database value to an Options struct
-func (o *Options) Scan(src interface{}) error {
-	var sourceStr string
-	sourceByte, ok := src.([]byte)
-	if !ok {
-		sourceStr, ok = src.(string)
-		if !ok {
-			return errors.New("type assertion from string / byte")
-		}
-		sourceByte = []byte(sourceStr)
-	}
-
-	if err := json.Unmarshal(sourceByte, o); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 // StringIntMap is a map of string keys to int values
 type StringIntMap map[string]int
@@ -122,8 +90,6 @@ type Report struct {
 	Rps     float64       `json:"rps"`
 
 	Status Status `json:"status" gorm:"not null"`
-
-	Options *Options `json:"options,omitempty" gorm:"type:TEXT"`
 
 	ErrorDist      StringIntMap `json:"errorDistribution,omitempty" gorm:"type:TEXT"`
 	StatusCodeDist StringIntMap `json:"statusCodeDistribution,omitempty" gorm:"type:TEXT"`

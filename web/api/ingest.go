@@ -14,6 +14,7 @@ type IngestDatabase interface {
 	CreateReport(*model.Report) error
 	CreateLatencyDistribution(*model.LatencyDistribution) error
 	CreateHistogram(*model.Histogram) error
+	CreateOptions(*model.Options) error
 	FindProjectByID(uint) (*model.Project, error)
 	CreateDetailsBatch(uint, []*model.Detail) (uint, uint)
 }
@@ -25,6 +26,9 @@ type IngestResponse struct {
 
 	// Created report
 	Report *model.Report `json:"report"`
+
+	// Created Options
+	Options *model.Options `json:"options"`
 
 	// Created LatencyDistribution
 	LatencyDistribution *model.LatencyDistribution `json:"latencyDistribution"`
@@ -67,17 +71,32 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 		}
 	}
 
+	// Project
 	p := new(model.Project)
-
 	if err := api.DB.CreateProject(p); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	report := convertIngestToReport(p.ID, ir)
+	// Report
 
+	report := convertIngestToReport(p.ID, ir)
 	if err := api.DB.CreateReport(report); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// Options
+
+	o := &model.Options{
+		ReportID: report.ID,
+	}
+	opts := model.OptionsInfo(*ir.Options)
+	o.Info = &opts
+
+	if err := api.DB.CreateOptions(o); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// Latency Distribution
 
 	ld := &model.LatencyDistribution{
 		ReportID: report.ID,
@@ -91,10 +110,11 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 	if err := api.DB.CreateLatencyDistribution(ld); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-
 	h := &model.Histogram{
 		ReportID: report.ID,
 	}
+
+	// Histogram
 
 	h.Buckets = make(model.BucketList, len(ir.Histogram))
 	for i, v := range ir.Histogram {
@@ -105,6 +125,8 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// Details
+
 	details := make([]*model.Detail, len(ir.Details))
 	for i, v := range ir.Details {
 		det := model.Detail{ReportID: report.ID, ResultDetail: v}
@@ -113,9 +135,12 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 
 	created, errored := api.DB.CreateDetailsBatch(report.ID, details)
 
+	// Response
+
 	rres := &IngestResponse{
 		Project:             p,
 		Report:              report,
+		Options:             o,
 		LatencyDistribution: ld,
 		Histogram:           h,
 		Details: &DetailsCreated{
@@ -133,9 +158,6 @@ func convertIngestToReport(pid uint, ir *IngestRequest) *model.Report {
 
 	r.Name = ir.Name
 	r.EndReason = ir.EndReason.String()
-
-	opts := model.Options(*ir.Options)
-	r.Options = &opts
 
 	r.Date = ir.Date
 

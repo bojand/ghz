@@ -37,6 +37,7 @@ func New(dialect, connection string) (*Database, error) {
 	db.AutoMigrate(
 		new(model.Project),
 		new(model.Report),
+		new(model.Options),
 		new(model.Detail),
 		new(model.Histogram),
 		new(model.LatencyDistribution),
