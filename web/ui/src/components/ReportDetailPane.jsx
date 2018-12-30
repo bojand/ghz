@@ -1,16 +1,22 @@
 import React, { Component } from 'react'
-import { Pane, Heading, Icon, Pre, Strong, Table, Tooltip, Text, Badge } from 'evergreen-ui'
+import { Pane, Heading, Icon, Strong, Table, Tooltip, Text, Badge } from 'evergreen-ui'
 import _ from 'lodash'
+import { Provider, Subscribe } from 'unstated'
 
 import {
   getIconForStatus,
   getColorForStatus,
-  formatNano,
-  pretty
+  formatNano
 } from '../lib/common'
 
 import HistogramChart from './HistogramChart'
 import StatusCodeChart from './ReportDistChart'
+import OptionsPane from './OptionsPane'
+import LatencyPane from './LatencyPane'
+
+import HistogramContainer from '../containers/HistogramContainer'
+import OptionsContainer from '../containers/OptionsContainer'
+import LatencyContainer from '../containers/LatencyContainer'
 
 export default class ReportDetailPane extends Component {
   constructor (props) {
@@ -46,7 +52,7 @@ export default class ReportDetailPane extends Component {
 
     let statusKey = 0
     let errKey = 0
-    let latKey = 0
+    
     let tagKey = 0
 
     return (
@@ -120,15 +126,18 @@ export default class ReportDetailPane extends Component {
               </Table.Row>
             </Pane>
           </Pane>
+
           <Pane flex={2} marginLeft={20}>
-            <Heading>
-              Options
-            </Heading>
-            <Pane background='tint2' marginTop={16}>
-              <Pre fontFamily='monospace' paddingX={16} paddingY={16}>
-                {pretty(currentReport.options)}
-              </Pre>
-            </Pane>
+            <Provider>
+              <Subscribe to={[OptionsContainer]}>
+                {optionsStore => (
+                  <OptionsPane
+                    optionsStore={optionsStore}
+                    reportId={currentReport.id}
+                  />
+                )}
+              </Subscribe>
+            </Provider>
           </Pane>
         </Pane>
 
@@ -142,21 +151,16 @@ export default class ReportDetailPane extends Component {
             </Pane>
           </Pane>
           <Pane flex={1} marginLeft={30} marginRight={16}>
-            <Heading>
-              Latency Distribution
-            </Heading>
-            <Pane paddingY={10}>
-              {currentReport.latencyDistribution.map(p => (
-                <Table.Row key={'lat-' + latKey++}>
-                  <Table.TextCell maxWidth={60}>
-                    <Strong>{p.percentage} %</Strong>
-                  </Table.TextCell>
-                  <Table.TextCell isNumber>
-                    {formatNano(p.latency)} ms
-                  </Table.TextCell>
-                </Table.Row>
-              ))}
-            </Pane>
+            <Provider>
+              <Subscribe to={[LatencyContainer]}>
+                {latencyStore => (
+                  <LatencyPane
+                    latencyStore={latencyStore}
+                    reportId={currentReport.id}
+                  />
+                )}
+              </Subscribe>
+            </Provider>
           </Pane>
         </Pane>
 

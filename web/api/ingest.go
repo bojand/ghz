@@ -103,8 +103,8 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 	}
 
 	ld.List = make(model.LatencyDistributionList, len(ir.LatencyDistribution))
-	for i, v := range ir.LatencyDistribution {
-		ld.List[i] = &v
+	for i := range ir.LatencyDistribution {
+		ld.List[i] = &ir.LatencyDistribution[i]
 	}
 
 	if err := api.DB.CreateLatencyDistribution(ld); err != nil {
@@ -117,8 +117,8 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 	// Histogram
 
 	h.Buckets = make(model.BucketList, len(ir.Histogram))
-	for i, v := range ir.Histogram {
-		h.Buckets[i] = &v
+	for i := range ir.Histogram {
+		h.Buckets[i] = &ir.Histogram[i]
 	}
 
 	if err := api.DB.CreateHistogram(h); err != nil {

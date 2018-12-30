@@ -14,7 +14,7 @@ date4.setMonth(date3.getMonth() - 1)
 
 const reports = [{
   name: 'staging-oss.eventapi.createEvent',
-  id: 10,
+  id: 1,
   date: date1.toISOString(),
   projectId: 11,
   count: 200,
