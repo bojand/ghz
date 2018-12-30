@@ -39,9 +39,37 @@ func New(db *database.Database, conf *config.Config) (*echo.Echo, error) {
 	// Projects
 
 	projectGroup := apiRoot.Group("/projects")
-	setupProjectAPI(projectGroup, db)
 
-	// ingest
+	projectAPI := api.ProjectAPI{DB: db}
+
+	projectGroup.GET("/", projectAPI.ListProjects).Name = "ghz api: list projects"
+	projectGroup.POST("/", projectAPI.CreateProject).Name = "ghz api: create project"
+	projectGroup.GET("/:pid/", projectAPI.GetProject).Name = "ghz api: get project"
+	projectGroup.PUT("/:pid/", projectAPI.UpdateProject).Name = "ghz api: update project"
+	projectGroup.DELETE("/:pid/", projectAPI.DeleteProject).Name = "ghz api: delete project"
+
+	// Reports by Project
+
+	reportAPI := api.ReportAPI{DB: db}
+	projectGroup.GET("/:pid/reports/", reportAPI.ListReportsForProject).Name = "ghz api: list reports for project"
+
+	// Reports
+
+	reportGroup := apiRoot.Group("/reports")
+	reportGroup.GET("/", reportAPI.ListReportsAll).Name = "ghz api: list all reports"
+	reportGroup.GET("/:rid/", reportAPI.GetReport).Name = "ghz api: get report"
+
+	optionsAPI := api.OptionsAPI{DB: db}
+	reportGroup.GET("/:rid/options/", optionsAPI.GetOptions).Name = "ghz api: get options"
+
+	histogramAPI := api.HistogramAPI{DB: db}
+	reportGroup.GET("/:rid/histogram/", histogramAPI.GetHistogram).Name = "ghz api: get histogram"
+
+	latencyAPI := api.LatencyAPI{DB: db}
+	reportGroup.GET("/:rid/latencies/", latencyAPI.GetLatencyDistribution).Name = "ghz api: get latencies"
+
+	// Ingest
+
 	ingestAPI := api.IngestAPI{DB: db}
 	apiRoot.POST("/ingest/", ingestAPI.Ingest).Name = "ghz api: ingest"
 
@@ -50,16 +78,6 @@ func New(db *database.Database, conf *config.Config) (*echo.Echo, error) {
 	s.Static("/", "ui/dist").Name = "ghz api: static"
 
 	return s, nil
-}
-
-func setupProjectAPI(g *echo.Group, db *database.Database) {
-	projectHandler := api.ProjectAPI{DB: db}
-
-	g.GET("/", projectHandler.ListProjects).Name = "ghz api: list projects"
-	g.POST("/", projectHandler.CreateProject).Name = "ghz api: create project"
-	g.GET("/:pid/", projectHandler.GetProject).Name = "ghz api: get project"
-	g.PUT("/:pid/", projectHandler.UpdateProject).Name = "ghz api: update project"
-	g.DELETE("/:pid/", projectHandler.DeleteProject).Name = "ghz api: delete project"
 }
 
 // CustomValidator is our validator for the API
