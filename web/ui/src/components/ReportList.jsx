@@ -35,6 +35,7 @@ export default class ReportList extends Component {
       const prevList = prevProps.reportStore.state.reports
 
       if (currentList.length === 0 && prevList.length > 0) {
+        this.setState({ page: 0 })
         this.props.reportStore.fetchReports(
           this.state.ordering, this.state.sort, this.state.page, this.props.projectId)
       }
@@ -53,10 +54,10 @@ export default class ReportList extends Component {
       page = 0
     }
 
-    this.setState({ page })
-
     this.props.reportStore.fetchReports(
-      this.state.ordering, this.state.sort, this.state.page, this.state.projectId)
+      this.state.ordering, this.state.sort, page, this.state.projectId)
+
+    this.setState({ page })
   }
 
   render () {

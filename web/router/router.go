@@ -73,6 +73,9 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	ingestAPI := api.IngestAPI{DB: db}
 	apiRoot.POST("/ingest/", ingestAPI.Ingest).Name = "ghz api: ingest"
 
+	// Ingest to project
+	projectGroup.POST("/:pid/ingest/", ingestAPI.IngestToProject).Name = "ghz api: ingest to project"
+
 	// Info
 
 	infoAPI := api.InfoAPI{Info: *appInfo}

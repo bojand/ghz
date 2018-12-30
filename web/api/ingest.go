@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/bojand/ghz/runner"
 	"github.com/bojand/ghz/web/model"
@@ -77,6 +78,45 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	return api.ingestToProject(p, ir, ctx)
+}
+
+// IngestToProject ingests data into a specific project
+func (api *IngestAPI) IngestToProject(ctx echo.Context) error {
+	var projectID uint64
+	var err error
+
+	pid := ctx.Param("pid")
+	if pid == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "")
+	}
+
+	if projectID, err = strconv.ParseUint(pid, 10, 32); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	project := new(model.Project)
+	project, err = api.DB.FindProjectByID(uint(projectID))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	ir := new(IngestRequest)
+
+	if err := ctx.Bind(ir); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if ctx.Echo().Validator != nil {
+		if err := ctx.Validate(ir); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	return api.ingestToProject(project, ir, ctx)
+}
+
+func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx echo.Context) error {
 	// Report
 
 	report := convertIngestToReport(p.ID, ir)

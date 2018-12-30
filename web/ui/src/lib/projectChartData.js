@@ -66,6 +66,9 @@ function createLineChart (reports) {
     }
   })
 
+  const cubicInterpolationMode = 'monotone' // set to 'default' to get cubic
+  const lineTension = undefined // set to 0 to have straing lines
+
   const datasets = [
     {
       label: 'Average',
@@ -73,7 +76,9 @@ function createLineChart (reports) {
       borderColor: colors.blue,
       fill: false,
       data: avgData,
-      yAxisID: 'y-axis-lat'
+      yAxisID: 'y-axis-lat',
+      cubicInterpolationMode,
+      lineTension
     },
     {
       label: 'Fastest',
@@ -81,7 +86,9 @@ function createLineChart (reports) {
       borderColor: colors.green,
       fill: false,
       data: fastData,
-      yAxisID: 'y-axis-lat'
+      yAxisID: 'y-axis-lat',
+      cubicInterpolationMode,
+      lineTension
     },
     {
       label: 'Slowest',
@@ -89,7 +96,9 @@ function createLineChart (reports) {
       borderColor: colors.red,
       fill: false,
       data: slowData,
-      yAxisID: 'y-axis-lat'
+      yAxisID: 'y-axis-lat',
+      cubicInterpolationMode,
+      lineTension
     },
     {
       label: '95th',
@@ -97,7 +106,9 @@ function createLineChart (reports) {
       borderColor: colors.orange,
       fill: false,
       data: n5Data,
-      yAxisID: 'y-axis-lat'
+      yAxisID: 'y-axis-lat',
+      cubicInterpolationMode,
+      lineTension
     },
     {
       label: 'RPS',
@@ -105,7 +116,9 @@ function createLineChart (reports) {
       borderColor: colors.grey,
       fill: false,
       data: rpsData,
-      yAxisID: 'y-axis-rps'
+      yAxisID: 'y-axis-rps',
+      cubicInterpolationMode,
+      lineTension
     }
   ]
 
