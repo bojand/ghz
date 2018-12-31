@@ -58,6 +58,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	reportGroup := apiRoot.Group("/reports")
 	reportGroup.GET("/", reportAPI.ListReportsAll).Name = "ghz api: list all reports"
 	reportGroup.GET("/:rid/", reportAPI.GetReport).Name = "ghz api: get report"
+	reportGroup.GET("/:rid/previous/", reportAPI.GetPreviousReport).Name = "ghz api: get previous report"
 
 	optionsAPI := api.OptionsAPI{DB: db}
 	reportGroup.GET("/:rid/options/", optionsAPI.GetOptions).Name = "ghz api: get options"

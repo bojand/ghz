@@ -1,10 +1,13 @@
 import React, { Component } from 'react'
-import { Heading, Pane, Tooltip, Text, Table, Strong, Icon } from 'evergreen-ui'
+import { Heading, Pane, Tooltip, Text, Table, Strong, Icon, Badge } from 'evergreen-ui'
 import { Bar } from 'react-chartjs-2'
+import { Link as RouterLink } from 'react-router-dom'
+import _ from 'lodash'
 
 import {
   formatNano,
-  formatFloat
+  formatFloat,
+  toLocaleString
 } from '../lib/common'
 
 import { colors } from '../lib/colors'
@@ -23,6 +26,8 @@ export default class ComparePane extends Component {
 
     const color1 = colors.orange
     const color2 = colors.skyBlue
+
+    let tagKey = 0
 
     if (!report1 || !report1.id) {
       return (<Pane />)
@@ -48,16 +53,52 @@ export default class ComparePane extends Component {
           <Heading size={500}>REPORT COMPARISON</Heading>
         </Pane>
 
-        <Pane display='flex' marginTop={16}>
-          <Pane>
-            <Icon icon='full-circle' size={12} color={color1} marginRight={10} /><Text size={500}>{report1Name}</Text>
+        <Pane marginTop={16} display='flex'>
+          <Pane maxWidth={450}>
+            <Icon icon='full-circle' size={12} color={color1} marginRight={10} />
+            <RouterLink to={`/reports/${report1.id}`}>
+              <Text size={500}>{report1Name}</Text>
+            </RouterLink>
+            <Pane marginTop={8}>
+              <Text>
+                {toLocaleString(report1.date)}
+              </Text>
+            </Pane>
+            {report1.tags && _.keys(report1.tags).length
+              ? <Pane marginTop={12}>
+                {_.map(report1.tags, (v, k) => (
+                  <Badge color='blue' marginRight={8} marginBottom={8} key={'tag1-' + tagKey++}>
+                    {`${k}: ${v}`}
+                  </Badge>
+                ))}
+              </Pane>
+              : <Pane />
+            }
           </Pane>
-          <Pane marginLeft={20} >
-            <Icon icon='full-circle' size={12} color={color2} marginRight={10} /><Text size={500}>{report2Name}</Text>
+          <Pane marginLeft={32} maxWidth={450}>
+            <Icon icon='full-circle' size={12} color={color2} marginRight={10} />
+            <RouterLink to={`/reports/${report2.id}`}>
+              <Text size={500}>{report2Name}</Text>
+            </RouterLink>
+            <Pane marginTop={8}>
+              <Text>
+                {toLocaleString(report2.date)}
+              </Text>
+            </Pane>
+            {report2.tags && _.keys(report2.tags).length
+              ? <Pane marginTop={12}>
+                {_.map(report2.tags, (v, k) => (
+                  <Badge color='blue' marginRight={8} marginBottom={8} key={'tag2-' + tagKey++}>
+                    {`${k}: ${v}`}
+                  </Badge>
+                ))}
+              </Pane>
+              : <Pane />
+            }
           </Pane>
         </Pane>
 
-        <Pane marginTop={24} maxWidth={840}>
+        <Pane marginTop={32} maxWidth={840}>
           <Bar data={config.data} options={config.options} />
         </Pane>
 
@@ -146,7 +187,9 @@ export default class ComparePane extends Component {
             </Heading>
             <Pane>
               <Table.Row>
-                <Table.TextCell maxWidth={60} />
+                <Table.TextCell maxWidth={60} >
+                  <Icon icon='percentage' />
+                </Table.TextCell>
                 <Table.TextCell>
                   <Tooltip content={report1Name}>
                     <Text size={500} color={color1}>{report1Name}</Text>

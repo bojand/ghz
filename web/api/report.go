@@ -14,6 +14,7 @@ type ReportDatabase interface {
 	CountReports() (uint, error)
 	CountReportsForProject(uint) (uint, error)
 	FindReportByID(uint) (*model.Report, error)
+	FindPreviousReport(uint) (*model.Report, error)
 	ListReports(limit, page uint, sortField, order string) ([]*model.Report, error)
 	ListReportsForProject(pid, limit, page uint, sortField, order string) ([]*model.Report, error)
 }
@@ -134,6 +135,28 @@ func (api *ReportAPI) GetReport(ctx echo.Context) error {
 	}
 
 	if report, err = api.DB.FindReportByID(uint(id)); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, report)
+}
+
+// GetPreviousReport gets a previous report
+func (api *ReportAPI) GetPreviousReport(ctx echo.Context) error {
+	var id uint64
+	var report *model.Report
+	var err error
+
+	rid := ctx.Param("rid")
+	if rid == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "")
+	}
+
+	if id, err = strconv.ParseUint(rid, 10, 32); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	if report, err = api.DB.FindPreviousReport(uint(id)); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 

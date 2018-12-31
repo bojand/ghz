@@ -34,6 +34,23 @@ func (d *Database) CreateReport(r *model.Report) error {
 	return d.DB.Create(r).Error
 }
 
+// FindPreviousReport find previous report for the report id
+func (d *Database) FindPreviousReport(rid uint) (*model.Report, error) {
+	report, err := d.FindReportByID(rid)
+	if err != nil {
+		return nil, err
+	}
+
+	previous := new(model.Report)
+
+	orderSQL := "date desc"
+	whereSQL := "project_id = ? AND date < ?"
+
+	err = d.DB.Debug().Where(whereSQL, report.ProjectID, report.Date).Order(orderSQL).Limit(1).Find(&previous).Error
+
+	return previous, err
+}
+
 // ListReports lists reports using sorting
 func (d *Database) ListReports(limit, page uint, sortField, order string) ([]*model.Report, error) {
 	return d.listReports(false, 0, limit, page, sortField, order)

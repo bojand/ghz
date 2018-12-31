@@ -79,7 +79,7 @@ export default class ReportDetailPane extends Component {
             {currentReport.tags && _.keys(currentReport.tags).length
               ? <Pane marginTop={12}>
                 {_.map(currentReport.tags, (v, k) => (
-                  <Badge color='blue' marginRight={8} key={'tag-' + tagKey++}>
+                  <Badge color='blue' marginRight={8} marginBottom={8} key={'tag-' + tagKey++}>
                     {`${k}: ${v}`}
                   </Badge>
                 ))}
@@ -90,7 +90,7 @@ export default class ReportDetailPane extends Component {
 
           <Pane>
             <Pane display='flex'>
-              <RouterLink to={`/compare/${currentReport.id}/11`}>
+              <RouterLink to={`/compare/${currentReport.id}/previous`}>
                 <Button iconBefore='comparison' appearance='minimal' intent='none' height={32} marginRight={12}>
                   COMPARE TO PREVIOUS
                 </Button>
