@@ -2,7 +2,9 @@ import { Container } from 'unstated'
 import ky from 'ky'
 import { toaster } from 'evergreen-ui'
 
-const api = ky.extend({ prefixUrl: 'http://localhost:3000/api/' })
+import { getAppRoot } from '../lib/common'
+
+const api = ky.extend({ prefixUrl: getAppRoot() + '/api/' })
 
 export default class InfoContainer extends Container {
   constructor (props) {

@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf .cache dist",
     "start": "parcel src/index.html --open",
-    "build": "parcel build src/index.html"
+    "build": "npm run clean && parcel build src/main.js --no-source-maps && cp src/index.html dist/index.html"
   },
   "author": "",
   "license": "ISC",

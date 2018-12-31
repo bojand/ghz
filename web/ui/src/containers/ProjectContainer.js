@@ -3,7 +3,9 @@ import ky from 'ky'
 import _ from 'lodash'
 import { toaster } from 'evergreen-ui'
 
-const api = ky.extend({ prefixUrl: 'http://localhost:3000/api/' })
+import { getAppRoot } from '../lib/common'
+
+const api = ky.extend({ prefixUrl: getAppRoot() + '/api/' })
 
 export default class ProjectContainer extends Container {
   constructor (props) {
