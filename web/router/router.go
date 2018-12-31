@@ -65,6 +65,9 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	histogramAPI := api.HistogramAPI{DB: db}
 	reportGroup.GET("/:rid/histogram/", histogramAPI.GetHistogram).Name = "ghz api: get histogram"
 
+	exportAPI := api.ExportAPI{DB: db}
+	reportGroup.GET("/:rid/export/", exportAPI.GetExport).Name = "ghz api: get export"
+
 	// Ingest
 
 	ingestAPI := api.IngestAPI{DB: db}

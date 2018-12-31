@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { Pane, Heading, Icon, Strong, Table, Tooltip, Text, Badge, Button } from 'evergreen-ui'
+import { Pane, Heading, Icon, Strong, Table, 
+  Tooltip, Text, Badge, Button, Link } from 'evergreen-ui'
 import _ from 'lodash'
 import { Provider, Subscribe } from 'unstated'
 
@@ -66,11 +67,13 @@ export default class ReportDetailPane extends Component {
                 {currentReport.name || `REPORT: ${currentReport.id}`}
               </Heading>
             </Pane>
-            <Text>
-              {dateStr}
-            </Text>
+            <Pane marginTop={8}>
+              <Text>
+                {dateStr}
+              </Text>
+            </Pane>
             {currentReport.tags && _.keys(currentReport.tags).length
-              ? <Pane marginTop={10}>
+              ? <Pane marginTop={12}>
                 {_.map(currentReport.tags, (v, k) => (
                   <Badge color='blue' marginRight={8} key={'tag-' + tagKey++}>
                     {`${k}: ${v}`}
@@ -81,9 +84,11 @@ export default class ReportDetailPane extends Component {
             }
           </Pane>
           <Pane>
-            <Button iconBefore='code' appearance='minimal' intent='none' height={40} marginRight={12}>
-              JSON
-            </Button>
+            <Link href={`http://localhost:3000/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
+              <Button iconBefore='code' appearance='minimal' intent='none' height={40} marginRight={12}>
+                JSON
+              </Button>
+            </Link>
             <Button iconBefore='document' appearance='minimal' intent='none' height={40}>
               CSV
             </Button>
