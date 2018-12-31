@@ -8,23 +8,13 @@ export default class LatencyPane extends Component {
     super(props)
 
     this.state = {
-      reportId: props.reportId || 0
-    }
-  }
-
-  componentDidMount () {
-    this.props.latencyStore.fetchLatencyDistribution(this.props.reportId)
-  }
-
-  componentDidUpdate (prevProps) {
-    if (!this.props.latencyStore.state.isFetching &&
-      (this.props.reportId !== prevProps.reportId)) {
-      this.props.latencyStore.fetchLatencyDistribution(this.props.reportId)
+      reportId: props.reportId || 0,
+      latencyDistribution: props.latencyDistribution
     }
   }
 
   render () {
-    const { state: { latencyDistribution } } = this.props.latencyStore
+    const { latencyDistribution } = this.state
 
     if (!latencyDistribution || !latencyDistribution.length) {
       return (<Pane />)

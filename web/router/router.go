@@ -65,9 +65,6 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	histogramAPI := api.HistogramAPI{DB: db}
 	reportGroup.GET("/:rid/histogram/", histogramAPI.GetHistogram).Name = "ghz api: get histogram"
 
-	latencyAPI := api.LatencyAPI{DB: db}
-	reportGroup.GET("/:rid/latencies/", latencyAPI.GetLatencyDistribution).Name = "ghz api: get latencies"
-
 	// Ingest
 
 	ingestAPI := api.IngestAPI{DB: db}

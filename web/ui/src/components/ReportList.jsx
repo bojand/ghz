@@ -8,7 +8,8 @@ import {
   getIconForStatus,
   getColorForStatus,
   formatNano,
-  formatFloat
+  formatFloat,
+  toLocaleString
 } from '../lib/common'
 
 export default class ReportList extends Component {
@@ -115,7 +116,7 @@ export default class ReportList extends Component {
                     ? (
                       <Tooltip content={p.name}>
                         <RouterLink to={`/reports/${p.id}`}>
-                          {p.date}
+                          {toLocaleString(p.date)}
                         </RouterLink>
                       </Tooltip>
                     )

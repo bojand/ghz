@@ -13,7 +13,6 @@ import (
 type IngestDatabase interface {
 	CreateProject(*model.Project) error
 	CreateReport(*model.Report) error
-	CreateLatencyDistribution(*model.LatencyDistribution) error
 	CreateHistogram(*model.Histogram) error
 	CreateOptions(*model.Options) error
 	FindProjectByID(uint) (*model.Project, error)
@@ -30,9 +29,6 @@ type IngestResponse struct {
 
 	// Created Options
 	Options *model.Options `json:"options"`
-
-	// Created LatencyDistribution
-	LatencyDistribution *model.LatencyDistribution `json:"latencyDistribution"`
 
 	// Created Histogram
 	Histogram *model.Histogram `json:"histogram"`
@@ -136,25 +132,10 @@ func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx e
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// Latency Distribution
-
-	ld := &model.LatencyDistribution{
-		ReportID: report.ID,
-	}
-
-	ld.List = make(model.LatencyDistributionList, len(ir.LatencyDistribution))
-	for i := range ir.LatencyDistribution {
-		ld.List[i] = &ir.LatencyDistribution[i]
-	}
-
-	if err := api.DB.CreateLatencyDistribution(ld); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
+	// Histogram
 	h := &model.Histogram{
 		ReportID: report.ID,
 	}
-
-	// Histogram
 
 	h.Buckets = make(model.BucketList, len(ir.Histogram))
 	for i := range ir.Histogram {
@@ -178,11 +159,10 @@ func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx e
 	// Response
 
 	rres := &IngestResponse{
-		Project:             p,
-		Report:              report,
-		Options:             o,
-		LatencyDistribution: ld,
-		Histogram:           h,
+		Project:   p,
+		Report:    report,
+		Options:   o,
+		Histogram: h,
 		Details: &DetailsCreated{
 			Success: created,
 			Fail:    errored,
@@ -213,6 +193,11 @@ func convertIngestToReport(pid uint, ir *IngestRequest) *model.Report {
 	r.StatusCodeDist = ir.StatusCodeDist
 
 	r.Tags = ir.Tags
+
+	r.LatencyDistribution = make(model.LatencyDistributionList, len(ir.LatencyDistribution))
+	for i := range ir.LatencyDistribution {
+		r.LatencyDistribution[i] = &ir.LatencyDistribution[i]
+	}
 
 	return r
 }

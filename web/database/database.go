@@ -40,7 +40,6 @@ func New(dialect, connection string) (*Database, error) {
 		new(model.Options),
 		new(model.Detail),
 		new(model.Histogram),
-		new(model.LatencyDistribution),
 	)
 
 	return &Database{DB: db}, nil

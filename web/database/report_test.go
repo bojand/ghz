@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bojand/ghz/runner"
 	"github.com/bojand/ghz/web/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,32 +66,32 @@ func TestDatabase_Report(t *testing.T) {
 			"Internal":         3,
 			"DeadlineExceeded": 2}
 
-		// r.LatencyDistribution = []*runner.LatencyDistribution{
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 25,
-		// 		Latency:    time.Duration(1 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 50,
-		// 		Latency:    time.Duration(5 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 75,
-		// 		Latency:    time.Duration(10 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 90,
-		// 		Latency:    time.Duration(15 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 95,
-		// 		Latency:    time.Duration(20 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 99,
-		// 		Latency:    time.Duration(25 * time.Millisecond),
-		// 	},
-		// }
+		r.LatencyDistribution = []*runner.LatencyDistribution{
+			&runner.LatencyDistribution{
+				Percentage: 25,
+				Latency:    time.Duration(1 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 50,
+				Latency:    time.Duration(5 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 75,
+				Latency:    time.Duration(10 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 90,
+				Latency:    time.Duration(15 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 95,
+				Latency:    time.Duration(20 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 99,
+				Latency:    time.Duration(25 * time.Millisecond),
+			},
+		}
 
 		// r.Histogram = []*runner.Bucket{
 		// 	&runner.Bucket{
@@ -184,32 +185,32 @@ func TestDatabase_Report(t *testing.T) {
 			"Internal":         1,
 			"DeadlineExceeded": 4}
 
-		// r.LatencyDistribution = []*runner.LatencyDistribution{
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 25,
-		// 		Latency:    time.Duration(2 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 50,
-		// 		Latency:    time.Duration(6 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 75,
-		// 		Latency:    time.Duration(11 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 90,
-		// 		Latency:    time.Duration(16 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 95,
-		// 		Latency:    time.Duration(21 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 99,
-		// 		Latency:    time.Duration(27 * time.Millisecond),
-		// 	},
-		// }
+		r.LatencyDistribution = []*runner.LatencyDistribution{
+			&runner.LatencyDistribution{
+				Percentage: 25,
+				Latency:    time.Duration(2 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 50,
+				Latency:    time.Duration(6 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 75,
+				Latency:    time.Duration(11 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 90,
+				Latency:    time.Duration(16 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 95,
+				Latency:    time.Duration(21 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 99,
+				Latency:    time.Duration(27 * time.Millisecond),
+			},
+		}
 
 		// r.Histogram = []*runner.Bucket{
 		// 	&runner.Bucket{
@@ -299,32 +300,32 @@ func TestDatabase_Report(t *testing.T) {
 			"Internal":         2,
 			"DeadlineExceeded": 2}
 
-		// r.LatencyDistribution = []*runner.LatencyDistribution{
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 25,
-		// 		Latency:    time.Duration(3 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 50,
-		// 		Latency:    time.Duration(7 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 75,
-		// 		Latency:    time.Duration(12 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 90,
-		// 		Latency:    time.Duration(17 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 95,
-		// 		Latency:    time.Duration(22 * time.Millisecond),
-		// 	},
-		// 	&runner.LatencyDistribution{
-		// 		Percentage: 99,
-		// 		Latency:    time.Duration(30 * time.Millisecond),
-		// 	},
-		// }
+		r.LatencyDistribution = []*runner.LatencyDistribution{
+			&runner.LatencyDistribution{
+				Percentage: 25,
+				Latency:    time.Duration(3 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 50,
+				Latency:    time.Duration(7 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 75,
+				Latency:    time.Duration(12 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 90,
+				Latency:    time.Duration(17 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 95,
+				Latency:    time.Duration(22 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 99,
+				Latency:    time.Duration(30 * time.Millisecond),
+			},
+		}
 
 		// r.Histogram = []*runner.Bucket{
 		// 	&runner.Bucket{
@@ -407,16 +408,16 @@ func TestDatabase_Report(t *testing.T) {
 		// assert.Equal(t, true, r.Options.Insecure)
 		// assert.Equal(t, 8, r.Options.CPUs)
 
-		// assert.NotNil(t, r.LatencyDistribution)
-		// assert.Len(t, r.LatencyDistribution, 6)
-		// assert.Equal(t, &runner.LatencyDistribution{
-		// 	Percentage: 25,
-		// 	Latency:    time.Duration(1 * time.Millisecond),
-		// }, r.LatencyDistribution[0])
-		// assert.Equal(t, &runner.LatencyDistribution{
-		// 	Percentage: 99,
-		// 	Latency:    time.Duration(25 * time.Millisecond),
-		// }, r.LatencyDistribution[5])
+		assert.NotNil(t, r.LatencyDistribution)
+		assert.Len(t, r.LatencyDistribution, 6)
+		assert.Equal(t, &runner.LatencyDistribution{
+			Percentage: 25,
+			Latency:    time.Duration(1 * time.Millisecond),
+		}, r.LatencyDistribution[0])
+		assert.Equal(t, &runner.LatencyDistribution{
+			Percentage: 99,
+			Latency:    time.Duration(25 * time.Millisecond),
+		}, r.LatencyDistribution[5])
 
 		// assert.NotNil(t, r.Histogram)
 		// assert.Len(t, r.Histogram, 5)
@@ -471,16 +472,16 @@ func TestDatabase_Report(t *testing.T) {
 		// assert.Equal(t, true, r.Options.Insecure)
 		// assert.Equal(t, 8, r.Options.CPUs)
 
-		// assert.NotNil(t, r.LatencyDistribution)
-		// assert.Len(t, r.LatencyDistribution, 6)
-		// assert.Equal(t, &runner.LatencyDistribution{
-		// 	Percentage: 25,
-		// 	Latency:    time.Duration(2 * time.Millisecond),
-		// }, r.LatencyDistribution[0])
-		// assert.Equal(t, &runner.LatencyDistribution{
-		// 	Percentage: 99,
-		// 	Latency:    time.Duration(27 * time.Millisecond),
-		// }, r.LatencyDistribution[5])
+		assert.NotNil(t, r.LatencyDistribution)
+		assert.Len(t, r.LatencyDistribution, 6)
+		assert.Equal(t, &runner.LatencyDistribution{
+			Percentage: 25,
+			Latency:    time.Duration(2 * time.Millisecond),
+		}, r.LatencyDistribution[0])
+		assert.Equal(t, &runner.LatencyDistribution{
+			Percentage: 99,
+			Latency:    time.Duration(27 * time.Millisecond),
+		}, r.LatencyDistribution[5])
 
 		// assert.NotNil(t, r.Histogram)
 		// assert.Len(t, r.Histogram, 5)
@@ -535,16 +536,16 @@ func TestDatabase_Report(t *testing.T) {
 		// assert.Equal(t, false, r.Options.Insecure)
 		// assert.Equal(t, 8, r.Options.CPUs)
 
-		// assert.NotNil(t, r.LatencyDistribution)
-		// assert.Len(t, r.LatencyDistribution, 6)
-		// assert.Equal(t, &runner.LatencyDistribution{
-		// 	Percentage: 25,
-		// 	Latency:    time.Duration(3 * time.Millisecond),
-		// }, r.LatencyDistribution[0])
-		// assert.Equal(t, &runner.LatencyDistribution{
-		// 	Percentage: 99,
-		// 	Latency:    time.Duration(30 * time.Millisecond),
-		// }, r.LatencyDistribution[5])
+		assert.NotNil(t, r.LatencyDistribution)
+		assert.Len(t, r.LatencyDistribution, 6)
+		assert.Equal(t, &runner.LatencyDistribution{
+			Percentage: 25,
+			Latency:    time.Duration(3 * time.Millisecond),
+		}, r.LatencyDistribution[0])
+		assert.Equal(t, &runner.LatencyDistribution{
+			Percentage: 99,
+			Latency:    time.Duration(30 * time.Millisecond),
+		}, r.LatencyDistribution[5])
 
 		// assert.NotNil(t, r.Histogram)
 		// assert.Len(t, r.Histogram, 4)

@@ -59,6 +59,15 @@ function getRandomInt (max) {
   return Math.floor(Math.random() * Math.floor(max))
 }
 
+function toLocaleString (date) {
+  if (date instanceof Date) {
+    return date.toLocaleString
+  }
+
+  const dateObj = new Date(date + '')
+  return dateObj.toLocaleString()
+}
+
 module.exports = {
   getIconForOrder,
   getIconForStatus,
@@ -67,5 +76,6 @@ module.exports = {
   formatFloat,
   formatNano,
   pretty,
-  getRandomInt
+  getRandomInt,
+  toLocaleString
 }
