@@ -1,6 +1,6 @@
 import { Container } from 'unstated'
-import _ from 'lodash'
 import ky from 'ky'
+import { toaster } from 'evergreen-ui'
 
 const api = ky.extend({ prefixUrl: 'http://localhost:3000/api/' })
 
@@ -47,6 +47,7 @@ export default class ReportContainer extends Container {
         isFetching: false
       })
     } catch (err) {
+      toaster.danger(err.message)
       console.log('error: ', err)
     }
   }
@@ -63,6 +64,7 @@ export default class ReportContainer extends Container {
         isFetching: false
       })
     } catch (err) {
+      toaster.danger(err.message)
       console.log('error: ', err)
     }
   }
