@@ -1,12 +1,16 @@
 import React, { Component } from 'react'
 import { Pane, Tab, Icon, Text } from 'evergreen-ui'
 import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom'
+import { Provider, Subscribe } from 'unstated'
 
 import ProjectListPage from './components/ProjectListPage'
 import ProjectDetailPage from './components/ProjectDetailPage'
 import ReportPage from './components/ReportPage'
 import ReportDetailPage from './components/ReportDetailPage'
 import Footer from './components/Footer'
+import InfoComponent from './components/InfoComponent'
+
+import InfoContainer from './containers/InfoContainer'
 
 export default class App extends Component {
   render () {
@@ -20,7 +24,7 @@ export default class App extends Component {
             </Pane>
             <Pane>
               <Tab height={36} paddingX={14}><Icon icon='manual' marginRight={12} /><Text size={400}>DOCS</Text></Tab>
-              <Tab height={36} paddingX={14}><Icon icon='info-sign' marginRight={12} /><Text size={400}>ABOUT</Text></Tab>
+              <TabLink to='/about' icon='info-sign' linkText='ABOUT' />
             </Pane>
           </Pane>
           <Switch>
@@ -29,6 +33,7 @@ export default class App extends Component {
             <Route path='/projects' component={Projects} />
             <Route path='/reports/:reportId' component={Reports} />
             <Route path='/reports' component={Reports} />
+            <Route path='/about' component={Info} />
           </Switch>
           <Footer />
         </div>
@@ -55,6 +60,20 @@ function Reports ({ match }) {
         ? <ReportDetailPage projectId={match.params.reportId} />
         : <ReportPage />
       }
+    </Pane>
+  )
+}
+
+function Info () {
+  return (
+    <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
+      <Provider>
+        <Subscribe to={[InfoContainer]}>
+          {infoStore => (
+            <InfoComponent infoStore={infoStore} />
+          )}
+        </Subscribe>
+      </Provider>
     </Pane>
   )
 }
