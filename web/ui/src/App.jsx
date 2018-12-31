@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Pane, Tab, Icon, Text } from 'evergreen-ui'
-import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Link as RouterLink, Switch } from 'react-router-dom'
 import { Provider, Subscribe } from 'unstated'
 
 import ProjectListPage from './components/ProjectListPage'
@@ -9,6 +9,7 @@ import ReportPage from './components/ReportPage'
 import ReportDetailPage from './components/ReportDetailPage'
 import Footer from './components/Footer'
 import InfoComponent from './components/InfoComponent'
+import ComparePage from './components/ComparePage'
 
 import InfoContainer from './containers/InfoContainer'
 
@@ -16,14 +17,17 @@ export default class App extends Component {
   render () {
     return (
       <Router>
-        <div style={{ marginTop: 8 }}>
-          <Pane display='flex' paddingBottom={8} marginLeft={16} marginRight={16} borderBottom>
-            <Pane flex={1} alignItems='center' display='flex'>
+        <div>
+          <Pane display='flex' paddingY={12} borderBottom>
+            <Pane flex={1} alignItems='center' display='flex' marginLeft={8}>
               <TabLink to='/projects' linkText='PROJECTS' icon='control' />
               <TabLink to='/reports' linkText='REPORTS' icon='dashboard' />
             </Pane>
-            <Pane>
+            <Pane marginRight={8}>
               <Tab height={36} paddingX={14}><Icon icon='manual' marginRight={12} /><Text size={400}>DOCS</Text></Tab>
+              {/* <Button iconBefore='manual' appearance='minimal' intent='none' height={40}>
+                DOCS
+              </Button> */}
             </Pane>
           </Pane>
           <Switch>
@@ -31,6 +35,7 @@ export default class App extends Component {
             <Route path='/projects/:projectId' component={Projects} />
             <Route path='/projects' component={Projects} />
             <Route path='/reports/:reportId' component={Reports} />
+            <Route path='/compare/:reportId1/:reportId2' component={Compare} />
             <Route path='/reports' component={Reports} />
             <Route path='/about' component={Info} />
           </Switch>
@@ -63,6 +68,14 @@ function Reports ({ match }) {
   )
 }
 
+function Compare ({ match }) {
+  return (
+    <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
+      <ComparePage reportId1={match.params.reportId1} reportId2={match.params.reportId2} />
+    </Pane>
+  )
+}
+
 function Info () {
   return (
     <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
@@ -81,9 +94,12 @@ const TabLink = ({ to, linkText, icon, ...rest }) => (
   <Route
     path={to}
     children={({ match }) => (
-      <Link to={to} {...rest} >
+      <RouterLink to={to} {...rest} >
         <Tab height={36} paddingX={14}><Icon icon={icon} marginRight={12} /><Text size={400}>{linkText}</Text></Tab>
-      </Link>
+        {/* <Button iconBefore={icon} appearance='minimal' intent='none' height={40} marginRight={12}>
+          {linkText}
+        </Button> */}
+      </RouterLink>
     )
     }
   />

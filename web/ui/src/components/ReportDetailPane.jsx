@@ -1,8 +1,11 @@
 import React, { Component } from 'react'
-import { Pane, Heading, Icon, Strong, Table, 
-  Tooltip, Text, Badge, Button, Link } from 'evergreen-ui'
+import {
+  Pane, Heading, Icon, Strong, Table,
+  Tooltip, Text, Badge, Button, Link
+} from 'evergreen-ui'
 import _ from 'lodash'
 import { Provider, Subscribe } from 'unstated'
+import { Link as RouterLink } from 'react-router-dom'
 
 import {
   getIconForStatus,
@@ -56,6 +59,7 @@ export default class ReportDetailPane extends Component {
 
     return (
       <Pane>
+
         <Pane display='flex' marginTop={6} marginBottom={10}>
           <Pane flex={1}>
             <Pane display='flex'>
@@ -83,17 +87,25 @@ export default class ReportDetailPane extends Component {
               : <Pane />
             }
           </Pane>
+
           <Pane>
-            <Link href={`http://localhost:3000/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
-              <Button iconBefore='code' appearance='minimal' intent='none' height={40} marginRight={12}>
-                JSON
-              </Button>
-            </Link>
-            <Link href={`http://localhost:3000/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
-              <Button iconBefore='document' appearance='minimal' intent='none' height={40}>
-                CSV
-              </Button>
-            </Link>
+            <Pane display='flex'>
+              <RouterLink to={`/compare/${currentReport.id}/11`}>
+                <Button iconBefore='comparison' appearance='minimal' intent='none' height={32} marginRight={12}>
+                  COMPARE TO PREVIOUS
+                </Button>
+              </RouterLink>
+              <Link href={`http://localhost:3000/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
+                <Button iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
+                  JSON
+                </Button>
+              </Link>
+              <Link href={`http://localhost:3000/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
+                <Button iconBefore='label' appearance='minimal' intent='none' height={32}>
+                  CSV
+                </Button>
+              </Link>
+            </Pane>
           </Pane>
         </Pane>
 

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Icon, Tooltip } from 'evergreen-ui'
-import { Link as RouterLink } from 'react-router-dom'
+import { Table, Heading, IconButton, Pane, Icon, Tooltip, TextInput, Button } from 'evergreen-ui'
+import { Link as RouterLink, withRouter } from 'react-router-dom'
 
 import {
   Order,
@@ -12,7 +12,7 @@ import {
   toLocaleString
 } from '../lib/common'
 
-export default class ReportList extends Component {
+class ReportList extends Component {
   constructor (props) {
     super(props)
 
@@ -20,7 +20,9 @@ export default class ReportList extends Component {
       projectId: props.projectId || 0,
       ordering: Order.DESC,
       sort: 'date',
-      page: 0
+      page: 0,
+      compareId1: '',
+      compareId2: ''
     }
   }
 
@@ -50,6 +52,13 @@ export default class ReportList extends Component {
     this.setState({ ordering: order })
   }
 
+  compare () {
+    const { compareId1, compareId2 } = this.state
+    if (compareId1 && compareId2) {
+      this.props.history.push(`/compare/${compareId1}/${compareId2}`)
+    }
+  }
+
   fetchPage (page) {
     if (page < 0) {
       page = 0
@@ -68,11 +77,34 @@ export default class ReportList extends Component {
 
     return (
       <Pane>
-        <Pane display='flex' alignItems='center' marginTop={6}>
-          <Heading size={500}>REPORTS</Heading>
+        <Pane display='flex' alignItems='center' marginTop={0}>
+          <Pane flex={1}>
+            <Heading size={500}>REPORTS</Heading>
+          </Pane>
+          <Pane>
+            <TextInput
+              name='text-input-id1'
+              placeholder='report id 1'
+              marginRight={12}
+              width={80}
+              value={this.state.compareId1}
+              onChange={ev => this.setState({ compareId1: ev.target.value })}
+            />
+            <TextInput
+              name='text-input-id2'
+              placeholder='report id 2'
+              marginRight={12}
+              width={80}
+              value={this.state.compareId2}
+              onChange={ev => this.setState({ compareId2: ev.target.value })}
+            />
+            <Button iconBefore='comparison' appearance='minimal' intent='none' onClick={() => this.compare()}>
+              COMPARE
+            </Button>
+          </Pane>
         </Pane>
 
-        <Table marginY={30}>
+        <Table marginY={20}>
           <Table.Head>
             <Table.TextHeaderCell minWidth={210} textProps={{ size: 400 }}>
               <Pane display='flex'>
@@ -171,3 +203,5 @@ export default class ReportList extends Component {
     )
   }
 }
+
+export default withRouter(ReportList)
