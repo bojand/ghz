@@ -39,7 +39,7 @@ func Read(path string) (*Config, error) {
 
 	config := Config{}
 
-	err := configor.Load(&config, path)
+	err := configor.New(&configor.Config{ENVPrefix: "GHZ"}).Load(&config, path)
 
 	if err != nil {
 		return nil, err
