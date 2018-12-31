@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { Pane, Strong, Link, Paragraph } from 'evergreen-ui'
+import { Link as RouterLink } from 'react-router-dom'
 import GitHubIcon from './GitHubIcon'
 
 export default class Footer extends Component {
@@ -20,8 +21,12 @@ export default class Footer extends Component {
         </Pane>
 
         <Paragraph>
-          <Strong>ghz</Strong> by <Link href='https://bojand.github.io'>Bojan D</Link>.
-              The source code is licensed <Link href='http://opensource.org/licenses/mit-license.php'>MIT</Link>.
+          <Strong>ghz</Strong> The source code is licensed <Link href='http://opensource.org/licenses/mit-license.php'>MIT</Link>.
+        </Paragraph>
+        <Paragraph>
+          <RouterLink to='/about'>
+            About
+          </RouterLink>
         </Paragraph>
       </Pane>
     )

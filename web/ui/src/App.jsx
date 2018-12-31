@@ -24,7 +24,6 @@ export default class App extends Component {
             </Pane>
             <Pane>
               <Tab height={36} paddingX={14}><Icon icon='manual' marginRight={12} /><Text size={400}>DOCS</Text></Tab>
-              <TabLink to='/about' icon='info-sign' linkText='ABOUT' />
             </Pane>
           </Pane>
           <Switch>

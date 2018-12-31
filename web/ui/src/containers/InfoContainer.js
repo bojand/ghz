@@ -7,6 +7,7 @@ const api = ky.extend({ prefixUrl: 'http://localhost:3000/api/' })
 export default class InfoContainer extends Container {
   constructor (props) {
     super(props)
+
     this.state = {
       info: null,
       isFetching: false

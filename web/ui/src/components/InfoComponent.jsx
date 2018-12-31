@@ -9,8 +9,6 @@ export default class ReportDetailPane extends Component {
   render () {
     const { state: { info } } = this.props.infoStore
 
-    console.log(info)
-
     if (!info) {
       return (<Pane />)
     }
