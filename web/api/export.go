@@ -1,10 +1,14 @@
 package api
 
 import (
+	"bytes"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/alecthomas/template"
 	"github.com/bojand/ghz/runner"
 	"github.com/bojand/ghz/web/model"
 	"github.com/labstack/echo"
@@ -34,6 +38,22 @@ type JSONExportRespose struct {
 	Details []*runner.ResultDetail `json:"details"`
 }
 
+const (
+	csvTmpl = `
+duration (ms),status,error{{ range $i, $v := . }}
+{{ formatDuration .Latency 1000000 }},{{ .Status }},{{ .Error }}{{ end }}
+`
+)
+
+var tmplFuncMap = template.FuncMap{
+	"formatDuration": formatDuration,
+}
+
+func formatDuration(duration time.Duration, div int64) string {
+	durationNano := duration.Nanoseconds()
+	return fmt.Sprintf("%4.2f", float64(durationNano/div))
+}
+
 // GetExport does export for the report
 func (api *ExportAPI) GetExport(ctx echo.Context) error {
 	var id uint64
@@ -54,6 +74,27 @@ func (api *ExportAPI) GetExport(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
+	var details []*model.Detail
+	if details, err = api.DB.ListAllDetailsForReport(uint(id)); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	if format == "csv" {
+		outputTmpl := csvTmpl
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Bad Request: "+err.Error())
+		}
+
+		buf := &bytes.Buffer{}
+		templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(outputTmpl))
+		if err := templ.Execute(buf, &details); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Bad Request: "+err.Error())
+		}
+
+		return ctx.Blob(http.StatusOK, "text/csv", buf.Bytes())
+	}
+
 	if report, err = api.DB.FindReportByID(uint(id)); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
@@ -65,11 +106,6 @@ func (api *ExportAPI) GetExport(ctx echo.Context) error {
 
 	var histogram *model.Histogram
 	if histogram, err = api.DB.GetHistogramForReport(uint(id)); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
-	}
-
-	var details []*model.Detail
-	if details, err = api.DB.ListAllDetailsForReport(uint(id)); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 

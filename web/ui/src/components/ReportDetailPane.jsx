@@ -89,9 +89,11 @@ export default class ReportDetailPane extends Component {
                 JSON
               </Button>
             </Link>
-            <Button iconBefore='document' appearance='minimal' intent='none' height={40}>
-              CSV
-            </Button>
+            <Link href={`http://localhost:3000/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
+              <Button iconBefore='document' appearance='minimal' intent='none' height={40}>
+                CSV
+              </Button>
+            </Link>
           </Pane>
         </Pane>
 
