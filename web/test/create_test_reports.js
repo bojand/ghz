@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const http = require('http');
+const https = require('http');
 
 const reportFiles = [
   'report1.json', 'report2.json', 'report3.json', 'report4.json', 'report5.json',
@@ -50,8 +50,7 @@ function doPost (data) {
     const postData = JSON.stringify(data)
 
     const options = {
-      hostname: 'localhost',
-      port: 3000,
+      hostname: 'ghz-demo.herokuapp.com',
       path: '/api/projects/1/ingest',
       method: 'POST',
       headers: {
@@ -61,7 +60,7 @@ function doPost (data) {
       }
     }
 
-    req = http.request(options, res => {
+    req = https.request(options, res => {
       res.setEncoding('utf8')
       res.on('end', () => {
         if (!res.complete) {
