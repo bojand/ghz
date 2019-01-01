@@ -1,3 +1,5 @@
+// +heroku install ./cmd/ghz-web
+
 module github.com/bojand/ghz
 
 require (
