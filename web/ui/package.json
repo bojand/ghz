@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf .cache dist",
     "start": "parcel src/index.html --open",
-    "build": "npm run clean && parcel build src/main.js --no-source-maps && cp src/index.html dist/index.html"
+    "build": "npm run clean && parcel build src/index.html --no-source-maps"
   },
   "author": "",
   "license": "ISC",

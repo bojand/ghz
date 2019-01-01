@@ -22,15 +22,23 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 
 	s.Validator = &CustomValidator{validator: validator.New()}
 
+	s.Pre(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
+		Skipper: func(ctx echo.Context) bool {
+			path := ctx.Request().URL.Path
+			if strings.Contains(path, "/api") {
+				return false
+			}
+			return true
+		},
+	}))
+
 	s.Use(middleware.CORS())
 
-	s.Pre(middleware.AddTrailingSlash())
+	s.Use(middleware.RequestID())
+	s.Use(middleware.Logger())
+	s.Use(middleware.Recover())
 
 	root := s.Group(conf.Server.RootURL)
-
-	root.Use(middleware.RequestID())
-	root.Use(middleware.Logger())
-	root.Use(middleware.Recover())
 
 	// API
 
@@ -84,7 +92,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 
 	// Frontend
 
-	s.Static("/", "ui/dist").Name = "ghz api: static"
+	s.Static(conf.Server.RootURL+"/", "dist").Name = "ghz api: static"
 
 	return s, nil
 }

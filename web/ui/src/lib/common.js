@@ -69,18 +69,23 @@ function toLocaleString (date) {
 }
 
 function getAppRoot () {
-  if (!window.ghz) {
-    window.ghz = {}
-  }
+  // if (!window.ghz) {
+  //   window.ghz = {}
+  // }
+
+  // if (process.env.NODE_ENV !== 'production') {
+  //   window.ghz = {
+  //     host: 'http://localhost',
+  //     rootPath: '',
+  //     port: 3000
+  //   }
+  // }
+  // return window.ghz.host + ':' + window.ghz.port + window.ghz.rootPath
 
   if (process.env.NODE_ENV !== 'production') {
-    window.ghz = {
-      host: 'http://localhost',
-      rootPath: '',
-      port: 3000
-    }
+    return 'http://localhost:3000'
   }
-  return window.ghz.host + ':' + window.ghz.port + window.ghz.rootPath
+  return ''
 }
 
 module.exports = {

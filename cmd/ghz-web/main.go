@@ -69,6 +69,6 @@ func main() {
 
 	router.PrintRoutes(server)
 
-	hostPort := net.JoinHostPort("localhost", strconv.FormatUint(uint64(conf.Server.Port), 10))
+	hostPort := net.JoinHostPort("", strconv.FormatUint(uint64(conf.Server.Port), 10))
 	server.Logger.Fatal(server.Start(hostPort))
 }
