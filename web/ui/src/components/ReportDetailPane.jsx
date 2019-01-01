@@ -95,12 +95,12 @@ export default class ReportDetailPane extends Component {
                   COMPARE TO PREVIOUS
                 </Button>
               </RouterLink>
-              <Link href={`http://localhost:3000/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
+              <Link href={`/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
                 <Button iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
                   JSON
                 </Button>
               </Link>
-              <Link href={`http://localhost:3000/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
+              <Link href={`/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
                 <Button iconBefore='label' appearance='minimal' intent='none' height={32}>
                   CSV
                 </Button>
