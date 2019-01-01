@@ -2,7 +2,10 @@ package router
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/bojand/ghz/web/api"
@@ -24,6 +27,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	s := echo.New()
 
 	s.Logger.SetLevel(getLogLevel(conf))
+	s.Logger.SetOutput(getLogOutput(conf))
 
 	s.Validator = &CustomValidator{validator: validator.New()}
 
@@ -43,11 +47,9 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	s.Use(middleware.Logger())
 	s.Use(middleware.Recover())
 
-	root := s.Group(conf.Server.RootURL)
-
 	// API
 
-	apiRoot := root.Group("/api")
+	apiRoot := s.Group("/api")
 
 	// Projects
 
@@ -103,7 +105,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	}
 
 	assetHandler := http.FileServer(statikFS)
-	s.GET(conf.Server.RootURL+"/*", echo.WrapHandler(assetHandler))
+	s.GET("/*", echo.WrapHandler(assetHandler))
 
 	return s, nil
 }
@@ -132,6 +134,26 @@ func getLogLevel(config *config.Config) log.Lvl {
 	}
 }
 
+func getLogOutput(config *config.Config) io.Writer {
+	logPath := strings.TrimSpace(config.Log.Path)
+	if logPath == "" {
+		return os.Stdout
+	}
+
+	if _, err := os.Stat(filepath.Dir(logPath)); os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(logPath), 0777); err != nil {
+			panic(err)
+		}
+	}
+
+	f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	return f
+}
+
 // PrintRoutes prints routes in the server
 func PrintRoutes(echoServer *echo.Echo) {
 	routes := echoServer.Routes()
@@ -139,7 +161,7 @@ func PrintRoutes(echoServer *echo.Echo) {
 		index := strings.Index(r.Name, "ghz api:")
 		if index >= 0 {
 			desc := fmt.Sprintf("%+v %+v", r.Method, r.Path)
-			fmt.Println(desc)
+			echoServer.Logger.Info(desc)
 		}
 	}
 
