@@ -2,16 +2,21 @@ package router
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/bojand/ghz/web/api"
 	"github.com/bojand/ghz/web/config"
 	"github.com/bojand/ghz/web/database"
+	"github.com/rakyll/statik/fs"
 
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
+
+	// for bundled resources
+	_ "github.com/bojand/ghz/web/router/statik"
 )
 
 // New creates new server
@@ -92,7 +97,13 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 
 	// Frontend
 
-	s.Static(conf.Server.RootURL+"/", "dist").Name = "ghz api: static"
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assetHandler := http.FileServer(statikFS)
+	s.GET(conf.Server.RootURL+"/*", echo.WrapHandler(assetHandler))
 
 	return s, nil
 }
