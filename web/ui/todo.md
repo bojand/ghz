@@ -1,7 +1,9 @@
-[] Previous report endpoint for compare
+[] Fix UI when going to a direct url
 [] About page
-[] Env config
-[] Config js
 [] Docs
 [] Tests
-[] Demo
+[] Demo ingest
+[x] Previous report endpoint for compare
+[x] Env config
+[x] Config js
+[x] Demo deployment

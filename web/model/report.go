@@ -142,7 +142,9 @@ func (r *Report) BeforeSave(scope *gorm.Scope) error {
 		return errors.New("Report must belong to a project")
 	}
 
-	r.Status = StatusOK
+	if string(r.Status) == "" {
+		r.Status = StatusOK
+	}
 
 	if scope != nil {
 		scope.SetColumn("status", r.Status)

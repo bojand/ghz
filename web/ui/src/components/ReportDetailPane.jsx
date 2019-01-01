@@ -11,7 +11,8 @@ import {
   getIconForStatus,
   getColorForStatus,
   formatNano,
-  toLocaleString
+  toLocaleString,
+  getAppRoot
 } from '../lib/common'
 
 import StatusCodeChart from './ReportDistChart'
@@ -57,6 +58,8 @@ export default class ReportDetailPane extends Component {
     let errKey = 0
     let tagKey = 0
 
+    const appRoot = getAppRoot()
+
     return (
       <Pane>
 
@@ -95,12 +98,12 @@ export default class ReportDetailPane extends Component {
                   COMPARE TO PREVIOUS
                 </Button>
               </RouterLink>
-              <Link href={`/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
+              <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
                 <Button iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
                   JSON
                 </Button>
               </Link>
-              <Link href={`/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
+              <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
                 <Button iconBefore='label' appearance='minimal' intent='none' height={32}>
                   CSV
                 </Button>
