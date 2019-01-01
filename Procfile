@@ -1,1 +1,1 @@
-web: GHZ_PORT=$PORT ghz-web
+web: GHZ_SERVER_PORT=$PORT ghz-web
