@@ -2,18 +2,29 @@ const fs = require('fs')
 const path = require('path')
 const http = require('http');
 
+function getRandomInt (max) {
+  return Math.floor(Math.random() * Math.floor(max))
+}
+
 const reportFiles = [
   'report1.json', 'report2.json', 'report3.json', 'report4.json', 'report5.json',
-  'report6.json', 'report7.json', 'report8.json', 'report9.json', 'report1.json',
-  'report5.json', 'report4.json', 'report3.json', 'report2.json', 'report9.json',
-  'report8.json', 'report7.json', 'report6.json', 'report5.json', 'report4.json',
-  'report3.json', 'report2.json', 'report1.json', 'report2.json', 'report3.json'
+  'report6.json', 'report7.json', 'report8.json', 'report9.json'
 ]
+
+for (let i = 0; i < 15; i++) {
+  let index = getRandomInt(10)
+  reportFiles.push(`report${index}.json`)
+}
+
+reportFiles.push(`report3.json`)
+
+const projectId = 33
 
 createData()
 
 async function createData () {
   let n = 0
+  let h = 0
   const MONTH = (new Date()).getMonth()
   reportFiles.forEach(async fileName => {
 
@@ -30,12 +41,18 @@ async function createData () {
         return
       }
 
+      h++
+      if (h >= 23) {
+        h = 1
+      }
+
       console.log(rf)
       const content = fs.readFileSync(rf, 'utf8')
       const data = JSON.parse(content)
       const date = new Date()
       date.setMonth(MONTH)
       date.setDate(n)
+      date.setHours(h)
       data.date = date.toISOString()
       const status = await doPost(data)
       console.log('done: ' + status)
@@ -52,7 +69,7 @@ function doPost (data) {
     const options = {
       hostname: 'localhost',
       port: 3000,
-      path: '/api/projects/1/ingest',
+      path: `/api/projects/${projectId}/ingest`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
