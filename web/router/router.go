@@ -99,13 +99,41 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 
 	// Frontend
 
+	// load the precompiled statik fs
 	statikFS, err := fs.New()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// get the index file
+	indexFile, err := fs.ReadFile(statikFS, "/index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// wrap the handler
 	assetHandler := http.FileServer(statikFS)
-	s.GET("/*", echo.WrapHandler(assetHandler))
+	wrapHandler := echo.WrapHandler(assetHandler)
+
+	// our custom handler
+	s.GET("/*", func(ctx echo.Context) error {
+		// if root just pass through to the fs handler
+		path := ctx.Request().URL.Path
+		if path == "/" {
+			return wrapHandler(ctx)
+		}
+
+		// if it has an extension means it's a file
+		// so pass through to the fs handler
+		ext := filepath.Ext(path)
+		if len(ext) > 0 {
+			return wrapHandler(ctx)
+		}
+
+		// otherwise serve the index file
+		// React router will handle the path from there on
+		return ctx.HTML(200, string(indexFile))
+	})
 
 	return s, nil
 }
