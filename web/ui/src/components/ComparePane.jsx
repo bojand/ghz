@@ -57,8 +57,11 @@ export default class ComparePane extends Component {
           <Pane maxWidth={450}>
             <Icon icon='full-circle' size={12} color={color1} marginRight={10} />
             <RouterLink to={`/reports/${report1.id}`}>
-              <Text size={500}>{report1Name}</Text>
+              <Text size={500} marginRight={8}>{report1Name}</Text>
             </RouterLink>
+            {report1.status.toLowerCase() === 'ok'
+              ? <Badge color='green' isSolid marginRight={8}>OK</Badge>
+              : <Badge color='red' isSolid marginRight={8}>FAIL</Badge>}
             <Pane marginTop={8}>
               <Text>
                 {toLocaleString(report1.date)}
@@ -78,8 +81,11 @@ export default class ComparePane extends Component {
           <Pane marginLeft={32} maxWidth={450}>
             <Icon icon='full-circle' size={12} color={color2} marginRight={10} />
             <RouterLink to={`/reports/${report2.id}`}>
-              <Text size={500}>{report2Name}</Text>
+              <Text size={500} marginRight={8}>{report2Name}</Text>
             </RouterLink>
+            {report2.status.toLowerCase() === 'ok'
+              ? <Badge color='green' isSolid marginRight={8}>OK</Badge>
+              : <Badge color='red' isSolid marginRight={8}>FAIL</Badge>}
             <Pane marginTop={8}>
               <Text>
                 {toLocaleString(report2.date)}

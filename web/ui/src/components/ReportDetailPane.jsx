@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import {
-  Pane, Heading, Icon, Strong, Table,
+  Pane, Heading, Strong, Table,
   Tooltip, Text, Badge, Button, Link
 } from 'evergreen-ui'
 import _ from 'lodash'
@@ -8,8 +8,6 @@ import { Provider, Subscribe } from 'unstated'
 import { Link as RouterLink } from 'react-router-dom'
 
 import {
-  getIconForStatus,
-  getColorForStatus,
   formatNano,
   toLocaleString,
   getAppRoot
@@ -65,11 +63,10 @@ export default class ReportDetailPane extends Component {
 
         <Pane display='flex' marginTop={6} marginBottom={10}>
           <Pane flex={1}>
-            <Pane display='flex'>
-              <Icon
-                marginRight={16}
-                icon={getIconForStatus(currentReport.status)}
-                color={getColorForStatus(currentReport.status)} />
+            <Pane display='flex' textAlign='center' alignItems='center'>
+              {currentReport.status.toLowerCase() === 'ok'
+                ? <Badge color='green' isSolid marginRight={8}>OK</Badge>
+                : <Badge color='red' isSolid marginRight={8}>FAIL</Badge>}
               <Heading size={500}>
                 {currentReport.name || `REPORT: ${currentReport.id}`}
               </Heading>

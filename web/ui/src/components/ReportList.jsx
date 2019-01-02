@@ -1,12 +1,10 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Icon, Tooltip, TextInput, Button } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Badge, Tooltip, TextInput, Button } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
 
 import {
   Order,
   getIconForOrder,
-  getIconForStatus,
-  getColorForStatus,
   formatNano,
   formatFloat,
   toLocaleString
@@ -177,10 +175,10 @@ class ReportList extends Component {
                   {formatFloat(p.rps)}
                 </Table.TextCell>
                 <Table.TextCell
-                  display='flex' textAlign='center' maxWidth={80}>
-                  <Icon
-                    icon={getIconForStatus(p.status)}
-                    color={getColorForStatus(p.status)} />
+                  display='flex' textAlign='center' alignItems='center' maxWidth={80}>
+                  {p.status.toLowerCase() === 'ok'
+                    ? <Badge color='green' isSolid marginRight={8}>OK</Badge>
+                    : <Badge color='red' isSolid marginRight={8}>FAIL</Badge>}
                 </Table.TextCell>
               </Table.Row>
             ))}

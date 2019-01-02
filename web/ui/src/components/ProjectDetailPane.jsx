@@ -1,13 +1,8 @@
 import React, { Component } from 'react'
-import { Pane, Heading, Button, Paragraph, Icon } from 'evergreen-ui'
+import { Pane, Heading, Button, Paragraph, Badge } from 'evergreen-ui'
 import { toUpper } from 'lodash'
 
 import EditProjectDialog from './EditProjectDialog'
-
-import {
-  getIconForStatus,
-  getColorForStatus
-} from '../lib/common'
 
 export default class ProjectDetailPane extends Component {
   constructor (props) {
@@ -39,10 +34,9 @@ export default class ProjectDetailPane extends Component {
     return (
       <Pane>
         <Pane display='flex' alignItems='center' marginBottom={10}>
-          <Icon
-            marginRight={16}
-            icon={getIconForStatus(currentProject.status)}
-            color={getColorForStatus(currentProject.status)} />
+          {(currentProject.status && currentProject.status.toLowerCase() === 'ok')
+            ? <Badge color='green' isSolid marginRight={8}>OK</Badge>
+            : <Badge color='red' isSolid marginRight={8}>FAIL</Badge>}
           <Heading size={500}>{toUpper(currentProject.name)}</Heading>
           {this.state.editProjectVisible
             ? <EditProjectDialog
