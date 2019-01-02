@@ -17,6 +17,7 @@ import StatusCodeChart from './ReportDistChart'
 import OptionsPane from './OptionsPane'
 import LatencyPane from './LatencyPane'
 import HistogramPane from './HistogramPane'
+import StatusBadge from './StatusBadge'
 
 import HistogramContainer from '../containers/HistogramContainer'
 import OptionsContainer from '../containers/OptionsContainer'
@@ -64,9 +65,7 @@ export default class ReportDetailPane extends Component {
         <Pane display='flex' marginTop={6} marginBottom={10}>
           <Pane flex={1}>
             <Pane display='flex' textAlign='center' alignItems='center'>
-              {currentReport.status.toLowerCase() === 'ok'
-                ? <Badge color='green' isSolid marginRight={8}>OK</Badge>
-                : <Badge color='red' isSolid marginRight={8}>FAIL</Badge>}
+              <StatusBadge status={currentReport.status} marginRight={8} />
               <Heading size={500}>
                 {currentReport.name || `REPORT: ${currentReport.id}`}
               </Heading>

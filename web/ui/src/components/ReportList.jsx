@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Badge, Tooltip, TextInput, Button } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Tooltip, TextInput, Button } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
 
 import {
@@ -9,6 +9,8 @@ import {
   formatFloat,
   toLocaleString
 } from '../lib/common'
+
+import StatusBadge from './StatusBadge'
 
 class ReportList extends Component {
   constructor (props) {
@@ -176,9 +178,7 @@ class ReportList extends Component {
                 </Table.TextCell>
                 <Table.TextCell
                   display='flex' textAlign='center' alignItems='center' maxWidth={80}>
-                  {p.status.toLowerCase() === 'ok'
-                    ? <Badge color='green' isSolid marginRight={8}>OK</Badge>
-                    : <Badge color='red' isSolid marginRight={8}>FAIL</Badge>}
+                  <StatusBadge status={p.status} marginRight={8} />
                 </Table.TextCell>
               </Table.Row>
             ))}

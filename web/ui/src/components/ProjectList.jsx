@@ -9,6 +9,7 @@ import {
 } from '../lib/common'
 
 import EditProjectDialog from './EditProjectDialog'
+import StatusBadge from './StatusBadge'
 
 export default class ProjectList extends Component {
   constructor (props) {
@@ -149,9 +150,7 @@ export default class ProjectList extends Component {
                 <Table.TextCell
                   maxWidth={80}
                   display='flex' textAlign='center' alignItems='center'>
-                  {p.status.toLowerCase() === 'ok'
-                    ? <Badge color='green' isSolid marginRight={8}>OK</Badge>
-                    : <Badge color='red' isSolid marginRight={8}>FAIL</Badge>}
+                  <StatusBadge status={p.status} marginRight={8} />
                 </Table.TextCell>
                 <Table.Cell maxWidth={50}>
                   <IconButton icon='edit' height={24} appearance='minimal' onClick={ev => this.handleEditProject(p)} />
