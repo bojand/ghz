@@ -78,6 +78,7 @@ export default class ComparePane extends Component {
               : <Pane />
             }
           </Pane>
+
           <Pane marginLeft={32} maxWidth={450}>
             <Icon icon='full-circle' size={12} color={color2} marginRight={10} />
             <RouterLink to={`/reports/${report2.id}`}>
