@@ -24,16 +24,9 @@
   "fastest": 25559976,
   "slowest": 67781682,
   "rps": 1189.8770873627034,
-  "errorDistribution": {
-    "rpc error: code = Internal desc = Internal error.": 5,
-    "rpc error: code = PermissionDenied desc = Permission denied.": 2,
-    "rpc error: code = Unavailable desc = Service unavialable.": 5
-  },
+  "errorDistribution": {},
   "statusCodeDistribution": {
-    "Internal": 5,
-    "OK": 188,
-    "PermissionDenied": 2,
-    "Unavailable": 5
+    "OK": 200
   },
   "latencyDistribution": [
     {
@@ -126,20 +119,20 @@
     {
       "timestamp": "2018-12-30T16:50:49.786856-04:00",
       "latency": 28777958,
-      "error": "rpc error: code = PermissionDenied desc = Permission denied.",
-      "status": "PermissionDenied"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.786861-04:00",
       "latency": 29166356,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.786862-04:00",
       "latency": 28768614,
-      "error": "rpc error: code = Unavailable desc = Service unavialable.",
-      "status": "Unavailable"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.786864-04:00",
@@ -204,8 +197,8 @@
     {
       "timestamp": "2018-12-30T16:50:49.790086-04:00",
       "latency": 32180262,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.790086-04:00",
@@ -240,8 +233,8 @@
     {
       "timestamp": "2018-12-30T16:50:49.791154-04:00",
       "latency": 32635998,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.791154-04:00",
@@ -444,14 +437,14 @@
     {
       "timestamp": "2018-12-30T16:50:49.819035-04:00",
       "latency": 27368028,
-      "error": "rpc error: code = Unavailable desc = Service unavialable.",
-      "status": "Unavailable"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.819203-04:00",
       "latency": 32110833,
-      "error": "rpc error: code = Unavailable desc = Service unavialable.",
-      "status": "Unavailable"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.819203-04:00",
@@ -618,8 +611,8 @@
     {
       "timestamp": "2018-12-30T16:50:49.827265-04:00",
       "latency": 35589839,
-      "error": "rpc error: code = Unavailable desc = Service unavialable.",
-      "status": "Unavailable"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.827266-04:00",
@@ -798,8 +791,8 @@
     {
       "timestamp": "2018-12-30T16:50:49.851981-04:00",
       "latency": 32919062,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.851982-04:00",
@@ -840,8 +833,8 @@
     {
       "timestamp": "2018-12-30T16:50:49.863268-04:00",
       "latency": 41453411,
-      "error": "rpc error: code = PermissionDenied desc = Permission denied.",
-      "status": "PermissionDenied"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.863269-04:00",
@@ -894,8 +887,8 @@
     {
       "timestamp": "2018-12-30T16:50:49.863559-04:00",
       "latency": 41157916,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.863575-04:00",
@@ -1170,8 +1163,8 @@
     {
       "timestamp": "2018-12-30T16:50:49.895281-04:00",
       "latency": 31816700,
-      "error": "rpc error: code = Unavailable desc = Service unavialable.",
-      "status": "Unavailable"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:49.896373-04:00",

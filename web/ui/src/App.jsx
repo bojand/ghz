@@ -25,9 +25,6 @@ export default class App extends Component {
             </Pane>
             <Pane marginRight={8}>
               <Tab height={36} paddingX={14}><Icon icon='manual' marginRight={12} /><Text size={400}>DOCS</Text></Tab>
-              {/* <Button iconBefore='manual' appearance='minimal' intent='none' height={40}>
-                DOCS
-              </Button> */}
             </Pane>
           </Pane>
           <Switch>
@@ -93,7 +90,7 @@ function Info () {
 const TabLink = ({ to, linkText, icon, ...rest }) => (
   <Route
     path={to}
-    children={({ match }) => (
+    children={() => (
       <RouterLink to={to} {...rest} >
         <Tab height={36} paddingX={14}><Icon icon={icon} marginRight={12} /><Text size={400}>{linkText}</Text></Tab>
         {/* <Button iconBefore={icon} appearance='minimal' intent='none' height={40} marginRight={12}>

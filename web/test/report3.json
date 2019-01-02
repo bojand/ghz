@@ -24,16 +24,9 @@
   "fastest": 25407663,
   "slowest": 72725169,
   "rps": 986.817942831061,
-  "errorDistribution": {
-    "rpc error: code = Internal desc = Internal error.": 4,
-    "rpc error: code = PermissionDenied desc = Permission denied.": 5,
-    "rpc error: code = Unavailable desc = Service unavialable.": 2
-  },
+  "errorDistribution": {},
   "statusCodeDistribution": {
-    "Internal": 4,
-    "OK": 189,
-    "PermissionDenied": 5,
-    "Unavailable": 2
+    "OK": 200
   },
   "latencyDistribution": [
     {
@@ -126,20 +119,20 @@
     {
       "timestamp": "2018-12-30T16:50:41.169066-04:00",
       "latency": 27958384,
-      "error": "rpc error: code = PermissionDenied desc = Permission denied.",
-      "status": "PermissionDenied"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.169073-04:00",
       "latency": 27868613,
-      "error": "rpc error: code = PermissionDenied desc = Permission denied.",
-      "status": "PermissionDenied"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.169146-04:00",
       "latency": 27909837,
-      "error": "rpc error: code = Unavailable desc = Service unavialable.",
-      "status": "Unavailable"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.169147-04:00",
@@ -228,14 +221,14 @@
     {
       "timestamp": "2018-12-30T16:50:41.170519-04:00",
       "latency": 29034511,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.170548-04:00",
       "latency": 29056211,
-      "error": "rpc error: code = PermissionDenied desc = Permission denied.",
-      "status": "PermissionDenied"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.170682-04:00",
@@ -246,8 +239,8 @@
     {
       "timestamp": "2018-12-30T16:50:41.170683-04:00",
       "latency": 29907110,
-      "error": "rpc error: code = PermissionDenied desc = Permission denied.",
-      "status": "PermissionDenied"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.171441-04:00",
@@ -450,14 +443,14 @@
     {
       "timestamp": "2018-12-30T16:50:41.200695-04:00",
       "latency": 31562896,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.200746-04:00",
       "latency": 31369139,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.201047-04:00",
@@ -510,8 +503,8 @@
     {
       "timestamp": "2018-12-30T16:50:41.201653-04:00",
       "latency": 32022270,
-      "error": "rpc error: code = Unavailable desc = Service unavialable.",
-      "status": "Unavailable"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.20181-04:00",
@@ -750,8 +743,8 @@
     {
       "timestamp": "2018-12-30T16:50:41.230997-04:00",
       "latency": 30195668,
-      "error": "rpc error: code = PermissionDenied desc = Permission denied.",
-      "status": "PermissionDenied"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.230998-04:00",
@@ -1164,8 +1157,8 @@
     {
       "timestamp": "2018-12-30T16:50:41.278464-04:00",
       "latency": 30909905,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:41.278465-04:00",

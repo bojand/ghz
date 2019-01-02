@@ -16,6 +16,8 @@ import {
   createComparisonChart
 } from '../lib/compareBarChart'
 
+import StatusBadge from './StatusBadge'
+
 export default class ComparePane extends Component {
   componentDidMount () {
     this.props.compareStore.fetchReports(this.props.reportId1, this.props.reportId2)
@@ -57,8 +59,9 @@ export default class ComparePane extends Component {
           <Pane maxWidth={450}>
             <Icon icon='full-circle' size={12} color={color1} marginRight={10} />
             <RouterLink to={`/reports/${report1.id}`}>
-              <Text size={500}>{report1Name}</Text>
+              <Text size={500} marginRight={8}>{report1Name}</Text>
             </RouterLink>
+            <StatusBadge status={report1.status} />
             <Pane marginTop={8}>
               <Text>
                 {toLocaleString(report1.date)}
@@ -75,11 +78,13 @@ export default class ComparePane extends Component {
               : <Pane />
             }
           </Pane>
+
           <Pane marginLeft={32} maxWidth={450}>
             <Icon icon='full-circle' size={12} color={color2} marginRight={10} />
             <RouterLink to={`/reports/${report2.id}`}>
-              <Text size={500}>{report2Name}</Text>
+              <Text size={500} marginRight={8}>{report2Name}</Text>
             </RouterLink>
+            <StatusBadge status={report2.status} />
             <Pane marginTop={8}>
               <Text>
                 {toLocaleString(report2.date)}

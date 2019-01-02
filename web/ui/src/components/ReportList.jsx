@@ -1,16 +1,16 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Icon, Tooltip, TextInput, Button } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Tooltip, TextInput, Button } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
 
 import {
   Order,
   getIconForOrder,
-  getIconForStatus,
-  getColorForStatus,
   formatNano,
   formatFloat,
   toLocaleString
 } from '../lib/common'
+
+import StatusBadge from './StatusBadge'
 
 class ReportList extends Component {
   constructor (props) {
@@ -177,10 +177,8 @@ class ReportList extends Component {
                   {formatFloat(p.rps)}
                 </Table.TextCell>
                 <Table.TextCell
-                  display='flex' textAlign='center' maxWidth={80}>
-                  <Icon
-                    icon={getIconForStatus(p.status)}
-                    color={getColorForStatus(p.status)} />
+                  display='flex' textAlign='center' alignItems='center' maxWidth={80}>
+                  <StatusBadge status={p.status} marginRight={8} />
                 </Table.TextCell>
               </Table.Row>
             ))}

@@ -25,13 +25,10 @@
   "slowest": 80200129,
   "rps": 1011.2135748546173,
   "errorDistribution": {
-    "rpc error: code = Internal desc = Internal error.": 6,
-    "rpc error: code = Unavailable desc = Service unavialable.": 1
+    
   },
   "statusCodeDistribution": {
-    "Internal": 6,
-    "OK": 193,
-    "Unavailable": 1
+    "OK": 200
   },
   "latencyDistribution": [
     {
@@ -124,8 +121,8 @@
     {
       "timestamp": "2018-12-30T16:50:13.873937-04:00",
       "latency": 42462755,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:13.87394-04:00",
@@ -328,8 +325,8 @@
     {
       "timestamp": "2018-12-30T16:50:13.8795-04:00",
       "latency": 47880401,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:13.879501-04:00",
@@ -424,8 +421,8 @@
     {
       "timestamp": "2018-12-30T16:50:13.902065-04:00",
       "latency": 70555682,
-      "error": "rpc error: code = Unavailable desc = Service unavialable.",
-      "status": "Unavailable"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:13.902185-04:00",
@@ -454,8 +451,8 @@
     {
       "timestamp": "2018-12-30T16:50:13.905444-04:00",
       "latency": 31304739,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:13.905446-04:00",
@@ -604,8 +601,8 @@
     {
       "timestamp": "2018-12-30T16:50:13.908969-04:00",
       "latency": 33752479,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:13.909107-04:00",
@@ -718,8 +715,8 @@
     {
       "timestamp": "2018-12-30T16:50:13.932157-04:00",
       "latency": 30926458,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:13.932594-04:00",
@@ -754,8 +751,8 @@
     {
       "timestamp": "2018-12-30T16:50:13.934607-04:00",
       "latency": 28930437,
-      "error": "rpc error: code = Internal desc = Internal error.",
-      "status": "Internal"
+      "error": "",
+      "status": "OK"
     },
     {
       "timestamp": "2018-12-30T16:50:13.935153-04:00",

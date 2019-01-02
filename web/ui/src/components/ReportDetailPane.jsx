@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import {
-  Pane, Heading, Icon, Strong, Table,
+  Pane, Heading, Strong, Table,
   Tooltip, Text, Badge, Button, Link
 } from 'evergreen-ui'
 import _ from 'lodash'
@@ -8,16 +8,16 @@ import { Provider, Subscribe } from 'unstated'
 import { Link as RouterLink } from 'react-router-dom'
 
 import {
-  getIconForStatus,
-  getColorForStatus,
   formatNano,
-  toLocaleString
+  toLocaleString,
+  getAppRoot
 } from '../lib/common'
 
 import StatusCodeChart from './ReportDistChart'
 import OptionsPane from './OptionsPane'
 import LatencyPane from './LatencyPane'
 import HistogramPane from './HistogramPane'
+import StatusBadge from './StatusBadge'
 
 import HistogramContainer from '../containers/HistogramContainer'
 import OptionsContainer from '../containers/OptionsContainer'
@@ -57,16 +57,15 @@ export default class ReportDetailPane extends Component {
     let errKey = 0
     let tagKey = 0
 
+    const appRoot = getAppRoot()
+
     return (
       <Pane>
 
         <Pane display='flex' marginTop={6} marginBottom={10}>
           <Pane flex={1}>
-            <Pane display='flex'>
-              <Icon
-                marginRight={16}
-                icon={getIconForStatus(currentReport.status)}
-                color={getColorForStatus(currentReport.status)} />
+            <Pane display='flex' textAlign='center' alignItems='center'>
+              <StatusBadge status={currentReport.status} marginRight={8} />
               <Heading size={500}>
                 {currentReport.name || `REPORT: ${currentReport.id}`}
               </Heading>
@@ -95,12 +94,12 @@ export default class ReportDetailPane extends Component {
                   COMPARE TO PREVIOUS
                 </Button>
               </RouterLink>
-              <Link href={`/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
+              <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
                 <Button iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
                   JSON
                 </Button>
               </Link>
-              <Link href={`/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
+              <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
                 <Button iconBefore='label' appearance='minimal' intent='none' height={32}>
                   CSV
                 </Button>

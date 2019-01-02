@@ -17,6 +17,7 @@ type IngestDatabase interface {
 	CreateOptions(*model.Options) error
 	FindProjectByID(uint) (*model.Project, error)
 	CreateDetailsBatch(uint, []*model.Detail) (uint, uint)
+	UpdateProjectStatus(uint, model.Status) error
 }
 
 // IngestResponse is the response to the ingest endpoint
@@ -156,6 +157,11 @@ func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx e
 
 	created, errored := api.DB.CreateDetailsBatch(report.ID, details)
 
+	// Update project status
+	if err := api.DB.UpdateProjectStatus(p.ID, report.Status); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	// Response
 
 	rres := &IngestResponse{
@@ -197,6 +203,11 @@ func convertIngestToReport(pid uint, ir *IngestRequest) *model.Report {
 	r.LatencyDistribution = make(model.LatencyDistributionList, len(ir.LatencyDistribution))
 	for i := range ir.LatencyDistribution {
 		r.LatencyDistribution[i] = &ir.LatencyDistribution[i]
+	}
+
+	// status
+	if len(r.ErrorDist) > 0 {
+		r.Status = model.StatusFail
 	}
 
 	return r

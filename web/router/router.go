@@ -2,7 +2,10 @@ package router
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/bojand/ghz/web/api"
@@ -24,6 +27,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	s := echo.New()
 
 	s.Logger.SetLevel(getLogLevel(conf))
+	s.Logger.SetOutput(getLogOutput(conf))
 
 	s.Validator = &CustomValidator{validator: validator.New()}
 
@@ -43,11 +47,9 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	s.Use(middleware.Logger())
 	s.Use(middleware.Recover())
 
-	root := s.Group(conf.Server.RootURL)
-
 	// API
 
-	apiRoot := root.Group("/api")
+	apiRoot := s.Group("/api")
 
 	// Projects
 
@@ -97,13 +99,41 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 
 	// Frontend
 
+	// load the precompiled statik fs
 	statikFS, err := fs.New()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// get the index file
+	indexFile, err := fs.ReadFile(statikFS, "/index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// wrap the handler
 	assetHandler := http.FileServer(statikFS)
-	s.GET(conf.Server.RootURL+"/*", echo.WrapHandler(assetHandler))
+	wrapHandler := echo.WrapHandler(assetHandler)
+
+	// our custom handler
+	s.GET("/*", func(ctx echo.Context) error {
+		// if root just pass through to the fs handler
+		path := ctx.Request().URL.Path
+		if path == "/" {
+			return wrapHandler(ctx)
+		}
+
+		// if it has an extension means it's a file
+		// so pass through to the fs handler
+		ext := filepath.Ext(path)
+		if len(ext) > 0 {
+			return wrapHandler(ctx)
+		}
+
+		// otherwise serve the index file
+		// React router will handle the path from there on
+		return ctx.HTML(200, string(indexFile))
+	})
 
 	return s, nil
 }
@@ -132,6 +162,26 @@ func getLogLevel(config *config.Config) log.Lvl {
 	}
 }
 
+func getLogOutput(config *config.Config) io.Writer {
+	logPath := strings.TrimSpace(config.Log.Path)
+	if logPath == "" {
+		return os.Stdout
+	}
+
+	if _, err := os.Stat(filepath.Dir(logPath)); os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(logPath), 0777); err != nil {
+			panic(err)
+		}
+	}
+
+	f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	return f
+}
+
 // PrintRoutes prints routes in the server
 func PrintRoutes(echoServer *echo.Echo) {
 	routes := echoServer.Routes()
@@ -139,7 +189,7 @@ func PrintRoutes(echoServer *echo.Echo) {
 		index := strings.Index(r.Name, "ghz api:")
 		if index >= 0 {
 			desc := fmt.Sprintf("%+v %+v", r.Method, r.Path)
-			fmt.Println(desc)
+			echoServer.Logger.Info(desc)
 		}
 	}
 
