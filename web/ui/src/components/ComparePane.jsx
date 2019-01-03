@@ -5,7 +5,7 @@ import { Link as RouterLink } from 'react-router-dom'
 import _ from 'lodash'
 
 import {
-  formatNano,
+  formatNanoUnit,
   formatFloat,
   toLocaleString
 } from '../lib/common'
@@ -141,37 +141,37 @@ export default class ComparePane extends Component {
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Total</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(report1.total)} ms
+                  {formatNanoUnit(report1.total)}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(report2.total)} ms
+                  {formatNanoUnit(report2.total)}
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Average</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(report1.average)} ms
+                  {formatNanoUnit(report1.average)}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(report2.average)} ms
+                  {formatNanoUnit(report2.average)}
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Slowest</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(report1.slowest)} ms
+                  {formatNanoUnit(report1.slowest)}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(report2.slowest)} ms
+                  {formatNanoUnit(report2.slowest)}
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Fastest</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(report1.fastest)} ms
+                  {formatNanoUnit(report1.fastest)}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(report2.fastest)} ms
+                  {formatNanoUnit(report2.fastest)}
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
@@ -212,10 +212,10 @@ export default class ComparePane extends Component {
                     <Strong>{p.percentage} %</Strong>
                   </Table.TextCell>
                   <Table.TextCell isNumber>
-                    {formatNano(p.latency)} ms
+                    {formatNanoUnit(p.latency)}
                   </Table.TextCell>
                   <Table.TextCell isNumber>
-                    {formatNano(report2.latencyDistribution[i].latency)} ms
+                    {formatNanoUnit(report2.latencyDistribution[i].latency)}
                   </Table.TextCell>
                 </Table.Row>
               ))}

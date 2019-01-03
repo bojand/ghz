@@ -47,6 +47,25 @@ function formatNano (val) {
   return Number.parseFloat(val / 1000000).toFixed(2)
 }
 
+function formatDiv (val, div) {
+  return Number.parseFloat(val / div).toFixed(2)
+}
+
+function formatNanoUnit (val) {
+  let v = Number.parseFloat(val)
+  if (v < 1000000) {
+    return `${v} ns`
+  }
+
+  let valMs = v / 1000000
+  if (valMs < 1000) {
+    valMs = valMs.toFixed(2)
+    return `${valMs} ms`
+  }
+
+  return Number.parseFloat(valMs / 1000).toFixed(2) + ' s'
+}
+
 function pretty (value) {
   let v = value
   if (typeof v === 'string') {
@@ -83,8 +102,10 @@ module.exports = {
   Order,
   formatFloat,
   formatNano,
+  formatNanoUnit,
   pretty,
   getRandomInt,
   toLocaleString,
-  getAppRoot
+  getAppRoot,
+  formatDiv
 }

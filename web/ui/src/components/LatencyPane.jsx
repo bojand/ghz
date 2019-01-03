@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Pane, Heading, Table, Strong } from 'evergreen-ui'
 
-import { formatNano } from '../lib/common'
+import { formatNanoUnit } from '../lib/common'
 
 export default class LatencyPane extends Component {
   constructor (props) {
@@ -33,7 +33,7 @@ export default class LatencyPane extends Component {
                 <Strong>{p.percentage} %</Strong>
               </Table.TextCell>
               <Table.TextCell isNumber>
-                {formatNano(p.latency)} ms
+                {formatNanoUnit(p.latency)}
               </Table.TextCell>
             </Table.Row>
           ))}

@@ -8,7 +8,7 @@ import { Provider, Subscribe } from 'unstated'
 import { Link as RouterLink } from 'react-router-dom'
 
 import {
-  formatNano,
+  formatNanoUnit,
   toLocaleString,
   getAppRoot
 } from '../lib/common'
@@ -125,25 +125,25 @@ export default class ReportDetailPane extends Component {
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Total</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(currentReport.total)} ms
+                  {formatNanoUnit(currentReport.total)}
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Average</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(currentReport.average)} ms
+                  {formatNanoUnit(currentReport.average)}
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Slowest</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(currentReport.slowest)} ms
+                  {formatNanoUnit(currentReport.slowest)}
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}><Strong>Fastest</Strong></Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(currentReport.fastest)} ms
+                  {formatNanoUnit(currentReport.fastest)}
                 </Table.TextCell>
               </Table.Row>
               <Table.Row>
