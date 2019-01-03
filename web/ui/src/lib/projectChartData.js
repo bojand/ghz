@@ -18,12 +18,24 @@ function createChartData (reports) {
     })
     .compact()
     .valueOf()
+
+  const nine9 = _(data)
+    .map(r => {
+      const elem = _.find(r.latencyDistribution, ['percentage', 99])
+      if (elem) {
+        return elem.latency / 1000000
+      }
+    })
+    .compact()
+    .valueOf()
+
   const dates = data.map(d => d.date)
   return {
     averate: avgs,
     fastest: fasts,
     slowest: slows,
     nine5: nine5,
+    nine9: nine9,
     rps,
     dates
   }
@@ -40,6 +52,7 @@ function createLineChart (reports) {
   const fastData = []
   const slowData = []
   const n5Data = []
+  const n9Data = []
   const rpsData = []
 
   dates.forEach((v, i) => {
@@ -59,6 +72,10 @@ function createLineChart (reports) {
     n5Data[i] = {
       x: d,
       y: formatFloat(chartData.nine5[i])
+    }
+    n9Data[i] = {
+      x: d,
+      y: formatFloat(chartData.nine9[i])
     }
     rpsData[i] = {
       x: d,
@@ -106,6 +123,16 @@ function createLineChart (reports) {
       borderColor: colors.orange,
       fill: false,
       data: n5Data,
+      yAxisID: 'y-axis-lat',
+      cubicInterpolationMode,
+      lineTension
+    },
+    {
+      label: '99th',
+      backgroundColor: colors.purple,
+      borderColor: colors.purple,
+      fill: false,
+      data: n9Data,
       yAxisID: 'y-axis-lat',
       cubicInterpolationMode,
       lineTension
