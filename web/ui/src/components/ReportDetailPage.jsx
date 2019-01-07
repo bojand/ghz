@@ -4,18 +4,18 @@ import { Provider, Subscribe } from 'unstated'
 
 import ReportDetailPane from './ReportDetailPane'
 
-import ReportContainer from '../containers/ReportContainer'
+import CompareContainer from '../containers/CompareContainer'
 
 export default class ReportDetailPage extends Component {
   render () {
     return (
       <Provider>
-        <Subscribe to={[ReportContainer]}>
-          {reportStore => (
+        <Subscribe to={[CompareContainer]}>
+          {compareStore => (
             <Pane>
               <Pane marginBottom={24}>
                 <ReportDetailPane
-                  reportStore={reportStore}
+                  compareStore={compareStore}
                   reportId={this.props.projectId}
                 />
               </Pane>

@@ -53,12 +53,12 @@ function formatDiv (val, div) {
 
 function formatNanoUnit (val) {
   let v = Number.parseFloat(val)
-  if (v < 1000000) {
+  if (Math.abs(v) < 10000) {
     return `${v} ns`
   }
 
   let valMs = v / 1000000
-  if (valMs < 1000) {
+  if (Math.abs(valMs) < 1000) {
     valMs = valMs.toFixed(2)
     return `${valMs} ms`
   }

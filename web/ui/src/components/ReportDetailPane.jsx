@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {
-  Pane, Heading, Strong, Table,
-  Tooltip, Text, Badge, Button, Link
+  Pane, Heading, Strong, Table, Icon,
+  Tooltip, Text, Badge, Button, Link, CornerDialog
 } from 'evergreen-ui'
 import _ from 'lodash'
 import { Provider, Subscribe } from 'unstated'
@@ -9,6 +9,7 @@ import { Link as RouterLink } from 'react-router-dom'
 
 import {
   formatNanoUnit,
+  formatFloat,
   toLocaleString,
   getAppRoot
 } from '../lib/common'
@@ -32,24 +33,23 @@ export default class ReportDetailPane extends Component {
   }
 
   componentDidMount () {
-    this.props.reportStore.fetchReport(this.props.reportId)
+    this.props.compareStore.fetchReports(this.props.reportId, 'previous')
   }
 
   componentDidUpdate (prevProps) {
-    if (!this.props.reportStore.state.isFetching &&
+    if (!this.props.compareStore.state.isFetching &&
       (this.props.reportId !== prevProps.reportId)) {
-      this.props.reportStore.fetchReport(this.props.reportId)
+      this.props.compareStore.fetchReports(this.props.reportId, 'previous')
     }
   }
 
   render () {
-    const { state: { currentReport } } = this.props.reportStore
+    const currentReport = this.props.compareStore.state.report1
+    const prevReport = this.props.compareStore.state.report2
 
     if (!currentReport || !currentReport.id) {
       return (<Pane />)
     }
-
-    const maxWidthLabel = 100
 
     const dateStr = toLocaleString(currentReport.date)
 
@@ -109,68 +109,40 @@ export default class ReportDetailPane extends Component {
         </Pane>
 
         <Pane display='flex' paddingY={20}>
-          <Pane flex={1} minWidth={260} maxWidth={260}>
+          <Pane flex={1} minWidth={260} maxWidth={360}>
             <Heading>
               Summary
             </Heading>
-            <Pane marginTop={16}>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}>
-                  <Strong>Count</Strong>
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {currentReport.count}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>Total</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(currentReport.total)}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>Average</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(currentReport.average)}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>Slowest</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(currentReport.slowest)}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>Fastest</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(currentReport.fastest)}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>RPS</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {currentReport.rps}
-                </Table.TextCell>
-              </Table.Row>
+            <Pane borderBottom paddingY={16}>
+              <Pane>
+                <Text size={300} color='muted' fontWeight='normal'>
+                  COUNT
+                </Text>
+              </Pane>
+              <Pane display='flex' paddingTop={8}>
+                <Pane flex={1} display='flex'>
+                  <Text size={500} fontFamily='mono'>{currentReport.count}</Text>
+                </Pane>
+              </Pane>
             </Pane>
+            <SummaryPropComponent currentReport={currentReport} previousReport={prevReport} propName='total' />
+            <SummaryPropComponent currentReport={currentReport} previousReport={prevReport} propName='average' />
+            <SummaryPropComponent currentReport={currentReport} previousReport={prevReport} propName='fastest' />
+            <SummaryPropComponent currentReport={currentReport} previousReport={prevReport} propName='slowest' />
+            <SummaryPropComponent currentReport={currentReport} previousReport={prevReport} propName='rps' />
           </Pane>
 
-          <Pane flex={2} marginLeft={20}>
-            <Provider>
-              <Subscribe to={[OptionsContainer]}>
-                {optionsStore => (
-                  <OptionsPane
-                    optionsStore={optionsStore}
-                    reportId={currentReport.id}
-                  />
-                )}
-              </Subscribe>
-            </Provider>
+          <Pane flex={1} marginLeft={30} marginRight={16}>
+            <LatencyComponent
+              currentReport={currentReport} previousReport={prevReport}
+            />
           </Pane>
+          <Pane flex={1} />
+
         </Pane>
 
         <Pane display='flex' alignItems='left' marginTop={24} marginBottom={24}>
-          <Pane flex={4}>
+          <Pane flex={3}>
             <Provider>
               <Subscribe to={[HistogramContainer]}>
                 {histogramStore => (
@@ -183,12 +155,7 @@ export default class ReportDetailPane extends Component {
               </Subscribe>
             </Provider>
           </Pane>
-          <Pane flex={1} marginLeft={30} marginRight={16}>
-            <LatencyPane
-              latencyDistribution={currentReport.latencyDistribution}
-              reportId={currentReport.id}
-            />
-          </Pane>
+          <Pane flex={1} />
         </Pane>
 
         <Pane>
@@ -224,39 +191,162 @@ export default class ReportDetailPane extends Component {
           </Pane>
         </Pane>
 
-        <Pane marginTop={30}>
-          <Heading>
-            Error Distribution
-          </Heading>
-          <Pane display='flex' marginTop={16} alignItems='left'>
-            <Pane minWidth={400} maxWidth={500} alignItems='left'>
-              <StatusCodeChart
-                report={currentReport}
-                label='Error Distribution'
-                dataMapKey='errorDistribution'
-              />
-            </Pane>
-            <Pane flex={1} marginLeft={16}>
-              {_.map(currentReport.errorDistribution, (v, k) => (
-                <Table.Row key={'error-' + errKey++}>
-                  <Table.TextCell textProps={{ size: 400 }}>
-                    {k.toString()}
-                  </Table.TextCell>
-                  <Table.TextCell isNumber maxWidth={120}>
-                    {v.toString()}
-                    <Tooltip content='Percent of all calls'>
-                      <Text marginLeft={8} textDecoration='underline dotted'>
-                        {'(' + Number.parseFloat((v / currentReport.count) * 100).toFixed(2) + ' %)'}
-                      </Text>
-                    </Tooltip>
-                  </Table.TextCell>
-                </Table.Row>
-              ))}
+        {currentReport.errorDistribution && _.keys(currentReport.errorDistribution).length
+          ? <Pane marginTop={30}>
+            <Heading>
+              Error Distribution
+            </Heading>
+            <Pane display='flex' marginTop={16} alignItems='left'>
+              <Pane minWidth={400} maxWidth={500} alignItems='left'>
+                <StatusCodeChart
+                  report={currentReport}
+                  label='Error Distribution'
+                  dataMapKey='errorDistribution'
+                />
+              </Pane>
+              <Pane flex={1} marginLeft={16}>
+                {_.map(currentReport.errorDistribution, (v, k) => (
+                  <Table.Row key={'error-' + errKey++}>
+                    <Table.TextCell textProps={{ size: 400 }}>
+                      {k.toString()}
+                    </Table.TextCell>
+                    <Table.TextCell isNumber maxWidth={120}>
+                      {v.toString()}
+                      <Tooltip content='Percent of all calls'>
+                        <Text marginLeft={8} textDecoration='underline dotted'>
+                          {'(' + Number.parseFloat((v / currentReport.count) * 100).toFixed(2) + ' %)'}
+                        </Text>
+                      </Tooltip>
+                    </Table.TextCell>
+                  </Table.Row>
+                ))}
+              </Pane>
             </Pane>
           </Pane>
-        </Pane>
+          : <Pane />
+        }
 
+        <Pane display='flex' alignItems='left' marginTop={32} marginBottom={24}>
+          <Pane flex={3} >
+            <Provider>
+              <Subscribe to={[OptionsContainer]}>
+                {optionsStore => (
+                  <OptionsPane
+                    optionsStore={optionsStore}
+                    reportId={currentReport.id}
+                  />
+                )}
+              </Subscribe>
+            </Provider>
+          </Pane>
+          <Pane flex={2} />
+        </Pane>
       </Pane>
     )
   }
+}
+
+const SummaryPropComponent = ({ currentReport, previousReport, propName }) => {
+  const crVal = currentReport[propName]
+  const prVal = previousReport[propName]
+  const change = crVal - prVal
+  const changeAbs = Math.abs(change)
+  const changeP = change > 0
+    ? crVal / prVal * 100 - 100
+    : 100 - crVal / prVal * 100
+  const changeIcon = change > 0
+    ? 'arrow-up'
+    : 'arrow-down'
+  let changeColor = change > 0
+    ? 'danger'
+    : 'success'
+
+  if (propName === 'rps') {
+    changeColor = change > 0
+      ? 'success'
+      : 'danger'
+  }
+
+  let label = propName
+
+  if (propName === 'rps') {
+    label = 'Requests Per Second'
+  }
+
+  return (
+    <Pane borderBottom paddingY={16}>
+      <Pane>
+        <Text size={300} color='muted' fontWeight='normal'>
+          {_.toUpper(label)}
+        </Text>
+      </Pane>
+      <Pane display='flex' paddingTop={8}>
+        <Pane flex={2} display='flex'>
+          <Text size={500} fontFamily='mono'>
+            {propName === 'rps' ? formatFloat(crVal) : formatNanoUnit(crVal)}
+          </Text>
+        </Pane>
+        <Pane flex={3} display='flex'>
+          <Icon icon={changeIcon} color={changeColor} marginRight={8} />
+          <Text fontFamily='mono'>
+            {propName === 'rps' ? formatFloat(changeAbs) : formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
+          </Text>
+        </Pane>
+      </Pane>
+    </Pane>
+  )
+}
+
+const LatencyPropComponent = ({ currentReportLD, previousReportLD, propName }) => {
+  const crVal = currentReportLD.latency
+  const prVal = previousReportLD.latency
+  const change = crVal - prVal
+  const changeAbs = Math.abs(change)
+  const changeP = change > 0
+    ? crVal / prVal * 100 - 100
+    : 100 - crVal / prVal * 100
+  const changeIcon = change > 0
+    ? 'arrow-up'
+    : 'arrow-down'
+  let changeColor = change > 0
+    ? 'danger'
+    : 'success'
+
+  let label = currentReportLD.percentage
+
+  return (
+    <Pane borderBottom paddingY={16} display='flex'>
+      <Pane flex={2}>
+        <Text fontWeight='bold' size={500}>
+          {_.toUpper(label)} %
+        </Text>
+      </Pane>
+      <Pane flex={3} display='flex'>
+        <Text fontFamily='mono'>
+          {formatNanoUnit(crVal)}
+        </Text>
+      </Pane>
+      <Pane flex={5} display='flex'>
+        <Icon icon={changeIcon} color={changeColor} marginRight={8} />
+        <Text fontFamily='mono'>
+          {formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
+        </Text>
+      </Pane>
+    </Pane>
+  )
+}
+
+const LatencyComponent = ({ currentReport, previousReport }) => {
+  return (
+    <Pane>
+      <Heading>
+        Latency Distribution
+      </Heading>
+      <Pane>
+        {currentReport.latencyDistribution.map((p, i) => (
+          <LatencyPropComponent currentReportLD={p} previousReportLD={previousReport.latencyDistribution[i]} propName={p} />
+        ))}
+      </Pane>
+    </Pane>
+  )
 }
