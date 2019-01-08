@@ -33,7 +33,7 @@ export function createComparisonChart (report1, report2, color1, color2) {
   }
 
   const chartData = {
-    labels: ['Fastest', 'Average', 'Slowest', '10 %', '25 %', '50 %', '75 %', '95 %', '99 %'],
+    labels: ['Fastest', 'Average', 'Slowest', '10 %', '25 %', '50 %', '75 %', '90 %', '95 %', '99 %'],
     datasets: [{
       label: report1Name,
       backgroundColor: color(color1)
@@ -49,8 +49,9 @@ export function createComparisonChart (report1, report2, color1, color2) {
         formatDiv(report1Latencies['25'].latency, divr),
         formatDiv(report1Latencies['50'].latency, divr),
         formatDiv(report1Latencies['75'].latency, divr),
+        formatDiv(report1Latencies['90'].latency, divr),
         formatDiv(report1Latencies['95'].latency, divr),
-        formatDiv(report1Latencies['99'].latency, divr),
+        formatDiv(report1Latencies['99'].latency, divr)
       ]
     }, {
       label: report2Name,
@@ -67,8 +68,9 @@ export function createComparisonChart (report1, report2, color1, color2) {
         formatDiv(report2Latencies['25'].latency, divr),
         formatDiv(report2Latencies['50'].latency, divr),
         formatDiv(report2Latencies['75'].latency, divr),
+        formatDiv(report2Latencies['90'].latency, divr),
         formatDiv(report2Latencies['95'].latency, divr),
-        formatDiv(report2Latencies['99'].latency, divr),
+        formatDiv(report2Latencies['99'].latency, divr)
       ]
     }]
   }

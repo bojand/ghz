@@ -49,6 +49,9 @@ export default class ComparePane extends Component {
 
     const config = createComparisonChart(report1, report2, color1, color2)
 
+    const latency1 = _.sortBy(report1.latencyDistribution, 'percentage')
+    const latency2 = _.sortBy(report2.latencyDistribution, 'percentage')
+
     return (
       <Pane marginTop={6}>
         <Pane>
@@ -103,16 +106,20 @@ export default class ComparePane extends Component {
           </Pane>
         </Pane>
 
-        <Pane marginTop={32} maxWidth={840}>
-          <Bar data={config.data} options={config.options} />
+        <Pane marginTop={32} display='flex'>
+          <Pane flex={4}>
+            <Bar data={config.data} options={config.options} />
+          </Pane>
+          <Pane flex={1} />
         </Pane>
 
         <Pane display='flex' marginTop={24} marginBottom={24}>
 
-          <Pane maxWidth={400}>
+          <Pane flex={2}>
             <Heading>
               Summary
             </Heading>
+
             <Pane>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel} />
@@ -126,6 +133,7 @@ export default class ComparePane extends Component {
                     <Text size={500} color={color2}>{report2Name}</Text>
                   </Tooltip>
                 </Table.TextCell>
+                <Table.TextCell><Text size={500}>Change</Text></Table.TextCell>
               </Table.Row>
               <Table.Row>
                 <Table.TextCell maxWidth={maxWidthLabel}>
@@ -137,56 +145,53 @@ export default class ComparePane extends Component {
                 <Table.TextCell isNumber>
                   {report2.count}
                 </Table.TextCell>
+                <Table.TextCell />
               </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>Total</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(report1.total)}
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(report2.total)}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>Average</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(report1.average)}
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(report2.average)}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>Slowest</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(report1.slowest)}
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(report2.slowest)}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>Fastest</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(report1.fastest)}
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(report2.fastest)}
-                </Table.TextCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.TextCell maxWidth={maxWidthLabel}><Strong>RPS</Strong></Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatFloat(report1.rps)}
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatFloat(report2.rps)}
-                </Table.TextCell>
-              </Table.Row>
+              <LatencyRow
+                key='row-total'
+                maxWidth={maxWidthLabel}
+                label='Total'
+                value1={report1.total}
+                value2={report2.total}
+              />
+              <LatencyRow
+                key='row-average'
+                maxWidth={maxWidthLabel}
+                label='Average'
+                value1={report1.average}
+                value2={report2.average}
+              />
+              <LatencyRow
+                key='row-fastest'
+                maxWidth={maxWidthLabel}
+                label='Fastest'
+                value1={report1.fastest}
+                value2={report2.fastest}
+              />
+              <LatencyRow
+                key='row-slowest'
+                maxWidth={maxWidthLabel}
+                label='Slowest'
+                value1={report1.slowest}
+                value2={report2.slowest}
+              />
+              <LatencyRow
+                key='row-rps'
+                maxWidth={maxWidthLabel}
+                label='RPS'
+                value1={report1.rps}
+                value2={report2.rps}
+                invert
+                floatFormat
+              />
             </Pane>
           </Pane>
 
-          <Pane flex={1} maxWidth={400} marginLeft={20}>
+          <Pane flex={1} />
+        </Pane>
+
+        <Pane display='flex' marginTop={24} marginBottom={24}>
+          <Pane flex={2}>
             <Heading>
               Latency Distribution
             </Heading>
@@ -205,25 +210,63 @@ export default class ComparePane extends Component {
                     <Text size={500} color={color2}>{report2Name}</Text>
                   </Tooltip>
                 </Table.TextCell>
+                <Table.TextCell>
+                  <Text size={500}>Change</Text>
+                </Table.TextCell>
               </Table.Row>
-              {report1.latencyDistribution.map((p, i) => (
-                <Table.Row key={'lat-' + latKey++}>
-                  <Table.TextCell maxWidth={60}>
-                    <Strong>{p.percentage} %</Strong>
-                  </Table.TextCell>
-                  <Table.TextCell isNumber>
-                    {formatNanoUnit(p.latency)}
-                  </Table.TextCell>
-                  <Table.TextCell isNumber>
-                    {formatNanoUnit(report2.latencyDistribution[i].latency)}
-                  </Table.TextCell>
-                </Table.Row>
+              {latency1.map((p, i) => (
+                <LatencyRow
+                  key={'lat-' + latKey++}
+                  maxWidth={60}
+                  label={p.percentage + ' %'}
+                  value1={p.latency}
+                  value2={latency2[i].latency}
+                />
               ))}
             </Pane>
           </Pane>
+
+          <Pane flex={1} />
         </Pane>
       </Pane>
 
     )
   }
+}
+
+const LatencyRow = ({ key, maxWidth, label, value1, value2, invert, floatFormat }) => {
+  const change = value1 - value2
+  const changeAbs = Math.abs(change)
+  const changeP = change > 0
+    ? value1 / value2 * 100 - 100
+    : 100 - value1 / value2 * 100
+  const changeIcon = change > 0
+    ? 'arrow-up'
+    : 'arrow-down'
+  let changeColor = change > 0
+    ? 'danger'
+    : 'success'
+
+  if (invert) {
+    changeColor = change > 0
+      ? 'success'
+      : 'danger'
+  }
+  return (
+    <Table.Row key={key}>
+      <Table.TextCell maxWidth={maxWidth || 60}>
+        <Strong>{label}</Strong>
+      </Table.TextCell>
+      <Table.TextCell isNumber>
+        {floatFormat ? formatFloat(value1) : formatNanoUnit(value1)}
+      </Table.TextCell>
+      <Table.TextCell isNumber>
+        {floatFormat ? formatFloat(value2) : formatNanoUnit(value2)}
+      </Table.TextCell>
+      <Table.TextCell isNumber>
+        <Icon icon={changeIcon} color={changeColor} marginRight={8} />
+        {floatFormat ? formatFloat(changeAbs) : formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
+      </Table.TextCell>
+    </Table.Row>
+  )
 }
