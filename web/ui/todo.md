@@ -1,6 +1,7 @@
 - [ ] Tests
 - [ ] Docs
 - [ ] Lock down demo ingest
+- [ ] Figure out release mechanism
 - [x] Fix UI when going to a direct url
 - [x] About page
 - [x] Previous report endpoint for compare
