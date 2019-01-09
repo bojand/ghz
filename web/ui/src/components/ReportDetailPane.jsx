@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {
-  Pane, Heading, Strong, Table, Icon,
-  Tooltip, Text, Badge, Button, Link, CornerDialog
+  Pane, Heading, Table, Icon,
+  Tooltip, Text, Badge, Button, Link
 } from 'evergreen-ui'
 import _ from 'lodash'
 import { Provider, Subscribe } from 'unstated'
@@ -16,7 +16,6 @@ import {
 
 import StatusCodeChart from './ReportDistChart'
 import OptionsPane from './OptionsPane'
-import LatencyPane from './LatencyPane'
 import HistogramPane from './HistogramPane'
 import StatusBadge from './StatusBadge'
 
@@ -66,7 +65,7 @@ export default class ReportDetailPane extends Component {
           <Pane flex={1}>
             <Pane display='flex' textAlign='center' alignItems='center'>
               <StatusBadge status={currentReport.status} marginRight={8} />
-              <Heading size={500}>
+              <Heading size={600}>
                 {currentReport.name || `REPORT: ${currentReport.id}`}
               </Heading>
             </Pane>
@@ -108,9 +107,9 @@ export default class ReportDetailPane extends Component {
           </Pane>
         </Pane>
 
-        <Pane display='flex' paddingY={20}>
+        <Pane display='flex' paddingY={8}>
           <Pane flex={1} minWidth={260} maxWidth={360}>
-            <Heading>
+            <Heading size={600}>
               Summary
             </Heading>
             <Pane borderBottom paddingY={16}>
@@ -159,7 +158,7 @@ export default class ReportDetailPane extends Component {
         </Pane>
 
         <Pane>
-          <Heading>
+          <Heading size={600}>
             Status Code Distribution
           </Heading>
           <Pane display='flex' marginTop={16} alignItems='left'>
@@ -193,7 +192,7 @@ export default class ReportDetailPane extends Component {
 
         {currentReport.errorDistribution && _.keys(currentReport.errorDistribution).length
           ? <Pane marginTop={30}>
-            <Heading>
+            <Heading size={600}>
               Error Distribution
             </Heading>
             <Pane display='flex' marginTop={16} alignItems='left'>
@@ -339,7 +338,7 @@ const LatencyPropComponent = ({ currentReportLD, previousReportLD, propName }) =
 const LatencyComponent = ({ currentReport, previousReport }) => {
   return (
     <Pane>
-      <Heading>
+      <Heading size={600}>
         Latency Distribution
       </Heading>
       <Pane>

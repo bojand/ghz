@@ -91,7 +91,7 @@ export default class ProjectList extends Component {
     return (
       <Pane>
         <Pane display='flex' alignItems='center'>
-          <Heading size={500}>PROJECTS</Heading>
+          <Heading size={600}>PROJECTS</Heading>
           {this.state.editProjectVisible
             ? <EditProjectDialog
               projectStore={this.props.projectStore}

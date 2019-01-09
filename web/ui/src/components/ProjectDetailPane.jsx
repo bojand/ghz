@@ -36,7 +36,7 @@ export default class ProjectDetailPane extends Component {
       <Pane>
         <Pane display='flex' alignItems='center' marginBottom={10}>
           <StatusBadge status={currentProject.status} marginRight={8} />
-          <Heading size={500}>{toUpper(currentProject.name)}</Heading>
+          <Heading size={600}>{toUpper(currentProject.name)}</Heading>
           {this.state.editProjectVisible
             ? <EditProjectDialog
               projectStore={this.props.projectStore}

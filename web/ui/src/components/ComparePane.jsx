@@ -55,7 +55,7 @@ export default class ComparePane extends Component {
     return (
       <Pane marginTop={6}>
         <Pane>
-          <Heading size={500}>REPORT COMPARISON</Heading>
+          <Heading size={600}>REPORT COMPARISON</Heading>
         </Pane>
 
         <Pane marginTop={16} display='flex'>
@@ -116,7 +116,7 @@ export default class ComparePane extends Component {
         <Pane display='flex' marginTop={24} marginBottom={24}>
 
           <Pane flex={2}>
-            <Heading>
+            <Heading size={600}>
               Summary
             </Heading>
 
@@ -192,7 +192,7 @@ export default class ComparePane extends Component {
 
         <Pane display='flex' marginTop={24} marginBottom={24}>
           <Pane flex={2}>
-            <Heading>
+            <Heading size={600}>
               Latency Distribution
             </Heading>
             <Pane>

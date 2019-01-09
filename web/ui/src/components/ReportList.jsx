@@ -79,7 +79,7 @@ class ReportList extends Component {
       <Pane>
         <Pane display='flex' alignItems='center' marginTop={0}>
           <Pane flex={1}>
-            <Heading size={500}>REPORTS</Heading>
+            <Heading size={600}>REPORTS</Heading>
           </Pane>
           <Pane>
             <TextInput
