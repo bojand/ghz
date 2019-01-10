@@ -42,11 +42,5 @@ func (p *Project) BeforeSave() error {
 	p.Name = strings.TrimSpace(p.Name)
 	p.Description = strings.TrimSpace(p.Description)
 
-	// if scope != nil {
-	// 	scope.SetColumn("name", p.Name)
-	// 	scope.SetColumn("description", p.Description)
-	// 	scope.
-	// }
-
 	return nil
 }

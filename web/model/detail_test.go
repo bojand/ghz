@@ -24,7 +24,7 @@ func TestDetail_BeforeSave(t *testing.T) {
 
 	for _, tt := range details {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.in.BeforeSave(nil)
+			err := tt.in.BeforeSave()
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {

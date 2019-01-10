@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -53,7 +52,7 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Nil(t, p2.DeletedAt)
+		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new with empty name", func(t *testing.T) {
@@ -81,7 +80,7 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Nil(t, p2.DeletedAt)
+		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new with ID", func(t *testing.T) {
@@ -113,7 +112,7 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusFail, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Nil(t, p2.DeletedAt)
+		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("should fail with same ID", func(t *testing.T) {
@@ -177,11 +176,13 @@ func TestProject_Save(t *testing.T) {
 	})
 
 	t.Run("test update existing", func(t *testing.T) {
-		p := Project{
-			Name:        " New Name ",
-			Description: "Baz",
-		}
-		p.ID = pid
+		p := new(Project)
+		err = db.First(p, pid).Error
+
+		assert.NoError(t, err)
+
+		p.Name = " New Name "
+		p.Description = "Baz"
 
 		err := db.Save(&p).Error
 
@@ -193,31 +194,14 @@ func TestProject_Save(t *testing.T) {
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
 		assert.Zero(t, p.DeletedAt)
-	})
-
-	t.Run("test update existing just name", func(t *testing.T) {
-		p := Project{
-			Name: " New Name 2 ",
-		}
-		p.ID = pid
-
-		err := db.Save(&p).Error
-
-		assert.NoError(t, err)
-
-		assert.NotZero(t, p.ID)
-		assert.Equal(t, "New Name 2", p.Name)
-		assert.Equal(t, "", p.Description)
 
 		p2 := new(Project)
 		err = db.First(p2, p.ID).Error
 
-		fmt.Printf("%+v\n\n", p2)
-
 		assert.NoError(t, err)
 		assert.Equal(t, uint(1), p2.ID)
-		assert.Equal(t, "New Name 2", p2.Name)
-		assert.Equal(t, "", p2.Description)
+		assert.Equal(t, "New Name", p2.Name)
+		assert.Equal(t, "Baz", p2.Description)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
 		assert.Zero(t, p2.DeletedAt)
@@ -232,5 +216,16 @@ func TestProject_Save(t *testing.T) {
 		err := db.Save(&p).Error
 
 		assert.Error(t, err)
+
+		p2 := new(Project)
+		err = db.First(p2, p.ID).Error
+
+		assert.NoError(t, err)
+		assert.Equal(t, uint(1), p2.ID)
+		assert.Equal(t, "New Name", p2.Name)
+		assert.Equal(t, "Baz", p2.Description)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
+		assert.Zero(t, p2.DeletedAt)
 	})
 }

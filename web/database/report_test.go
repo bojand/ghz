@@ -96,7 +96,7 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Nil(t, p2.DeletedAt)
+		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new 2", func(t *testing.T) {
@@ -172,7 +172,7 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Nil(t, p2.DeletedAt)
+		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new for project 2", func(t *testing.T) {
@@ -241,7 +241,7 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Nil(t, p2.DeletedAt)
+		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("FindReportByID", func(t *testing.T) {

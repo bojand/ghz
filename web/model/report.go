@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/bojand/ghz/runner"
-	"github.com/jinzhu/gorm"
 )
 
 // LatencyDistributionList is a slice of LatencyDistribution pointers
@@ -137,7 +136,7 @@ type Report struct {
 }
 
 // BeforeSave is called by GORM before save
-func (r *Report) BeforeSave(scope *gorm.Scope) error {
+func (r *Report) BeforeSave() error {
 	if r.ProjectID == 0 && r.Project == nil {
 		return errors.New("Report must belong to a project")
 	}
@@ -146,9 +145,9 @@ func (r *Report) BeforeSave(scope *gorm.Scope) error {
 		r.Status = StatusOK
 	}
 
-	if scope != nil {
-		scope.SetColumn("status", r.Status)
-	}
+	// if scope != nil {
+	// 	scope.SetColumn("status", r.Status)
+	// }
 
 	return nil
 }
