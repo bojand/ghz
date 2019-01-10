@@ -386,3 +386,45 @@ func TestDatabase_ListProjects(t *testing.T) {
 		}
 	})
 }
+
+func TestDatabase_CountProjects(t *testing.T) {
+	os.Remove(dbName)
+
+	defer os.Remove(dbName)
+
+	db, err := New("sqlite3", dbName)
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+	defer db.Close()
+
+	t.Run("no projects", func(t *testing.T) {
+		count, err := db.CountProjects()
+
+		assert.NoError(t, err)
+		assert.Equal(t, uint(0), count)
+	})
+
+	t.Run("create new projects", func(t *testing.T) {
+		i := 1
+		for i < 12 {
+			iStr := strconv.FormatInt(int64(i), 10)
+			p := model.Project{
+				Name:        "Test Proj " + iStr,
+				Description: "Test Description " + iStr,
+			}
+			err := db.CreateProject(&p)
+
+			assert.NoError(t, err)
+
+			i = i + 1
+		}
+	})
+
+	t.Run("with projects", func(t *testing.T) {
+		count, err := db.CountProjects()
+
+		assert.NoError(t, err)
+		assert.Equal(t, uint(11), count)
+	})
+}

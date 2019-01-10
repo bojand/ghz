@@ -42,21 +42,6 @@ func TestDatabase_Report(t *testing.T) {
 			Rps:       2000,
 		}
 
-		// r.Options = &model.Options{
-		// 	Name:        "Test report",
-		// 	Call:        "helloworld.Greeter.SayHello",
-		// 	Proto:       "../../testdata/greeter.proto",
-		// 	Host:        "0.0.0.0:50051",
-		// 	N:           200,
-		// 	C:           50,
-		// 	Timeout:     time.Duration(20 * time.Second),
-		// 	DialTimeout: time.Duration(10 * time.Second),
-		// 	CPUs:        8,
-		// 	Insecure:    true,
-		// 	Data:        map[string]string{"name": "Joe"},
-		// 	Metadata:    &map[string]string{"token": "abc123", "request-id": "12345"},
-		// }
-
 		r.ErrorDist = map[string]int{
 			"rpc error: code = Internal desc = Internal error.":            3,
 			"rpc error: code = DeadlineExceeded desc = Deadline exceeded.": 2}
@@ -92,34 +77,6 @@ func TestDatabase_Report(t *testing.T) {
 				Latency:    time.Duration(25 * time.Millisecond),
 			},
 		}
-
-		// r.Histogram = []*runner.Bucket{
-		// 	&runner.Bucket{
-		// 		Mark:      0.01,
-		// 		Count:     1,
-		// 		Frequency: 0.005,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.02,
-		// 		Count:     10,
-		// 		Frequency: 0.01,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.03,
-		// 		Count:     50,
-		// 		Frequency: 0.1,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.05,
-		// 		Count:     60,
-		// 		Frequency: 0.15,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.1,
-		// 		Count:     15,
-		// 		Frequency: 0.07,
-		// 	},
-		// }
 
 		err := db.CreateReport(&r)
 
@@ -161,21 +118,6 @@ func TestDatabase_Report(t *testing.T) {
 			Rps:       2222,
 		}
 
-		// r.Options = &model.Options{
-		// 	Name:        "Test report 2",
-		// 	Call:        "helloworld.Greeter.SayHello",
-		// 	Proto:       "../../testdata/greeter.proto",
-		// 	Host:        "0.0.0.0:50051",
-		// 	N:           300,
-		// 	C:           50,
-		// 	Timeout:     time.Duration(20 * time.Second),
-		// 	DialTimeout: time.Duration(10 * time.Second),
-		// 	CPUs:        8,
-		// 	Insecure:    true,
-		// 	Data:        map[string]string{"name": "Kate"},
-		// 	Metadata:    &map[string]string{"token": "foo123", "request-id": "321"},
-		// }
-
 		r.ErrorDist = map[string]int{
 			"rpc error: code = Internal desc = Internal error.":            1,
 			"rpc error: code = DeadlineExceeded desc = Deadline exceeded.": 4}
@@ -212,34 +154,6 @@ func TestDatabase_Report(t *testing.T) {
 			},
 		}
 
-		// r.Histogram = []*runner.Bucket{
-		// 	&runner.Bucket{
-		// 		Mark:      0.02,
-		// 		Count:     2,
-		// 		Frequency: 0.006,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.02,
-		// 		Count:     10,
-		// 		Frequency: 0.01,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.03,
-		// 		Count:     50,
-		// 		Frequency: 0.1,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.05,
-		// 		Count:     60,
-		// 		Frequency: 0.15,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.15,
-		// 		Count:     19,
-		// 		Frequency: 0.08,
-		// 	},
-		// }
-
 		err := db.CreateReport(&r)
 
 		assert.NoError(t, err)
@@ -274,22 +188,6 @@ func TestDatabase_Report(t *testing.T) {
 			Slowest:   time.Duration(120 * time.Millisecond),
 			Rps:       2567,
 		}
-
-		// r.Options = &model.Options{
-		// 	Name:        "Test report 3",
-		// 	Call:        "helloworld.Greeter.SayHello",
-		// 	Proto:       "../../testdata/greeter.proto",
-		// 	Host:        "0.0.0.0:50051",
-		// 	N:           400,
-		// 	C:           40,
-		// 	Timeout:     time.Duration(20 * time.Second),
-		// 	DialTimeout: time.Duration(10 * time.Second),
-		// 	CPUs:        8,
-		// 	Binary:      true,
-		// 	Insecure:    false,
-		// 	Data:        map[string]string{"name": "Bob"},
-		// 	Metadata:    &map[string]string{"token": "bar321", "request-id": "555"},
-		// }
 
 		r.ErrorDist = map[string]int{
 			"rpc error: code = Internal desc = Internal error.":            2,
@@ -326,29 +224,6 @@ func TestDatabase_Report(t *testing.T) {
 				Latency:    time.Duration(30 * time.Millisecond),
 			},
 		}
-
-		// r.Histogram = []*runner.Bucket{
-		// 	&runner.Bucket{
-		// 		Mark:      0.03,
-		// 		Count:     3,
-		// 		Frequency: 0.007,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.02,
-		// 		Count:     10,
-		// 		Frequency: 0.01,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.05,
-		// 		Count:     60,
-		// 		Frequency: 0.15,
-		// 	},
-		// 	&runner.Bucket{
-		// 		Mark:      0.17,
-		// 		Count:     22,
-		// 		Frequency: 0.11,
-		// 	},
-		// }
 
 		err := db.CreateReport(&r)
 
@@ -394,20 +269,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, 3, r.StatusCodeDist["Internal"])
 		assert.Equal(t, 2, r.StatusCodeDist["DeadlineExceeded"])
 
-		// assert.Equal(t, "Test report", r.Options.Name)
-		// assert.Equal(t, "helloworld.Greeter.SayHello", r.Options.Call)
-		// assert.Equal(t, "../../testdata/greeter.proto", r.Options.Proto)
-		// assert.Equal(t, "0.0.0.0:50051", r.Options.Host)
-		// assert.Equal(t, uint(200), r.Options.N)
-		// assert.Equal(t, uint(50), r.Options.C)
-		// assert.Equal(t, time.Duration(20*time.Second), r.Options.Timeout)
-		// assert.Equal(t, time.Duration(10*time.Second), r.Options.DialTimeout)
-		// assert.Equal(t, map[string]interface{}{"name": "Joe"}, r.Options.Data)
-		// assert.Equal(t, &map[string]string{"token": "abc123", "request-id": "12345"}, r.Options.Metadata)
-		// assert.Equal(t, false, r.Options.Binary)
-		// assert.Equal(t, true, r.Options.Insecure)
-		// assert.Equal(t, 8, r.Options.CPUs)
-
 		assert.NotNil(t, r.LatencyDistribution)
 		assert.Len(t, r.LatencyDistribution, 6)
 		assert.Equal(t, &runner.LatencyDistribution{
@@ -418,19 +279,6 @@ func TestDatabase_Report(t *testing.T) {
 			Percentage: 99,
 			Latency:    time.Duration(25 * time.Millisecond),
 		}, r.LatencyDistribution[5])
-
-		// assert.NotNil(t, r.Histogram)
-		// assert.Len(t, r.Histogram, 5)
-		// assert.Equal(t, &runner.Bucket{
-		// 	Mark:      0.01,
-		// 	Count:     1,
-		// 	Frequency: 0.005,
-		// }, r.Histogram[0])
-		// assert.Equal(t, &runner.Bucket{
-		// 	Mark:      0.1,
-		// 	Count:     15,
-		// 	Frequency: 0.07,
-		// }, r.Histogram[4])
 	})
 
 	t.Run("FindReportByID 2", func(t *testing.T) {
@@ -458,20 +306,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, 1, r.StatusCodeDist["Internal"])
 		assert.Equal(t, 4, r.StatusCodeDist["DeadlineExceeded"])
 
-		// assert.Equal(t, "Test report 2", r.Options.Name)
-		// assert.Equal(t, "helloworld.Greeter.SayHello", r.Options.Call)
-		// assert.Equal(t, "../../testdata/greeter.proto", r.Options.Proto)
-		// assert.Equal(t, "0.0.0.0:50051", r.Options.Host)
-		// assert.Equal(t, uint(300), r.Options.N)
-		// assert.Equal(t, uint(50), r.Options.C)
-		// assert.Equal(t, time.Duration(20*time.Second), r.Options.Timeout)
-		// assert.Equal(t, time.Duration(10*time.Second), r.Options.DialTimeout)
-		// assert.Equal(t, map[string]interface{}{"name": "Kate"}, r.Options.Data)
-		// assert.Equal(t, &map[string]string{"token": "foo123", "request-id": "321"}, r.Options.Metadata)
-		// assert.Equal(t, false, r.Options.Binary)
-		// assert.Equal(t, true, r.Options.Insecure)
-		// assert.Equal(t, 8, r.Options.CPUs)
-
 		assert.NotNil(t, r.LatencyDistribution)
 		assert.Len(t, r.LatencyDistribution, 6)
 		assert.Equal(t, &runner.LatencyDistribution{
@@ -482,19 +316,6 @@ func TestDatabase_Report(t *testing.T) {
 			Percentage: 99,
 			Latency:    time.Duration(27 * time.Millisecond),
 		}, r.LatencyDistribution[5])
-
-		// assert.NotNil(t, r.Histogram)
-		// assert.Len(t, r.Histogram, 5)
-		// assert.Equal(t, &runner.Bucket{
-		// 	Mark:      0.02,
-		// 	Count:     2,
-		// 	Frequency: 0.006,
-		// }, r.Histogram[0])
-		// assert.Equal(t, &runner.Bucket{
-		// 	Mark:      0.15,
-		// 	Count:     19,
-		// 	Frequency: 0.08,
-		// }, r.Histogram[4])
 	})
 
 	t.Run("FindReportByID 3", func(t *testing.T) {
@@ -522,20 +343,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, 2, r.StatusCodeDist["Internal"])
 		assert.Equal(t, 2, r.StatusCodeDist["DeadlineExceeded"])
 
-		// assert.Equal(t, "Test report 3", r.Options.Name)
-		// assert.Equal(t, "helloworld.Greeter.SayHello", r.Options.Call)
-		// assert.Equal(t, "../../testdata/greeter.proto", r.Options.Proto)
-		// assert.Equal(t, "0.0.0.0:50051", r.Options.Host)
-		// assert.Equal(t, uint(400), r.Options.N)
-		// assert.Equal(t, uint(40), r.Options.C)
-		// assert.Equal(t, time.Duration(20*time.Second), r.Options.Timeout)
-		// assert.Equal(t, time.Duration(10*time.Second), r.Options.DialTimeout)
-		// assert.Equal(t, map[string]interface{}{"name": "Bob"}, r.Options.Data)
-		// assert.Equal(t, &map[string]string{"token": "bar321", "request-id": "555"}, r.Options.Metadata)
-		// assert.Equal(t, true, r.Options.Binary)
-		// assert.Equal(t, false, r.Options.Insecure)
-		// assert.Equal(t, 8, r.Options.CPUs)
-
 		assert.NotNil(t, r.LatencyDistribution)
 		assert.Len(t, r.LatencyDistribution, 6)
 		assert.Equal(t, &runner.LatencyDistribution{
@@ -546,24 +353,36 @@ func TestDatabase_Report(t *testing.T) {
 			Percentage: 99,
 			Latency:    time.Duration(30 * time.Millisecond),
 		}, r.LatencyDistribution[5])
-
-		// assert.NotNil(t, r.Histogram)
-		// assert.Len(t, r.Histogram, 4)
-		// assert.Equal(t, &runner.Bucket{
-		// 	Mark:      0.03,
-		// 	Count:     3,
-		// 	Frequency: 0.007,
-		// }, r.Histogram[0])
-		// assert.Equal(t, &runner.Bucket{
-		// 	Mark:      0.17,
-		// 	Count:     22,
-		// 	Frequency: 0.11,
-		// }, r.Histogram[3])
 	})
 
 	t.Run("FindReportByID missing", func(t *testing.T) {
 		r := new(model.Report)
 		r, err = db.FindReportByID(123432)
+
+		assert.Error(t, err)
+		assert.Nil(t, r)
+	})
+
+	t.Run("FindPreviousReport", func(t *testing.T) {
+		r := new(model.Report)
+		r, err = db.FindPreviousReport(rid3)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, r)
+		assert.Equal(t, rid2, r.ID)
+	})
+
+	t.Run("FindPreviousReport invalid id", func(t *testing.T) {
+		r := new(model.Report)
+		r, err = db.FindPreviousReport(12345)
+
+		assert.Error(t, err)
+		assert.Nil(t, r)
+	})
+
+	t.Run("FindPreviousReport no previous", func(t *testing.T) {
+		r := new(model.Report)
+		r, err = db.FindPreviousReport(rid)
 
 		assert.Error(t, err)
 		assert.Nil(t, r)
@@ -617,7 +436,7 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, uint(1), list[2].ID)
 	})
 
-	t.Run("ListReports by pid", func(t *testing.T) {
+	t.Run("ListReportsForProject by pid", func(t *testing.T) {
 		list, err := db.ListReportsForProject(pid, 10, 0, "id", "asc")
 
 		assert.NoError(t, err)
@@ -626,14 +445,14 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, uint(1), list[0].ID)
 	})
 
-	t.Run("ListReports by pid unknown", func(t *testing.T) {
+	t.Run("ListReportsForProject by pid unknown", func(t *testing.T) {
 		list, err := db.ListReportsForProject(112311, 10, 0, "id", "asc")
 
 		assert.NoError(t, err)
 		assert.Len(t, list, 0)
 	})
 
-	t.Run("ListReports by pid 2 desc", func(t *testing.T) {
+	t.Run("ListReportsForProject by pid 2 desc", func(t *testing.T) {
 		list, err := db.ListReportsForProject(pid2, 10, 0, "id", "desc")
 
 		assert.NoError(t, err)
@@ -653,7 +472,7 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, uint(1), list[2].ID)
 	})
 
-	t.Run("ListReports by pid 2 date asc", func(t *testing.T) {
+	t.Run("ListReportsForProject by pid 2 date asc", func(t *testing.T) {
 		list, err := db.ListReportsForProject(pid2, 10, 0, "date", "asc")
 
 		assert.NoError(t, err)
@@ -661,5 +480,23 @@ func TestDatabase_Report(t *testing.T) {
 
 		assert.Equal(t, uint(2), list[0].ID)
 		assert.Equal(t, uint(3), list[1].ID)
+	})
+
+	t.Run("ListReportsForProject default to id", func(t *testing.T) {
+		list, err := db.ListReportsForProject(pid, 10, 0, "asdf", "asc")
+
+		assert.NoError(t, err)
+		assert.Len(t, list, 1)
+
+		assert.Equal(t, uint(1), list[0].ID)
+	})
+
+	t.Run("ListReportsForProject default to asc", func(t *testing.T) {
+		list, err := db.ListReportsForProject(pid, 10, 0, "id", "asdf")
+
+		assert.NoError(t, err)
+		assert.Len(t, list, 1)
+
+		assert.Equal(t, uint(1), list[0].ID)
 	})
 }

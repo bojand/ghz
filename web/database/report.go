@@ -48,6 +48,10 @@ func (d *Database) FindPreviousReport(rid uint) (*model.Report, error) {
 
 	err = d.DB.Debug().Where(whereSQL, report.ProjectID, report.Date).Order(orderSQL).Limit(1).Find(&previous).Error
 
+	if err != nil {
+		return nil, err
+	}
+
 	return previous, err
 }
 
