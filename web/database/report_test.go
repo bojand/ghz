@@ -94,8 +94,8 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, p.Name, p2.Name)
 		assert.Equal(t, "Test Description Asdf", p2.Description)
 		assert.Equal(t, model.StatusOK, p2.Status)
-		assert.NotNil(t, p2.CreatedAt)
-		assert.NotNil(t, p2.UpdatedAt)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
 	})
 
@@ -170,8 +170,8 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, p.Name, p2.Name)
 		assert.Equal(t, "Test Description project 2", p2.Description)
 		assert.Equal(t, model.StatusOK, p2.Status)
-		assert.NotNil(t, p2.CreatedAt)
-		assert.NotNil(t, p2.UpdatedAt)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
 	})
 
@@ -239,8 +239,8 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, "Test Proj 222", p2.Name)
 		assert.Equal(t, "Test Description project 2", p2.Description)
 		assert.Equal(t, model.StatusOK, p2.Status)
-		assert.NotNil(t, p2.CreatedAt)
-		assert.NotNil(t, p2.UpdatedAt)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
 	})
 
@@ -252,9 +252,9 @@ func TestDatabase_Report(t *testing.T) {
 		assert.NotNil(t, r)
 
 		assert.Equal(t, pid, r.ProjectID)
-		assert.NotNil(t, r.CreatedAt)
-		assert.NotNil(t, r.UpdatedAt)
-		assert.Nil(t, r.DeletedAt)
+		assert.NotZero(t, r.CreatedAt)
+		assert.NotZero(t, r.UpdatedAt)
+		assert.Zero(t, r.DeletedAt)
 		assert.Equal(t, model.StatusOK, r.Status)
 
 		assert.Equal(t, "Test report", r.Name)
@@ -289,9 +289,9 @@ func TestDatabase_Report(t *testing.T) {
 		assert.NotNil(t, r)
 
 		assert.Equal(t, pid2, r.ProjectID)
-		assert.NotNil(t, r.CreatedAt)
-		assert.NotNil(t, r.UpdatedAt)
-		assert.Nil(t, r.DeletedAt)
+		assert.NotZero(t, r.CreatedAt)
+		assert.NotZero(t, r.UpdatedAt)
+		assert.Zero(t, r.DeletedAt)
 		assert.Equal(t, model.StatusOK, r.Status)
 		assert.Equal(t, 2222.0, r.Rps)
 
@@ -326,9 +326,9 @@ func TestDatabase_Report(t *testing.T) {
 		assert.NotNil(t, r)
 
 		assert.Equal(t, pid2, r.ProjectID)
-		assert.NotNil(t, r.CreatedAt)
-		assert.NotNil(t, r.UpdatedAt)
-		assert.Nil(t, r.DeletedAt)
+		assert.NotZero(t, r.CreatedAt)
+		assert.NotZero(t, r.UpdatedAt)
+		assert.Zero(t, r.DeletedAt)
 		assert.Equal(t, model.StatusOK, r.Status)
 		assert.Equal(t, 2567.0, r.Rps)
 

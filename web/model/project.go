@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/bojand/hri"
-	"github.com/jinzhu/gorm"
 )
 
 // Project represents a project
@@ -39,14 +38,15 @@ func (p *Project) BeforeUpdate() error {
 }
 
 // BeforeSave is a GORM hook called when a model is created or updated
-func (p *Project) BeforeSave(scope *gorm.Scope) error {
+func (p *Project) BeforeSave() error {
 	p.Name = strings.TrimSpace(p.Name)
 	p.Description = strings.TrimSpace(p.Description)
 
-	if scope != nil {
-		scope.SetColumn("name", p.Name)
-		scope.SetColumn("description", p.Description)
-	}
+	// if scope != nil {
+	// 	scope.SetColumn("name", p.Name)
+	// 	scope.SetColumn("description", p.Description)
+	// 	scope.
+	// }
 
 	return nil
 }

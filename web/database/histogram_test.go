@@ -131,8 +131,8 @@ func TestDatabase_Histogram(t *testing.T) {
 		assert.Equal(t, hid, h.ID)
 		assert.Nil(t, h.Report)
 		assert.NotZero(t, h.CreatedAt)
-		assert.NotNil(t, h.UpdatedAt)
-		assert.Nil(t, h.DeletedAt)
+		assert.NotZero(t, h.UpdatedAt)
+		assert.Zero(t, h.DeletedAt)
 
 		assert.NotNil(t, h.Buckets)
 		assert.Len(t, h.Buckets, 5)

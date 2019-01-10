@@ -33,9 +33,9 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, "Test Proj 111", p.Name)
 		assert.Equal(t, "Test Description Asdf", p.Description)
 		assert.Equal(t, model.StatusOK, p.Status)
-		assert.NotNil(t, p.CreatedAt)
-		assert.NotNil(t, p.UpdatedAt)
-		assert.Nil(t, p.DeletedAt)
+		assert.NotZero(t, p.CreatedAt)
+		assert.NotZero(t, p.UpdatedAt)
+		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(model.Project)
 		err = db.DB.First(p2, p.ID).Error
@@ -44,8 +44,8 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, "Test Proj 111", p2.Name)
 		assert.Equal(t, "Test Description Asdf", p2.Description)
 		assert.Equal(t, model.StatusOK, p2.Status)
-		assert.NotNil(t, p2.CreatedAt)
-		assert.NotNil(t, p2.UpdatedAt)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
 	})
 
@@ -61,9 +61,9 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.NotEmpty(t, p.Name)
 		assert.Equal(t, "Test Description Asdf 2", p.Description)
 		assert.Equal(t, model.StatusOK, p.Status)
-		assert.NotNil(t, p.CreatedAt)
-		assert.NotNil(t, p.UpdatedAt)
-		assert.Nil(t, p.DeletedAt)
+		assert.NotZero(t, p.CreatedAt)
+		assert.NotZero(t, p.UpdatedAt)
+		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(model.Project)
 		err = db.DB.First(p2, p.ID).Error
@@ -72,8 +72,8 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, p.Name, p2.Name)
 		assert.Equal(t, "Test Description Asdf 2", p2.Description)
 		assert.Equal(t, model.StatusOK, p2.Status)
-		assert.NotNil(t, p2.CreatedAt)
-		assert.NotNil(t, p2.UpdatedAt)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
 	})
 
@@ -92,9 +92,9 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, "Foo Project", p.Name)
 		assert.Equal(t, "Bar Desc", p.Description)
 		assert.Equal(t, model.StatusFail, p.Status)
-		assert.NotNil(t, p.CreatedAt)
-		assert.NotNil(t, p.UpdatedAt)
-		assert.Nil(t, p.DeletedAt)
+		assert.NotZero(t, p.CreatedAt)
+		assert.NotZero(t, p.UpdatedAt)
+		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(model.Project)
 		err = db.DB.First(p2, p.ID).Error
@@ -104,8 +104,8 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, "Foo Project", p2.Name)
 		assert.Equal(t, "Bar Desc", p2.Description)
 		assert.Equal(t, model.StatusFail, p2.Status)
-		assert.NotNil(t, p2.CreatedAt)
-		assert.NotNil(t, p2.UpdatedAt)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
 	})
 
@@ -163,9 +163,9 @@ func TestDatabase_UpdateProject(t *testing.T) {
 		assert.Equal(t, "New Name", p.Name)
 		assert.Equal(t, "Baz", p.Description)
 		assert.Equal(t, model.StatusOK, p.Status)
-		assert.NotNil(t, p.CreatedAt)
-		assert.NotNil(t, p.UpdatedAt)
-		assert.Nil(t, p.DeletedAt)
+		assert.NotZero(t, p.CreatedAt)
+		assert.NotZero(t, p.UpdatedAt)
+		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(model.Project)
 		err = db.DB.First(p2, p.ID).Error
@@ -175,8 +175,8 @@ func TestDatabase_UpdateProject(t *testing.T) {
 		assert.Equal(t, "New Name", p2.Name)
 		assert.Equal(t, "Baz", p2.Description)
 		assert.Equal(t, model.StatusOK, p2.Status)
-		assert.NotNil(t, p2.CreatedAt)
-		assert.NotNil(t, p2.UpdatedAt)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
 	})
 }
@@ -219,8 +219,8 @@ func TestDatabase_UpdateProjectStatus(t *testing.T) {
 		assert.Equal(t, "Test Project 124", p2.Name)
 		assert.Equal(t, "Asdf", p2.Description)
 		assert.Equal(t, string(model.StatusFail), string(p2.Status))
-		assert.NotNil(t, p2.CreatedAt)
-		assert.NotNil(t, p2.UpdatedAt)
+		assert.NotZero(t, p2.CreatedAt)
+		assert.NotZero(t, p2.UpdatedAt)
 		assert.Nil(t, p2.DeletedAt)
 	})
 }
@@ -258,9 +258,9 @@ func TestDatabase_FindProjectByID(t *testing.T) {
 		assert.Equal(t, "Test Project 124", p.Name)
 		assert.Equal(t, "Some Project Description Asdf", p.Description)
 		assert.Equal(t, model.StatusOK, p.Status)
-		assert.NotNil(t, p.CreatedAt)
-		assert.NotNil(t, p.UpdatedAt)
-		assert.Nil(t, p.DeletedAt)
+		assert.NotZero(t, p.CreatedAt)
+		assert.NotZero(t, p.UpdatedAt)
+		assert.Zero(t, p.DeletedAt)
 	})
 
 	t.Run("test not found", func(t *testing.T) {

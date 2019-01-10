@@ -97,9 +97,9 @@ func TestOptions(t *testing.T) {
 		assert.Equal(t, rid, o.ReportID)
 		assert.Equal(t, oid, o.ID)
 		assert.Nil(t, o.Report)
-		assert.NotNil(t, o.CreatedAt)
-		assert.NotNil(t, o.UpdatedAt)
-		assert.Nil(t, o.DeletedAt)
+		assert.NotZero(t, o.CreatedAt)
+		assert.NotZero(t, o.UpdatedAt)
+		assert.Zero(t, o.DeletedAt)
 
 		assert.NotNil(t, o.Info)
 		assert.Equal(t, "helloworld.Greeter.SayHi", o.Info.Call)
