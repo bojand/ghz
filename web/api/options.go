@@ -18,7 +18,7 @@ type OptionsAPI struct {
 	DB OptionsDatabase
 }
 
-// GetHistogram gets options for a report
+// GetOptions gets options for a report
 func (api *OptionsAPI) GetOptions(ctx echo.Context) error {
 	var id uint64
 	var o *model.Options
