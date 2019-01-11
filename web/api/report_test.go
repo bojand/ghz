@@ -29,8 +29,6 @@ func TestReportAPI(t *testing.T) {
 	}
 	defer db.Close()
 
-	db.DB.AutoMigrate(&model.Project{})
-
 	api := ReportAPI{DB: db}
 
 	var projectID, projectID2 uint
@@ -353,6 +351,42 @@ func TestReportAPI(t *testing.T) {
 		c := e.NewContext(req, rec)
 		c.SetParamNames("rid")
 		c.SetParamValues("12332198")
+
+		err := api.GetReport(c)
+		if assert.Error(t, err) {
+			httpError, ok := err.(*echo.HTTPError)
+			assert.True(t, ok)
+			assert.Equal(t, http.StatusNotFound, httpError.Code)
+		}
+	})
+
+	t.Run("GetReport 404 for invalid rid", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodGet, "/asdf", strings.NewReader(""))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("rid")
+		c.SetParamValues("asdf")
+
+		err := api.GetReport(c)
+		if assert.Error(t, err) {
+			httpError, ok := err.(*echo.HTTPError)
+			assert.True(t, ok)
+			assert.Equal(t, http.StatusNotFound, httpError.Code)
+		}
+	})
+
+	t.Run("GetReport 404 for empty rid", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(""))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
 
 		err := api.GetReport(c)
 		if assert.Error(t, err) {

@@ -29,8 +29,6 @@ func TestProjectAPI(t *testing.T) {
 	}
 	defer db.Close()
 
-	db.DB.AutoMigrate(&model.Project{})
-
 	api := ProjectAPI{DB: db}
 
 	var projectID uint
@@ -148,6 +146,44 @@ func TestProjectAPI(t *testing.T) {
 		c := e.NewContext(req, rec)
 		c.SetParamNames("pid")
 		c.SetParamValues("12332198")
+
+		err := api.GetProject(c)
+		if assert.Error(t, err) {
+			httpError, ok := err.(*echo.HTTPError)
+			assert.True(t, ok)
+			assert.Equal(t, http.StatusNotFound, httpError.Code)
+		}
+	})
+
+	t.Run("GetProject 404 for invalid", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodGet, "/asdf", strings.NewReader(""))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("pid")
+		c.SetParamValues("asdf")
+
+		err := api.GetProject(c)
+		if assert.Error(t, err) {
+			httpError, ok := err.(*echo.HTTPError)
+			assert.True(t, ok)
+			assert.Equal(t, http.StatusNotFound, httpError.Code)
+		}
+	})
+
+	t.Run("GetProject 404 for empty pid", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(""))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("pid")
+		c.SetParamValues("")
 
 		err := api.GetProject(c)
 		if assert.Error(t, err) {

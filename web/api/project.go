@@ -33,18 +33,11 @@ type ProjectList struct {
 func (api *ProjectAPI) CreateProject(ctx echo.Context) error {
 	p := new(model.Project)
 
-	if err := ctx.Bind(p); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	if err := api.bindAndValidate(ctx, p); err != nil {
+		return err
 	}
 
-	if ctx.Echo().Validator != nil {
-		if err := ctx.Validate(p); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-	}
-
-	err := api.DB.CreateProject(p)
-	if err != nil {
+	if err := api.DB.CreateProject(p); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -53,28 +46,17 @@ func (api *ProjectAPI) CreateProject(ctx echo.Context) error {
 
 // UpdateProject updates a project
 func (api *ProjectAPI) UpdateProject(ctx echo.Context) error {
-	var id uint64
 	var project *model.Project
 	var err error
 
-	if id, err = strconv.ParseUint(ctx.Param("pid"), 10, 32); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
-	}
-
-	if project, err = api.DB.FindProjectByID(uint(id)); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	if project, err = api.findProject(ctx); err != nil {
+		return err
 	}
 
 	newVal := new(model.Project)
 
-	if err := ctx.Bind(newVal); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	if ctx.Echo().Validator != nil {
-		if err := ctx.Validate(newVal); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
+	if err := api.bindAndValidate(ctx, newVal); err != nil {
+		return err
 	}
 
 	project.Name = newVal.Name
@@ -90,21 +72,11 @@ func (api *ProjectAPI) UpdateProject(ctx echo.Context) error {
 
 // GetProject gets a project
 func (api *ProjectAPI) GetProject(ctx echo.Context) error {
-	var id uint64
 	var project *model.Project
 	var err error
 
-	pid := ctx.Param("pid")
-	if pid == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "")
-	}
-
-	if id, err = strconv.ParseUint(pid, 10, 32); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
-	}
-
-	if project, err = api.DB.FindProjectByID(uint(id)); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	if project, err = api.findProject(ctx); err != nil {
+		return err
 	}
 
 	return ctx.JSON(http.StatusOK, project)
@@ -172,4 +144,39 @@ func (api *ProjectAPI) ListProjects(ctx echo.Context) error {
 // DeleteProject deletes a project
 func (api *ProjectAPI) DeleteProject(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusNotImplemented, "Not Implemented")
+}
+
+func (api *ProjectAPI) findProject(ctx echo.Context) (*model.Project, error) {
+	var id uint64
+	var project *model.Project
+	var err error
+
+	pid := ctx.Param("pid")
+	if pid == "" {
+		return nil, echo.NewHTTPError(http.StatusNotFound, "")
+	}
+
+	if id, err = strconv.ParseUint(pid, 10, 32); err != nil {
+		return nil, echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	if project, err = api.DB.FindProjectByID(uint(id)); err != nil {
+		return nil, echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	return project, err
+}
+
+func (api *ProjectAPI) bindAndValidate(ctx echo.Context, p *model.Project) error {
+	if err := ctx.Bind(p); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if ctx.Echo().Validator != nil {
+		if err := ctx.Validate(p); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	return nil
 }
