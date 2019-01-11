@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -32,13 +33,12 @@ func TestReportAPI(t *testing.T) {
 
 	api := ReportAPI{DB: db}
 
-	var projectID uint
-	// var pid string
-	var reportID uint
-	var rid string
-	var reportID9 uint
-	var reportID10 uint
-	var rid10 string
+	var projectID, projectID2 uint
+	var pid, pid2 string
+	var reportID, p2reportID uint
+	var rid, p2rid string
+	var reportID9, reportID10, p2reportID5, p2reportID6, p2ridLatest uint
+	var rid10, p2rid6 string
 
 	t.Run("Create Reports", func(t *testing.T) {
 		p := model.Project{
@@ -102,7 +102,7 @@ func TestReportAPI(t *testing.T) {
 		assert.NotZero(t, r.ID)
 
 		projectID = p.ID
-		// pid = strconv.FormatUint(uint64(projectID), 10)
+		pid = strconv.FormatUint(uint64(projectID), 10)
 		reportID = r.ID
 		rid = strconv.FormatUint(uint64(reportID), 10)
 
@@ -171,6 +171,145 @@ func TestReportAPI(t *testing.T) {
 			if n == 10 {
 				reportID10 = r.ID
 				rid10 = strconv.FormatUint(uint64(reportID10), 10)
+			}
+		}
+	})
+
+	t.Run("Create Reports Project 2", func(t *testing.T) {
+		p := model.Project{
+			Name:        "Test Proj 222 ",
+			Description: "Test Description 2 ",
+		}
+
+		r := model.Report{
+			Project:   &p,
+			Name:      "Test report",
+			EndReason: "normal",
+			Date:      time.Date(2018, 12, 1, 1, 30, 0, 0, time.UTC),
+			Count:     300,
+			Total:     time.Duration(3 * time.Second),
+			Average:   time.Duration(30 * time.Millisecond),
+			Fastest:   time.Duration(3 * time.Millisecond),
+			Slowest:   time.Duration(300 * time.Millisecond),
+			Rps:       3000,
+		}
+
+		r.ErrorDist = map[string]int{
+			"rpc error: code = Internal desc = Internal error.":            1,
+			"rpc error: code = DeadlineExceeded desc = Deadline exceeded.": 4}
+
+		r.StatusCodeDist = map[string]int{
+			"OK":               195,
+			"Internal":         1,
+			"DeadlineExceeded": 4}
+
+		r.LatencyDistribution = []*runner.LatencyDistribution{
+			&runner.LatencyDistribution{
+				Percentage: 25,
+				Latency:    time.Duration(1 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 50,
+				Latency:    time.Duration(5 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 75,
+				Latency:    time.Duration(10 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 90,
+				Latency:    time.Duration(15 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 95,
+				Latency:    time.Duration(20 * time.Millisecond),
+			},
+			&runner.LatencyDistribution{
+				Percentage: 99,
+				Latency:    time.Duration(25 * time.Millisecond),
+			},
+		}
+
+		err := db.CreateReport(&r)
+
+		assert.NoError(t, err)
+		assert.NotZero(t, p.ID)
+		assert.NotZero(t, r.ID)
+
+		projectID2 = p.ID
+		pid2 = strconv.FormatUint(uint64(projectID2), 10)
+		p2reportID = r.ID
+		p2rid = strconv.FormatUint(uint64(p2reportID), 10)
+
+		N := 10
+
+		for n := 0; n < N; n++ {
+			r := model.Report{
+				ProjectID: projectID2,
+				Name:      "Test report " + strconv.FormatUint(uint64(n), 10),
+				EndReason: "normal",
+				Date:      time.Date(2018, 12, 1, 2+n, 30, 0, 0, time.UTC),
+				Count:     uint64(300) + uint64(n),
+				Total:     time.Duration(time.Duration(30+n) * time.Second),
+				Average:   time.Duration(time.Duration(30+n) * time.Millisecond),
+				Fastest:   time.Duration(time.Duration(3+n) * time.Millisecond),
+				Slowest:   time.Duration(time.Duration(300+n) * time.Millisecond),
+				Rps:       float64(3000 + n),
+			}
+
+			r.ErrorDist = map[string]int{
+				"rpc error: code = Internal desc = Internal error.":            1,
+				"rpc error: code = DeadlineExceeded desc = Deadline exceeded.": 4}
+
+			r.StatusCodeDist = map[string]int{
+				"OK":               195,
+				"Internal":         1,
+				"DeadlineExceeded": 4}
+
+			r.LatencyDistribution = []*runner.LatencyDistribution{
+				&runner.LatencyDistribution{
+					Percentage: 25,
+					Latency:    time.Duration(1 * time.Millisecond),
+				},
+				&runner.LatencyDistribution{
+					Percentage: 50,
+					Latency:    time.Duration(5 * time.Millisecond),
+				},
+				&runner.LatencyDistribution{
+					Percentage: 75,
+					Latency:    time.Duration(10 * time.Millisecond),
+				},
+				&runner.LatencyDistribution{
+					Percentage: 90,
+					Latency:    time.Duration(15 * time.Millisecond),
+				},
+				&runner.LatencyDistribution{
+					Percentage: 95,
+					Latency:    time.Duration(20 * time.Millisecond),
+				},
+				&runner.LatencyDistribution{
+					Percentage: 99,
+					Latency:    time.Duration(25 * time.Millisecond),
+				},
+			}
+
+			err := db.CreateReport(&r)
+
+			assert.NoError(t, err)
+			assert.NotZero(t, p.ID)
+			assert.NotZero(t, r.ID)
+
+			if n == 5 {
+				p2reportID5 = r.ID
+			}
+
+			if n == 6 {
+				p2reportID6 = r.ID
+				p2rid6 = strconv.FormatUint(uint64(p2reportID6), 10)
+			}
+
+			if n == 9 {
+				p2ridLatest = r.ID
 			}
 		}
 	})
@@ -307,14 +446,13 @@ func TestReportAPI(t *testing.T) {
 			err = json.NewDecoder(rec.Body).Decode(list)
 
 			assert.NoError(t, err)
-			assert.Equal(t, uint(21), list.Total)
+			assert.Equal(t, uint(32), list.Total)
 			assert.Len(t, list.Data, 20)
 			assert.NotZero(t, list.Data[0].ID)
 			assert.NotEmpty(t, list.Data[0].Name)
 
 			// by default we sort by desc id
-			assert.Equal(t, reportID9, list.Data[10].ID)
-			assert.Equal(t, reportID10, list.Data[9].ID)
+			assert.Equal(t, p2ridLatest, list.Data[0].ID)
 		}
 	})
 
@@ -334,15 +472,15 @@ func TestReportAPI(t *testing.T) {
 			err = json.NewDecoder(rec.Body).Decode(list)
 
 			assert.NoError(t, err)
-			assert.Equal(t, uint(21), list.Total)
-			assert.Len(t, list.Data, 1)
-			assert.NotZero(t, list.Data[0].ID)
-			assert.NotEmpty(t, list.Data[0].Name)
+			assert.Equal(t, uint(32), list.Total)
+			assert.Len(t, list.Data, 12)
+			assert.NotZero(t, list.Data[11].ID)
+			assert.NotEmpty(t, list.Data[11].Name)
 
 			// by default we sort by desc id
 			// so the last one should be the first one
 
-			assert.Equal(t, reportID, list.Data[0].ID)
+			assert.Equal(t, reportID, list.Data[11].ID)
 		}
 	})
 
@@ -362,7 +500,120 @@ func TestReportAPI(t *testing.T) {
 			err = json.NewDecoder(rec.Body).Decode(list)
 
 			assert.NoError(t, err)
+			assert.Equal(t, uint(32), list.Total)
+			assert.Len(t, list.Data, 0)
+			assert.Empty(t, list.Data)
+		}
+	})
+
+	t.Run("ListReportsForProject p1", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPut, "/"+pid+"/reports", strings.NewReader(`{}`))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("pid")
+		c.SetParamValues(pid)
+
+		if assert.NoError(t, api.ListReportsForProject(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			list := new(ReportList)
+			err = json.NewDecoder(rec.Body).Decode(list)
+
+			assert.NoError(t, err)
 			assert.Equal(t, uint(21), list.Total)
+			assert.Len(t, list.Data, 20)
+			assert.NotZero(t, list.Data[0].ID)
+			assert.NotEmpty(t, list.Data[0].Name)
+
+			// by default we sort by desc id
+			assert.Equal(t, reportID9, list.Data[10].ID)
+			assert.Equal(t, reportID10, list.Data[9].ID)
+		}
+	})
+
+	t.Run("ListReportsForProject p2", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPut, "/"+pid2+"/reports", strings.NewReader(`{}`))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("pid")
+		c.SetParamValues(pid2)
+
+		if assert.NoError(t, api.ListReportsForProject(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			list := new(ReportList)
+			err = json.NewDecoder(rec.Body).Decode(list)
+
+			assert.NoError(t, err)
+			assert.Equal(t, uint(11), list.Total)
+			assert.Len(t, list.Data, 11)
+			assert.NotZero(t, list.Data[0].ID)
+			assert.NotEmpty(t, list.Data[0].Name)
+
+			assert.Equal(t, p2ridLatest, list.Data[0].ID)
+			assert.Equal(t, p2reportID5, list.Data[4].ID)
+			assert.Equal(t, p2reportID6, list.Data[3].ID)
+		}
+	})
+
+	t.Run("ListReportsForProject p1 page 1", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPut, "/"+pid+"/reports?page=1", strings.NewReader(`{}`))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("pid")
+		c.SetParamValues(pid)
+
+		if assert.NoError(t, api.ListReportsForProject(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			list := new(ReportList)
+			err = json.NewDecoder(rec.Body).Decode(list)
+
+			assert.NoError(t, err)
+			assert.Equal(t, uint(21), list.Total)
+			assert.Len(t, list.Data, 1)
+			assert.NotZero(t, list.Data[0].ID)
+			assert.NotEmpty(t, list.Data[0].Name)
+
+			assert.Equal(t, reportID, list.Data[0].ID)
+		}
+	})
+
+	t.Run("ListReportsForProject p2 page 1 empty", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPut, "/"+pid2+"/reports?page=1", strings.NewReader(`{}`))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("pid")
+		c.SetParamValues(pid2)
+
+		if assert.NoError(t, api.ListReportsForProject(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			list := new(ReportList)
+			err = json.NewDecoder(rec.Body).Decode(list)
+
+			fmt.Println(pid, pid2, p2rid, p2reportID5, p2reportID6, p2rid6)
+
+			fmt.Printf("%+v\n\n", list)
+
+			assert.NoError(t, err)
+			assert.Equal(t, uint(11), list.Total)
 			assert.Len(t, list.Data, 0)
 			assert.Empty(t, list.Data)
 		}
