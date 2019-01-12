@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/bojand/ghz/web/model"
 	"github.com/labstack/echo"
@@ -24,13 +23,8 @@ func (api *OptionsAPI) GetOptions(ctx echo.Context) error {
 	var o *model.Options
 	var err error
 
-	rid := ctx.Param("rid")
-	if rid == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "")
-	}
-
-	if id, err = strconv.ParseUint(rid, 10, 32); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	if id, err = getReportID(ctx); err != nil {
+		return err
 	}
 
 	if o, err = api.DB.GetOptionsForReport(uint(id)); err != nil {

@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOptionsAPI(t *testing.T) {
+func TestHistogramAPI(t *testing.T) {
 	os.Remove(dbName)
 
 	defer os.Remove(dbName)
@@ -28,11 +28,11 @@ func TestOptionsAPI(t *testing.T) {
 	}
 	defer db.Close()
 
-	api := OptionsAPI{DB: db}
+	api := HistogramAPI{DB: db}
 
-	var rid, oid uint
+	var rid, hid uint
 
-	t.Run("Create Options", func(t *testing.T) {
+	t.Run("Create Histogram", func(t *testing.T) {
 		p := model.Project{
 			Name:        "Test Proj 111 ",
 			Description: "Test Description Asdf ",
@@ -87,30 +87,53 @@ func TestOptionsAPI(t *testing.T) {
 			},
 		}
 
-		o := model.Options{
+		h := model.Histogram{
 			Report: &r,
-			Info: &model.OptionsInfo{
-				Call:  "helloworld.Greeter.SayHi",
-				Proto: "greeter.proto",
+			Buckets: []*runner.Bucket{
+				&runner.Bucket{
+					Mark:      0.01,
+					Count:     1,
+					Frequency: 0.005,
+				},
+				&runner.Bucket{
+					Mark:      0.02,
+					Count:     10,
+					Frequency: 0.01,
+				},
+				&runner.Bucket{
+					Mark:      0.03,
+					Count:     50,
+					Frequency: 0.1,
+				},
+				&runner.Bucket{
+					Mark:      0.05,
+					Count:     60,
+					Frequency: 0.15,
+				},
+				&runner.Bucket{
+					Mark:      0.1,
+					Count:     15,
+					Frequency: 0.07,
+				},
 			},
 		}
 
-		err := db.CreateOptions(&o)
+		err := db.CreateHistogram(&h)
 
 		assert.NoError(t, err)
 		assert.NotZero(t, p.ID)
 		assert.NotZero(t, r.ID)
-		assert.NotZero(t, o.ID)
+		assert.NotZero(t, h.ID)
 
 		rid = r.ID
-		oid = o.ID
+		hid = h.ID
 	})
 
-	t.Run("GetOptions", func(t *testing.T) {
+	t.Run("GetHistogram", func(t *testing.T) {
 		id := strconv.FormatUint(uint64(rid), 10)
 
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, "/"+id+"/options", strings.NewReader(""))
+		req := httptest.NewRequest(http.MethodGet, "/"+id+"/histogram", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -119,29 +142,39 @@ func TestOptionsAPI(t *testing.T) {
 		c.SetParamNames("rid")
 		c.SetParamValues(id)
 
-		if assert.NoError(t, api.GetOptions(c)) {
+		if assert.NoError(t, api.GetHistogram(c)) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 
-			o := new(model.Options)
-			err = json.NewDecoder(rec.Body).Decode(o)
+			h := new(model.Histogram)
+			err = json.NewDecoder(rec.Body).Decode(h)
 
 			assert.NoError(t, err)
 
-			assert.NotZero(t, o.ID)
-			assert.Equal(t, oid, o.ID)
-			assert.NotZero(t, o.CreatedAt)
-			assert.NotZero(t, o.UpdatedAt)
-			assert.Equal(t, rid, o.ReportID)
-			assert.Nil(t, o.Report)
-			assert.NotNil(t, o.Info)
-			assert.Equal(t, "helloworld.Greeter.SayHi", o.Info.Call)
-			assert.Equal(t, "greeter.proto", o.Info.Proto)
+			assert.Equal(t, rid, h.ReportID)
+			assert.Equal(t, hid, h.ID)
+			assert.Nil(t, h.Report)
+			assert.NotZero(t, h.CreatedAt)
+			assert.NotZero(t, h.UpdatedAt)
+			assert.Zero(t, h.DeletedAt)
+
+			assert.NotNil(t, h.Buckets)
+			assert.Len(t, h.Buckets, 5)
+			assert.Equal(t, &runner.Bucket{
+				Mark:      0.01,
+				Count:     1,
+				Frequency: 0.005,
+			}, h.Buckets[0])
+			assert.Equal(t, &runner.Bucket{
+				Mark:      0.1,
+				Count:     15,
+				Frequency: 0.07,
+			}, h.Buckets[4])
 		}
 	})
 
 	t.Run("GetOptions 404 for unknown", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, "/12332198/options", strings.NewReader(""))
+		req := httptest.NewRequest(http.MethodGet, "/12332198/histogram", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -150,7 +183,7 @@ func TestOptionsAPI(t *testing.T) {
 		c.SetParamNames("rid")
 		c.SetParamValues("12332198")
 
-		err := api.GetOptions(c)
+		err := api.GetHistogram(c)
 		if assert.Error(t, err) {
 			httpError, ok := err.(*echo.HTTPError)
 			assert.True(t, ok)
@@ -160,7 +193,7 @@ func TestOptionsAPI(t *testing.T) {
 
 	t.Run("GetOptions 404 for invalid", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, "/asdf/options", strings.NewReader(""))
+		req := httptest.NewRequest(http.MethodGet, "/asdf/histogram", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -169,7 +202,7 @@ func TestOptionsAPI(t *testing.T) {
 		c.SetParamNames("rid")
 		c.SetParamValues("asdf")
 
-		err := api.GetOptions(c)
+		err := api.GetHistogram(c)
 		if assert.Error(t, err) {
 			httpError, ok := err.(*echo.HTTPError)
 			assert.True(t, ok)
@@ -179,14 +212,14 @@ func TestOptionsAPI(t *testing.T) {
 
 	t.Run("GetOptions 404 for empty", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, "/options", strings.NewReader(""))
+		req := httptest.NewRequest(http.MethodGet, "/histogram", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
 
 		c := e.NewContext(req, rec)
 
-		err := api.GetOptions(c)
+		err := api.GetHistogram(c)
 		if assert.Error(t, err) {
 			httpError, ok := err.(*echo.HTTPError)
 			assert.True(t, ok)
