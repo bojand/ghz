@@ -10,7 +10,7 @@ require (
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.2.2
-	golang.org/x/net v0.0.0-20180826012351-8a410e7b638d
+	golang.org/x/net v0.0.0-20190110200230-915654e7eabc
 	google.golang.org/grpc v1.17.0
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 )

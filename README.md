@@ -9,6 +9,7 @@
 [![Release](https://img.shields.io/github/release/bojand/ghz.svg?style=flat-square)](https://github.com/bojand/ghz/releases/latest) 
 [![build status](https://img.shields.io/travis/bojand/ghz/master.svg?style=flat-square)](https://travis-ci.org/bojand/ghz)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bojand/ghz?style=flat-square)](https://goreportcard.com/report/github.com/bojand/ghz)
+[![coverage status](https://img.shields.io/coveralls/github/bojand/ghz.svg?style=flat-square)](https://coveralls.io/github/bojand/ghz)
 [![License](https://img.shields.io/github/license/bojand/ghz.svg?style=flat-square)](https://raw.githubusercontent.com/bojand/ghz/master/LICENSE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat-square)](https://www.paypal.me/bojandj)
 [![Buy me a coffee](https://img.shields.io/badge/buy%20me-a%20coffee-orange.svg?style=flat-square)](https://www.buymeacoffee.com/bojand)
