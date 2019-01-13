@@ -1,7 +1,3 @@
 language: go
 go:
-  - "1.10"
-before_install:
-  - go get github.com/mattn/goveralls
-script:
-  - $GOPATH/bin/goveralls -ignore=internal,testdata -service=travis-ci
+  - "1.11"
