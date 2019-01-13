@@ -49,7 +49,7 @@ func (api *ProjectAPI) UpdateProject(ctx echo.Context) error {
 	var project *model.Project
 	var err error
 
-	if project, err = api.findProject(ctx); err != nil {
+	if project, err = findProject(api.DB.FindProjectByID, ctx); err != nil {
 		return err
 	}
 
@@ -75,7 +75,7 @@ func (api *ProjectAPI) GetProject(ctx echo.Context) error {
 	var project *model.Project
 	var err error
 
-	if project, err = api.findProject(ctx); err != nil {
+	if project, err = findProject(api.DB.FindProjectByID, ctx); err != nil {
 		return err
 	}
 
@@ -146,7 +146,7 @@ func (api *ProjectAPI) DeleteProject(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusNotImplemented, "Not Implemented")
 }
 
-func (api *ProjectAPI) findProject(ctx echo.Context) (*model.Project, error) {
+func findProject(FindProjectByID func(id uint) (*model.Project, error), ctx echo.Context) (*model.Project, error) {
 	var id uint64
 	var project *model.Project
 	var err error
@@ -160,7 +160,7 @@ func (api *ProjectAPI) findProject(ctx echo.Context) (*model.Project, error) {
 		return nil, echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
-	if project, err = api.DB.FindProjectByID(uint(id)); err != nil {
+	if project, err = FindProjectByID(uint(id)); err != nil {
 		return nil, echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
