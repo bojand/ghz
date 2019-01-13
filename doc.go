@@ -1,5 +1,5 @@
 /*
-package ghz can be used to perform benchmarking and load testing against gRPC services.
+Package ghz can be used to perform benchmarking and load testing against gRPC services.
 
 	report, err := runner.Run(
 		"helloworld.Greeter.SayHello",
