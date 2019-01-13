@@ -125,7 +125,7 @@ func WithTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithDialTimeout specifies the inital connection dial timeout
+// WithDialTimeout specifies the initial connection dial timeout
 //	WithDialTimeout(time.Duration(20*time.Second))
 func WithDialTimeout(dt time.Duration) Option {
 	return func(o *RunConfig) error {
