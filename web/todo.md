@@ -1,6 +1,6 @@
-- [ ] Lock down demo ingest
 - [ ] Figure out release mechanism
 - [ ] Invalid request and bad condition tests
+- [x] Lock down demo create
 - [x] Docs
 - [x] Fix UI when going to a direct url
 - [x] About page
