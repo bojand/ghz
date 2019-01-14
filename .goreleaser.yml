@@ -9,6 +9,16 @@ builds:
       - windows
     goarch:
       - amd64
+  - main: ./cmd/ghz-web
+    binary: ghz-web
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
 archive:
   replacements:
     darwin: Darwin
