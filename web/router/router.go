@@ -192,7 +192,6 @@ func PrintRoutes(echoServer *echo.Echo) {
 			echoServer.Logger.Info(desc)
 		}
 	}
-
 }
 
 func isCreateAllowed(next echo.HandlerFunc) echo.HandlerFunc {
