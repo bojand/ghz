@@ -24,7 +24,7 @@ func TestDetail_BeforeSave(t *testing.T) {
 
 	for _, tt := range details {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.in.BeforeSave(nil)
+			err := tt.in.BeforeSave()
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
@@ -137,9 +137,9 @@ func TestDetail(t *testing.T) {
 		assert.Nil(t, d.Report)
 		assert.NotZero(t, d.Timestamp)
 		assert.Equal(t, time.Duration(1*time.Millisecond), d.Latency)
-		assert.NotNil(t, d.CreatedAt)
-		assert.NotNil(t, d.UpdatedAt)
-		assert.Nil(t, d.DeletedAt)
+		assert.NotZero(t, d.CreatedAt)
+		assert.NotZero(t, d.UpdatedAt)
+		assert.Zero(t, d.DeletedAt)
 		assert.Equal(t, "OK", d.Status)
 	})
 
@@ -168,9 +168,9 @@ func TestDetail(t *testing.T) {
 		assert.Nil(t, d.Report)
 		assert.NotZero(t, d.Timestamp)
 		assert.Equal(t, time.Duration(2*time.Millisecond), d.Latency)
-		assert.NotNil(t, d.CreatedAt)
-		assert.NotNil(t, d.UpdatedAt)
-		assert.Nil(t, d.DeletedAt)
+		assert.NotZero(t, d.CreatedAt)
+		assert.NotZero(t, d.UpdatedAt)
+		assert.Zero(t, d.DeletedAt)
 		assert.Equal(t, "CANCELED", d.Status)
 	})
 

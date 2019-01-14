@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -65,13 +64,8 @@ func (api *ExportAPI) GetExport(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Unsupported format: "+format)
 	}
 
-	rid := ctx.Param("rid")
-	if rid == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "")
-	}
-
-	if id, err = strconv.ParseUint(rid, 10, 32); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	if id, err = getReportID(ctx); err != nil {
+		return err
 	}
 
 	var details []*model.Detail

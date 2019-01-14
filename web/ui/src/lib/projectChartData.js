@@ -5,27 +5,56 @@ import { formatFloat } from './common'
 
 function createChartData (reports) {
   let data = reports
-  const avgs = data.map(d => d.average / 1000000)
-  const fasts = data.map(d => d.fastest / 1000000)
-  const slows = data.map(d => d.slowest / 1000000)
+
+  let unit = 'ns'
+  let testValue = data[0].average
+  let divr = 1
+
+  if (testValue > 1000000) {
+    unit = 'ms'
+    divr = 1000000
+    testValue = testValue / divr
+  }
+
+  if (testValue > 1000) {
+    unit = 's'
+    divr = 1000000000
+  }
+
+  const avgs = data.map(d => d.average / divr)
+  const fasts = data.map(d => d.fastest / divr)
+  const slows = data.map(d => d.slowest / divr)
   const rps = data.map(d => d.rps)
   const nine5 = _(data)
     .map(r => {
       const elem = _.find(r.latencyDistribution, ['percentage', 95])
       if (elem) {
-        return elem.latency / 1000000
+        return elem.latency / divr
       }
     })
     .compact()
     .valueOf()
+
+  const nine9 = _(data)
+    .map(r => {
+      const elem = _.find(r.latencyDistribution, ['percentage', 99])
+      if (elem) {
+        return elem.latency / divr
+      }
+    })
+    .compact()
+    .valueOf()
+
   const dates = data.map(d => d.date)
   return {
     averate: avgs,
     fastest: fasts,
     slowest: slows,
     nine5: nine5,
+    nine9: nine9,
     rps,
-    dates
+    dates,
+    unit
   }
 }
 
@@ -36,10 +65,12 @@ function createLineChart (reports) {
 
   const chartData = createChartData(reports)
   const dates = chartData.dates
+  const unit = chartData.unit
   const avgData = []
   const fastData = []
   const slowData = []
   const n5Data = []
+  const n9Data = []
   const rpsData = []
 
   dates.forEach((v, i) => {
@@ -59,6 +90,10 @@ function createLineChart (reports) {
     n5Data[i] = {
       x: d,
       y: formatFloat(chartData.nine5[i])
+    }
+    n9Data[i] = {
+      x: d,
+      y: formatFloat(chartData.nine9[i])
     }
     rpsData[i] = {
       x: d,
@@ -111,6 +146,16 @@ function createLineChart (reports) {
       lineTension
     },
     {
+      label: '99th',
+      backgroundColor: colors.purple,
+      borderColor: colors.purple,
+      fill: false,
+      data: n9Data,
+      yAxisID: 'y-axis-lat',
+      cubicInterpolationMode,
+      lineTension
+    },
+    {
       label: 'RPS',
       backgroundColor: colors.grey,
       borderColor: colors.grey,
@@ -121,6 +166,8 @@ function createLineChart (reports) {
       lineTension
     }
   ]
+
+  const labelStr = `Latency (${unit})`
 
   var config = {
     type: 'line',
@@ -160,7 +207,7 @@ function createLineChart (reports) {
             id: 'y-axis-lat',
             scaleLabel: {
               display: true,
-              labelString: 'Latency (ms)'
+              labelString: labelStr
             }
           },
           {

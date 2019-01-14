@@ -15,5 +15,8 @@ func (d *Database) GetHistogramForReport(rid uint) (*model.Histogram, error) {
 	r.ID = rid
 	h := new(model.Histogram)
 	err := d.DB.Model(r).Related(&h).Error
+	if err != nil {
+		return nil, err
+	}
 	return h, err
 }

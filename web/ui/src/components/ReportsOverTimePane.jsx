@@ -42,7 +42,7 @@ export default class ReportsOverTimePane extends Component {
     return (
       <Pane marginTop={24} marginBottom={24}>
         <Pane display='flex' alignItems='center' marginTop={6}>
-          <Heading size={500}>HISTORY</Heading>
+          <Heading size={600}>HISTORY</Heading>
         </Pane>
         <Pane paddingX={20} paddingTop={20}><HistoryChart
           reports={reports}

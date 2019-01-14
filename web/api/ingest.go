@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/bojand/ghz/runner"
 	"github.com/bojand/ghz/web/model"
@@ -59,14 +58,8 @@ type IngestRequest runner.Report
 func (api *IngestAPI) Ingest(ctx echo.Context) error {
 	ir := new(IngestRequest)
 
-	if err := ctx.Bind(ir); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	if ctx.Echo().Validator != nil {
-		if err := ctx.Validate(ir); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
+	if err := bindAndValidateInput(ctx, ir); err != nil {
+		return err
 	}
 
 	// Project
@@ -80,40 +73,24 @@ func (api *IngestAPI) Ingest(ctx echo.Context) error {
 
 // IngestToProject ingests data into a specific project
 func (api *IngestAPI) IngestToProject(ctx echo.Context) error {
-	var projectID uint64
+	var project *model.Project
 	var err error
 
-	pid := ctx.Param("pid")
-	if pid == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "")
-	}
-
-	if projectID, err = strconv.ParseUint(pid, 10, 32); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
-	}
-
-	project := new(model.Project)
-	project, err = api.DB.FindProjectByID(uint(projectID))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	if project, err = findProject(api.DB.FindProjectByID, ctx); err != nil {
+		return err
 	}
 
 	ir := new(IngestRequest)
 
-	if err := ctx.Bind(ir); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	if ctx.Echo().Validator != nil {
-		if err := ctx.Validate(ir); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
+	if err := bindAndValidateInput(ctx, ir); err != nil {
+		return err
 	}
 
 	return api.ingestToProject(project, ir, ctx)
 }
 
 func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx echo.Context) error {
+
 	// Report
 
 	report := convertIngestToReport(p.ID, ir)
@@ -126,8 +103,11 @@ func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx e
 	o := &model.Options{
 		ReportID: report.ID,
 	}
-	opts := model.OptionsInfo(*ir.Options)
-	o.Info = &opts
+
+	if ir.Options != nil {
+		opts := model.OptionsInfo(*ir.Options)
+		o.Info = &opts
+	}
 
 	if err := api.DB.CreateOptions(o); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -211,4 +191,18 @@ func convertIngestToReport(pid uint, ir *IngestRequest) *model.Report {
 	}
 
 	return r
+}
+
+func bindAndValidateInput(ctx echo.Context, ir *IngestRequest) error {
+	if err := ctx.Bind(ir); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if ctx.Echo().Validator != nil {
+		if err := ctx.Validate(ir); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	return nil
 }

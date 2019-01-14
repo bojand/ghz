@@ -32,7 +32,7 @@ export default class OptionsPane extends Component {
 
     return (
       <Pane>
-        <Heading>
+        <Heading size={600}>
           Options
         </Heading>
         <Pane background='tint2' marginTop={16}>

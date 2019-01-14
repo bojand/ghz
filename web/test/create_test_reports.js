@@ -11,9 +11,11 @@ const reportFiles = [
   'report6.json', 'report7.json', 'report8.json', 'report9.json'
 ]
 
-for (let i = 0; i < 15; i++) {
+for (let i = 1; i < 15; i++) {
   let index = getRandomInt(10)
-  reportFiles.push(`report${index}.json`)
+  if (index > 0) {
+    reportFiles.push(`report${index}.json`)
+  }
 }
 
 reportFiles.push(`report3.json`)

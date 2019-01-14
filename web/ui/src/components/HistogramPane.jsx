@@ -4,7 +4,7 @@ import { Pane, Heading } from 'evergreen-ui'
 import HistogramChart from './HistogramChart'
 
 export default class HistogramPane extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props)
 
     this.state = {
@@ -38,7 +38,7 @@ export default class HistogramPane extends Component {
 
     return (
       <Pane>
-        <Heading size={500}>Histogram</Heading>
+        <Heading size={600}>Histogram</Heading>
         <Pane marginTop={20}>
           <HistogramChart report={report} />
         </Pane>

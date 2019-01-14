@@ -188,7 +188,7 @@ func PrintRoutes(echoServer *echo.Echo) {
 	for _, r := range routes {
 		index := strings.Index(r.Name, "ghz api:")
 		if index >= 0 {
-			desc := fmt.Sprintf("%+v %+v", r.Method, r.Path)
+			desc := fmt.Sprintf("[%+v] %+v %+v", r.Name, r.Method, r.Path)
 			echoServer.Logger.Info(desc)
 		}
 	}

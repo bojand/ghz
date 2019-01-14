@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/bojand/ghz/runner"
-	"github.com/jinzhu/gorm"
 )
 
 // Detail represents a report detail
@@ -57,7 +56,7 @@ func (d *Detail) UnmarshalJSON(data []byte) error {
 }
 
 // BeforeSave is called by GORM before save
-func (d *Detail) BeforeSave(scope *gorm.Scope) error {
+func (d *Detail) BeforeSave() error {
 	if d.ReportID == 0 && d.Report == nil {
 		return errors.New("Detail must belong to a report")
 	}
@@ -70,10 +69,10 @@ func (d *Detail) BeforeSave(scope *gorm.Scope) error {
 	}
 	d.Status = status
 
-	if scope != nil {
-		scope.SetColumn("error", d.Error)
-		scope.SetColumn("status", d.Status)
-	}
+	// if scope != nil {
+	// 	scope.SetColumn("error", d.Error)
+	// 	scope.SetColumn("status", d.Status)
+	// }
 
 	return nil
 }

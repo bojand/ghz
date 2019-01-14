@@ -5,7 +5,7 @@ import { Link as RouterLink, withRouter } from 'react-router-dom'
 import {
   Order,
   getIconForOrder,
-  formatNano,
+  formatNanoUnit,
   formatFloat,
   toLocaleString
 } from '../lib/common'
@@ -79,7 +79,7 @@ class ReportList extends Component {
       <Pane>
         <Pane display='flex' alignItems='center' marginTop={0}>
           <Pane flex={1}>
-            <Heading size={500}>REPORTS</Heading>
+            <Heading size={600}>REPORTS</Heading>
           </Pane>
           <Pane>
             <TextInput
@@ -162,16 +162,16 @@ class ReportList extends Component {
                   {p.count}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(p.total)} ms
+                  {formatNanoUnit(p.total)}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(p.average)} ms
+                  {formatNanoUnit(p.average)}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(p.slowest)} ms
+                  {formatNanoUnit(p.slowest)}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
-                  {formatNano(p.fastest)} ms
+                  {formatNanoUnit(p.fastest)}
                 </Table.TextCell>
                 <Table.TextCell isNumber>
                   {formatFloat(p.rps)}

@@ -15,5 +15,10 @@ func (d *Database) GetOptionsForReport(rid uint) (*model.Options, error) {
 	r.ID = rid
 	o := new(model.Options)
 	err := d.DB.Model(r).Related(&o).Error
+
+	if err != nil {
+		return nil, err
+	}
+
 	return o, err
 }

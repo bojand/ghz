@@ -42,7 +42,7 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mtdTestUnaryTwo)
 
-	t.Run("get nil, emtpy when empty", func(t *testing.T) {
+	t.Run("get nil, empty when empty", func(t *testing.T) {
 		single, streaming, err := createPayloads("", mtdUnary)
 		assert.NoError(t, err)
 		assert.Nil(t, single)
