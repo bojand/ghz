@@ -192,5 +192,4 @@ func PrintRoutes(echoServer *echo.Echo) {
 			echoServer.Logger.Info(desc)
 		}
 	}
-
 }
