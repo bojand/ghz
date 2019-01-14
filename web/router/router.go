@@ -58,7 +58,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	projectAPI := api.ProjectAPI{DB: db}
 
 	projectGroup.GET("/", projectAPI.ListProjects).Name = "ghz api: list projects"
-	projectGroup.POST("/", projectAPI.CreateProject).Name = "ghz api: create project"
+	projectGroup.POST("/", projectAPI.CreateProject, isCreateAllowed).Name = "ghz api: create project"
 	projectGroup.GET("/:pid/", projectAPI.GetProject).Name = "ghz api: get project"
 	projectGroup.PUT("/:pid/", projectAPI.UpdateProject).Name = "ghz api: update project"
 	projectGroup.DELETE("/:pid/", projectAPI.DeleteProject).Name = "ghz api: delete project"
@@ -87,10 +87,10 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	// Ingest
 
 	ingestAPI := api.IngestAPI{DB: db}
-	apiRoot.POST("/ingest/", ingestAPI.Ingest).Name = "ghz api: ingest"
+	apiRoot.POST("/ingest/", ingestAPI.Ingest, isCreateAllowed).Name = "ghz api: ingest"
 
 	// Ingest to project
-	projectGroup.POST("/:pid/ingest/", ingestAPI.IngestToProject).Name = "ghz api: ingest to project"
+	projectGroup.POST("/:pid/ingest/", ingestAPI.IngestToProject, isCreateAllowed).Name = "ghz api: ingest to project"
 
 	// Info
 
@@ -193,4 +193,15 @@ func PrintRoutes(echoServer *echo.Echo) {
 		}
 	}
 
+}
+
+func isCreateAllowed(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		disable := os.Getenv("GHZ_DISABLE_CREATE")
+		if strings.ToLower(disable) == "true" {
+			return echo.NewHTTPError(http.StatusForbidden)
+		}
+
+		return next(c)
+	}
 }
