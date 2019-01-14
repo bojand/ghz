@@ -12,5 +12,15 @@
       "extras",
       "package"
     ]
+  },
+  "web": {
+    "Web Server": [
+      "web/intro",
+      "web/install",
+      "web/config",
+      "web/data",
+      "web/api",
+      "web/demo"
+    ]
   }
 }

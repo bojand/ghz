@@ -18,7 +18,8 @@ const siteConfig = {
 
   // For no header links in the top nav bar -> headerLinks: [],
   headerLinks: [
-    { doc: 'intro', label: 'Docs'},
+    { doc: 'intro', label: 'CLI'},
+    { doc: 'web/intro', label: 'Web'},
     { href: "https://godoc.org/github.com/bojand/ghz", label: "GoDoc" },
     { href: "https://github.com/bojand/ghz", label: "GitHub" }
   ],
