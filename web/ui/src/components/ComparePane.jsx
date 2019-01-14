@@ -148,35 +148,30 @@ export default class ComparePane extends Component {
                 <Table.TextCell />
               </Table.Row>
               <LatencyRow
-                key='row-total'
                 maxWidth={maxWidthLabel}
                 label='Total'
                 value1={report1.total}
                 value2={report2.total}
               />
               <LatencyRow
-                key='row-average'
                 maxWidth={maxWidthLabel}
                 label='Average'
                 value1={report1.average}
                 value2={report2.average}
               />
               <LatencyRow
-                key='row-fastest'
                 maxWidth={maxWidthLabel}
                 label='Fastest'
                 value1={report1.fastest}
                 value2={report2.fastest}
               />
               <LatencyRow
-                key='row-slowest'
                 maxWidth={maxWidthLabel}
                 label='Slowest'
                 value1={report1.slowest}
                 value2={report2.slowest}
               />
               <LatencyRow
-                key='row-rps'
                 maxWidth={maxWidthLabel}
                 label='RPS'
                 value1={report1.rps}
@@ -234,7 +229,7 @@ export default class ComparePane extends Component {
   }
 }
 
-const LatencyRow = ({ key, maxWidth, label, value1, value2, invert, floatFormat }) => {
+const LatencyRow = ({ maxWidth, label, value1, value2, invert, floatFormat }) => {
   const change = value1 - value2
   const changeAbs = Math.abs(change)
   const changeP = change > 0
@@ -253,7 +248,7 @@ const LatencyRow = ({ key, maxWidth, label, value1, value2, invert, floatFormat 
       : 'danger'
   }
   return (
-    <Table.Row key={key}>
+    <Table.Row>
       <Table.TextCell maxWidth={maxWidth || 60}>
         <Strong>{label}</Strong>
       </Table.TextCell>

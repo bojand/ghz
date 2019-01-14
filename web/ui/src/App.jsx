@@ -10,6 +10,7 @@ import ReportDetailPage from './components/ReportDetailPage'
 import Footer from './components/Footer'
 import InfoComponent from './components/InfoComponent'
 import ComparePage from './components/ComparePage'
+import DocsComponent from './components/DocsComponent'
 
 import InfoContainer from './containers/InfoContainer'
 
@@ -24,7 +25,7 @@ export default class App extends Component {
               <TabLink to='/reports' linkText='REPORTS' icon='dashboard' />
             </Pane>
             <Pane marginRight={8}>
-              <Tab height={36} paddingX={14}><Icon icon='manual' marginRight={12} /><Text size={400}>DOCS</Text></Tab>
+              <TabLink to='/docs' linkText='DOCS' icon='manual' />
             </Pane>
           </Pane>
           <Switch>
@@ -35,6 +36,7 @@ export default class App extends Component {
             <Route path='/compare/:reportId1/:reportId2' component={Compare} />
             <Route path='/reports' component={Reports} />
             <Route path='/about' component={Info} />
+            <Route path='/docs' component={Docs} />
           </Switch>
           <Footer />
         </div>
@@ -87,15 +89,20 @@ function Info () {
   )
 }
 
+function Docs () {
+  return (
+    <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
+      <DocsComponent />
+    </Pane>
+  )
+}
+
 const TabLink = ({ to, linkText, icon, ...rest }) => (
   <Route
     path={to}
     children={() => (
       <RouterLink to={to} {...rest} >
         <Tab height={36} paddingX={14}><Icon icon={icon} marginRight={12} /><Text size={400}>{linkText}</Text></Tab>
-        {/* <Button iconBefore={icon} appearance='minimal' intent='none' height={40} marginRight={12}>
-          {linkText}
-        </Button> */}
       </RouterLink>
     )
     }

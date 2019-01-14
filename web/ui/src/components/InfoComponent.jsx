@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Pane, Text, Strong, Heading, Link, Paragraph } from 'evergreen-ui'
 import _ from 'lodash'
 
-export default class ReportDetailPane extends Component {
+export default class InfoComponent extends Component {
   componentDidMount () {
     this.props.infoStore.fetchInfo()
   }

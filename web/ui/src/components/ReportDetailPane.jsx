@@ -343,7 +343,7 @@ const LatencyComponent = ({ currentReport, previousReport }) => {
       </Heading>
       <Pane>
         {currentReport.latencyDistribution.map((p, i) => (
-          <LatencyPropComponent currentReportLD={p} previousReportLD={previousReport.latencyDistribution[i]} propName={p} />
+          <LatencyPropComponent key={i} currentReportLD={p} previousReportLD={previousReport.latencyDistribution[i]} propName={p} />
         ))}
       </Pane>
     </Pane>
