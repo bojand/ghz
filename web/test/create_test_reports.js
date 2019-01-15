@@ -2,25 +2,25 @@ const fs = require('fs')
 const path = require('path')
 const http = require('http');
 
-function getRandomInt (max) {
-  return Math.floor(Math.random() * Math.floor(max))
+const folder = process.argv[2]
+
+if (!folder) {
+  console.log('Need folder')
+  process.exit(1)
 }
 
-const reportFiles = [
+const projectId = 42
+
+let reportFiles = [
   'report1.json', 'report2.json', 'report3.json', 'report4.json', 'report5.json',
-  'report6.json', 'report7.json', 'report8.json', 'report9.json'
+  'report6.json', 'report7.json', 'report8.json', 'report9.json', 'report1.json', 
+  'report2.json', 'report3.json', 'report4.json', 'report5.json', 'report6.json', 
+  'report7.json', 'report8.json', 'report9.json'
 ]
 
-for (let i = 1; i < 15; i++) {
-  let index = getRandomInt(10)
-  if (index > 0) {
-    reportFiles.push(`report${index}.json`)
-  }
-}
+reportFiles = arrayShuffle(reportFiles)
 
 reportFiles.push(`report3.json`)
-
-const projectId = 33
 
 createData()
 
@@ -30,7 +30,7 @@ async function createData () {
   const MONTH = (new Date()).getMonth()
   reportFiles.forEach(async fileName => {
 
-    const rf = path.join(__dirname, fileName)
+    const rf = path.join(__dirname, folder, fileName)
 
     try {
       if (!rf) {
@@ -100,4 +100,44 @@ function doPost (data) {
     req.write(postData);
     req.end()
   })
+}
+
+function arrayShuffle(array) {
+  return shuffleSelf(copyArray(array));
+}
+
+function copyArray(source, array) {
+  var index = -1,
+      length = source.length;
+
+  array || (array = Array(length));
+  while (++index < length) {
+    array[index] = source[index];
+  }
+  return array;
+}
+
+function shuffleSelf(array, size) {
+  var index = -1,
+      length = array.length,
+      lastIndex = length - 1;
+
+  size = size === undefined ? length : size;
+  while (++index < size) {
+    var rand = baseRandom(index, lastIndex),
+        value = array[rand];
+
+    array[rand] = array[index];
+    array[index] = value;
+  }
+  array.length = size;
+  return array;
+}
+
+function baseRandom(lower, upper) {
+  return lower + Math.floor(Math.random() * (upper - lower + 1));
+}
+
+function getRandomInt (max) {
+  return Math.floor(Math.random() * Math.floor(max))
 }

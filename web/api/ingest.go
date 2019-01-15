@@ -186,6 +186,8 @@ func convertIngestToReport(pid uint, ir *IngestRequest) *model.Report {
 	}
 
 	// status
+	r.Status = model.StatusOK
+
 	if len(r.ErrorDist) > 0 {
 		r.Status = model.StatusFail
 	}

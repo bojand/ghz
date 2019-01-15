@@ -20,12 +20,12 @@ Alternatively we can manually create a project ahead of time and then ingest rep
 Example:
 
 ```sh
-ghz -insecure \\
-    -proto ./testdata/greeter.proto \\
-    -call helloworld.Greeter.SayHello \\
-    -d '{"name": "Bob"}' \\
-    -tags '{"env": "staging", "created by":"Joe Developer"}' \\
-    -O pretty \\
-    -name 'Greeter SayHello' \\
+ghz -insecure \
+    -proto ./greeter.proto \
+    -call helloworld.Greeter.SayHello \
+    -d '{"name": "Bob"}' \
+    -tags '{"env": "staging", "created by":"Joe Developer"}' \
+    -name 'Greeter SayHello' \
+    -O json \
     0.0.0.0:50051 | http POST localhost:3000/api/projects/34/ingest
 ```

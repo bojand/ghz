@@ -34,7 +34,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("Ingest", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/report1.json")
+		dat, err := ioutil.ReadFile("../test/SayHello/report1.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -92,7 +92,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("IngestToProject", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/report2.json")
+		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -150,7 +150,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("IngestToProject 404 for unknown project", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/report2.json")
+		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -172,7 +172,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("IngestToProject 404 for invalid project", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/report2.json")
+		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -194,7 +194,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("IngestToProject 404 for empty project", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/report2.json")
+		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()

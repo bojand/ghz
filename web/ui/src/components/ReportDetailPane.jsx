@@ -285,13 +285,14 @@ const SummaryPropComponent = ({ currentReport, previousReport, propName }) => {
             {propName === 'rps' ? formatFloat(crVal) : formatNanoUnit(crVal)}
           </Text>
         </Pane>
-        {previousReport &&
-          <Pane flex={3} display='flex'>
+        {previousReport
+          ? <Pane flex={3} display='flex'>
             <Icon icon={changeIcon} color={changeColor} marginRight={8} />
             <Text fontFamily='mono'>
               {propName === 'rps' ? formatFloat(changeAbs) : formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
             </Text>
           </Pane>
+          : <Pane />
         }
       </Pane>
     </Pane>
@@ -327,13 +328,14 @@ const LatencyPropComponent = ({ currentReportLD, previousReportLD }) => {
           {formatNanoUnit(crVal)}
         </Text>
       </Pane>
-      {previousReportLD &&
-        <Pane flex={5} display='flex'>
+      {previousReportLD
+        ? <Pane flex={5} display='flex'>
           <Icon icon={changeIcon} color={changeColor} marginRight={8} />
           <Text fontFamily='mono'>
             {formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
           </Text>
         </Pane>
+        : <Pane />
       }
     </Pane>
   )
