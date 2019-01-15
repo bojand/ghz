@@ -3,13 +3,17 @@ const path = require('path')
 const http = require('http');
 
 const folder = process.argv[2]
+const projectId = process.argv[3]
 
 if (!folder) {
   console.log('Need folder')
   process.exit(1)
 }
 
-const projectId = 42
+if (!projectId) {
+  console.log('Need projectId')
+  process.exit(1)
+}
 
 let reportFiles = [
   'report1.json', 'report2.json', 'report3.json', 'report4.json', 'report5.json',
