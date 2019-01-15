@@ -15,7 +15,7 @@ func TestConfig_Read(t *testing.T) {
 		{"config1.toml",
 			"../test/config1.toml",
 			&Config{
-				Server:   Server{Port: 3000},
+				Server:   Server{Port: 80},
 				Database: Database{Type: "sqlite3", Connection: "data/ghz.db"},
 				Log:      Log{Level: "info"}}},
 		{"config2.toml",
