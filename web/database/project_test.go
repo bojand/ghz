@@ -14,7 +14,7 @@ func TestDatabase_CreateProject(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := New("sqlite3", dbName)
+	db, err := New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}
@@ -127,7 +127,7 @@ func TestDatabase_UpdateProject(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := New("sqlite3", dbName)
+	db, err := New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}
@@ -186,7 +186,7 @@ func TestDatabase_UpdateProjectStatus(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := New("sqlite3", dbName)
+	db, err := New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}
@@ -230,7 +230,7 @@ func TestDatabase_FindProjectByID(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := New("sqlite3", dbName)
+	db, err := New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}
@@ -276,7 +276,7 @@ func TestDatabase_ListProjects(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := New("sqlite3", dbName)
+	db, err := New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}
@@ -392,7 +392,7 @@ func TestDatabase_CountProjects(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := New("sqlite3", dbName)
+	db, err := New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}

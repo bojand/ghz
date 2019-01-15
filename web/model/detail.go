@@ -16,7 +16,7 @@ type Detail struct {
 	Report *Report `json:"-"`
 
 	// Run id
-	ReportID uint `json:"reportID" gorm:"type:integer REFERENCES reports(id);not null"`
+	ReportID uint `json:"reportID" gorm:"type:integer REFERENCES reports(id) ON DELETE CASCADE;not null"`
 
 	runner.ResultDetail
 }
@@ -68,11 +68,6 @@ func (d *Detail) BeforeSave() error {
 		status = "OK"
 	}
 	d.Status = status
-
-	// if scope != nil {
-	// 	scope.SetColumn("error", d.Error)
-	// 	scope.SetColumn("status", d.Status)
-	// }
 
 	return nil
 }

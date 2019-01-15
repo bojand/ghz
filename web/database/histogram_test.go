@@ -15,7 +15,7 @@ func TestDatabase_Histogram(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := New("sqlite3", dbName)
+	db, err := New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}

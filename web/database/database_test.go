@@ -8,7 +8,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	db, err := New("sqlite3", "test/testdb.db")
+	db, err := New("sqlite3", "test/testdb.db", false)
 
 	assert.NotNil(t, db)
 	assert.Nil(t, err)
@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 	os.Remove("test/testdb.db")
 }
 func TestInvalidDialect(t *testing.T) {
-	_, err := New("asdf", "testdb.db")
+	_, err := New("asdf", "invalidtestdb.db", false)
 	assert.NotNil(t, err)
 }
 
@@ -26,7 +26,7 @@ func TestCreateSqliteFolder(t *testing.T) {
 	// ensure path not exists
 	os.RemoveAll("test/somepath")
 
-	db, err := New("sqlite3", "test/somepath/testdb.db")
+	db, err := New("sqlite3", "test/somepath/testdb.db", false)
 	assert.Nil(t, err)
 	assert.DirExists(t, "test/somepath")
 	db.Close()
@@ -39,7 +39,7 @@ func TestWithAlreadyExistingSqliteFolder(t *testing.T) {
 	os.RemoveAll("test/somepath")
 	os.MkdirAll("test/somepath", 0777)
 
-	db, err := New("sqlite3", "test/somepath/testdb.db")
+	db, err := New("sqlite3", "test/somepath/testdb.db", false)
 	assert.Nil(t, err)
 	assert.DirExists(t, "test/somepath")
 	db.Close()

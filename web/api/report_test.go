@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -23,7 +22,7 @@ func TestReportAPI(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := database.New("sqlite3", dbName)
+	db, err := database.New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}
@@ -33,10 +32,10 @@ func TestReportAPI(t *testing.T) {
 
 	var projectID, projectID2 uint
 	var pid, pid2 string
-	var reportID, p2reportID uint
-	var rid, p2rid string
+	var reportID uint
+	var rid string
 	var reportID9, reportID10, p2reportID5, p2reportID6, p2ridLatest uint
-	var rid10, p2rid6 string
+	var rid10 string
 
 	t.Run("Create Reports", func(t *testing.T) {
 		p := model.Project{
@@ -236,8 +235,6 @@ func TestReportAPI(t *testing.T) {
 
 		projectID2 = p.ID
 		pid2 = strconv.FormatUint(uint64(projectID2), 10)
-		p2reportID = r.ID
-		p2rid = strconv.FormatUint(uint64(p2reportID), 10)
 
 		N := 10
 
@@ -303,7 +300,6 @@ func TestReportAPI(t *testing.T) {
 
 			if n == 6 {
 				p2reportID6 = r.ID
-				p2rid6 = strconv.FormatUint(uint64(p2reportID6), 10)
 			}
 
 			if n == 9 {
@@ -641,10 +637,6 @@ func TestReportAPI(t *testing.T) {
 
 			list := new(ReportList)
 			err = json.NewDecoder(rec.Body).Decode(list)
-
-			fmt.Println(pid, pid2, p2rid, p2reportID5, p2reportID6, p2rid6)
-
-			fmt.Printf("%+v\n\n", list)
 
 			assert.NoError(t, err)
 			assert.Equal(t, uint(11), list.Total)

@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"sync/atomic"
 
 	"github.com/bojand/ghz/web/model"
@@ -44,7 +43,6 @@ func (d *Database) CreateDetailsBatch(rid uint, s []*model.Detail) (uint, uint) 
 			err := d.createDetail(detail)
 
 			if err != nil {
-				fmt.Println(err)
 				atomic.AddUint32(&nErr, 1)
 			}
 		}(item)
