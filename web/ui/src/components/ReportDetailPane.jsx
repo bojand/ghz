@@ -99,10 +99,11 @@ export default class ReportDetailPane extends Component {
                 </Button>
               </Link>
               <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
-                <Button iconBefore='label' appearance='minimal' intent='none' height={32}>
+                <Button iconBefore='label' appearance='minimal' intent='none' height={32} marginRight={12}>
                   CSV
                 </Button>
               </Link>
+              <Button iconBefore='trash' appearance='minimal' intent='danger'>DELETE</Button>
             </Pane>
           </Pane>
         </Pane>

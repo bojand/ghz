@@ -34,18 +34,23 @@ export default class ProjectDetailPane extends Component {
     }
     return (
       <Pane>
-        <Pane display='flex' alignItems='center' marginBottom={10}>
-          <StatusBadge status={currentProject.status} marginRight={8} />
-          <Heading size={600}>{toUpper(currentProject.name)}</Heading>
-          {this.state.editProjectVisible
-            ? <EditProjectDialog
-              projectStore={this.props.projectStore}
-              project={currentProject}
-              isShown={this.state.editProjectVisible}
-              onDone={() => this.setState({ editProjectVisible: false })}
-            /> : null
-          }
-          <Button onClick={() => this.setState({ editProjectVisible: !this.state.editProjectVisible })} marginLeft={14} iconBefore='edit' appearance='minimal' intent='none'>EDIT</Button>
+        <Pane display='flex' marginBottom={10}>
+          <Pane display='flex' alignItems='center' flex={1}>
+            <StatusBadge status={currentProject.status} marginRight={8} />
+            <Heading size={600}>{toUpper(currentProject.name)}</Heading>
+            {this.state.editProjectVisible
+              ? <EditProjectDialog
+                projectStore={this.props.projectStore}
+                project={currentProject}
+                isShown={this.state.editProjectVisible}
+                onDone={() => this.setState({ editProjectVisible: false })}
+              /> : null
+            }
+            <Button onClick={() => this.setState({ editProjectVisible: !this.state.editProjectVisible })} marginLeft={14} iconBefore='edit' appearance='minimal' intent='none'>EDIT</Button>
+          </Pane>
+          <Pane display='flex'>
+            <Button iconBefore='trash' appearance='minimal' intent='danger'>DELETE</Button>
+          </Pane>
         </Pane>
         <Paragraph>{currentProject.description}</Paragraph>
       </Pane>

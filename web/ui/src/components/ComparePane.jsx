@@ -40,11 +40,11 @@ export default class ComparePane extends Component {
     let latKey = 0
 
     const report1Name = report1.name
-      ? `${report1.name} [ID:${report1.id}]`
+      ? `${report1.name} [ID: ${report1.id}]`
       : `Report: ${report1.id}`
 
     const report2Name = report2.name
-      ? `${report2.name} [ID:${report2.id}]`
+      ? `${report2.name} [ID: ${report2.id}]`
       : `Report: ${report2.id}`
 
     const config = createComparisonChart(report1, report2, color1, color2)
