@@ -21,24 +21,31 @@ export default class CompareContainer extends Container {
       isFetching: true
     })
 
-    try {
-      const report1 = await api.get(`${reportId1}`).json()
+    let report1 = null
+    let report2 = null
 
-      let report2 = null
+    try {
+      report1 = await api.get(`${reportId1}`).json()
+    } catch (err) {
+      toaster.danger(err.message)
+      console.log('error: ', err)
+      return
+    }
+
+    try {
       if (reportId2.toLowerCase() === 'previous') {
         report2 = await api.get(`${reportId1}/previous`).json()
       } else {
         report2 = await api.get(`${reportId2}`).json()
       }
-
-      this.setState({
-        report1,
-        report2,
-        isFetching: false
-      })
     } catch (err) {
-      toaster.danger(err.message)
       console.log('error: ', err)
     }
+
+    this.setState({
+      report1,
+      report2,
+      isFetching: false
+    })
   }
 }

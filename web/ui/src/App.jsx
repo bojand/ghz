@@ -10,7 +10,6 @@ import ReportDetailPage from './components/ReportDetailPage'
 import Footer from './components/Footer'
 import InfoComponent from './components/InfoComponent'
 import ComparePage from './components/ComparePage'
-import DocsComponent from './components/DocsComponent'
 
 import InfoContainer from './containers/InfoContainer'
 
@@ -24,9 +23,6 @@ export default class App extends Component {
               <TabLink to='/projects' linkText='PROJECTS' icon='control' />
               <TabLink to='/reports' linkText='REPORTS' icon='dashboard' />
             </Pane>
-            <Pane marginRight={8}>
-              <TabLink to='/docs' linkText='DOCS' icon='manual' />
-            </Pane>
           </Pane>
           <Switch>
             <Route exact path='/' component={Projects} />
@@ -36,7 +32,6 @@ export default class App extends Component {
             <Route path='/compare/:reportId1/:reportId2' component={Compare} />
             <Route path='/reports' component={Reports} />
             <Route path='/about' component={Info} />
-            <Route path='/docs' component={Docs} />
           </Switch>
           <Footer />
         </div>
@@ -85,14 +80,6 @@ function Info () {
           )}
         </Subscribe>
       </Provider>
-    </Pane>
-  )
-}
-
-function Docs () {
-  return (
-    <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
-      <DocsComponent />
     </Pane>
   )
 }

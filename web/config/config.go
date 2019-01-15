@@ -27,7 +27,7 @@ type Database struct {
 
 // Server settings
 type Server struct {
-	Port uint `default:"3000"`
+	Port uint `default:"80"`
 }
 
 // Read the config file

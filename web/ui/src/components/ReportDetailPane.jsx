@@ -89,9 +89,9 @@ export default class ReportDetailPane extends Component {
           <Pane>
             <Pane display='flex'>
               <RouterLink to={`/compare/${currentReport.id}/previous`}>
-                <Button iconBefore='comparison' appearance='minimal' intent='none' height={32} marginRight={12}>
+                {prevReport && <Button iconBefore='comparison' appearance='minimal' intent='none' height={32} marginRight={12}>
                   COMPARE TO PREVIOUS
-                </Button>
+                </Button>}
               </RouterLink>
               <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
                 <Button iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
@@ -247,7 +247,7 @@ export default class ReportDetailPane extends Component {
 
 const SummaryPropComponent = ({ currentReport, previousReport, propName }) => {
   const crVal = currentReport[propName]
-  const prVal = previousReport[propName]
+  const prVal = previousReport ? previousReport[propName] : -1
   const change = crVal - prVal
   const changeAbs = Math.abs(change)
   const changeP = change > 0
@@ -285,20 +285,22 @@ const SummaryPropComponent = ({ currentReport, previousReport, propName }) => {
             {propName === 'rps' ? formatFloat(crVal) : formatNanoUnit(crVal)}
           </Text>
         </Pane>
-        <Pane flex={3} display='flex'>
-          <Icon icon={changeIcon} color={changeColor} marginRight={8} />
-          <Text fontFamily='mono'>
-            {propName === 'rps' ? formatFloat(changeAbs) : formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
-          </Text>
-        </Pane>
+        {previousReport &&
+          <Pane flex={3} display='flex'>
+            <Icon icon={changeIcon} color={changeColor} marginRight={8} />
+            <Text fontFamily='mono'>
+              {propName === 'rps' ? formatFloat(changeAbs) : formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
+            </Text>
+          </Pane>
+        }
       </Pane>
     </Pane>
   )
 }
 
-const LatencyPropComponent = ({ currentReportLD, previousReportLD, propName }) => {
+const LatencyPropComponent = ({ currentReportLD, previousReportLD }) => {
   const crVal = currentReportLD.latency
-  const prVal = previousReportLD.latency
+  const prVal = previousReportLD ? previousReportLD.latency : -1
   const change = crVal - prVal
   const changeAbs = Math.abs(change)
   const changeP = change > 0
@@ -325,12 +327,14 @@ const LatencyPropComponent = ({ currentReportLD, previousReportLD, propName }) =
           {formatNanoUnit(crVal)}
         </Text>
       </Pane>
-      <Pane flex={5} display='flex'>
-        <Icon icon={changeIcon} color={changeColor} marginRight={8} />
-        <Text fontFamily='mono'>
-          {formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
-        </Text>
-      </Pane>
+      {previousReportLD &&
+        <Pane flex={5} display='flex'>
+          <Icon icon={changeIcon} color={changeColor} marginRight={8} />
+          <Text fontFamily='mono'>
+            {formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
+          </Text>
+        </Pane>
+      }
     </Pane>
   )
 }
@@ -343,7 +347,7 @@ const LatencyComponent = ({ currentReport, previousReport }) => {
       </Heading>
       <Pane>
         {currentReport.latencyDistribution.map((p, i) => (
-          <LatencyPropComponent key={i} currentReportLD={p} previousReportLD={previousReport.latencyDistribution[i]} propName={p} />
+          <LatencyPropComponent key={i} currentReportLD={p} previousReportLD={previousReport ? previousReport.latencyDistribution[i] : null} propName={p} />
         ))}
       </Pane>
     </Pane>

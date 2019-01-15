@@ -34,15 +34,35 @@
       },
       "usage": {
         "title": "Usage"
+      },
+      "web/api": {
+        "title": "API"
+      },
+      "web/config": {
+        "title": "Configuration"
+      },
+      "web/data": {
+        "title": "Data"
+      },
+      "web/demo": {
+        "title": "Demo"
+      },
+      "web/install": {
+        "title": "Installation"
+      },
+      "web/intro": {
+        "title": "Introduction"
       }
     },
     "links": {
-      "Docs": "Docs",
+      "CLI": "CLI",
+      "Web": "Web",
       "GoDoc": "GoDoc",
       "GitHub": "GitHub"
     },
     "categories": {
-      "Guide": "Guide"
+      "Guide": "Guide",
+      "Web Server": "Web Server"
     }
   },
   "pages-strings": {
