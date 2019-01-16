@@ -105,4 +105,22 @@ export default class ProjectContainer extends Container {
       console.log('error: ', err)
     }
   }
+
+  async deleteProject (id) {
+    this.setState({
+      isFetching: true
+    })
+
+    try {
+      await api.delete(`projects/${id}`).json()
+      this.setState({
+        isFetching: false
+      })
+
+      return true
+    } catch (err) {
+      toaster.danger(err.message)
+      console.log('error: ', err)
+    }
+  }
 }

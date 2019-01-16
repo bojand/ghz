@@ -29,19 +29,18 @@ class ProjectDetailPane extends Component {
     }
   }
 
-  deleteProject () {
+  async deleteProject () {
     this.setState({ deleteVisible: false })
 
     const currentProject = this.props.projectStore.state.currentProject
-    const id = currentProject && currentProject.name ? currentProject.name : this.props.projectId
+    const id = this.props.projectId
+    const name = currentProject && currentProject.name ? currentProject.name : id
 
-    setTimeout(() => {
-      toaster.success(
-        `Project ${id} deleted.`
-      )
-
+    const ok = await this.props.projectStore.deleteProject(id)
+    if (ok) {
+      toaster.success(`Project ${name} deleted.`)
       this.props.history.push(`/projects`)
-    }, 234)
+    }
   }
 
   render () {

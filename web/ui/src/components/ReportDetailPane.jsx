@@ -42,18 +42,17 @@ class ReportDetailPane extends Component {
     }
   }
 
-  deleteReport () {
+  async deleteReport () {
     this.setState({ deleteVisible: false })
     const currentReport = this.props.compareStore.state.report1
-    const id = currentReport && currentReport.name ? currentReport.name : this.props.reportId
+    const id = this.props.reportId
+    const name = currentReport && currentReport.name ? currentReport.name : id
 
-    setTimeout(() => {
-      toaster.success(
-        `Report ${id} deleted.`
-      )
-
+    const ok = await this.props.reportStore.deleteReport(id)
+    if (ok) {
+      toaster.success(`Report ${name} deleted.`)
       this.props.history.push(`/projects`)
-    }, 234)
+    }
   }
 
   render () {
