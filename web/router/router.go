@@ -58,10 +58,10 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	projectAPI := api.ProjectAPI{DB: db}
 
 	projectGroup.GET("/", projectAPI.ListProjects).Name = "ghz api: list projects"
-	projectGroup.POST("/", projectAPI.CreateProject, isCreateAllowed).Name = "ghz api: create project"
+	projectGroup.POST("/", projectAPI.CreateProject, isActionAllowed).Name = "ghz api: create project"
 	projectGroup.GET("/:pid/", projectAPI.GetProject).Name = "ghz api: get project"
 	projectGroup.PUT("/:pid/", projectAPI.UpdateProject).Name = "ghz api: update project"
-	projectGroup.DELETE("/:pid/", projectAPI.DeleteProject).Name = "ghz api: delete project"
+	projectGroup.DELETE("/:pid/", projectAPI.DeleteProject, isActionAllowed).Name = "ghz api: delete project"
 
 	// Reports by Project
 
@@ -73,7 +73,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	reportGroup := apiRoot.Group("/reports")
 	reportGroup.GET("/", reportAPI.ListReportsAll).Name = "ghz api: list all reports"
 	reportGroup.GET("/:rid/", reportAPI.GetReport).Name = "ghz api: get report"
-	reportGroup.DELETE("/:rid/", reportAPI.DeleteReport).Name = "ghz api: delete report"
+	reportGroup.DELETE("/:rid/", reportAPI.DeleteReport, isActionAllowed).Name = "ghz api: delete report"
 	reportGroup.GET("/:rid/previous/", reportAPI.GetPreviousReport).Name = "ghz api: get previous report"
 
 	optionsAPI := api.OptionsAPI{DB: db}
@@ -88,10 +88,10 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	// Ingest
 
 	ingestAPI := api.IngestAPI{DB: db}
-	apiRoot.POST("/ingest/", ingestAPI.Ingest, isCreateAllowed).Name = "ghz api: ingest"
+	apiRoot.POST("/ingest/", ingestAPI.Ingest, isActionAllowed).Name = "ghz api: ingest"
 
 	// Ingest to project
-	projectGroup.POST("/:pid/ingest/", ingestAPI.IngestToProject, isCreateAllowed).Name = "ghz api: ingest to project"
+	projectGroup.POST("/:pid/ingest/", ingestAPI.IngestToProject, isActionAllowed).Name = "ghz api: ingest to project"
 
 	// Info
 
@@ -195,9 +195,9 @@ func PrintRoutes(echoServer *echo.Echo) {
 	}
 }
 
-func isCreateAllowed(next echo.HandlerFunc) echo.HandlerFunc {
+func isActionAllowed(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		disable := os.Getenv("GHZ_DISABLE_CREATE")
+		disable := os.Getenv("GHZ_READ_ONLY")
 		if strings.ToLower(disable) == "true" {
 			return echo.NewHTTPError(http.StatusForbidden)
 		}
