@@ -22,7 +22,7 @@ func TestHistogramAPI(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := database.New("sqlite3", dbName)
+	db, err := database.New("sqlite3", dbName, false)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}
@@ -155,7 +155,6 @@ func TestHistogramAPI(t *testing.T) {
 			assert.Nil(t, h.Report)
 			assert.NotZero(t, h.CreatedAt)
 			assert.NotZero(t, h.UpdatedAt)
-			assert.Zero(t, h.DeletedAt)
 
 			assert.NotNil(t, h.Buckets)
 			assert.Len(t, h.Buckets, 5)

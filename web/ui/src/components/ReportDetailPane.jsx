@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
 import {
   Pane, Heading, Table, Icon,
-  Tooltip, Text, Badge, Button, Link
+  Tooltip, Text, Badge, Button, Link, toaster
 } from 'evergreen-ui'
 import _ from 'lodash'
 import { Provider, Subscribe } from 'unstated'
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, withRouter } from 'react-router-dom'
 
 import {
   formatNanoUnit,
@@ -18,11 +18,11 @@ import StatusCodeChart from './ReportDistChart'
 import OptionsPane from './OptionsPane'
 import HistogramPane from './HistogramPane'
 import StatusBadge from './StatusBadge'
-
+import DeleteDialog from './DeleteDialog'
 import HistogramContainer from '../containers/HistogramContainer'
 import OptionsContainer from '../containers/OptionsContainer'
 
-export default class ReportDetailPane extends Component {
+class ReportDetailPane extends Component {
   constructor (props) {
     super(props)
 
@@ -39,6 +39,19 @@ export default class ReportDetailPane extends Component {
     if (!this.props.compareStore.state.isFetching &&
       (this.props.reportId !== prevProps.reportId)) {
       this.props.compareStore.fetchReports(this.props.reportId, 'previous')
+    }
+  }
+
+  async deleteReport () {
+    this.setState({ deleteVisible: false })
+    const currentReport = this.props.compareStore.state.report1
+    const id = this.props.reportId
+    const name = currentReport && currentReport.name ? currentReport.name : id
+
+    const ok = await this.props.reportStore.deleteReport(id)
+    if (ok) {
+      toaster.success(`Report ${name} deleted.`)
+      this.props.history.push(`/projects`)
     }
   }
 
@@ -99,10 +112,23 @@ export default class ReportDetailPane extends Component {
                 </Button>
               </Link>
               <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
-                <Button iconBefore='label' appearance='minimal' intent='none' height={32}>
+                <Button iconBefore='label' appearance='minimal' intent='none' height={32} marginRight={12}>
                   CSV
                 </Button>
               </Link>
+              {this.state.deleteVisible
+                ? <DeleteDialog
+                  dataType='report'
+                  name={currentReport.name || currentReport.id}
+                  isShown={this.state.deleteVisible}
+                  onConfirm={() => this.deleteReport()}
+                /> : null
+              }
+              <Button
+                iconBefore='trash'
+                appearance='minimal'
+                intent='danger'
+                onClick={() => this.setState({ deleteVisible: !this.state.deleteVisible })}>DELETE</Button>
             </Pane>
           </Pane>
         </Pane>
@@ -355,3 +381,5 @@ const LatencyComponent = ({ currentReport, previousReport }) => {
     </Pane>
   )
 }
+
+export default withRouter(ReportDetailPane)

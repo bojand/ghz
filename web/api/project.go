@@ -13,7 +13,8 @@ import (
 type ProjectDatabase interface {
 	CreateProject(project *model.Project) error
 	FindProjectByID(id uint) (*model.Project, error)
-	UpdateProject(project *model.Project) error
+	UpdateProject(*model.Project) error
+	DeleteProject(*model.Project) error
 	CountProjects() (uint, error)
 	ListProjects(limit, page uint, sortField, order string) ([]*model.Project, error)
 }
@@ -142,8 +143,20 @@ func (api *ProjectAPI) ListProjects(ctx echo.Context) error {
 }
 
 // DeleteProject deletes a project
-func (api *ProjectAPI) DeleteProject(c echo.Context) error {
-	return echo.NewHTTPError(http.StatusNotImplemented, "Not Implemented")
+func (api *ProjectAPI) DeleteProject(ctx echo.Context) error {
+	var project *model.Project
+	var err error
+
+	if project, err = findProject(api.DB.FindProjectByID, ctx); err != nil {
+		return err
+	}
+
+	err = api.DB.DeleteProject(project)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, project)
 }
 
 func findProject(FindProjectByID func(id uint) (*model.Project, error), ctx echo.Context) (*model.Project, error) {

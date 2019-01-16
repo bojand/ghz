@@ -16,7 +16,7 @@ type Options struct {
 	Report *Report `json:"-"`
 
 	// Run id
-	ReportID uint `json:"reportID" gorm:"type:integer REFERENCES reports(id);not null"`
+	ReportID uint `json:"reportID" gorm:"type:integer REFERENCES reports(id) ON DELETE CASCADE;not null"`
 
 	Info *OptionsInfo `json:"info,omitempty" gorm:"type:TEXT"`
 }

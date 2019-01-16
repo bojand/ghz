@@ -11,11 +11,12 @@ import (
 	"testing"
 
 	"github.com/bojand/ghz/web/database"
+	"github.com/bojand/ghz/web/model"
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIngestAPI(t *testing.T) {
+func TestDeleteAPI(t *testing.T) {
 	os.Remove(dbName)
 
 	defer os.Remove(dbName)
@@ -27,10 +28,13 @@ func TestIngestAPI(t *testing.T) {
 	defer db.Close()
 
 	api := IngestAPI{DB: db}
+	projectAPI := ProjectAPI{DB: db}
+	reportAPI := ReportAPI{DB: db}
 
-	var projectID uint
-	var projectName string
-	var pid string
+	var reportID, projectID string
+	var pid uint
+	var rid, rid2 uint
+	var oid, oid2 uint
 
 	t.Run("Ingest", func(t *testing.T) {
 
@@ -82,9 +86,11 @@ func TestIngestAPI(t *testing.T) {
 			assert.NotNil(t, r.Details)
 			assert.NotEmpty(t, r.Details)
 
-			projectID = r.Project.ID
-			pid = strconv.FormatUint(uint64(r.Project.ID), 10)
-			projectName = r.Project.Name
+			pid = r.Project.ID
+			rid = r.Report.ID
+			projectID = strconv.FormatUint(uint64(r.Project.ID), 10)
+			reportID = strconv.FormatUint(uint64(r.Report.ID), 10)
+			oid = r.Options.ID
 		}
 	})
 
@@ -94,13 +100,13 @@ func TestIngestAPI(t *testing.T) {
 		assert.NoError(t, err)
 
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/projects/"+pid+"/ingest", strings.NewReader(string(dat)))
+		req := httptest.NewRequest(http.MethodPost, "/projects/"+projectID+"/ingest", strings.NewReader(string(dat)))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 
 		c := e.NewContext(req, rec)
 		c.SetParamNames("pid")
-		c.SetParamValues(pid)
+		c.SetParamValues(projectID)
 
 		if assert.NoError(t, api.IngestToProject(c)) {
 			assert.Equal(t, http.StatusCreated, rec.Code)
@@ -112,8 +118,7 @@ func TestIngestAPI(t *testing.T) {
 
 			assert.NotNil(t, r.Project)
 			assert.NotZero(t, r.Project.ID)
-			assert.Equal(t, projectID, r.Project.ID)
-			assert.Equal(t, projectName, r.Project.Name)
+			assert.Equal(t, pid, r.Project.ID)
 			assert.NotZero(t, r.Project.CreatedAt)
 			assert.NotZero(t, r.Project.UpdatedAt)
 
@@ -141,16 +146,77 @@ func TestIngestAPI(t *testing.T) {
 
 			assert.NotNil(t, r.Details)
 			assert.NotEmpty(t, r.Details)
+
+			rid2 = r.Report.ID
+			oid2 = r.Options.ID
 		}
 	})
 
-	t.Run("IngestToProject 404 for unknown project", func(t *testing.T) {
-
-		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
-		assert.NoError(t, err)
+	t.Run("DeleteReport 404 for unknown id", func(t *testing.T) {
 
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/projects/123321/ingest", strings.NewReader(string(dat)))
+		req := httptest.NewRequest(http.MethodDelete, "/reports/123321", strings.NewReader(""))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("rid")
+		c.SetParamValues("123321")
+
+		err := reportAPI.DeleteReport(c)
+		if assert.Error(t, err) {
+			httpError, ok := err.(*echo.HTTPError)
+			assert.True(t, ok)
+			assert.Equal(t, http.StatusNotFound, httpError.Code)
+		}
+	})
+
+	t.Run("DeleteReport()", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodDelete, "/reports/"+reportID, strings.NewReader(""))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("rid")
+		c.SetParamValues(reportID)
+
+		err := reportAPI.DeleteReport(c)
+		if assert.NoError(t, err) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			r := new(model.Report)
+			err = db.DB.First(r, rid).Error
+
+			assert.Error(t, err)
+
+			o := new(model.Options)
+			err = db.DB.First(o, oid).Error
+
+			assert.Error(t, err)
+
+			p := new(model.Project)
+			err = db.DB.First(p, pid).Error
+
+			assert.NoError(t, err)
+			assert.Equal(t, pid, p.ID)
+
+			details, err := db.ListAllDetailsForReport(rid)
+
+			assert.NoError(t, err)
+			assert.Len(t, details, 0)
+
+			details, err = db.ListAllDetailsForReport(rid2)
+
+			assert.NoError(t, err)
+			assert.True(t, len(details) > 0)
+		}
+	})
+
+	t.Run("DeleteProject() 404 for unknown id", func(t *testing.T) {
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodDelete, "/projects/123321", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 
@@ -158,7 +224,7 @@ func TestIngestAPI(t *testing.T) {
 		c.SetParamNames("pid")
 		c.SetParamValues("123321")
 
-		err = api.IngestToProject(c)
+		err := projectAPI.DeleteProject(c)
 		if assert.Error(t, err) {
 			httpError, ok := err.(*echo.HTTPError)
 			assert.True(t, ok)
@@ -166,47 +232,44 @@ func TestIngestAPI(t *testing.T) {
 		}
 	})
 
-	t.Run("IngestToProject 404 for invalid project", func(t *testing.T) {
-
-		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
-		assert.NoError(t, err)
-
+	t.Run("DeleteProject()", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/projects/asdf/ingest", strings.NewReader(string(dat)))
+		req := httptest.NewRequest(http.MethodDelete, "/projects/"+projectID, strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 
 		c := e.NewContext(req, rec)
 		c.SetParamNames("pid")
-		c.SetParamValues("asdf")
+		c.SetParamValues(projectID)
 
-		err = api.IngestToProject(c)
-		if assert.Error(t, err) {
-			httpError, ok := err.(*echo.HTTPError)
-			assert.True(t, ok)
-			assert.Equal(t, http.StatusNotFound, httpError.Code)
-		}
-	})
+		err := projectAPI.DeleteProject(c)
+		if assert.NoError(t, err) {
+			assert.Equal(t, http.StatusOK, rec.Code)
 
-	t.Run("IngestToProject 404 for empty project", func(t *testing.T) {
+			r := new(model.Report)
+			err = db.DB.First(r, rid2).Error
 
-		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
-		assert.NoError(t, err)
+			assert.Error(t, err)
 
-		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/projects/ingest", strings.NewReader(string(dat)))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		rec := httptest.NewRecorder()
+			o := new(model.Options)
+			err = db.DB.First(o, oid2).Error
 
-		c := e.NewContext(req, rec)
-		c.SetParamNames("pid")
-		c.SetParamValues("")
+			assert.Error(t, err)
 
-		err = api.IngestToProject(c)
-		if assert.Error(t, err) {
-			httpError, ok := err.(*echo.HTTPError)
-			assert.True(t, ok)
-			assert.Equal(t, http.StatusNotFound, httpError.Code)
+			p := new(model.Project)
+			err = db.DB.First(p, pid).Error
+
+			assert.Error(t, err)
+
+			details, err := db.ListAllDetailsForReport(rid)
+
+			assert.NoError(t, err)
+			assert.Len(t, details, 0)
+
+			details, err = db.ListAllDetailsForReport(rid2)
+
+			assert.NoError(t, err)
+			assert.Len(t, details, 0)
 		}
 	})
 }

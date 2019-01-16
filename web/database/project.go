@@ -32,6 +32,11 @@ func (d *Database) UpdateProject(p *model.Project) error {
 	return d.DB.Save(p).Error
 }
 
+// DeleteProject deletas an existing project
+func (d *Database) DeleteProject(p *model.Project) error {
+	return d.DB.Delete(p).Error
+}
+
 // UpdateProjectStatus updates the project's status
 func (d *Database) UpdateProjectStatus(pid uint, status model.Status) error {
 	p := new(model.Project)

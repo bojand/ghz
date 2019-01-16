@@ -49,7 +49,7 @@ func main() {
 		panic(err)
 	}
 
-	db, err := database.New(conf.Database.Type, conf.Database.Connection)
+	db, err := database.New(conf.Database.Type, conf.Database.Connection, conf.Log.Level == "debug")
 	if err != nil {
 		panic(err)
 	}

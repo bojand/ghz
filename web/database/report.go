@@ -34,6 +34,11 @@ func (d *Database) CreateReport(r *model.Report) error {
 	return d.DB.Create(r).Error
 }
 
+// DeleteReport deletes an existing report
+func (d *Database) DeleteReport(r *model.Report) error {
+	return d.DB.Delete(r).Error
+}
+
 // FindPreviousReport find previous report for the report id
 func (d *Database) FindPreviousReport(rid uint) (*model.Report, error) {
 	report, err := d.FindReportByID(rid)

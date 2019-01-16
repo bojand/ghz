@@ -15,13 +15,15 @@ import (
 const dbName = "../test/test.db"
 
 // New creates a new wrapper for the gorm database framework.
-func New(dialect, connection string) (*Database, error) {
+func New(dialect, connection string, log bool) (*Database, error) {
 	createDirectoryIfSqlite(dialect, connection)
 
 	db, err := gorm.Open(dialect, connection)
 	if err != nil {
 		return nil, err
 	}
+
+	db.LogMode(log)
 
 	// We normally don't need that much connections, so we limit them.
 	db.DB().SetMaxOpenConns(10)

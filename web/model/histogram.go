@@ -49,7 +49,7 @@ func (bl *BucketList) Scan(src interface{}) error {
 type Histogram struct {
 	Model
 
-	ReportID uint    `json:"reportID" gorm:"type:integer REFERENCES reports(id);not null"`
+	ReportID uint    `json:"reportID" gorm:"type:integer REFERENCES reports(id) ON DELETE CASCADE;not null"`
 	Report   *Report `json:"-"`
 
 	Buckets BucketList `json:"buckets" gorm:"type:TEXT"`

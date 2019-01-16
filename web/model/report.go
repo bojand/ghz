@@ -111,7 +111,7 @@ func (m *StringStringMap) Scan(src interface{}) error {
 type Report struct {
 	Model
 
-	ProjectID uint     `json:"projectID" gorm:"type:integer REFERENCES projects(id);not null"`
+	ProjectID uint     `json:"projectID" gorm:"type:integer REFERENCES projects(id) ON DELETE CASCADE;not null"`
 	Project   *Project `json:"-"`
 
 	Name      string    `json:"name,omitempty"`
@@ -144,10 +144,6 @@ func (r *Report) BeforeSave() error {
 	if string(r.Status) == "" {
 		r.Status = StatusOK
 	}
-
-	// if scope != nil {
-	// 	scope.SetColumn("status", r.Status)
-	// }
 
 	return nil
 }
