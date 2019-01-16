@@ -1,17 +1,20 @@
 import React, { Component } from 'react'
-import { Pane, Heading, Button, Paragraph } from 'evergreen-ui'
+import { Pane, Heading, Button, Paragraph, toaster } from 'evergreen-ui'
 import { toUpper } from 'lodash'
+import { withRouter } from 'react-router-dom'
 
 import EditProjectDialog from './EditProjectDialog'
+import DeleteDialog from './DeleteDialog'
 import StatusBadge from './StatusBadge'
 
-export default class ProjectDetailPane extends Component {
+class ProjectDetailPane extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
       projectId: props.projectId || -1,
-      editProjectVisible: false
+      editProjectVisible: false,
+      deleteVisible: false
     }
   }
 
@@ -26,12 +29,28 @@ export default class ProjectDetailPane extends Component {
     }
   }
 
+  deleteProject () {
+    this.setState({ deleteVisible: false })
+
+    const currentProject = this.props.projectStore.state.currentProject
+    const id = currentProject && currentProject.name ? currentProject.name : this.props.projectId
+
+    setTimeout(() => {
+      toaster.success(
+        `Project ${id} deleted.`
+      )
+
+      this.props.history.push(`/projects`)
+    }, 234)
+  }
+
   render () {
     const { state: { currentProject } } = this.props.projectStore
 
     if (!currentProject) {
       return (<Pane />)
     }
+
     return (
       <Pane>
         <Pane display='flex' marginBottom={10}>
@@ -46,10 +65,27 @@ export default class ProjectDetailPane extends Component {
                 onDone={() => this.setState({ editProjectVisible: false })}
               /> : null
             }
-            <Button onClick={() => this.setState({ editProjectVisible: !this.state.editProjectVisible })} marginLeft={14} iconBefore='edit' appearance='minimal' intent='none'>EDIT</Button>
+            <Button
+              onClick={() => this.setState({ editProjectVisible: !this.state.editProjectVisible })}
+              marginLeft={14}
+              iconBefore='edit'
+              appearance='minimal'
+              intent='none'>EDIT</Button>
           </Pane>
           <Pane display='flex'>
-            <Button iconBefore='trash' appearance='minimal' intent='danger'>DELETE</Button>
+            {this.state.deleteVisible
+              ? <DeleteDialog
+                dataType='project'
+                name={currentProject.name}
+                isShown={this.state.deleteVisible}
+                onConfirm={() => this.deleteProject()}
+              /> : null
+            }
+            <Button
+              iconBefore='trash'
+              appearance='minimal'
+              intent='danger'
+              onClick={() => this.setState({ deleteVisible: !this.state.deleteVisible })}>DELETE</Button>
           </Pane>
         </Pane>
         <Paragraph>{currentProject.description}</Paragraph>
@@ -57,3 +93,5 @@ export default class ProjectDetailPane extends Component {
     )
   }
 }
+
+export default withRouter(ProjectDetailPane)
