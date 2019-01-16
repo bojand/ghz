@@ -139,7 +139,6 @@ func TestDetail(t *testing.T) {
 		assert.Equal(t, time.Duration(1*time.Millisecond), d.Latency)
 		assert.NotZero(t, d.CreatedAt)
 		assert.NotZero(t, d.UpdatedAt)
-		assert.Zero(t, d.DeletedAt)
 		assert.Equal(t, "OK", d.Status)
 	})
 
@@ -170,7 +169,6 @@ func TestDetail(t *testing.T) {
 		assert.Equal(t, time.Duration(2*time.Millisecond), d.Latency)
 		assert.NotZero(t, d.CreatedAt)
 		assert.NotZero(t, d.UpdatedAt)
-		assert.Zero(t, d.DeletedAt)
 		assert.Equal(t, "CANCELED", d.Status)
 	})
 

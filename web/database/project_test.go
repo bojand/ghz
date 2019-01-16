@@ -35,7 +35,6 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(model.Project)
 		err = db.DB.First(p2, p.ID).Error
@@ -46,7 +45,6 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new with empty name", func(t *testing.T) {
@@ -63,7 +61,6 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(model.Project)
 		err = db.DB.First(p2, p.ID).Error
@@ -74,7 +71,6 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new with ID", func(t *testing.T) {
@@ -94,7 +90,6 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, model.StatusFail, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(model.Project)
 		err = db.DB.First(p2, p.ID).Error
@@ -106,7 +101,6 @@ func TestDatabase_CreateProject(t *testing.T) {
 		assert.Equal(t, model.StatusFail, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("should fail with same ID", func(t *testing.T) {
@@ -165,7 +159,6 @@ func TestDatabase_UpdateProject(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(model.Project)
 		err = db.DB.First(p2, p.ID).Error
@@ -177,7 +170,6 @@ func TestDatabase_UpdateProject(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 }
 
@@ -221,7 +213,6 @@ func TestDatabase_UpdateProjectStatus(t *testing.T) {
 		assert.Equal(t, string(model.StatusFail), string(p2.Status))
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 }
 
@@ -260,7 +251,6 @@ func TestDatabase_FindProjectByID(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 	})
 
 	t.Run("test not found", func(t *testing.T) {
@@ -426,5 +416,46 @@ func TestDatabase_CountProjects(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, uint(11), count)
+	})
+}
+
+func TestDatabase_DeleteProject(t *testing.T) {
+	os.Remove(dbName)
+
+	defer os.Remove(dbName)
+
+	db, err := New("sqlite3", dbName, false)
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+	defer db.Close()
+
+	var pid uint
+
+	t.Run("create new", func(t *testing.T) {
+		p := model.Project{
+			Name:        "testproject124",
+			Description: "asdf",
+		}
+
+		err := db.CreateProject(&p)
+
+		assert.NoError(t, err)
+
+		pid = p.ID
+	})
+
+	t.Run("DeleteProject()", func(t *testing.T) {
+		p := &model.Project{}
+		p.ID = pid
+
+		err := db.DeleteProject(p)
+
+		assert.NoError(t, err)
+
+		p2 := new(model.Project)
+		err = db.DB.First(p2, pid).Error
+
+		assert.Error(t, err)
 	})
 }

@@ -129,7 +129,6 @@ func TestReport(t *testing.T) {
 		assert.Equal(t, StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("read", func(t *testing.T) {
@@ -141,7 +140,6 @@ func TestReport(t *testing.T) {
 		assert.Equal(t, pid, r.ProjectID)
 		assert.NotZero(t, r.CreatedAt)
 		assert.NotZero(t, r.UpdatedAt)
-		assert.Zero(t, r.DeletedAt)
 		assert.Equal(t, StatusOK, r.Status)
 
 		assert.Equal(t, "Test report", r.Name)
@@ -198,7 +196,6 @@ func TestReport(t *testing.T) {
 		assert.Equal(t, StatusOK, r2.Status)
 		assert.NotZero(t, r2.CreatedAt)
 		assert.NotZero(t, r2.UpdatedAt)
-		assert.Zero(t, r2.DeletedAt)
 		assert.Equal(t, uint64(300), r2.Count)
 		assert.Equal(t, float64(2100), r2.Rps)
 	})

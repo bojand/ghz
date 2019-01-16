@@ -2,6 +2,7 @@
 - [ ] DELETE
 - [ ] Figure out release mechanism
 - [ ] Invalid request and bad condition tests
+- [ ] Make ingest transactional
 - [x] Lock down demo create
 - [x] Docs
 - [x] Fix UI when going to a direct url

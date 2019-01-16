@@ -186,7 +186,6 @@ func TestExportAPI(t *testing.T) {
 			assert.Equal(t, rid, jsonExport.ID)
 			assert.NotZero(t, jsonExport.CreatedAt)
 			assert.NotZero(t, jsonExport.UpdatedAt)
-			assert.Zero(t, jsonExport.DeletedAt)
 
 			assert.NotNil(t, jsonExport.Histogram)
 			assert.Len(t, jsonExport.Histogram, 5)

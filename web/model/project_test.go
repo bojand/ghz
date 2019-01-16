@@ -41,7 +41,6 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusOK, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(Project)
 		err = db.First(p2, p.ID).Error
@@ -52,7 +51,6 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new with empty name", func(t *testing.T) {
@@ -69,7 +67,6 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusOK, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(Project)
 		err = db.First(p2, p.ID).Error
@@ -80,7 +77,6 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new with ID", func(t *testing.T) {
@@ -100,7 +96,6 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusFail, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(Project)
 		err = db.First(p2, p.ID).Error
@@ -112,7 +107,6 @@ func TestProject_Create(t *testing.T) {
 		assert.Equal(t, StatusFail, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("should fail with same ID", func(t *testing.T) {
@@ -159,7 +153,6 @@ func TestProject_Save(t *testing.T) {
 		assert.Equal(t, StatusOK, p.Status)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(Project)
 		err = db.First(p2, p.ID).Error
@@ -170,7 +163,6 @@ func TestProject_Save(t *testing.T) {
 		assert.Equal(t, StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 
 		pid = p2.ID
 	})
@@ -193,7 +185,6 @@ func TestProject_Save(t *testing.T) {
 		assert.Equal(t, "Baz", p.Description)
 		assert.NotZero(t, p.CreatedAt)
 		assert.NotZero(t, p.UpdatedAt)
-		assert.Zero(t, p.DeletedAt)
 
 		p2 := new(Project)
 		err = db.First(p2, p.ID).Error
@@ -204,7 +195,6 @@ func TestProject_Save(t *testing.T) {
 		assert.Equal(t, "Baz", p2.Description)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test update existing no name", func(t *testing.T) {
@@ -226,6 +216,5 @@ func TestProject_Save(t *testing.T) {
 		assert.Equal(t, "Baz", p2.Description)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 }

@@ -109,7 +109,6 @@ func TestDatabase_Options(t *testing.T) {
 		assert.Nil(t, o.Report)
 		assert.NotZero(t, o.CreatedAt)
 		assert.NotZero(t, o.UpdatedAt)
-		assert.Zero(t, o.DeletedAt)
 
 		assert.NotNil(t, o.Info)
 		assert.Equal(t, "helloworld.Greeter.SayHi", o.Info.Call)

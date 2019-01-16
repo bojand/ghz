@@ -145,9 +145,5 @@ func (r *Report) BeforeSave() error {
 		r.Status = StatusOK
 	}
 
-	// if scope != nil {
-	// 	scope.SetColumn("status", r.Status)
-	// }
-
 	return nil
 }

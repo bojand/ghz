@@ -123,7 +123,6 @@ func TestHistogram(t *testing.T) {
 		assert.Nil(t, h.Report)
 		assert.NotZero(t, h.CreatedAt)
 		assert.NotZero(t, h.UpdatedAt)
-		assert.Zero(t, h.DeletedAt)
 
 		assert.NotNil(t, h.Buckets)
 		assert.Len(t, h.Buckets, 5)
@@ -186,7 +185,6 @@ func TestHistogram(t *testing.T) {
 		assert.Nil(t, h.Report)
 		assert.NotZero(t, h.CreatedAt)
 		assert.NotZero(t, h.UpdatedAt)
-		assert.Zero(t, h.DeletedAt)
 
 		assert.NotNil(t, h.Buckets)
 		assert.Len(t, h.Buckets, 5)

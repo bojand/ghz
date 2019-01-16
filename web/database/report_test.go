@@ -96,7 +96,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new 2", func(t *testing.T) {
@@ -172,7 +171,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("test new for project 2", func(t *testing.T) {
@@ -241,7 +239,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, model.StatusOK, p2.Status)
 		assert.NotZero(t, p2.CreatedAt)
 		assert.NotZero(t, p2.UpdatedAt)
-		assert.Zero(t, p2.DeletedAt)
 	})
 
 	t.Run("FindReportByID", func(t *testing.T) {
@@ -254,7 +251,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, pid, r.ProjectID)
 		assert.NotZero(t, r.CreatedAt)
 		assert.NotZero(t, r.UpdatedAt)
-		assert.Zero(t, r.DeletedAt)
 		assert.Equal(t, model.StatusOK, r.Status)
 
 		assert.Equal(t, "Test report", r.Name)
@@ -291,7 +287,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, pid2, r.ProjectID)
 		assert.NotZero(t, r.CreatedAt)
 		assert.NotZero(t, r.UpdatedAt)
-		assert.Zero(t, r.DeletedAt)
 		assert.Equal(t, model.StatusOK, r.Status)
 		assert.Equal(t, 2222.0, r.Rps)
 
@@ -328,7 +323,6 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, pid2, r.ProjectID)
 		assert.NotZero(t, r.CreatedAt)
 		assert.NotZero(t, r.UpdatedAt)
-		assert.Zero(t, r.DeletedAt)
 		assert.Equal(t, model.StatusOK, r.Status)
 		assert.Equal(t, 2567.0, r.Rps)
 
@@ -498,5 +492,19 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Len(t, list, 1)
 
 		assert.Equal(t, uint(1), list[0].ID)
+	})
+
+	t.Run("DeleteReport()", func(t *testing.T) {
+		p := &model.Report{}
+		p.ID = rid3
+
+		err := db.DeleteReport(p)
+
+		assert.NoError(t, err)
+
+		r2 := new(model.Report)
+		err = db.DB.First(r2, rid3).Error
+
+		assert.Error(t, err)
 	})
 }

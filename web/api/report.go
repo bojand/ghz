@@ -15,6 +15,7 @@ type ReportDatabase interface {
 	CountReportsForProject(uint) (uint, error)
 	FindReportByID(uint) (*model.Report, error)
 	FindPreviousReport(uint) (*model.Report, error)
+	DeleteReport(*model.Report) error
 	ListReports(limit, page uint, sortField, order string) ([]*model.Report, error)
 	ListReportsForProject(pid, limit, page uint, sortField, order string) ([]*model.Report, error)
 }
@@ -131,6 +132,28 @@ func (api *ReportAPI) GetReport(ctx echo.Context) error {
 
 	if report, err = api.DB.FindReportByID(uint(id)); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, report)
+}
+
+// DeleteReport deletes a report
+func (api *ReportAPI) DeleteReport(ctx echo.Context) error {
+	var id uint64
+	var report *model.Report
+	var err error
+
+	if id, err = getReportID(ctx); err != nil {
+		return err
+	}
+
+	if report, err = api.DB.FindReportByID(uint(id)); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
+	err = api.DB.DeleteReport(report)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return ctx.JSON(http.StatusOK, report)
