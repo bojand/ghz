@@ -1,8 +1,10 @@
 - [ ] Website documentation
-- [ ] DELETE
 - [ ] Figure out release mechanism
-- [ ] Invalid request and bad condition tests
 - [ ] Make ingest transactional
+- [ ] Menu in project listing with Delete option ?
+- [ ] Latest run time ago + link in project list (needs DB + API) ?
+- [ ] Invalid request and bad condition tests
+- [x] DELETE
 - [x] Lock down demo create
 - [x] Docs
 - [x] Fix UI when going to a direct url
