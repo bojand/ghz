@@ -19,6 +19,7 @@ import (
 var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
+	beta    = true
 	date    = "unknown"
 	cPath   = flag.String("config", "", "Path to the config file.")
 	v       = flag.Bool("v", false, "Print the version.")
@@ -31,6 +32,11 @@ Options:
 `
 
 func main() {
+	// fix version
+	if version != "dev" && beta {
+		version = version + "-beta"
+	}
+
 	flag.Usage = func() {
 		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
 	}
