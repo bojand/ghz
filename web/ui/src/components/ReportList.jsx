@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Tooltip, TextInput, Button } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Tooltip, TextInput, Button, Text } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
+import { format as formatAgo } from 'timeago.js'
 
 import {
   Order,
@@ -106,7 +107,12 @@ class ReportList extends Component {
 
         <Table marginY={20}>
           <Table.Head>
-            <Table.TextHeaderCell minWidth={210} textProps={{ size: 400 }}>
+            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
+              <Pane display='flex'>
+                ID
+              </Pane>
+            </Table.TextHeaderCell>
+            <Table.TextHeaderCell minWidth={280} textProps={{ size: 400 }}>
               <Pane display='flex'>
                 Date
                 <IconButton
@@ -117,9 +123,6 @@ class ReportList extends Component {
                   onClick={() => this.sort()}
                 />
               </Pane>
-            </Table.TextHeaderCell>
-            <Table.TextHeaderCell textProps={{ size: 400 }} maxWidth={100}>
-              Count
             </Table.TextHeaderCell>
             <Table.TextHeaderCell textProps={{ size: 400 }}>
               Total
@@ -143,23 +146,19 @@ class ReportList extends Component {
           <Table.Body>
             {reports.map(p => (
               <Table.Row key={p.id}>
-                <Table.TextCell minWidth={210} textProps={{ size: 400 }}>
+                <Table.TextCell maxWidth={80} textProps={{ size: 400 }}>
                   {p.name
                     ? (
                       <Tooltip content={p.name}>
-                        <RouterLink to={`/reports/${p.id}`}>
-                          {toLocaleString(p.date)}
-                        </RouterLink>
+                        <Text size={400} textDecoration='underline dotted'>{p.id}</Text>
                       </Tooltip>
                     )
-                    : (
-                      <RouterLink to={`/reports/${p.id}`}>
-                        {p.date}
-                      </RouterLink>
-                    )}
+                    : p.id}
                 </Table.TextCell>
-                <Table.TextCell isNumber maxWidth={100}>
-                  {p.count}
+                <Table.TextCell minWidth={280} textProps={{ size: 400 }}>
+                  <RouterLink to={`/reports/${p.id}`}>
+                    {toLocaleString(p.date)} ({formatAgo(p.date)})
+                  </RouterLink>
                 </Table.TextCell>
                 <Table.TextCell isNumber>
                   {formatNanoUnit(p.total)}
