@@ -98,7 +98,7 @@ class Index extends React.Component {
     );
 
     const Features = () => (
-      <Block layout="fourColumn">
+      <Block layout="threeColumn">
         {[
           {
             content: 'Use proto files with import paths, or prebuilt protoset bundle files',
@@ -108,7 +108,7 @@ class Index extends React.Component {
           {
             content: 'View test results in various fomats including CLI, CSV, JSON, HTML and InfluxData',
             imageAlign: 'top',
-            title: 'Various Reports',
+            title: 'Various Report Formats',
           },
           {
             content: 'Add custom data to requests using standard Go template variables',
@@ -116,9 +116,14 @@ class Index extends React.Component {
             title: 'Custom Data',
           },
           {
-            content: 'Test unary, streaming and duplex call types using JSON or binary data',
+            content: 'Test unary, streaming and duplex calls <br />using JSON or binary data',
             imageAlign: 'top',
             title: 'Flexible and featureful',
+          },
+          {
+            content: 'Save, track, view and analyse test results <br />in a complementary web application <br /><a href="https://ghz-demo.herokuapp.com">Demo</a>',
+            imageAlign: 'top',
+            title: 'Complementary Web Application',
           }
         ]}
       </Block>
@@ -148,10 +153,25 @@ class Index extends React.Component {
     );
 
     const Description = () => (
-      <div className="productShowcaseSection" style={{ textAlign: 'center' }}>
-        <br />
-        <img src={imgUrl('ghz_cobalt_plain.png')} alt="ghz" />
-      </div>
+      <Container>
+        <div className="productShowcaseSection">
+          <br />
+          <img src={imgUrl('ghz_cobalt_plain.png')} alt="ghz" />
+        </div>
+      </Container>
+    )
+
+    const Screen = (props) => (
+      <Container background={props.background}>
+        <div className="productShowcaseSection">
+          <br />
+          <a href={imgUrl(props.image)}>
+            <img width="860" src={imgUrl(props.preview)} style={{ border: '1px solid #d6dbdf'}} />
+          </a>
+          <br />
+          <br />
+        </div>
+      </Container>
     )
 
     return (
@@ -161,6 +181,8 @@ class Index extends React.Component {
           <Badges />
           <Features />
           <Description />
+          <Screen background='light' preview='project_detail_page_preview.png' image='project_detail_page.png' />
+          <Screen preview='report_detail_page_preview.png' image='report_detail_page.png' />
         </div>
       </div>
     );
