@@ -123,7 +123,7 @@ class Index extends React.Component {
           {
             content: 'Save, track, view and analyse test results <br />in a complementary web application <br /><a href="https://ghz-demo.herokuapp.com">Demo</a>',
             imageAlign: 'top',
-            title: 'Complementary Web Application',
+            title: 'Complementary Web Application (Beta)',
           }
         ]}
       </Block>
