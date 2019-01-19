@@ -16,6 +16,6 @@
 cmd
 dist
 www
-web
+/web
 
 coverage.html
