@@ -70,7 +70,7 @@ type Report struct {
 	Histogram           []Bucket              `json:"histogram"`
 	Details             []ResultDetail        `json:"details"`
 
-	Tags *map[string]string `json:"tags,omitempty"`
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // MarshalJSON is custom marshal for report to properly format the date

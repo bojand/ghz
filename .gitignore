@@ -13,10 +13,14 @@
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
+*.out
+
 cmd/ghz/ghz
+cmd/ghz-web/ghz-web
+cmd/server/server
 
 dist
 build
 node_modules
-
+.cache
 coverage.html

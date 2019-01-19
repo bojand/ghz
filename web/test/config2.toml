@@ -1,0 +1,10 @@
+[database]
+type = "postgres"
+connection = "host=dbhost user=dbuser dbname=ghz sslmode=disabled password=dbpwd"
+
+[server]
+port = 4321
+
+[log]
+level = "warn"
+path = "/tmp/ghz.log"

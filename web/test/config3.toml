@@ -1,0 +1,9 @@
+[database]
+type = "postgres"
+connection = "host=localhost port=5432 dbname=ghz sslmode=disable"
+
+[server]
+port = 3000
+
+[log]
+level = "debug"

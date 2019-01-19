@@ -1,0 +1,12 @@
+{
+  "database": {
+    "type": "postgres",
+    "connection": "host=localhost port=5432 dbname=ghz sslmode=disable"
+  },
+  "log": {
+    "level": "debug"
+  },
+  "server": {
+    "port": 3000
+  }
+}
