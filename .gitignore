@@ -13,8 +13,9 @@
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
-cmd/ghz/ghz
+cmd
 dist
 www
+web
 
 coverage.html

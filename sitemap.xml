@@ -11,4 +11,10 @@
 <url> <loc>https://ghz.sh/docs/output</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/output" /> </url>
 <url> <loc>https://ghz.sh/docs/package</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/package" /> </url>
 <url> <loc>https://ghz.sh/docs/usage</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/usage" /> </url>
+<url> <loc>https://ghz.sh/docs/web/api</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/web/api" /> </url>
+<url> <loc>https://ghz.sh/docs/web/config</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/web/config" /> </url>
+<url> <loc>https://ghz.sh/docs/web/data</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/web/data" /> </url>
+<url> <loc>https://ghz.sh/docs/web/demo</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/web/demo" /> </url>
+<url> <loc>https://ghz.sh/docs/web/install</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/web/install" /> </url>
+<url> <loc>https://ghz.sh/docs/web/intro</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://ghz.sh/docs/web/intro" /> </url>
 </urlset>
