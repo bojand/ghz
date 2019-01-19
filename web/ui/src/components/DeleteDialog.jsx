@@ -30,6 +30,7 @@ export default class DeleteDialog extends Component {
           title={`Delete ${this.props.dataType} ${this.props.name}?`}
           intent='danger'
           isConfirmDisabled={this.state.isInvalid}
+          onCancel={this.props.onCancel}
           onConfirm={() => {
             if (this.state.name.trim() !== this.props.name) {
               this.setState({ isInvalid: true })
