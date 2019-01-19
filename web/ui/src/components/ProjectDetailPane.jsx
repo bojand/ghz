@@ -78,6 +78,7 @@ class ProjectDetailPane extends Component {
                 name={currentProject.name}
                 isShown={this.state.deleteVisible}
                 onConfirm={() => this.deleteProject()}
+                onCancel={() => this.setState({ deleteVisible: !this.state.deleteVisible })}
               /> : null
             }
             <Button

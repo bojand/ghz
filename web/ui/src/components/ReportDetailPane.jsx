@@ -122,6 +122,7 @@ class ReportDetailPane extends Component {
                   name={currentReport.name || currentReport.id}
                   isShown={this.state.deleteVisible}
                   onConfirm={() => this.deleteReport()}
+                  onCancel={() => this.setState({ deleteVisible: !this.state.deleteVisible })}
                 /> : null
               }
               <Button

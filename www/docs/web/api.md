@@ -9,7 +9,7 @@ Reports are created in the system using the **Ingest API**. There are two endpoi
 POST /api/ingest
 ```
 
-When used this endpoing automatically created a new project, ingests and report and assigns it to the project.
+This endpoint automatically creates a new project, ingests a report and assigns it to the project.
 
 ```sh
 POST /api/projects/:id/ingest
@@ -17,7 +17,7 @@ POST /api/projects/:id/ingest
 
 Alternatively we can manually create a project ahead of time and then ingest reports specifically for an existing project using this endoint.
 
-Example:
+### Example
 
 ```sh
 ghz -insecure \
