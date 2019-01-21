@@ -93,8 +93,8 @@ func (rp *ReportPrinter) printInfluxDetails() {
 	for _, v := range rp.Report.Details {
 		values := make([]string, 3)
 		values[0] = fmt.Sprintf("latency=%v", v.Latency.Nanoseconds())
-		values[1] = fmt.Sprintf("error=%v", v.Error)
-		values[2] = fmt.Sprintf("status=%v", v.Status)
+		values[1] = fmt.Sprintf(`error="%v"`, cleanInfluxString(v.Error))
+		values[2] = fmt.Sprintf(`status="%v"`, v.Status)
 
 		tags := commonTags
 
@@ -116,7 +116,7 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 	s := make([]string, 0, 10)
 
 	if rp.Report.Name != "" {
-		s = append(s, fmt.Sprintf(`name="%v"`, rp.Report.Name))
+		s = append(s, fmt.Sprintf(`name="%v"`, cleanInfluxString(strings.TrimSpace(rp.Report.Name))))
 	}
 
 	s = append(s, fmt.Sprintf(`proto="%v"`, rp.Report.Options.Proto))
@@ -126,31 +126,52 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 	s = append(s, fmt.Sprintf("c=%v", rp.Report.Options.C))
 	s = append(s, fmt.Sprintf("qps=%v", rp.Report.Options.QPS))
 	s = append(s, fmt.Sprintf("z=%v", rp.Report.Options.Z.Nanoseconds()))
-	s = append(s, fmt.Sprintf("timeout=%v", rp.Report.Options.Timeout))
-	s = append(s, fmt.Sprintf("dial_timeout=%v", rp.Report.Options.DialTimeout))
-	s = append(s, fmt.Sprintf("keepalive=%v", rp.Report.Options.KeepaliveTime))
+	s = append(s, fmt.Sprintf("timeout=%v", rp.Report.Options.Timeout.Seconds()))
+	s = append(s, fmt.Sprintf("dial_timeout=%v", rp.Report.Options.DialTimeout.Seconds()))
+	s = append(s, fmt.Sprintf("keepalive=%v", rp.Report.Options.KeepaliveTime.Seconds()))
 
-	dataStr := ""
+	dataStr := `""`
 	dataBytes, err := json.Marshal(rp.Report.Options.Data)
-	if err == nil {
+	if err == nil && len(dataBytes) > 0 {
 		dataBytes, err = json.Marshal(string(dataBytes))
 		if err == nil {
 			dataStr = string(dataBytes)
 		}
 	}
 
+	dataStr = cleanInfluxString(dataStr)
+
 	s = append(s, fmt.Sprintf("data=%s", dataStr))
 
-	mdStr := ""
-	mdBytes, err := json.Marshal(rp.Report.Options.Metadata)
-	if err == nil {
-		mdBytes, err = json.Marshal(string(mdBytes))
+	mdStr := `""`
+	if rp.Report.Options.Metadata != nil {
+		mdBytes, err := json.Marshal(rp.Report.Options.Metadata)
 		if err == nil {
-			mdStr = string(mdBytes)
+			mdBytes, err = json.Marshal(string(mdBytes))
+			if err == nil {
+				mdStr = string(mdBytes)
+			}
 		}
+
+		mdStr = cleanInfluxString(mdStr)
 	}
 
 	s = append(s, fmt.Sprintf("metadata=%s", mdStr))
+
+	callTagsStr := `""`
+	if len(rp.Report.Tags) > 0 {
+		callTagsBytes, err := json.Marshal(rp.Report.Tags)
+		if err == nil {
+			callTagsBytes, err = json.Marshal(string(callTagsBytes))
+			if err == nil {
+				callTagsStr = string(callTagsBytes)
+			}
+		}
+
+		callTagsStr = cleanInfluxString(callTagsStr)
+	}
+
+	s = append(s, fmt.Sprintf("tags=%s", callTagsStr))
 
 	if addErrors {
 		errCount := 0
@@ -293,6 +314,13 @@ func formatErrorDist(errDist map[string]int) string {
 	}
 	w.Flush()
 	return buf.String()
+}
+
+func cleanInfluxString(input string) string {
+	input = strings.Replace(input, " ", "\\ ", -1)
+	input = strings.Replace(input, ",", "\\,", -1)
+	input = strings.Replace(input, "=", "\\=", -1)
+	return input
 }
 
 var (
