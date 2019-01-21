@@ -21,7 +21,7 @@ export default class Footer extends Component {
         </Pane>
 
         <Paragraph>
-          <Strong>ghz</Strong> The source code is licensed <Link href='http://opensource.org/licenses/mit-license.php'>MIT</Link>.
+          <Strong>ghz</Strong> The source code is licensed <Link href='https://opensource.org/licenses/Apache-2.0'>Apache-2.0</Link>.
         </Paragraph>
         <Paragraph>
           <RouterLink to='/about'>
