@@ -60,7 +60,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	projectGroup.GET("/", projectAPI.ListProjects).Name = "ghz api: list projects"
 	projectGroup.POST("/", projectAPI.CreateProject, isActionAllowed).Name = "ghz api: create project"
 	projectGroup.GET("/:pid/", projectAPI.GetProject).Name = "ghz api: get project"
-	projectGroup.PUT("/:pid/", projectAPI.UpdateProject).Name = "ghz api: update project"
+	projectGroup.PUT("/:pid/", projectAPI.UpdateProject, isActionAllowed).Name = "ghz api: update project"
 	projectGroup.DELETE("/:pid/", projectAPI.DeleteProject, isActionAllowed).Name = "ghz api: delete project"
 
 	// Reports by Project
