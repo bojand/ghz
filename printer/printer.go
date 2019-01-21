@@ -81,7 +81,10 @@ func (rp *ReportPrinter) getInfluxLine() string {
 	measurement := "ghz_run"
 	tags := rp.getInfluxTags(true)
 	fields := rp.getInfluxFields()
-	timestamp := rp.Report.Date.Nanosecond()
+	timestamp := rp.Report.Date.UnixNano()
+	if timestamp < 0 {
+		timestamp = 0
+	}
 
 	return fmt.Sprintf("%v,%v %v %v", measurement, tags, fields, timestamp)
 }
@@ -104,7 +107,7 @@ func (rp *ReportPrinter) printInfluxDetails() {
 			tags = tags + ",hasError=false"
 		}
 
-		timestamp := v.Timestamp.Nanosecond()
+		timestamp := v.Timestamp.UnixNano()
 
 		fields := strings.Join(values, ",")
 
@@ -119,19 +122,24 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 		s = append(s, fmt.Sprintf(`name="%v"`, cleanInfluxString(strings.TrimSpace(rp.Report.Name))))
 	}
 
-	s = append(s, fmt.Sprintf(`proto="%v"`, rp.Report.Options.Proto))
-	s = append(s, fmt.Sprintf(`call="%v"`, rp.Report.Options.Call))
-	s = append(s, fmt.Sprintf(`host="%v"`, rp.Report.Options.Host))
-	s = append(s, fmt.Sprintf("n=%v", rp.Report.Options.N))
-	s = append(s, fmt.Sprintf("c=%v", rp.Report.Options.C))
-	s = append(s, fmt.Sprintf("qps=%v", rp.Report.Options.QPS))
-	s = append(s, fmt.Sprintf("z=%v", rp.Report.Options.Z.Nanoseconds()))
-	s = append(s, fmt.Sprintf("timeout=%v", rp.Report.Options.Timeout.Seconds()))
-	s = append(s, fmt.Sprintf("dial_timeout=%v", rp.Report.Options.DialTimeout.Seconds()))
-	s = append(s, fmt.Sprintf("keepalive=%v", rp.Report.Options.KeepaliveTime.Seconds()))
+	options := rp.Report.Options
+	if options == nil {
+		options = &runner.Options{}
+	}
+
+	s = append(s, fmt.Sprintf(`proto="%v"`, options.Proto))
+	s = append(s, fmt.Sprintf(`call="%v"`, options.Call))
+	s = append(s, fmt.Sprintf(`host="%v"`, options.Host))
+	s = append(s, fmt.Sprintf("n=%v", options.N))
+	s = append(s, fmt.Sprintf("c=%v", options.C))
+	s = append(s, fmt.Sprintf("qps=%v", options.QPS))
+	s = append(s, fmt.Sprintf("z=%v", options.Z.Nanoseconds()))
+	s = append(s, fmt.Sprintf("timeout=%v", options.Timeout.Seconds()))
+	s = append(s, fmt.Sprintf("dial_timeout=%v", options.DialTimeout.Seconds()))
+	s = append(s, fmt.Sprintf("keepalive=%v", options.KeepaliveTime.Seconds()))
 
 	dataStr := `""`
-	dataBytes, err := json.Marshal(rp.Report.Options.Data)
+	dataBytes, err := json.Marshal(options.Data)
 	if err == nil && len(dataBytes) > 0 {
 		dataBytes, err = json.Marshal(string(dataBytes))
 		if err == nil {
@@ -144,8 +152,8 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 	s = append(s, fmt.Sprintf("data=%s", dataStr))
 
 	mdStr := `""`
-	if rp.Report.Options.Metadata != nil {
-		mdBytes, err := json.Marshal(rp.Report.Options.Metadata)
+	if options.Metadata != nil {
+		mdBytes, err := json.Marshal(options.Metadata)
 		if err == nil {
 			mdBytes, err = json.Marshal(string(mdBytes))
 			if err == nil {
