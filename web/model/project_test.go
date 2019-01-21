@@ -12,6 +12,8 @@ import (
 const dbName = "../test/test.db"
 
 func TestProject_Create(t *testing.T) {
+	os.Remove(dbName)
+
 	defer os.Remove(dbName)
 
 	db, err := gorm.Open("sqlite3", dbName)

@@ -35,6 +35,8 @@ func TestOptions_BeforeSave(t *testing.T) {
 }
 
 func TestOptions(t *testing.T) {
+	os.Remove(dbName)
+
 	defer os.Remove(dbName)
 
 	db, err := gorm.Open("sqlite3", dbName)
