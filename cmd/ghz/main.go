@@ -23,10 +23,15 @@ var (
 	proto    = flag.String("proto", "", `The Protocol Buffer .proto file.`)
 	protoset = flag.String("protoset", "", `The .protoset file.`)
 	call     = flag.String("call", "", `A fully-qualified symbol name.`)
-	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
-	cname    = flag.String("cname", "", "Server name override - useful for self signed certs.")
-	insecure = flag.Bool("insecure", false, "Specify for non TLS connection")
-	cPath    = flag.String("config", "", "Path to the config JSON file.")
+
+	cacert     = flag.String("cacert", "", "File containing trusted root certificates for verifying the server.")
+	cert       = flag.String("cert", "", "File containing client certificate (public key), to present to the server. Must also provide -key option.")
+	key        = flag.String("key", "", "File containing client private key, to present to the server. Must also provide -cert option.")
+	cname      = flag.String("cname", "", "Server name override when validating TLS certificate - useful for self signed certs.")
+	skipVerify = flag.Bool("skip-tls-verify", false, "Skip TLS client verification of the server's certificate chain and host name.")
+	insecure   = flag.Bool("insecure", false, "Specify for plantext and insecure (non TLS) connection")
+
+	cPath = flag.String("config", "", "Path to the config JSON file.")
 
 	c = flag.Uint("c", 50, "Number of requests to run concurrently.")
 	n = flag.Uint("n", 200, "Number of requests to run. Default is 200.")
@@ -114,7 +119,8 @@ Options:
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
+		flag.PrintDefaults()
+		// fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
 	}
 
 	flag.Parse()
@@ -161,7 +167,10 @@ func main() {
 	options = append(options,
 		runner.WithProtoFile(cfg.Proto, cfg.ImportPaths),
 		runner.WithProtoset(cfg.Protoset),
-		runner.WithCertificate(cfg.Cert, cfg.CName),
+		runner.WithRootCertificate(cfg.RootCert),
+		runner.WithCertificate(cfg.Cert, cfg.Key),
+		runner.WithServerNameOverride(cfg.CName),
+		runner.WithSkipTLSVerify(cfg.SkipTLSVerify),
 		runner.WithInsecure(cfg.Insecure),
 		runner.WithConcurrency(cfg.C),
 		runner.WithTotalRequests(cfg.N),
