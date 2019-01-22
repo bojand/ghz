@@ -36,3 +36,4 @@ changelog:
     - '^docs:'
     - '^test:'
     - '^www:'
+    - '^\[skip ci\]'

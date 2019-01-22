@@ -3,7 +3,7 @@ jobs:
   build:
     branches:
       ignore:
-        - gh-pages
+        - "gh-pages"
         - heroku
     docker:
       - image: circleci/golang:1.11
