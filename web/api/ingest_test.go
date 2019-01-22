@@ -75,6 +75,7 @@ func TestIngestAPI(t *testing.T) {
 			assert.NotNil(t, r.Options)
 			assert.NotNil(t, r.Options.Info)
 			assert.NotEmpty(t, r.Options.Info.Name)
+			assert.NotEmpty(t, r.Options.Info.Call)
 
 			assert.NotNil(t, r.Histogram)
 			assert.NotEmpty(t, r.Histogram.Buckets)

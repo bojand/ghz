@@ -104,10 +104,8 @@ func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx e
 		ReportID: report.ID,
 	}
 
-	if ir.Options != nil {
-		opts := model.OptionsInfo(*ir.Options)
-		o.Info = &opts
-	}
+	opts := model.OptionsInfo(ir.Options)
+	o.Info = &opts
 
 	if err := api.DB.CreateOptions(o); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

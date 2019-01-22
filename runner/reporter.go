@@ -53,7 +53,7 @@ type Report struct {
 	Name      string     `json:"name,omitempty"`
 	EndReason StopReason `json:"endReason,omitempty"`
 
-	Options *Options  `json:"options,omitempty"`
+	Options Options   `json:"options,omitempty"`
 	Date    time.Time `json:"date"`
 
 	Count   uint64        `json:"count"`
@@ -164,7 +164,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		ErrorDist:      r.errorDist,
 		StatusCodeDist: r.statusCodeDist}
 
-	rep.Options = &Options{
+	rep.Options = Options{
 		Call:          r.config.call,
 		Proto:         r.config.proto,
 		Protoset:      r.config.protoset,
