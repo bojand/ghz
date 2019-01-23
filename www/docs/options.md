@@ -9,7 +9,7 @@ The `ghz` command line has numerous command line options.  You can run `ghz --he
 
 ### `-proto`
 
-The protocol buffer file for input.
+The path to The Protocol Buffer .proto file for input.
 
 ### `-protoset`
 
@@ -24,29 +24,45 @@ protoc --proto_path=. --descriptor_set_out=bundle.protoset *.proto
 
 A fully-qualified method name in 'package/service/method' or 'package.service.method' format. For example: `helloworld.Greeter.SayHello`.
 
+### `-cacert`
+
+Path to the file containing trusted root certificates for verifying the server. By default `ghz` tries to create a secure connection using the system's default root certificate. The certificate file can be specified using `-cacert` option. The TLS verification can be skipped using `-skipTLS` option.
+
 ### `-cert`
 
-By default `ghz` tries to create a secure connection using the system's default root certificate. The certificate file can be specified using `-cert` option. Ignored if `-insecure` is specified.
+Path to the file containing client certificate (public key), to present to the server. Must also provide `-key` option when this is used.
+
+### `-key`
+
+File containing client private key, to present to the server. Must also provide `-cert` option.
 
 ### `-cname`
 
-An override of the expected server Cname presented by the server.
+Server name override when validating TLS certificate.
+
+### `-skipTLS`
+
+Skip TLS client verification of the server's certificate chain and host name.
 
 ### `-insecure`
 
- Specify for non TLS connection.
+Use plaintext and insecure connection.
 
- ### `-config`
+### `-authority`
 
- Path to the JSON or TOML [config file](example_config.md) that specifies all the test settings.
+Value to be used as the `:authority` pseudo-header. Only works if `-insecure` is used.
 
- ### `-c`
+### `-config`
 
- Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is `50`. For example to do requests in series without any concurrency set to `1`. 
+Path to the JSON or TOML [config file](example_config.md) that specifies all the test settings.
 
- ### `-n`
+### `-c`
 
- The total number of requests to run. Default is `200`. The combination of `-c` and `-n` are critical in how the benchmarking is done. `ghz` takes the `-c` argument and spawns that make worker goroutines. In parallel these goroutines each do their share (`c / n`) requests. So for example with the default `-c 50 -n 200` options we would spawn `50` goroutines which in parallel each do `40` requests. 
+Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is `50`. For example to do requests in series without any concurrency set to `1`. 
+
+### `-n`
+
+The total number of requests to run. Default is `200`. The combination of `-c` and `-n` are critical in how the benchmarking is done. `ghz` takes the `-c` argument and spawns that make worker goroutines. In parallel these goroutines each do their share (`c / n`) requests. So for example with the default `-c 50 -n 200` options we would spawn `50` goroutines which in parallel each do `40` requests. 
 
 ### `-q`
 

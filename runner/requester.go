@@ -13,7 +13,6 @@ import (
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 )
@@ -121,12 +120,16 @@ func (b *Requester) Finish() *Report {
 
 func (b *Requester) connect() (*grpc.ClientConn, error) {
 	var opts []grpc.DialOption
-	credOptions, err := createClientCredOption(b.config)
-	if err != nil {
-		return nil, err
+
+	if b.config.insecure {
+		opts = append(opts, grpc.WithInsecure())
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(b.config.creds))
 	}
 
-	opts = append(opts, credOptions)
+	if b.config.authority != "" {
+		opts = append(opts, grpc.WithAuthority(b.config.authority))
+	}
 
 	ctx := context.Background()
 	ctx, _ = context.WithTimeout(ctx, b.config.dialTimeout)
@@ -320,25 +323,6 @@ func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Mess
 			break
 		}
 	}
-}
-
-func createClientCredOption(config *RunConfig) (grpc.DialOption, error) {
-	if config.insecure {
-		credOptions := grpc.WithInsecure()
-		return credOptions, nil
-	}
-
-	if config.cert != "" {
-		creds, err := credentials.NewClientTLSFromFile(config.cert, config.cname)
-		if err != nil {
-			return nil, err
-		}
-		credOptions := grpc.WithTransportCredentials(creds)
-		return credOptions, nil
-	}
-
-	credOptions := grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, ""))
-	return credOptions, nil
 }
 
 func min(a, b int) int {
