@@ -38,7 +38,7 @@ func main() {
 	}
 
 	flag.Usage = func() {
-		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
+		fmt.Fprint(os.Stderr, usage)
 	}
 
 	flag.Parse()

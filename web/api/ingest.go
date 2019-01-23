@@ -15,6 +15,7 @@ type IngestDatabase interface {
 	CreateHistogram(*model.Histogram) error
 	CreateOptions(*model.Options) error
 	FindProjectByID(uint) (*model.Project, error)
+	FindLatestReportForProject(uint) (*model.Report, error)
 	CreateDetailsBatch(uint, []*model.Detail) (uint, uint)
 	UpdateProjectStatus(uint, model.Status) error
 }
@@ -91,6 +92,9 @@ func (api *IngestAPI) IngestToProject(ctx echo.Context) error {
 
 func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx echo.Context) error {
 
+	// first get latest (we'll need it later)
+	latest, _ := api.DB.FindLatestReportForProject(p.ID)
+
 	// Report
 
 	report := convertIngestToReport(p.ID, ir)
@@ -135,9 +139,13 @@ func (api *IngestAPI) ingestToProject(p *model.Project, ir *IngestRequest, ctx e
 
 	created, errored := api.DB.CreateDetailsBatch(report.ID, details)
 
-	// Update project status
-	if err := api.DB.UpdateProjectStatus(p.ID, report.Status); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	// Update project status if needed
+	if latest == nil || report.Date.After(latest.Date) {
+		if err := api.DB.UpdateProjectStatus(p.ID, report.Status); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		p.Status = report.Status
 	}
 
 	// Response

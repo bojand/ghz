@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/bojand/ghz/web/database"
+	"github.com/bojand/ghz/web/model"
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 )
@@ -142,6 +143,8 @@ func TestIngestAPI(t *testing.T) {
 
 			assert.NotNil(t, r.Details)
 			assert.NotEmpty(t, r.Details)
+
+			assert.Equal(t, r.Report.Status, r.Project.Status)
 		}
 	})
 
@@ -208,6 +211,55 @@ func TestIngestAPI(t *testing.T) {
 			httpError, ok := err.(*echo.HTTPError)
 			assert.True(t, ok)
 			assert.Equal(t, http.StatusNotFound, httpError.Code)
+		}
+	})
+
+	t.Run("IngestToProject status update", func(t *testing.T) {
+		dat, err := ioutil.ReadFile("../test/SayHello/report7.json")
+		assert.NoError(t, err)
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPost, "/projects/"+pid+"/ingest", strings.NewReader(string(dat)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+		c.SetParamNames("pid")
+		c.SetParamValues(pid)
+
+		if assert.NoError(t, api.IngestToProject(c)) {
+			assert.Equal(t, http.StatusCreated, rec.Code)
+
+			r := new(IngestResponse)
+			err = json.NewDecoder(rec.Body).Decode(r)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, model.Status("fail"), r.Project.Status)
+
+			// now ingest an earlier run with no errors / status OK
+			dat, err = ioutil.ReadFile("../test/SayHello/report3.json")
+			assert.NoError(t, err)
+
+			e = echo.New()
+			req = httptest.NewRequest(http.MethodPost, "/projects/"+pid+"/ingest", strings.NewReader(string(dat)))
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			rec := httptest.NewRecorder()
+
+			c := e.NewContext(req, rec)
+			c.SetParamNames("pid")
+			c.SetParamValues(pid)
+
+			if assert.NoError(t, api.IngestToProject(c)) {
+				assert.Equal(t, http.StatusCreated, rec.Code)
+
+				r := new(IngestResponse)
+				err = json.NewDecoder(rec.Body).Decode(r)
+
+				assert.NoError(t, err)
+
+				assert.Equal(t, model.Status("fail"), r.Project.Status)
+			}
 		}
 	})
 }

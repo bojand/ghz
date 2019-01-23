@@ -60,6 +60,16 @@ func (d *Database) FindPreviousReport(rid uint) (*model.Report, error) {
 	return previous, err
 }
 
+// FindLatestReportForProject returns the latest / most recent report for project
+func (d *Database) FindLatestReportForProject(pid uint) (*model.Report, error) {
+	list, err := d.listReports(true, pid, 1, 0, "date", "desc")
+	if err != nil || len(list) == 0 {
+		return nil, err
+	}
+
+	return list[0], nil
+}
+
 // ListReports lists reports using sorting
 func (d *Database) ListReports(limit, page uint, sortField, order string) ([]*model.Report, error) {
 	return d.listReports(false, 0, limit, page, sortField, order)

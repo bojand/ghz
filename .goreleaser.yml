@@ -11,8 +11,6 @@ builds:
       - amd64
   - main: ./cmd/ghz-web
     binary: ghz-web
-    env:
-      - CGO_ENABLED=0
     goos:
       - darwin
       - linux

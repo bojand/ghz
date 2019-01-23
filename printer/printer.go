@@ -8,6 +8,7 @@ import (
 	"log"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/alecthomas/template"
 	"github.com/bojand/ghz/runner"
@@ -246,6 +247,7 @@ var tmplFuncMap = template.FuncMap{
 	"formatPercent":    formatPercent,
 	"formatStatusCode": formatStatusCode,
 	"formatErrorDist":  formatErrorDist,
+	"formatDate":       formatDate,
 }
 
 func jsonify(v interface{}, pretty bool) string {
@@ -265,6 +267,10 @@ func jsonify(v interface{}, pretty bool) string {
 
 func formatMilli(duration float64) string {
 	return fmt.Sprintf("%4.2f", duration*1000)
+}
+
+func formatDate(d time.Time) string {
+	return d.Format("Mon Jan _2 2006 @ 15:04:05")
 }
 
 func formatSeconds(duration float64) string {
@@ -373,6 +379,16 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 	<body>
 	
 		<section class="section">
+
+		<div class="container">
+			{{ if .Name }}
+			<h1 class="title">{{ .Name }}</h1>
+			{{ end }}
+			{{ if .Date }}
+				<h2 class="subtitle">{{ formatDate .Date }}</h2>
+			{{ end }}
+		</div>
+		<br />
 		
 		<div class="container">
       <nav class="breadcrumb has-bullet-separator" aria-label="breadcrumbs">
@@ -462,12 +478,6 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 						</a>
 						<table class="table">
 							<tbody>
-							  {{ if .Name }}
-								<tr>
-									<th>Name</th>
-									<td>{{ .Name }}</td>
-								</tr>
-								{{ end }}
 								<tr>
 									<th>Count</th>
 									<td>{{ .Count }}</td>
