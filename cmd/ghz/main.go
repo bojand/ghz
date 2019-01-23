@@ -31,7 +31,7 @@ var (
 	cert       = flag.String("cert", "", "File containing client certificate (public key), to present to the server. Must also provide -key option.")
 	key        = flag.String("key", "", "File containing client private key, to present to the server. Must also provide -cert option.")
 	cname      = flag.String("cname", "", "Server name override when validating TLS certificate - useful for self signed certs.")
-	skipVerify = flag.Bool("no-verify", false, "Skip TLS client verification of the server's certificate chain and host name.")
+	skipVerify = flag.Bool("skipTLS", false, "Skip TLS client verification of the server's certificate chain and host name.")
 	insecure   = flag.Bool("insecure", false, "Use plaintext and insecure connection.")
 	authority  = flag.String("authority", "", "Value to be used as the :authority pseudo-header. Only works if -insecure is used.")
 
@@ -78,7 +78,7 @@ Options:
 -cert		File containing client certificate (public key), to present to the server. Must also provide -key option.
 -key 		File containing client private key, to present to the server. Must also provide -cert option.
 -cname		Server name override when validating TLS certificate - useful for self signed certs.
--no-verify	Skip TLS client verification of the server's certificate chain and host name.
+-skipTLS	Skip TLS client verification of the server's certificate chain and host name.
 -insecure	Use plaintext and insecure connection.
 -authority	Value to be used as the :authority pseudo-header. Only works if -insecure is used.
 
@@ -95,11 +95,11 @@ Options:
 
 -d  The call data as stringified JSON.
     If the value is '@' then the request contents are read from stdin.
--D  File path for call data JSON file. Examples: /home/user/file.json or ./file.json.
+-D  Path for call data JSON file. Examples: /home/user/file.json or ./file.json.
 -b  The call data comes as serialized binary message read from stdin.
--B  File path for the call data as serialized binary message.
+-B  Path for the call data as serialized binary message.
 -m  Request metadata as stringified JSON.
--M  File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
+-M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
 
 -o  Output path. If none provided stdout is used.
 -O  Output type. If none provided, a summary is printed.

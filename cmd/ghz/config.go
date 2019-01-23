@@ -24,7 +24,7 @@ type config struct {
 	RootCert      string             `json:"cacert" toml:"cacert" yaml:"cacert"`
 	Cert          string             `json:"cert" toml:"cert" yaml:"cert"`
 	Key           string             `json:"key" toml:"key" yaml:"key"`
-	SkipTLSVerify bool               `json:"skipTLSVerify" toml:"skipTLSVerify" yaml:"skipTLSVerify"`
+	SkipTLSVerify bool               `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
 	CName         string             `json:"cname" toml:"cname" yaml:"cname"`
 	N             uint               `json:"n" toml:"n" yaml:"n" default:"200"`
 	C             uint               `json:"c" toml:"c" yaml:"c" default:"50"`
