@@ -33,6 +33,7 @@ type RunConfig struct {
 	cname      string
 	skipVerify bool
 	insecure   bool
+	authority  string
 
 	// test
 	n   int
@@ -77,6 +78,16 @@ func WithCertificate(cert, key string) Option {
 func WithServerNameOverride(cname string) Option {
 	return func(o *RunConfig) error {
 		o.cname = cname
+
+		return nil
+	}
+}
+
+// WithAuthority specifies the value to be used as the :authority pseudo-header.
+// This only works with WithInsecure option.
+func WithAuthority(authority string) Option {
+	return func(o *RunConfig) error {
+		o.authority = authority
 
 		return nil
 	}

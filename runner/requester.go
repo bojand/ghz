@@ -127,6 +127,10 @@ func (b *Requester) connect() (*grpc.ClientConn, error) {
 		opts = append(opts, grpc.WithTransportCredentials(b.config.creds))
 	}
 
+	if b.config.authority != "" {
+		opts = append(opts, grpc.WithAuthority(b.config.authority))
+	}
+
 	ctx := context.Background()
 	ctx, _ = context.WithTimeout(ctx, b.config.dialTimeout)
 	// cancel is ignored here as connection.Close() is used.

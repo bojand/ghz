@@ -125,7 +125,6 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with options", func(t *testing.T) {
 		c, err := newConfig(
 			"call", "localhost:50050",
-			WithCertificate("certfile", "somecname"),
 			WithInsecure(true),
 			WithTotalRequests(100),
 			WithConcurrency(20),
@@ -146,8 +145,6 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "call", c.call)
 		assert.Equal(t, "localhost:50050", c.host)
 		assert.Equal(t, true, c.insecure)
-		assert.Equal(t, "certfile", c.cert)
-		assert.Equal(t, "somecname", c.cname)
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
@@ -169,8 +166,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with binary data, protoset and metadata file", func(t *testing.T) {
 		c, err := newConfig(
 			"call", "localhost:50050",
-			WithCertificate("certfile", "somecname"),
-			WithInsecure(true),
+			WithCertificate("../testdata/localhost.crt", "../testdata/localhost.key"),
+			WithServerNameOverride("cname"),
+			WithAuthority("someauth"),
 			WithTotalRequests(100),
 			WithConcurrency(20),
 			WithQPS(5),
@@ -189,9 +187,11 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 		assert.Equal(t, "call", c.call)
 		assert.Equal(t, "localhost:50050", c.host)
-		assert.Equal(t, true, c.insecure)
-		assert.Equal(t, "certfile", c.cert)
-		assert.Equal(t, "somecname", c.cname)
+		assert.Equal(t, false, c.insecure)
+		assert.Equal(t, "../testdata/localhost.crt", c.cert)
+		assert.Equal(t, "../testdata/localhost.key", c.key)
+		assert.Equal(t, "cname", c.cname)
+		assert.Equal(t, "someauth", c.authority)
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
@@ -206,6 +206,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, `{"request-id": "{{.RequestNumber}}"}`, string(c.metadata))
 		assert.Equal(t, "", string(c.proto))
 		assert.Equal(t, "testdata/bundle.protoset", string(c.protoset))
+		assert.NotNil(t, c.creds)
 	})
 
 	t.Run("with data interface and metadata map", func(t *testing.T) {
@@ -231,7 +232,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		c, err := newConfig(
 			"call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
-			WithCertificate("certfile", "somecname"),
+			WithCertificate("../testdata/localhost.crt", "../testdata/localhost.key"),
 			WithInsecure(true),
 			WithTotalRequests(100),
 			WithConcurrency(20),
@@ -252,8 +253,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "call", c.call)
 		assert.Equal(t, "localhost:50050", c.host)
 		assert.Equal(t, true, c.insecure)
-		assert.Equal(t, "certfile", c.cert)
-		assert.Equal(t, "somecname", c.cname)
+		assert.Equal(t, "../testdata/localhost.crt", c.cert)
+		assert.Equal(t, "../testdata/localhost.key", c.key)
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
@@ -270,6 +271,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+		assert.NotNil(t, c.creds)
 	})
 
 	t.Run("with binary data from file", func(t *testing.T) {

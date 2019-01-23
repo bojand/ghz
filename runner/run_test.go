@@ -472,7 +472,7 @@ func TestRunUnarySecure(t *testing.T) {
 		WithTimeout(time.Duration(20*time.Second)),
 		WithDialTimeout(time.Duration(20*time.Second)),
 		WithData(data),
-		WithCertificate("../testdata/localhost.crt", ""),
+		WithRootCertificate("../testdata/localhost.crt"),
 	)
 
 	assert.NoError(t, err)
