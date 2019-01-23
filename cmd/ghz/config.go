@@ -26,6 +26,8 @@ type config struct {
 	Key           string             `json:"key" toml:"key" yaml:"key"`
 	SkipTLSVerify bool               `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
 	CName         string             `json:"cname" toml:"cname" yaml:"cname"`
+	Authority     string             `json:"authority" toml:"authority" yaml:"authority"`
+	Insecure      bool               `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
 	N             uint               `json:"n" toml:"n" yaml:"n" default:"200"`
 	C             uint               `json:"c" toml:"c" yaml:"c" default:"50"`
 	QPS           uint               `json:"q" toml:"q" yaml:"q"`
@@ -45,7 +47,6 @@ type config struct {
 	KeepaliveTime uint               `json:"L" toml:"L" yaml:"L"`
 	CPUs          uint               `json:"cpus" toml:"cpus" yaml:"cpus"`
 	ImportPaths   []string           `json:"i,omitempty" toml:"i,omitempty" yaml:"i,omitempty"`
-	Insecure      bool               `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
 	Name          string             `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
 	Tags          *map[string]string `json:"tags,omitempty" toml:"tags,omitempty" yaml:"tags,omitempty"`
 }
