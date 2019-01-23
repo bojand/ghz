@@ -1,10 +1,10 @@
-- [ ] Website documentation
-- [ ] Figure out release mechanism
+- [ ] Improve website documentation
+- [ ] Fix ingest status
 - [ ] Make ingest transactional
-- [ ] Invalid request and bad condition tests
 - [ ] Menu in project listing with Delete option ?
 - [ ] Latest run time ago + link in project list (needs DB + API) ?
 - [ ] Add config for host to bind to ?
+- [ ] Improve invalid request and bad condition tests
 - [x] DELETE
 - [x] Lock down demo create
 - [x] Docs

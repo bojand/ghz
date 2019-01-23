@@ -20,40 +20,45 @@ var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
 
-	proto    = flag.String("proto", "", `The Protocol Buffer .proto file.`)
-	protoset = flag.String("protoset", "", `The .protoset file.`)
-	call     = flag.String("call", "", `A fully-qualified symbol name.`)
-	cert     = flag.String("cert", "", "Client certificate file. If Omitted insecure is used.")
-	cname    = flag.String("cname", "", "Server name override - useful for self signed certs.")
-	insecure = flag.Bool("insecure", false, "Specify for non TLS connection")
-	cPath    = flag.String("config", "", "Path to the config JSON file.")
+	cPath = flag.String("config", "", "Path to the JSON or TOML config file that specifies all the test run settings.")
 
-	c = flag.Uint("c", 50, "Number of requests to run concurrently.")
+	proto    = flag.String("proto", "", `The Protocol Buffer .proto file.`)
+	protoset = flag.String("protoset", "", `The compiled protoset file. Alternative to proto. -proto takes precedence.`)
+	call     = flag.String("call", "", `A fully-qualified method name in 'package/service/method' or 'package.service.method' format.`)
+	paths    = flag.String("i", "", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.")
+
+	cacert     = flag.String("cacert", "", "File containing trusted root certificates for verifying the server.")
+	cert       = flag.String("cert", "", "File containing client certificate (public key), to present to the server. Must also provide -key option.")
+	key        = flag.String("key", "", "File containing client private key, to present to the server. Must also provide -cert option.")
+	cname      = flag.String("cname", "", "Server name override when validating TLS certificate - useful for self signed certs.")
+	skipVerify = flag.Bool("skipTLS", false, "Skip TLS client verification of the server's certificate chain and host name.")
+	insecure   = flag.Bool("insecure", false, "Use plaintext and insecure connection.")
+	authority  = flag.String("authority", "", "Value to be used as the :authority pseudo-header. Only works if -insecure is used.")
+
+	c = flag.Uint("c", 50, "Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.")
 	n = flag.Uint("n", 200, "Number of requests to run. Default is 200.")
 	q = flag.Uint("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
-	t = flag.Uint("t", 20, "Timeout for each request in seconds.")
-	z = flag.Duration("z", 0, "Duration of application to send requests.")
-	x = flag.Duration("x", 0, "Maximum duration of application to send requests.")
+	t = flag.Uint("t", 20, "Timeout for each request in seconds. Default is 20, use 0 for infinite.")
+	z = flag.Duration("z", 0, "Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.")
+	x = flag.Duration("x", 0, "Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits. Examples: -x 10s -x 3m.")
 
 	data     = flag.String("d", "", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
-	dataPath = flag.String("D", "", "Path for call data JSON file.")
-	binData  = flag.Bool("b", false, "The call data as serialized binary message read from stdin.")
-	binPath  = flag.String("B", "", "The call data as serialized binary message read from a file.")
+	dataPath = flag.String("D", "", "File path for call data JSON file. Examples: /home/user/file.json or ./file.json.")
+	binData  = flag.Bool("b", false, "The call data comes as serialized binary message read from stdin.")
+	binPath  = flag.String("B", "", "File path for the call data as serialized binary message.")
 	md       = flag.String("m", "", "Request metadata as stringified JSON.")
-	mdPath   = flag.String("M", "", "Path for call metadata JSON file.")
+	mdPath   = flag.String("M", "", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.")
 
-	paths = flag.String("i", "", "Comma separated list of proto import paths")
+	output = flag.String("o", "", "Output path. If none provided stdout is used.")
+	format = flag.String("O", "", "Output format. If none provided, a summary is printed.")
 
-	output = flag.String("o", "", "Output path")
-	format = flag.String("O", "", "Output format")
-
-	ct = flag.Uint("T", 10, "Connection timeout in seconds for the initial connection dial.")
-	kt = flag.Uint("L", 0, "Keepalive time in seconds.")
+	ct = flag.Uint("T", 10, "Connection timeout in seconds for the initial connection dial. Default is 10.")
+	kt = flag.Uint("L", 0, "Keepalive time in seconds. Only used if present and above 0.")
 
 	name = flag.String("name", "", "User specified name for the test.")
 	tags = flag.String("tags", "", "JSON representation of user-defined string tags.")
 
-	cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "")
+	cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "Number of used cpu cores.")
 
 	v = flag.Bool("v", false, "Print the version.")
 )
@@ -61,33 +66,40 @@ var (
 var usage = `Usage: ghz [options...] host
 Options:
 
+-config	Path to the JSON or TOML config file that specifies all the test run settings.
+
 -proto		The Protocol Buffer .proto file.
 -protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
 -call		A fully-qualified method name in 'package/service/method' or 'package.service.method' format.
--cert		The file containing the CA root cert file. Ignored if -insecure is specified.
--cname		An server name override.
--insecure	Specify for non TLS connection.
--config		Path to the JSON or TOML config file that specifies all the test settings.
+-i		Comma separated list of proto import paths. The current working directory and the directory
+		of the protocol buffer file are automatically added to the import list.
+	
+-cacert		File containing trusted root certificates for verifying the server.
+-cert		File containing client certificate (public key), to present to the server. Must also provide -key option.
+-key 		File containing client private key, to present to the server. Must also provide -cert option.
+-cname		Server name override when validating TLS certificate - useful for self signed certs.
+-skipTLS	Skip TLS client verification of the server's certificate chain and host name.
+-insecure	Use plaintext and insecure connection.
+-authority	Value to be used as the :authority pseudo-header. Only works if -insecure is used.
 
 -c  Number of requests to run concurrently. 
     Total number of requests cannot be smaller than the concurrency level. Default is 50.
 -n  Number of requests to run. Default is 200.
 -q  Rate limit, in queries per second (QPS). Default is no rate limit.
 -t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
--z  Duration of application to send requests. When duration is reached,
-	application stops and exits. If duration is specified, n is ignored.
-	Examples: -z 10s -z 3m.
+-z  Duration of application to send requests. When duration is reached, application stops and exits.
+    If duration is specified, n is ignored. Examples: -z 10s -z 3m.
 -x  Maximum duration of application to send requests with n setting respected.
     If duration is reached before n requests are completed, application stops and exits.
     Examples: -x 10s -x 3m.
 
 -d  The call data as stringified JSON.
     If the value is '@' then the request contents are read from stdin.
--D  Path for call data JSON file. For example, /home/user/file.json or ./file.json.
+-D  Path for call data JSON file. Examples: /home/user/file.json or ./file.json.
 -b  The call data comes as serialized binary message read from stdin.
 -B  Path for the call data as serialized binary message.
 -m  Request metadata as stringified JSON.
--M  Path for call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
+-M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
 
 -o  Output path. If none provided stdout is used.
 -O  Output type. If none provided, a summary is printed.
@@ -97,9 +109,6 @@ Options:
     "html" outputs the metrics report as HTML.
     "influx-summary" outputs the metrics summary as influxdb line protocol.
     "influx-details" outputs the metrics details as influxdb line protocol.
-
--i  Comma separated list of proto import paths. The current working directory and the directory
-    of the protocol buffer file are automatically added to the import list.
 
 -T  Connection timeout in seconds for the initial connection dial. Default is 10.
 -L  Keepalive time in seconds. Only used if present and above 0.
@@ -161,7 +170,10 @@ func main() {
 	options = append(options,
 		runner.WithProtoFile(cfg.Proto, cfg.ImportPaths),
 		runner.WithProtoset(cfg.Protoset),
-		runner.WithCertificate(cfg.Cert, cfg.CName),
+		runner.WithRootCertificate(cfg.RootCert),
+		runner.WithCertificate(cfg.Cert, cfg.Key),
+		runner.WithServerNameOverride(cfg.CName),
+		runner.WithSkipTLSVerify(cfg.SkipTLSVerify),
 		runner.WithInsecure(cfg.Insecure),
 		runner.WithConcurrency(cfg.C),
 		runner.WithTotalRequests(cfg.N),

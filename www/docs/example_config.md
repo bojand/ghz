@@ -4,6 +4,7 @@ title: Configuration Files
 ---
 
 All the call options can be specified in JSON or TOML config files and used as input via the `-config` option. 
+
 An example JSON config file:
 
 ```json

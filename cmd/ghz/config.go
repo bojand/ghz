@@ -21,7 +21,10 @@ type config struct {
 	Proto         string             `json:"proto" toml:"proto" yaml:"proto"`
 	Protoset      string             `json:"protoset" toml:"protoset" yaml:"protoset"`
 	Call          string             `json:"call" toml:"call" yaml:"call" required:"true"`
+	RootCert      string             `json:"cacert" toml:"cacert" yaml:"cacert"`
 	Cert          string             `json:"cert" toml:"cert" yaml:"cert"`
+	Key           string             `json:"key" toml:"key" yaml:"key"`
+	SkipTLSVerify bool               `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
 	CName         string             `json:"cname" toml:"cname" yaml:"cname"`
 	N             uint               `json:"n" toml:"n" yaml:"n" default:"200"`
 	C             uint               `json:"c" toml:"c" yaml:"c" default:"50"`
