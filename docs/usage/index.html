@@ -30,54 +30,58 @@
         </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Usage</h1></header><article><div><span><pre><code class="hljs css language-sh">Usage: ghz [options...] host
 Options:
 
+-config Path to the JSON or TOML config file that specifies all the <span class="hljs-built_in">test</span> run settings.
+
 -proto      The Protocol Buffer .proto file.
 -protoset   The compiled protoset file. Alternative to proto. -proto takes precedence.
 -call       A fully-qualified method name <span class="hljs-keyword">in</span> <span class="hljs-string">'package/service/method'</span> or <span class="hljs-string">'package.service.method'</span> format.
--cert       The file containing the CA root cert file. Ignored <span class="hljs-keyword">if</span> -insecure is specified.
--cname      An server name override.
--insecure   Specify <span class="hljs-keyword">for</span> non TLS connection.
--config     Path to the JSON or TOML config file that specifies all the <span class="hljs-built_in">test</span> settings.
+-i      Comma separated list of proto import paths. The current working directory and the directory
+        of the protocol buffer file are automatically added to the import list.
+
+-cacert     File containing trusted root certificates <span class="hljs-keyword">for</span> verifying the server.
+-cert       File containing client certificate (public key), to present to the server. Must also provide -key option.
+-key        File containing client private key, to present to the server. Must also provide -cert option.
+-cname      Server name override when validating TLS certificate - useful <span class="hljs-keyword">for</span> self signed certs.
+-skipTLS    Skip TLS client verification of the server<span class="hljs-string">'s certificate chain and host name.
+-insecure   Use plaintext and insecure connection.
+-authority  Value to be used as the :authority pseudo-header. Only works if -insecure is used.
 
 -c  Number of requests to run concurrently.
     Total number of requests cannot be smaller than the concurrency level. Default is 50.
 -n  Number of requests to run. Default is 200.
--q  Rate <span class="hljs-built_in">limit</span>, <span class="hljs-keyword">in</span> queries per second (QPS). Default is no rate <span class="hljs-built_in">limit</span>.
--t  Timeout <span class="hljs-keyword">for</span> each request <span class="hljs-keyword">in</span> seconds. Default is 20, use 0 <span class="hljs-keyword">for</span> infinite.
--z  Duration of application to send requests. When duration is reached,
-    application stops and exits. If duration is specified, n is ignored.
-    Examples: -z 10s -z 3m.
+-q  Rate limit, in queries per second (QPS). Default is no rate limit.
+-t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
+-z  Duration of application to send requests. When duration is reached, application stops and exits.
+    If duration is specified, n is ignored. Examples: -z 10s -z 3m.
 -x  Maximum duration of application to send requests with n setting respected.
     If duration is reached before n requests are completed, application stops and exits.
     Examples: -x 10s -x 3m.
 
 -d  The call data as stringified JSON.
-    If the value is <span class="hljs-string">'@'</span> <span class="hljs-keyword">then</span> the request contents are <span class="hljs-built_in">read</span> from stdin.
--D  Path <span class="hljs-keyword">for</span> call data JSON file. For example, /home/user/file.json or ./file.json.
--b  The call data comes as serialized binary message <span class="hljs-built_in">read</span> from stdin.
--B  Path <span class="hljs-keyword">for</span> the call data as serialized binary message.
+    If the value is '</span>@<span class="hljs-string">' then the request contents are read from stdin.
+-D  Path for call data JSON file. Examples: /home/user/file.json or ./file.json.
+-b  The call data comes as serialized binary message read from stdin.
+-B  Path for the call data as serialized binary message.
 -m  Request metadata as stringified JSON.
--M  Path <span class="hljs-keyword">for</span> call metadata JSON file. For example, /home/user/metadata.json or ./metadata.json.
+-M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
 
 -o  Output path. If none provided stdout is used.
--O  Output <span class="hljs-built_in">type</span>. If none provided, a summary is printed.
-    <span class="hljs-string">"csv"</span> outputs the response metrics <span class="hljs-keyword">in</span> comma-separated values format.
-    <span class="hljs-string">"json"</span> outputs the metrics report <span class="hljs-keyword">in</span> JSON format.
-    <span class="hljs-string">"pretty"</span> outputs the metrics report <span class="hljs-keyword">in</span> pretty JSON format.
-    <span class="hljs-string">"html"</span> outputs the metrics report as HTML.
-    <span class="hljs-string">"influx-summary"</span> outputs the metrics summary as influxdb line protocol.
-    <span class="hljs-string">"influx-details"</span> outputs the metrics details as influxdb line protocol.
+-O  Output type. If none provided, a summary is printed.
+    "csv" outputs the response metrics in comma-separated values format.
+    "json" outputs the metrics report in JSON format.
+    "pretty" outputs the metrics report in pretty JSON format.
+    "html" outputs the metrics report as HTML.
+    "influx-summary" outputs the metrics summary as influxdb line protocol.
+    "influx-details" outputs the metrics details as influxdb line protocol.
 
--i  Comma separated list of proto import paths. The current working directory and the directory
-    of the protocol buffer file are automatically added to the import list.
+-T  Connection timeout in seconds for the initial connection dial. Default is 10.
+-L  Keepalive time in seconds. Only used if present and above 0.
 
--T  Connection timeout <span class="hljs-keyword">in</span> seconds <span class="hljs-keyword">for</span> the initial connection dial. Default is 10.
--L  Keepalive time <span class="hljs-keyword">in</span> seconds. Only used <span class="hljs-keyword">if</span> present and above 0.
-
--name  User specified name <span class="hljs-keyword">for</span> the <span class="hljs-built_in">test</span>.
+-name  User specified name for the test.
 -tags  JSON representation of user-defined string tags.
 
--cpus  Number of used cpu cores. (default <span class="hljs-keyword">for</span> current machine is 8 cores)
+-cpus  Number of used cpu cores.
 
 -v  Print the version.
-</code></pre>
+</span></code></pre>
 </span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/install"><span class="arrow-prev">← </span><span>Installation</span></a><a class="docs-next button" href="/docs/options"><span>Options Reference</span><span class="arrow-next"> →</span></a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Bojan D.</section></footer></div></body></html>
