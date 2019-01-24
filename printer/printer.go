@@ -248,6 +248,7 @@ var tmplFuncMap = template.FuncMap{
 	"formatStatusCode": formatStatusCode,
 	"formatErrorDist":  formatErrorDist,
 	"formatDate":       formatDate,
+	"formatNanoUnit":   formatNanoUnit,
 }
 
 func jsonify(v interface{}, pretty bool) string {
@@ -263,6 +264,20 @@ func jsonify(v interface{}, pretty bool) string {
 	}
 
 	return string(out.Bytes())
+}
+
+func formatNanoUnit(d time.Duration) string {
+	v := d.Nanoseconds()
+	if v < 10000 {
+		return fmt.Sprintf("%+v ns", v)
+	}
+
+	valMs := float64(v) / 1000000.0
+	if valMs < 1000 {
+		return fmt.Sprintf("%4.2f ms", valMs)
+	}
+
+	return fmt.Sprintf("%4.2f s", float64(valMs)/1000.0)
 }
 
 func formatMilli(duration float64) string {
@@ -302,7 +317,13 @@ func histogram(buckets []runner.Bucket) string {
 }
 
 func formatMarkMs(m float64) string {
-	return fmt.Sprintf("'%4.3f ms'", m*1000)
+	m = m * 1000.0
+
+	if m < 1 {
+		return fmt.Sprintf("'%4.4f ms'", m)
+	}
+
+	return fmt.Sprintf("'%4.2f ms'", m)
 }
 
 func formatStatusCode(statusCodeDist map[string]int) string {
@@ -339,16 +360,16 @@ var (
 Summary:
 {{ if .Name }}  Name:		{{ .Name }}
 {{ end }}  Count:	{{ .Count }}
-  Total:	{{ formatMilli .Total.Seconds }} ms
-  Slowest:	{{ formatMilli .Slowest.Seconds }} ms
-  Fastest:	{{ formatMilli .Fastest.Seconds }} ms
-  Average:	{{ formatMilli .Average.Seconds }} ms
+  Total:	{{ formatNanoUnit .Total }}
+  Slowest:	{{ formatNanoUnit .Slowest }}
+  Fastest:	{{ formatNanoUnit .Fastest }}
+  Average:	{{ formatNanoUnit .Average }}
   Requests/sec:	{{ formatSeconds .Rps }}
 
 Response time histogram:
 {{ histogram .Histogram }}
 Latency distribution:{{ range .LatencyDistribution }}
-  {{ .Percentage }}%% in {{ formatMilli .Latency.Seconds }} ms{{ end }}
+  {{ .Percentage }}%% in {{ formatNanoUnit .Latency }} {{ end }}
 Status code distribution:
 {{ formatStatusCode .StatusCodeDist }}
 {{ if gt (len .ErrorDist) 0 }}Error distribution:
@@ -484,19 +505,19 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 								</tr>
 								<tr>
 									<th>Total</th>
-									<td>{{ formatMilli .Total.Seconds }} ms</td>
+									<td>{{ formatNanoUnit .Total }}</td>
 								</tr>
 								<tr>
 									<th>Slowest</th>
-								<td>{{ formatMilli .Slowest.Seconds }} ms</td>
+								<td>{{ formatNanoUnit .Slowest }}</td>
 								</tr>
 								<tr>
 									<th>Fastest</th>
-									<td>{{ formatMilli .Fastest.Seconds }} ms</td>
+									<td>{{ formatNanoUnit .Fastest }}</td>
 								</tr>
 								<tr>
 									<th>Average</th>
-									<td>{{ formatMilli .Average.Seconds }} ms</td>
+									<td>{{ formatNanoUnit .Average }}</td>
 								</tr>
 								<tr>
 									<th>Requests / sec</th>
@@ -550,7 +571,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 					<tbody>
 						<tr>
 							{{ range .LatencyDistribution }}
-								<td>{{ formatMilli .Latency.Seconds }} ms</td>
+								<td>{{ formatNanoUnit .Latency }}</td>
 							{{ end }}
 						</tr>
 					</tbody>
