@@ -46,6 +46,8 @@ type RunConfig struct {
 	dialTimeout   time.Duration
 	keepaliveTime time.Duration
 
+	streamInterval time.Duration
+
 	// data
 	data     []byte
 	binary   bool
@@ -405,6 +407,15 @@ func WithProtoset(protoset string) Option {
 	return func(o *RunConfig) error {
 		protoset = strings.TrimSpace(protoset)
 		o.protoset = protoset
+
+		return nil
+	}
+}
+
+// WithStreamInterval sets the stream interval
+func WithStreamInterval(d time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.streamInterval = d
 
 		return nil
 	}

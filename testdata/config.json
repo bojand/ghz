@@ -1,7 +1,9 @@
 {
-  "x": "7s",
   "n": 5000,
   "c": 50,
+  "x": "7s",
+  "z": "12s",
+  "si": "500ms",
   "proto": "../../testdata/greeter.proto",
   "call": "helloworld.Greeter.SayHello",
   "d": {

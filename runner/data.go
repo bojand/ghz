@@ -45,6 +45,7 @@ func createPayloads(data string, mtd *desc.MethodDescriptor) (*dynamic.Message, 
 			if elems > 0 {
 				streamInput = make([]*dynamic.Message, elems)
 			}
+
 			for i, elem := range dataArray {
 				elemMsg := dynamic.NewMessage(md)
 				err := messageFromMap(elemMsg, &elem)

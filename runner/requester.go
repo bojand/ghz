@@ -269,6 +269,13 @@ func (b *Requester) makeClientStreamingRequest(ctx *context.Context, input *[]*d
 		}
 
 		payload := streamInput[counter]
+
+		var wait <-chan time.Time
+		if b.config.streamInterval > 0 {
+			wait = time.Tick(b.config.streamInterval)
+			<-wait
+		}
+
 		err = str.SendMsg(payload)
 		if err == io.EOF {
 			// We get EOF on send if the server says "go away"
@@ -310,6 +317,12 @@ func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Mess
 		}
 
 		payload := streamInput[counter]
+
+		var wait <-chan time.Time
+		if b.config.streamInterval > 0 {
+			wait = time.Tick(b.config.streamInterval)
+			<-wait
+		}
 		err = str.SendMsg(payload)
 		counter++
 	}
