@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const dbName = "../test/test.db"
+const dbName = "../test/model_test.db"
 
 func TestProject_Create(t *testing.T) {
 	os.Remove(dbName)
@@ -125,6 +125,8 @@ func TestProject_Create(t *testing.T) {
 }
 
 func TestProject_Save(t *testing.T) {
+	os.Remove(dbName)
+
 	defer os.Remove(dbName)
 
 	db, err := gorm.Open("sqlite3", dbName)
