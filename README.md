@@ -60,6 +60,9 @@ Options:
 -m  Request metadata as stringified JSON.
 -M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
 
+-si Stream interval duration. Spread stream sends by given amount. 
+    Only applies to client and bidi streaming calls. Example: 100ms
+
 -o  Output path. If none provided stdout is used.
 -O  Output type. If none provided, a summary is printed.
     "csv" outputs the response metrics in comma-separated values format.
