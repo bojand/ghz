@@ -48,6 +48,7 @@ var (
 	binPath  = flag.String("B", "", "File path for the call data as serialized binary message.")
 	md       = flag.String("m", "", "Request metadata as stringified JSON.")
 	mdPath   = flag.String("M", "", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.")
+	si       = flag.Duration("si", 0, "Interval for stream requests between message sends.")
 
 	output = flag.String("o", "", "Output path. If none provided stdout is used.")
 	format = flag.String("O", "", "Output format. If none provided, a summary is printed.")
@@ -100,6 +101,9 @@ Options:
 -B  Path for the call data as serialized binary message.
 -m  Request metadata as stringified JSON.
 -M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
+
+-si Stream interval duration. Spread stream sends by given amount. 
+    Only applies to client and bidi streaming calls. Example: 100ms
 
 -o  Output path. If none provided stdout is used.
 -O  Output type. If none provided, a summary is printed.
@@ -158,9 +162,9 @@ func main() {
 	}
 
 	// init / fix up durations
-	if cfg.X.Duration > 0 {
-		cfg.Z.Duration = cfg.X.Duration
-	} else if cfg.Z.Duration > 0 {
+	if cfg.X > 0 {
+		cfg.Z = cfg.X
+	} else if cfg.Z > 0 {
 		cfg.N = math.MaxInt32
 	}
 
@@ -180,13 +184,14 @@ func main() {
 		runner.WithTotalRequests(cfg.N),
 		runner.WithQPS(cfg.QPS),
 		runner.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
-		runner.WithRunDuration(cfg.Z.Duration),
+		runner.WithRunDuration(time.Duration(cfg.Z)),
 		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
 		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
 		runner.WithName(cfg.Name),
 		runner.WithCPUs(cfg.CPUs),
 		runner.WithMetadata(cfg.Metadata),
 		runner.WithTags(cfg.Tags),
+		runner.WithStreamInterval(time.Duration(cfg.SI)),
 	)
 
 	if strings.TrimSpace(cfg.MetadataPath) != "" {
@@ -306,8 +311,8 @@ func createConfigFromArgs() (*config, error) {
 		N:             *n,
 		C:             *c,
 		QPS:           *q,
-		Z:             duration{*z},
-		X:             duration{*x},
+		Z:             Duration(*z),
+		X:             Duration(*x),
 		Timeout:       *t,
 		Data:          dataObj,
 		DataPath:      *dataPath,
@@ -315,6 +320,7 @@ func createConfigFromArgs() (*config, error) {
 		BinDataPath:   *binPath,
 		Metadata:      &metadata,
 		MetadataPath:  *mdPath,
+		SI:            Duration(*si),
 		Output:        *output,
 		Format:        *format,
 		ImportPaths:   iPaths,

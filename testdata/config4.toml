@@ -1,0 +1,21 @@
+n = 500
+c = 1
+x = "7s"
+z = "12s"
+si = "500ms"
+proto = "../../testdata/greeter.proto"
+call = "helloworld.Greeter.SayHelloBidi"
+host = "0.0.0.0:50051"
+insecure = true
+
+[[d]]
+name = "Bob 1 {{.TimestampUnix}}"
+[[d]]
+name = "Bob 2 {{.TimestampUnix}}"
+[[d]]
+name = "Bob 3 {{.TimestampUnix}}"
+[[d]]
+name = "Bob 4 {{.TimestampUnix}}"
+
+[m]
+rn = "{{.RequestNumber}}"

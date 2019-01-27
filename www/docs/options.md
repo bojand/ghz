@@ -82,7 +82,13 @@ Maximum duration of application to send requests with `n` setting respected. If 
 
 ### `-d`
 
-The call data as stringified JSON. If the value is `@` then the request contents are read from standard input (stdin). Example: `-d '{"name":"Bob"}'`. For client streaming or bi-directional calls we can accept a JSON array of messages, and each element representing a single message within the stream call. For example: `-d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'` can be used as input for a client streaming call. In case of streaming calls if a single object is given for data then the it is sent as every message.
+The call data as stringified JSON. If the value is `@` then the request contents are read from standard input (stdin). Example: `-d '{"name":"Bob"}'`. 
+
+For client streaming or bi-directional calls we can accept a JSON array of messages, and each element representing a single message within the stream call. For example: `-d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'` can be used as input for a client streaming or bidi call. In case of streaming calls if a single object is given for data then it is automatically converted to an array with single element. For example `-d '{"name":"Joe"}'` is equivalent to `-d '[{"name":"Joe"}]`.
+
+In case of client streaming we send all the messages in the input array and then we close and receive.
+
+In case of bidi we send all the messages in the array first and close the send portion; then read the messages from the server until EOF and then the call is finished.
 
 ### `-D`
 

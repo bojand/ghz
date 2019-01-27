@@ -6,14 +6,27 @@ import (
 	"time"
 )
 
-type duration struct {
-	time.Duration
+// Duration is our duration with TOML support
+type Duration time.Duration
+
+// UnmarshalText is our custom unmarshaller with TOML support
+func (d *Duration) UnmarshalText(text []byte) error {
+	dur, err := time.ParseDuration(string(text))
+	if err != nil {
+		return err
+	}
+
+	*d = Duration(dur)
+	return nil
 }
 
-func (d *duration) UnmarshalText(text []byte) error {
-	var err error
-	d.Duration, err = time.ParseDuration(string(text))
-	return err
+// MarshalText implements encoding.TextMarshaler
+func (d Duration) MarshalText() ([]byte, error) {
+	return []byte(time.Duration(d).String()), nil
+}
+
+func (d Duration) String() string {
+	return time.Duration(d).String()
 }
 
 // Config for the run.
@@ -31,8 +44,8 @@ type config struct {
 	N             uint               `json:"n" toml:"n" yaml:"n" default:"200"`
 	C             uint               `json:"c" toml:"c" yaml:"c" default:"50"`
 	QPS           uint               `json:"q" toml:"q" yaml:"q"`
-	Z             duration           `json:"z" toml:"z" yaml:"z"`
-	X             duration           `json:"x" toml:"x" yaml:"x"`
+	Z             Duration           `json:"z" toml:"z" yaml:"z"`
+	X             Duration           `json:"x" toml:"x" yaml:"x"`
 	Timeout       uint               `json:"t" toml:"t" yaml:"t" default:"20"`
 	Data          interface{}        `json:"d,omitempty" toml:"d,omitempty" yaml:"d,omitempty"`
 	DataPath      string             `json:"D" toml:"D" yaml:"D"`
@@ -40,6 +53,7 @@ type config struct {
 	BinDataPath   string             `json:"B" toml:"B" yaml:"B"`
 	Metadata      *map[string]string `json:"m,omitempty" toml:"m,omitempty" yaml:"m,omitempty"`
 	MetadataPath  string             `json:"M" toml:"M" yaml:"M"`
+	SI            Duration           `json:"si" toml:"si" yaml:"si"`
 	Output        string             `json:"o" toml:"o" yaml:"o"`
 	Format        string             `json:"O" toml:"O" yaml:"O"`
 	Host          string             `json:"host" toml:"host" yaml:"host"`
@@ -51,13 +65,14 @@ type config struct {
 	Tags          *map[string]string `json:"tags,omitempty" toml:"tags,omitempty" yaml:"tags,omitempty"`
 }
 
-// UnmarshalJSON is our custom implementation to handle the Duration field Z
+// UnmarshalJSON is our custom implementation to handle the Duration fields
 // and validate data
 func (c *config) UnmarshalJSON(data []byte) error {
 	type Alias config
 	aux := &struct {
-		Z string `json:"z"`
-		X string `json:"x"`
+		Z  string `json:"z"`
+		X  string `json:"x"`
+		SI string `json:"si"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -73,21 +88,43 @@ func (c *config) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	zd, _ := time.ParseDuration(aux.Z)
-	c.Z = duration{zd}
+	zd, err := time.ParseDuration(aux.Z)
+	if err != nil {
+		return nil
+	}
+
+	c.Z = Duration(zd)
+
+	xd, err := time.ParseDuration(aux.X)
+	if err != nil {
+		return nil
+	}
+
+	c.X = Duration(xd)
+
+	sid, err := time.ParseDuration(aux.SI)
+	if err != nil {
+		return nil
+	}
+
+	c.SI = Duration(sid)
+
 	return nil
 }
 
-// MarshalJSON is our custom implementation to handle the Duration field Z
+// MarshalJSON is our custom implementation to handle the Duration fields
 func (c config) MarshalJSON() ([]byte, error) {
 	type Alias config
 	return json.Marshal(&struct {
 		*Alias
-		Z string `json:"z"`
-		X string `json:"x"`
+		Z  string `json:"z"`
+		X  string `json:"x"`
+		SI string `json:"si"`
 	}{
 		Alias: (*Alias)(&c),
 		Z:     c.Z.String(),
+		X:     c.X.String(),
+		SI:    c.SI.String(),
 	})
 }
 
