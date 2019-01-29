@@ -451,10 +451,6 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		return nil, errors.New("Host required")
 	}
 
-	if c.proto == "" && c.protoset == "" {
-		return nil, errors.New("Must provide proto or protoset")
-	}
-
 	creds, err := createClientTransportCredentials(
 		c.skipVerify,
 		c.cacert,

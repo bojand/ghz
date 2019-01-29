@@ -1,6 +1,7 @@
 package protodesc
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -10,6 +11,9 @@ import (
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
+	"github.com/jhump/protoreflect/grpcreflect"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // GetMethodDescFromProto gets method descritor for the given call symbol from proto file given my path proto
@@ -61,6 +65,19 @@ func GetMethodDescFromProtoSet(call, protoset string) (*desc.MethodDescriptor, e
 	}
 
 	return getMethodDesc(call, resolved)
+}
+
+// GetMethodDescFromReflect gets method descriptor for the call from reflection using client
+func GetMethodDescFromReflect(call string, client *grpcreflect.Client) (*desc.MethodDescriptor, error) {
+	file, err := client.FileContainingSymbol(call)
+	if err != nil {
+		return nil, reflectionSupport(err)
+	}
+
+	files := map[string]*desc.FileDescriptor{}
+	files[file.GetName()] = file
+
+	return getMethodDesc(call, files)
 }
 
 func getMethodDesc(call string, files map[string]*desc.FileDescriptor) (*desc.MethodDescriptor, error) {
@@ -132,4 +149,14 @@ func parseSymbol(svcAndMethod string) (string, string) {
 		}
 	}
 	return svcAndMethod[:pos], svcAndMethod[pos+1:]
+}
+
+func reflectionSupport(err error) error {
+	if err == nil {
+		return nil
+	}
+	if stat, ok := status.FromError(err); ok && stat.Code() == codes.Unimplemented {
+		return errors.New("server does not support the reflection API")
+	}
+	return err
 }

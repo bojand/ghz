@@ -8,13 +8,17 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bojand/ghz/protodesc"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
+	"github.com/jhump/protoreflect/grpcreflect"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
+
+	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
 // Max size of the buffer of result channel.
@@ -46,7 +50,44 @@ type Requester struct {
 	stopReason StopReason
 }
 
-func newRequester(mtd *desc.MethodDescriptor, c *RunConfig) (*Requester, error) {
+func newRequester(c *RunConfig) (*Requester, error) {
+	var err error
+	var mtd *desc.MethodDescriptor
+	var cc *grpc.ClientConn
+
+	reqr := &Requester{
+		config:     c,
+		stopReason: ReasonNormalEnd,
+	}
+
+	if c.proto != "" {
+		mtd, err = protodesc.GetMethodDescFromProto(c.call, c.proto, c.importPaths)
+	} else if c.protoset != "" {
+		mtd, err = protodesc.GetMethodDescFromProtoSet(c.call, c.protoset)
+	} else {
+		// use reflection to get method decriptor
+		cc, err = reqr.connect()
+
+		ctx := context.Background()
+		ctx, _ = context.WithTimeout(ctx, c.dialTimeout)
+		// cancel ignored because we manually do Close()
+
+		md := make(metadata.MD)
+		// md := grpcurl.MetadataFromHeaders(append(addlHeaders, reflHeaders...))
+
+		refCtx := metadata.NewOutgoingContext(ctx, md)
+		if err != nil {
+			return nil, err
+		}
+		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(cc))
+
+		mtd, err = protodesc.GetMethodDescFromReflect(c.call, refClient)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
 	md := mtd.GetInputType()
 	payloadMessage := dynamic.NewMessage(md)
 	if payloadMessage == nil {
@@ -58,11 +99,10 @@ func newRequester(mtd *desc.MethodDescriptor, c *RunConfig) (*Requester, error) 
 		qpsTick = time.Duration(1e6/(c.qps)) * time.Microsecond
 	}
 
-	reqr := &Requester{
-		config:     c,
-		mtd:        mtd,
-		qpsTick:    qpsTick,
-		stopReason: ReasonNormalEnd}
+	// fill in the rest
+	reqr.cc = cc
+	reqr.mtd = mtd
+	reqr.qpsTick = qpsTick
 
 	return reqr, nil
 }
@@ -74,15 +114,19 @@ func (b *Requester) Run() (*Report, error) {
 	b.stopCh = make(chan bool, b.config.c)
 	b.start = time.Now()
 
-	cc, err := b.connect()
-	if err != nil {
-		return nil, err
+	// we may have connection from newRequestor if we used reflection
+	if b.cc == nil {
+		cc, err := b.connect()
+		if err != nil {
+			return nil, err
+		}
+
+		b.cc = cc
 	}
 
-	b.cc = cc
-	defer cc.Close()
+	defer b.cc.Close()
 
-	b.stub = grpcdynamic.NewStub(cc)
+	b.stub = grpcdynamic.NewStub(b.cc)
 
 	b.reporter = newReporter(b.results, b.config)
 
@@ -105,6 +149,8 @@ func (b *Requester) Stop(reason StopReason) {
 	}
 
 	b.stopReason = reason
+
+	b.cc.Close()
 }
 
 // Finish finishes the test run
