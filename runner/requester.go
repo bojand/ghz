@@ -95,9 +95,6 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		mtd, err = protodesc.GetMethodDescFromReflect(c.call, refClient)
 	}
 
-	fmt.Printf("%+v\n\n", mtd)
-	fmt.Printf("%+v\n\n", err)
-
 	if err != nil {
 		return nil, err
 	}
