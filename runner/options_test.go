@@ -24,70 +24,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Nil(t, c)
 	})
 
-	t.Run("fail without proto or protoset", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050")
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty proto", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithProtoFile("  ", []string{}),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
 	t.Run("fail with invalid extension", func(t *testing.T) {
 		c, err := newConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.bin", []string{}),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty protoset", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithProtoset("  "),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty cert", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithCertificate("  ", ""),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty JSON data", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithData("  "),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty name", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithName("  "),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with invalid JSON data", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithData(`asdf:{"foo"}`),
 		)
 
 		assert.Error(t, err)

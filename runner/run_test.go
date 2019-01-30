@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bojand/ghz/internal"
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,7 @@ import (
 func TestRunUnary(t *testing.T) {
 	callType := helloworld.Unary
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -29,7 +30,7 @@ func TestRunUnary(t *testing.T) {
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
-			localhost,
+			internal.TestLocalhost,
 			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(1),
 			WithConcurrency(1),
@@ -72,7 +73,7 @@ func TestRunUnary(t *testing.T) {
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
-			localhost,
+			internal.TestLocalhost,
 			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(12),
 			WithConcurrency(2),
@@ -127,7 +128,7 @@ func TestRunUnary(t *testing.T) {
 
 			report, err := Run(
 				"helloworld.Greeter.SayHello",
-				localhost,
+				internal.TestLocalhost,
 				WithProtoFile("../testdata/greeter.proto", []string{}),
 				WithTotalRequests(10),
 				WithConcurrency(2),
@@ -176,7 +177,7 @@ func TestRunUnary(t *testing.T) {
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
-			localhost,
+			internal.TestLocalhost,
 			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(5),
 			WithConcurrency(1),
@@ -215,7 +216,7 @@ func TestRunUnary(t *testing.T) {
 func TestRunServerStreaming(t *testing.T) {
 	callType := helloworld.ServerStream
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -230,7 +231,7 @@ func TestRunServerStreaming(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHellos",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(15),
 		WithConcurrency(3),
@@ -270,7 +271,7 @@ func TestRunServerStreaming(t *testing.T) {
 func TestRunClientStreaming(t *testing.T) {
 	callType := helloworld.ClientStream
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -293,7 +294,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHelloCS",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(16),
 		WithConcurrency(4),
@@ -332,7 +333,7 @@ func TestRunClientStreaming(t *testing.T) {
 func TestRunClientStreamingBinary(t *testing.T) {
 	callType := helloworld.ClientStream
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -349,7 +350,7 @@ func TestRunClientStreamingBinary(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHelloCS",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(24),
 		WithConcurrency(4),
@@ -388,7 +389,7 @@ func TestRunClientStreamingBinary(t *testing.T) {
 func TestRunBidi(t *testing.T) {
 	callType := helloworld.Bidi
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -411,7 +412,7 @@ func TestRunBidi(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHelloBidi",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(20),
 		WithConcurrency(4),
@@ -450,7 +451,7 @@ func TestRunBidi(t *testing.T) {
 func TestRunUnarySecure(t *testing.T) {
 	callType := helloworld.Unary
 
-	gs, s, err := startServer(true)
+	gs, s, err := internal.StartServer(true)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -465,7 +466,7 @@ func TestRunUnarySecure(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHello",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(18),
 		WithConcurrency(3),
@@ -504,7 +505,7 @@ func TestRunUnarySecure(t *testing.T) {
 func TestRunUnaryProtoset(t *testing.T) {
 	callType := helloworld.Unary
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -519,7 +520,7 @@ func TestRunUnaryProtoset(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHello",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoset("../testdata/bundle.protoset"),
 		WithTotalRequests(21),
 		WithConcurrency(3),

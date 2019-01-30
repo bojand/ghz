@@ -87,3 +87,17 @@ func TestProtodesc_GetMethodDescFromProtoSet(t *testing.T) {
 		assert.NotNil(t, md)
 	})
 }
+
+// func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
+
+// 	gs, s, err := internal.StartServer(false)
+
+// 	if err != nil {
+// 		assert.FailNow(t, err.Error())
+// 	}
+
+// 	defer s.Stop()
+
+// 	t.Run("test known call", func(t *testing.T) {
+// 	})
+// }
