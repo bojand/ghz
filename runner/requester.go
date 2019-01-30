@@ -53,11 +53,18 @@ type Requester struct {
 func newRequester(c *RunConfig) (*Requester, error) {
 	var err error
 	var mtd *desc.MethodDescriptor
-	var cc *grpc.ClientConn
+
+	var qpsTick time.Duration
+	if c.qps > 0 {
+		qpsTick = time.Duration(1e6/(c.qps)) * time.Microsecond
+	}
 
 	reqr := &Requester{
 		config:     c,
+		qpsTick:    qpsTick,
 		stopReason: ReasonNormalEnd,
+		results:    make(chan *callResult, min(c.c*1000, maxResult)),
+		stopCh:     make(chan bool, c.c),
 	}
 
 	if c.proto != "" {
@@ -66,10 +73,13 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		mtd, err = protodesc.GetMethodDescFromProtoSet(c.call, c.protoset)
 	} else {
 		// use reflection to get method decriptor
-		cc, err = reqr.connect()
+		var cc *grpc.ClientConn
+		cc, err = reqr.connect(false)
 		if err != nil {
 			return nil, err
 		}
+
+		defer cc.Close()
 
 		ctx := context.Background()
 		ctx, _ = context.WithTimeout(ctx, c.dialTimeout)
@@ -85,6 +95,9 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		mtd, err = protodesc.GetMethodDescFromReflect(c.call, refClient)
 	}
 
+	fmt.Printf("%+v\n\n", mtd)
+	fmt.Printf("%+v\n\n", err)
+
 	if err != nil {
 		return nil, err
 	}
@@ -95,15 +108,9 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
 	}
 
-	var qpsTick time.Duration
-	if c.qps > 0 {
-		qpsTick = time.Duration(1e6/(c.qps)) * time.Microsecond
-	}
-
 	// fill in the rest
-	reqr.cc = cc
+	// reqr.cc = cc
 	reqr.mtd = mtd
-	reqr.qpsTick = qpsTick
 
 	return reqr, nil
 }
@@ -111,13 +118,11 @@ func newRequester(c *RunConfig) (*Requester, error) {
 // Run makes all the requests and returns a report of results
 // It blocks until all work is done.
 func (b *Requester) Run() (*Report, error) {
-	b.results = make(chan *callResult, min(b.config.c*1000, maxResult))
-	b.stopCh = make(chan bool, b.config.c)
 	b.start = time.Now()
 
 	// we may have connection from newRequestor if we used reflection
 	if b.cc == nil {
-		cc, err := b.connect()
+		cc, err := b.connect(true)
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +170,7 @@ func (b *Requester) Finish() *Report {
 	return b.reporter.Finalize(b.stopReason, total)
 }
 
-func (b *Requester) connect() (*grpc.ClientConn, error) {
+func (b *Requester) connect(stats bool) (*grpc.ClientConn, error) {
 	var opts []grpc.DialOption
 
 	if b.config.insecure {
@@ -190,7 +195,9 @@ func (b *Requester) connect() (*grpc.ClientConn, error) {
 		}))
 	}
 
-	opts = append(opts, grpc.WithStatsHandler(&statsHandler{b.results}))
+	if stats {
+		opts = append(opts, grpc.WithStatsHandler(&statsHandler{b.results}))
+	}
 
 	// create client connection
 	return grpc.DialContext(ctx, b.config.host, opts...)
