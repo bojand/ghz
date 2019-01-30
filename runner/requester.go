@@ -67,6 +67,9 @@ func newRequester(c *RunConfig) (*Requester, error) {
 	} else {
 		// use reflection to get method decriptor
 		cc, err = reqr.connect()
+		if err != nil {
+			return nil, err
+		}
 
 		ctx := context.Background()
 		ctx, _ = context.WithTimeout(ctx, c.dialTimeout)
@@ -76,9 +79,7 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		// md := grpcurl.MetadataFromHeaders(append(addlHeaders, reflHeaders...))
 
 		refCtx := metadata.NewOutgoingContext(ctx, md)
-		if err != nil {
-			return nil, err
-		}
+
 		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(cc))
 
 		mtd, err = protodesc.GetMethodDescFromReflect(c.call, refClient)

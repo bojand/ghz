@@ -69,8 +69,9 @@ func GetMethodDescFromProtoSet(call, protoset string) (*desc.MethodDescriptor, e
 
 // GetMethodDescFromReflect gets method descriptor for the call from reflection using client
 func GetMethodDescFromReflect(call string, client *grpcreflect.Client) (*desc.MethodDescriptor, error) {
+	call = strings.Replace(call, "/", ".", -1)
 	file, err := client.FileContainingSymbol(call)
-	if err != nil {
+	if err != nil || file == nil {
 		return nil, reflectionSupport(err)
 	}
 
