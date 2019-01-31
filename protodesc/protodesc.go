@@ -1,6 +1,7 @@
 package protodesc
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -11,6 +12,8 @@ import (
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 )
+
+var errNoMethodNameSpecified = errors.New("no method name specified")
 
 // GetMethodDescFromProto gets method descritor for the given call symbol from proto file given my path proto
 // imports is used for import paths in parsing the proto file
@@ -64,9 +67,9 @@ func GetMethodDescFromProtoSet(call, protoset string) (*desc.MethodDescriptor, e
 }
 
 func getMethodDesc(call string, files map[string]*desc.FileDescriptor) (*desc.MethodDescriptor, error) {
-	svc, mth := parseSymbol(call)
-	if svc == "" || mth == "" {
-		return nil, fmt.Errorf("given method name %q is not in expected format: 'service/method' or 'service.method'", call)
+	svc, mth, err := parseServiceMethod(call)
+	if err != nil {
+		return nil, err
 	}
 
 	dsc, err := findServiceSymbol(files, svc)
@@ -123,13 +126,39 @@ func findServiceSymbol(resolved map[string]*desc.FileDescriptor, fullyQualifiedN
 	return nil, fmt.Errorf("cannot find service %q", fullyQualifiedName)
 }
 
-func parseSymbol(svcAndMethod string) (string, string) {
-	pos := strings.LastIndex(svcAndMethod, "/")
-	if pos < 0 {
-		pos = strings.LastIndex(svcAndMethod, ".")
-		if pos < 0 {
-			return "", ""
-		}
+// parseServiceMethod parses the fully-qualified service name without a leading "."
+// and the method name from the input string.
+//
+// valid inputs:
+//   package.Service.Method
+//   .package.Service.Method
+//   package.Service/Method
+//   .package.Service/Method
+func parseServiceMethod(svcAndMethod string) (string, string, error) {
+	if len(svcAndMethod) == 0 {
+		return "", "", errNoMethodNameSpecified
 	}
-	return svcAndMethod[:pos], svcAndMethod[pos+1:]
+	if svcAndMethod[0] == '.' {
+		svcAndMethod = svcAndMethod[1:]
+	}
+	if len(svcAndMethod) == 0 {
+		return "", "", errNoMethodNameSpecified
+	}
+	switch strings.Count(svcAndMethod, "/") {
+	case 0:
+		pos := strings.LastIndex(svcAndMethod, ".")
+		if pos < 0 {
+			return "", "", newInvalidMethodNameError(svcAndMethod)
+		}
+		return svcAndMethod[:pos], svcAndMethod[pos+1:], nil
+	case 1:
+		split := strings.Split(svcAndMethod, "/")
+		return split[0], split[1], nil
+	default:
+		return "", "", newInvalidMethodNameError(svcAndMethod)
+	}
+}
+
+func newInvalidMethodNameError(svcAndMethod string) error {
+	return fmt.Errorf("method name must be package.Service.Method or package.Service/Method: %q", svcAndMethod)
 }
