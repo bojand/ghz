@@ -116,6 +116,9 @@ make # run all linters, tests, and produce code coverage
 make lint # run all linters
 make test # run tests
 make cover # run tests and produce code coverage
+
+V=1 make # more verbosity
+OPEN_COVERAGE=1 make cover # open code coverage.html after running
 ```
 
 ## Credit
