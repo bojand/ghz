@@ -15,9 +15,10 @@
 
 *.out
 
-cmd/ghz/ghz
-cmd/ghz-web/ghz-web
-cmd/server/server
+/cmd/ghz/ghz
+/cmd/ghz-web/ghz-web
+/cmd/server/server
+/.tmp/
 
 dist
 build

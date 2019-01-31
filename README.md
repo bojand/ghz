@@ -6,7 +6,7 @@
 
 # ghz
 
-[![Release](https://img.shields.io/github/release/bojand/ghz.svg?style=flat-square)](https://github.com/bojand/ghz/releases/latest) 
+[![Release](https://img.shields.io/github/release/bojand/ghz.svg?style=flat-square)](https://github.com/bojand/ghz/releases/latest)
 [![Build Status](https://img.shields.io/circleci/project/github/bojand/ghz/master.svg?style=flat-square)](https://circleci.com/gh/bojand/ghz)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bojand/ghz?style=flat-square)](https://goreportcard.com/report/github.com/bojand/ghz)
 [![License](https://img.shields.io/github/license/bojand/ghz.svg?style=flat-square)](https://raw.githubusercontent.com/bojand/ghz/master/LICENSE)
@@ -60,7 +60,7 @@ Options:
 -m  Request metadata as stringified JSON.
 -M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
 
--si Stream interval duration. Spread stream sends by given amount. 
+-si Stream interval duration. Spread stream sends by given amount.
     Only applies to client and bidi streaming calls. Example: 100ms
 
 -o  Output path. If none provided stdout is used.
@@ -107,6 +107,16 @@ printer := printer.ReportPrinter{
 printer.Print("pretty")
 ```
 
+## Development
+
+Golang 1.11+ is required.
+
+```
+make # run all linters, tests, and produce code coverage
+make lint # run all linters
+make test # run tests
+make cover # run tests and produce code coverage
+```
 
 ## Credit
 

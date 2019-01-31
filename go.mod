@@ -9,11 +9,13 @@ require (
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-playground/validator v9.25.0+incompatible
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
+	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
 	github.com/golang/protobuf v1.2.0
 	github.com/jhump/protoreflect v1.1.0
 	github.com/jinzhu/configor v0.0.0-20180614024415-4edaf76fe188
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
+	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/labstack/echo v3.3.5+incompatible
 	github.com/labstack/gommon v0.2.8
 	github.com/leodido/go-urn v1.1.0 // indirect
@@ -30,4 +32,5 @@ require (
 	golang.org/x/net v0.0.0-20190110200230-915654e7eabc
 	google.golang.org/grpc v1.17.0
 	gopkg.in/yaml.v2 v2.2.2 // indirect
+	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe // indirect
 )
