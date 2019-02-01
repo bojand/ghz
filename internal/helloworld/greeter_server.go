@@ -27,7 +27,7 @@ var Bidi CallType = "bidi"
 // Greeter implements the GreeterServer for tests
 type Greeter struct {
 	streamData []*HelloReply
-	mutex      *sync.Mutex
+	mutex      *sync.RWMutex
 
 	callCounts map[CallType]int
 }
@@ -111,7 +111,9 @@ func (s *Greeter) ResetCounters() {
 
 // GetCount gets the count for specific call type
 func (s *Greeter) GetCount(key CallType) int {
+	s.mutex.RLock()
 	val, ok := s.callCounts[key]
+	s.mutex.RUnlock()
 	if ok {
 		return val
 	}
@@ -133,5 +135,5 @@ func NewGreeter() *Greeter {
 	m[ClientStream] = 0
 	m[Bidi] = 0
 
-	return &Greeter{streamData: streamData, callCounts: m, mutex: &sync.Mutex{}}
+	return &Greeter{streamData: streamData, callCounts: m, mutex: &sync.RWMutex{}}
 }
