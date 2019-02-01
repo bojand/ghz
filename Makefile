@@ -114,7 +114,6 @@ test:
 # your terminal as a command to run, and then see the code coverage output locally.
 .PHONY: cover
 cover:
-	$(AT) go install golang.org/x/tools/cmd/cover
 	$(AT) rm -rf $(TMP_COVERAGE)
 	$(AT) mkdir -p $(TMP_COVERAGE)
 	go test $(GO_TEST_FLAGS) -coverprofile=$(TMP_COVERAGE)/coverage.txt -coverpkg=$(shell echo $(GO_PKGS) | grep -v \/cmd\/ | tr ' ' ',') $(GO_PKGS)
