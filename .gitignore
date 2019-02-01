@@ -17,5 +17,6 @@ cmd
 dist
 www
 /web
+.tmp
 
 coverage.html
