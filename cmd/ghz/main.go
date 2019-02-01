@@ -24,7 +24,7 @@ var (
 
 	proto    = flag.String("proto", "", `The Protocol Buffer .proto file.`)
 	protoset = flag.String("protoset", "", `The compiled protoset file. Alternative to proto. -proto takes precedence.`)
-	call     = flag.String("call", "", `A fully-qualified method name in 'package/service/method' or 'package.service.method' format.`)
+	call     = flag.String("call", "", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`)
 	paths    = flag.String("i", "", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.")
 
 	cacert     = flag.String("cacert", "", "File containing trusted root certificates for verifying the server.")
@@ -71,10 +71,10 @@ Options:
 
 -proto		The Protocol Buffer .proto file.
 -protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
--call		A fully-qualified method name in 'package/service/method' or 'package.service.method' format.
+-call		A fully-qualified method name in 'package.Service/Method' or 'package.Service.Method' format.
 -i		Comma separated list of proto import paths. The current working directory and the directory
 		of the protocol buffer file are automatically added to the import list.
-	
+
 -cacert		File containing trusted root certificates for verifying the server.
 -cert		File containing client certificate (public key), to present to the server. Must also provide -key option.
 -key 		File containing client private key, to present to the server. Must also provide -cert option.
@@ -83,7 +83,7 @@ Options:
 -insecure	Use plaintext and insecure connection.
 -authority	Value to be used as the :authority pseudo-header. Only works if -insecure is used.
 
--c  Number of requests to run concurrently. 
+-c  Number of requests to run concurrently.
     Total number of requests cannot be smaller than the concurrency level. Default is 50.
 -n  Number of requests to run. Default is 200.
 -q  Rate limit, in queries per second (QPS). Default is no rate limit.
@@ -102,7 +102,7 @@ Options:
 -m  Request metadata as stringified JSON.
 -M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
 
--si Stream interval duration. Spread stream sends by given amount. 
+-si Stream interval duration. Spread stream sends by given amount.
     Only applies to client and bidi streaming calls. Example: 100ms
 
 -o  Output path. If none provided stdout is used.

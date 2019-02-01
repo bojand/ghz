@@ -6,7 +6,7 @@
 
 # ghz
 
-[![Release](https://img.shields.io/github/release/bojand/ghz.svg?style=flat-square)](https://github.com/bojand/ghz/releases/latest) 
+[![Release](https://img.shields.io/github/release/bojand/ghz.svg?style=flat-square)](https://github.com/bojand/ghz/releases/latest)
 [![Build Status](https://img.shields.io/circleci/project/github/bojand/ghz/master.svg?style=flat-square)](https://circleci.com/gh/bojand/ghz)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bojand/ghz?style=flat-square)](https://goreportcard.com/report/github.com/bojand/ghz)
 [![License](https://img.shields.io/github/license/bojand/ghz.svg?style=flat-square)](https://raw.githubusercontent.com/bojand/ghz/master/LICENSE)
@@ -29,7 +29,7 @@ Options:
 
 -proto		The Protocol Buffer .proto file.
 -protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
--call		A fully-qualified method name in 'package/service/method' or 'package.service.method' format.
+-call		A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.
 -i		Comma separated list of proto import paths. The current working directory and the directory
 		of the protocol buffer file are automatically added to the import list.
 
@@ -60,7 +60,7 @@ Options:
 -m  Request metadata as stringified JSON.
 -M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
 
--si Stream interval duration. Spread stream sends by given amount. 
+-si Stream interval duration. Spread stream sends by given amount.
     Only applies to client and bidi streaming calls. Example: 100ms
 
 -o  Output path. If none provided stdout is used.
