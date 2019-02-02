@@ -170,7 +170,7 @@ func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
 		assert.Equal(t, "SayHello", mtd.GetName())
 	})
 
-	t.Run("test unknow known call", func(t *testing.T) {
+	t.Run("test unknown known call", func(t *testing.T) {
 		var opts []grpc.DialOption
 		opts = append(opts, grpc.WithInsecure())
 		ctx := context.Background()
