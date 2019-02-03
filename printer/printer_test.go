@@ -22,7 +22,7 @@ func TestPrinter_getInfluxLine(t *testing.T) {
 		{
 			"empty",
 			runner.Report{},
-			`ghz_run,proto="",call="",host="",n=0,c=0,qps=0,z=0,timeout=0,dial_timeout=0,keepalive=0,data="null",metadata="",tags="",errors=0,has_errors=false count=0,total=0,average=0,fastest=0,slowest=0,rps=0.00,errors=0 0`,
+			`ghz_run,call="",host="",n=0,c=0,qps=0,z=0,timeout=0,dial_timeout=0,keepalive=0,data="null",metadata="",tags="",errors=0,has_errors=false count=0,total=0,average=0,fastest=0,slowest=0,rps=0.00,errors=0 0`,
 		},
 		{
 			"basic",
