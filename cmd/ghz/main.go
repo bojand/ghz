@@ -26,7 +26,6 @@ var (
 	protoset = flag.String("protoset", "", `The compiled protoset file. Alternative to proto. -proto takes precedence.`)
 	call     = flag.String("call", "", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`)
 	paths    = flag.String("i", "", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.")
-	rmd      = flag.String("rmd", "", "Reflect metadata as stringified JSON used during reflection request.")
 
 	cacert     = flag.String("cacert", "", "File containing trusted root certificates for verifying the server.")
 	cert       = flag.String("cert", "", "File containing client certificate (public key), to present to the server. Must also provide -key option.")
@@ -50,6 +49,7 @@ var (
 	md       = flag.String("m", "", "Request metadata as stringified JSON.")
 	mdPath   = flag.String("M", "", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.")
 	si       = flag.Duration("si", 0, "Interval for stream requests between message sends.")
+	rmd      = flag.String("rmd", "", "Reflect metadata as stringified JSON used only for reflection request.")
 
 	output = flag.String("o", "", "Output path. If none provided stdout is used.")
 	format = flag.String("O", "", "Output format. If none provided, a summary is printed.")
@@ -75,7 +75,7 @@ Options:
 -call		A fully-qualified method name in 'package.Service/Method' or 'package.Service.Method' format.
 -i		Comma separated list of proto import paths. The current working directory and the directory
 		of the protocol buffer file are automatically added to the import list.
--rmd	Reflect metadata as stringified JSON used during reflection request.
+-rmd		Reflect metadata as stringified JSON used only for reflection request.
 
 -cacert		File containing trusted root certificates for verifying the server.
 -cert		File containing client certificate (public key), to present to the server. Must also provide -key option.

@@ -112,6 +112,10 @@ Request metadata as stringified JSON.
 
 Path for call metadata JSON file. For example, `-M /home/user/metadata.json` or `-M ./metadata.json`.
 
+### `-rmd`
+
+Reflect metadata as stringified JSON used only for reflection request.
+
 ### `-o`
 
 Output path. If none is provided by default we print to standard output (stdout).
