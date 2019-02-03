@@ -26,6 +26,7 @@ var (
 	protoset = flag.String("protoset", "", `The compiled protoset file. Alternative to proto. -proto takes precedence.`)
 	call     = flag.String("call", "", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`)
 	paths    = flag.String("i", "", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.")
+	rmd      = flag.String("rmd", "", "Reflect metadata as stringified JSON used during reflection request.")
 
 	cacert     = flag.String("cacert", "", "File containing trusted root certificates for verifying the server.")
 	cert       = flag.String("cert", "", "File containing client certificate (public key), to present to the server. Must also provide -key option.")
@@ -74,6 +75,7 @@ Options:
 -call		A fully-qualified method name in 'package.Service/Method' or 'package.Service.Method' format.
 -i		Comma separated list of proto import paths. The current working directory and the directory
 		of the protocol buffer file are automatically added to the import list.
+-rmd	Reflect metadata as stringified JSON used during reflection request.
 
 -cacert		File containing trusted root certificates for verifying the server.
 -cert		File containing client certificate (public key), to present to the server. Must also provide -key option.
@@ -192,6 +194,7 @@ func main() {
 		runner.WithMetadata(cfg.Metadata),
 		runner.WithTags(cfg.Tags),
 		runner.WithStreamInterval(time.Duration(cfg.SI)),
+		runner.WithReflectionMetadata(cfg.ReflectMetadata),
 	)
 
 	if strings.TrimSpace(cfg.MetadataPath) != "" {
@@ -292,43 +295,52 @@ func createConfigFromArgs() (*config, error) {
 	*tags = strings.TrimSpace(*tags)
 	if *tags != "" {
 		if err := json.Unmarshal([]byte(*tags), &tagsMap); err != nil {
-			return nil, fmt.Errorf("Error unmarshaling tags '%v': %v", *md, err.Error())
+			return nil, fmt.Errorf("Error unmarshaling tags '%v': %v", *tags, err.Error())
+		}
+	}
+
+	var rmdMap map[string]string
+	*rmd = strings.TrimSpace(*rmd)
+	if *rmd != "" {
+		if err := json.Unmarshal([]byte(*rmd), &rmdMap); err != nil {
+			return nil, fmt.Errorf("Error unmarshaling reflection metadata '%v': %v", *rmd, err.Error())
 		}
 	}
 
 	cfg := &config{
-		Host:          host,
-		Proto:         *proto,
-		Protoset:      *protoset,
-		Call:          *call,
-		RootCert:      *cacert,
-		Cert:          *cert,
-		Key:           *key,
-		SkipTLSVerify: *skipVerify,
-		Insecure:      *insecure,
-		Authority:     *authority,
-		CName:         *cname,
-		N:             *n,
-		C:             *c,
-		QPS:           *q,
-		Z:             Duration(*z),
-		X:             Duration(*x),
-		Timeout:       *t,
-		Data:          dataObj,
-		DataPath:      *dataPath,
-		BinData:       binaryData,
-		BinDataPath:   *binPath,
-		Metadata:      &metadata,
-		MetadataPath:  *mdPath,
-		SI:            Duration(*si),
-		Output:        *output,
-		Format:        *format,
-		ImportPaths:   iPaths,
-		DialTimeout:   *ct,
-		KeepaliveTime: *kt,
-		CPUs:          *cpus,
-		Name:          *name,
-		Tags:          &tagsMap,
+		Host:            host,
+		Proto:           *proto,
+		Protoset:        *protoset,
+		Call:            *call,
+		RootCert:        *cacert,
+		Cert:            *cert,
+		Key:             *key,
+		SkipTLSVerify:   *skipVerify,
+		Insecure:        *insecure,
+		Authority:       *authority,
+		CName:           *cname,
+		N:               *n,
+		C:               *c,
+		QPS:             *q,
+		Z:               Duration(*z),
+		X:               Duration(*x),
+		Timeout:         *t,
+		Data:            dataObj,
+		DataPath:        *dataPath,
+		BinData:         binaryData,
+		BinDataPath:     *binPath,
+		Metadata:        &metadata,
+		MetadataPath:    *mdPath,
+		SI:              Duration(*si),
+		Output:          *output,
+		Format:          *format,
+		ImportPaths:     iPaths,
+		DialTimeout:     *ct,
+		KeepaliveTime:   *kt,
+		CPUs:            *cpus,
+		Name:            *name,
+		Tags:            &tagsMap,
+		ReflectMetadata: &rmdMap,
 	}
 
 	return cfg, nil

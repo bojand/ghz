@@ -86,7 +86,9 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		// cancel ignored because we manually do Close()
 
 		md := make(metadata.MD)
-		// md := grpcurl.MetadataFromHeaders(append(addlHeaders, reflHeaders...))
+		if c.rmd != nil && len(*c.rmd) > 0 {
+			md = metadata.New(*c.rmd)
+		}
 
 		refCtx := metadata.NewOutgoingContext(ctx, md)
 

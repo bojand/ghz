@@ -52,6 +52,7 @@ type RunConfig struct {
 	data     []byte
 	binary   bool
 	metadata []byte
+	rmd      *map[string]string
 
 	// misc
 	name string
@@ -416,6 +417,19 @@ func WithProtoset(protoset string) Option {
 func WithStreamInterval(d time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.streamInterval = d
+
+		return nil
+	}
+}
+
+// WithReflectionMetadata specifies the metadata to be used as a map
+// 	md := make(map[string]string)
+// 	md["token"] = "foobar"
+// 	md["request-id"] = "123"
+// 	WithReflectionMetadata(&md)
+func WithReflectionMetadata(md *map[string]string) Option {
+	return func(o *RunConfig) error {
+		o.rmd = md
 
 		return nil
 	}

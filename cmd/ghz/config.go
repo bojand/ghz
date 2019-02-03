@@ -31,38 +31,39 @@ func (d Duration) String() string {
 
 // Config for the run.
 type config struct {
-	Proto         string             `json:"proto" toml:"proto" yaml:"proto"`
-	Protoset      string             `json:"protoset" toml:"protoset" yaml:"protoset"`
-	Call          string             `json:"call" toml:"call" yaml:"call" required:"true"`
-	RootCert      string             `json:"cacert" toml:"cacert" yaml:"cacert"`
-	Cert          string             `json:"cert" toml:"cert" yaml:"cert"`
-	Key           string             `json:"key" toml:"key" yaml:"key"`
-	SkipTLSVerify bool               `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
-	CName         string             `json:"cname" toml:"cname" yaml:"cname"`
-	Authority     string             `json:"authority" toml:"authority" yaml:"authority"`
-	Insecure      bool               `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
-	N             uint               `json:"n" toml:"n" yaml:"n" default:"200"`
-	C             uint               `json:"c" toml:"c" yaml:"c" default:"50"`
-	QPS           uint               `json:"q" toml:"q" yaml:"q"`
-	Z             Duration           `json:"z" toml:"z" yaml:"z"`
-	X             Duration           `json:"x" toml:"x" yaml:"x"`
-	Timeout       uint               `json:"t" toml:"t" yaml:"t" default:"20"`
-	Data          interface{}        `json:"d,omitempty" toml:"d,omitempty" yaml:"d,omitempty"`
-	DataPath      string             `json:"D" toml:"D" yaml:"D"`
-	BinData       []byte             `json:"-" toml:"-" yaml:"-"`
-	BinDataPath   string             `json:"B" toml:"B" yaml:"B"`
-	Metadata      *map[string]string `json:"m,omitempty" toml:"m,omitempty" yaml:"m,omitempty"`
-	MetadataPath  string             `json:"M" toml:"M" yaml:"M"`
-	SI            Duration           `json:"si" toml:"si" yaml:"si"`
-	Output        string             `json:"o" toml:"o" yaml:"o"`
-	Format        string             `json:"O" toml:"O" yaml:"O"`
-	Host          string             `json:"host" toml:"host" yaml:"host"`
-	DialTimeout   uint               `json:"T" toml:"T" yaml:"T" default:"10"`
-	KeepaliveTime uint               `json:"L" toml:"L" yaml:"L"`
-	CPUs          uint               `json:"cpus" toml:"cpus" yaml:"cpus"`
-	ImportPaths   []string           `json:"i,omitempty" toml:"i,omitempty" yaml:"i,omitempty"`
-	Name          string             `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
-	Tags          *map[string]string `json:"tags,omitempty" toml:"tags,omitempty" yaml:"tags,omitempty"`
+	Proto           string             `json:"proto" toml:"proto" yaml:"proto"`
+	Protoset        string             `json:"protoset" toml:"protoset" yaml:"protoset"`
+	Call            string             `json:"call" toml:"call" yaml:"call" required:"true"`
+	RootCert        string             `json:"cacert" toml:"cacert" yaml:"cacert"`
+	Cert            string             `json:"cert" toml:"cert" yaml:"cert"`
+	Key             string             `json:"key" toml:"key" yaml:"key"`
+	SkipTLSVerify   bool               `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
+	CName           string             `json:"cname" toml:"cname" yaml:"cname"`
+	Authority       string             `json:"authority" toml:"authority" yaml:"authority"`
+	Insecure        bool               `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
+	N               uint               `json:"n" toml:"n" yaml:"n" default:"200"`
+	C               uint               `json:"c" toml:"c" yaml:"c" default:"50"`
+	QPS             uint               `json:"q" toml:"q" yaml:"q"`
+	Z               Duration           `json:"z" toml:"z" yaml:"z"`
+	X               Duration           `json:"x" toml:"x" yaml:"x"`
+	Timeout         uint               `json:"t" toml:"t" yaml:"t" default:"20"`
+	Data            interface{}        `json:"d,omitempty" toml:"d,omitempty" yaml:"d,omitempty"`
+	DataPath        string             `json:"D" toml:"D" yaml:"D"`
+	BinData         []byte             `json:"-" toml:"-" yaml:"-"`
+	BinDataPath     string             `json:"B" toml:"B" yaml:"B"`
+	Metadata        *map[string]string `json:"m,omitempty" toml:"m,omitempty" yaml:"m,omitempty"`
+	MetadataPath    string             `json:"M" toml:"M" yaml:"M"`
+	SI              Duration           `json:"si" toml:"si" yaml:"si"`
+	Output          string             `json:"o" toml:"o" yaml:"o"`
+	Format          string             `json:"O" toml:"O" yaml:"O"`
+	Host            string             `json:"host" toml:"host" yaml:"host"`
+	DialTimeout     uint               `json:"T" toml:"T" yaml:"T" default:"10"`
+	KeepaliveTime   uint               `json:"L" toml:"L" yaml:"L"`
+	CPUs            uint               `json:"cpus" toml:"cpus" yaml:"cpus"`
+	ImportPaths     []string           `json:"i,omitempty" toml:"i,omitempty" yaml:"i,omitempty"`
+	Name            string             `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
+	Tags            *map[string]string `json:"tags,omitempty" toml:"tags,omitempty" yaml:"tags,omitempty"`
+	ReflectMetadata *map[string]string `json:"rmd,omitempty" toml:"rmd,omitempty" yaml:"rmd,omitempty"`
 }
 
 // UnmarshalJSON is our custom implementation to handle the Duration fields

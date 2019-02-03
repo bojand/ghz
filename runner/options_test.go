@@ -168,6 +168,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		tags["env"] = "staging"
 		tags["created by"] = "joe developer"
 
+		rmd := make(map[string]string)
+		rmd["auth"] = "bizbaz"
+
 		c, err := newConfig(
 			"call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
@@ -185,6 +188,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithData(d),
 			WithMetadata(&md),
 			WithTags(&tags),
+			WithReflectionMetadata(&rmd),
 		)
 
 		assert.NoError(t, err)
@@ -211,6 +215,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
 		assert.NotNil(t, c.creds)
+		assert.Equal(t, map[string]string{"auth": "bizbaz"}, *c.rmd)
 	})
 
 	t.Run("with binary data from file", func(t *testing.T) {
