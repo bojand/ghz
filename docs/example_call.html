@@ -34,6 +34,12 @@
   -d <span class="hljs-string">'{"name":"Joe"}'</span> \
   0.0.0.0:50051
 </code></pre>
+<p>Or same test using <a href="https://github.com/grpc/grpc/blob/master/doc/server-reflection.md">server reflection</a> (just omit <code>-proto</code> option):</p>
+<pre><code class="hljs css language-sh">ghz -insecure \
+  -call helloworld.Greeter.SayHello \
+  -d <span class="hljs-string">'{"name":"Joe"}'</span> \
+  0.0.0.0:50051
+</code></pre>
 <p>A simple unary call with metadata using template actions:</p>
 <pre><code class="hljs css language-sh">ghz -insecure \
   -proto ./greeter.proto \
