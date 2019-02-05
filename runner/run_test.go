@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bojand/ghz/internal"
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,7 @@ import (
 func TestRunUnary(t *testing.T) {
 	callType := helloworld.Unary
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -29,7 +30,7 @@ func TestRunUnary(t *testing.T) {
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
-			localhost,
+			internal.TestLocalhost,
 			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(1),
 			WithConcurrency(1),
@@ -72,7 +73,7 @@ func TestRunUnary(t *testing.T) {
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
-			localhost,
+			internal.TestLocalhost,
 			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(12),
 			WithConcurrency(2),
@@ -127,7 +128,7 @@ func TestRunUnary(t *testing.T) {
 
 			report, err := Run(
 				"helloworld.Greeter.SayHello",
-				localhost,
+				internal.TestLocalhost,
 				WithProtoFile("../testdata/greeter.proto", []string{}),
 				WithTotalRequests(10),
 				WithConcurrency(2),
@@ -176,7 +177,7 @@ func TestRunUnary(t *testing.T) {
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
-			localhost,
+			internal.TestLocalhost,
 			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(5),
 			WithConcurrency(1),
@@ -215,7 +216,7 @@ func TestRunUnary(t *testing.T) {
 func TestRunServerStreaming(t *testing.T) {
 	callType := helloworld.ServerStream
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -230,7 +231,7 @@ func TestRunServerStreaming(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHellos",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(15),
 		WithConcurrency(3),
@@ -270,7 +271,7 @@ func TestRunServerStreaming(t *testing.T) {
 func TestRunClientStreaming(t *testing.T) {
 	callType := helloworld.ClientStream
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -293,7 +294,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHelloCS",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(16),
 		WithConcurrency(4),
@@ -332,7 +333,7 @@ func TestRunClientStreaming(t *testing.T) {
 func TestRunClientStreamingBinary(t *testing.T) {
 	callType := helloworld.ClientStream
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -349,7 +350,7 @@ func TestRunClientStreamingBinary(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHelloCS",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(24),
 		WithConcurrency(4),
@@ -388,7 +389,7 @@ func TestRunClientStreamingBinary(t *testing.T) {
 func TestRunBidi(t *testing.T) {
 	callType := helloworld.Bidi
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -411,7 +412,7 @@ func TestRunBidi(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHelloBidi",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(20),
 		WithConcurrency(4),
@@ -450,7 +451,7 @@ func TestRunBidi(t *testing.T) {
 func TestRunUnarySecure(t *testing.T) {
 	callType := helloworld.Unary
 
-	gs, s, err := startServer(true)
+	gs, s, err := internal.StartServer(true)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -465,7 +466,7 @@ func TestRunUnarySecure(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHello",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoFile("../testdata/greeter.proto", []string{}),
 		WithTotalRequests(18),
 		WithConcurrency(3),
@@ -504,7 +505,7 @@ func TestRunUnarySecure(t *testing.T) {
 func TestRunUnaryProtoset(t *testing.T) {
 	callType := helloworld.Unary
 
-	gs, s, err := startServer(false)
+	gs, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -519,7 +520,7 @@ func TestRunUnaryProtoset(t *testing.T) {
 
 	report, err := Run(
 		"helloworld.Greeter.SayHello",
-		localhost,
+		internal.TestLocalhost,
 		WithProtoset("../testdata/bundle.protoset"),
 		WithTotalRequests(21),
 		WithConcurrency(3),
@@ -559,4 +560,162 @@ func TestRunUnaryProtoset(t *testing.T) {
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 21, count)
+}
+
+func TestRunUnaryReflection(t *testing.T) {
+
+	t.Run("Unknown method", func(t *testing.T) {
+
+		gs, s, err := internal.StartServer(false)
+
+		if err != nil {
+			assert.FailNow(t, err.Error())
+		}
+
+		defer s.Stop()
+
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "bob"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloAsdf",
+			internal.TestLocalhost,
+			WithTotalRequests(21),
+			WithConcurrency(3),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithKeepalive(time.Duration(1*time.Minute)),
+			WithMetadataFromFile("../testdata/metadata.json"),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, report)
+	})
+
+	t.Run("Unary streaming", func(t *testing.T) {
+		callType := helloworld.Unary
+
+		gs, s, err := internal.StartServer(false)
+
+		if err != nil {
+			assert.FailNow(t, err.Error())
+		}
+
+		defer s.Stop()
+
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "bob"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithTotalRequests(21),
+			WithConcurrency(3),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithKeepalive(time.Duration(1*time.Minute)),
+			WithMetadataFromFile("../testdata/metadata.json"),
+		)
+
+		assert.NoError(t, err)
+		if err != nil {
+			assert.FailNow(t, err.Error())
+		}
+
+		assert.NotNil(t, report)
+
+		md := make(map[string]string)
+		md["request-id"] = "{{.RequestNumber}}"
+
+		assert.Equal(t, 21, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, md, *report.Options.Metadata)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 21, count)
+	})
+
+	t.Run("Client streaming", func(t *testing.T) {
+		callType := helloworld.ClientStream
+
+		gs, s, err := internal.StartServer(false)
+
+		if err != nil {
+			assert.FailNow(t, err.Error())
+		}
+
+		defer s.Stop()
+
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+
+		data := []interface{}{m1, m2, m3}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithTotalRequests(16),
+			WithConcurrency(4),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 16, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 16, count)
+	})
 }

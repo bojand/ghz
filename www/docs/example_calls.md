@@ -13,6 +13,15 @@ ghz -insecure \
   0.0.0.0:50051
 ```
 
+Or same test using [server reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md) (just omit `-proto` option):
+
+```sh
+ghz -insecure \
+  -call helloworld.Greeter.SayHello \
+  -d '{"name":"Joe"}' \
+  0.0.0.0:50051
+```
+
 A simple unary call with metadata using template actions:
 
 ```sh

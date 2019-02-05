@@ -32,6 +32,7 @@ Options:
 -call		A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.
 -i		Comma separated list of proto import paths. The current working directory and the directory
 		of the protocol buffer file are automatically added to the import list.
+-rmd		Reflect metadata as stringified JSON used only for reflection request.        
 
 -cacert		File containing trusted root certificates for verifying the server.
 -cert		File containing client certificate (public key), to present to the server. Must also provide -key option.

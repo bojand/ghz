@@ -125,7 +125,12 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 
 	options := rp.Report.Options
 
-	s = append(s, fmt.Sprintf(`proto="%v"`, options.Proto))
+	if options.Proto != "" {
+		s = append(s, fmt.Sprintf(`proto="%v"`, options.Proto))
+	} else if options.Protoset != "" {
+		s = append(s, fmt.Sprintf(`Protoset="%v"`, options.Protoset))
+	}
+
 	s = append(s, fmt.Sprintf(`call="%v"`, options.Call))
 	s = append(s, fmt.Sprintf(`host="%v"`, options.Host))
 	s = append(s, fmt.Sprintf("n=%v", options.N))

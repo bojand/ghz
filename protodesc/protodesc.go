@@ -11,6 +11,9 @@ import (
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
+	"github.com/jhump/protoreflect/grpcreflect"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var errNoMethodNameSpecified = errors.New("no method name specified")
@@ -64,6 +67,20 @@ func GetMethodDescFromProtoSet(call, protoset string) (*desc.MethodDescriptor, e
 	}
 
 	return getMethodDesc(call, resolved)
+}
+
+// GetMethodDescFromReflect gets method descriptor for the call from reflection using client
+func GetMethodDescFromReflect(call string, client *grpcreflect.Client) (*desc.MethodDescriptor, error) {
+	call = strings.Replace(call, "/", ".", -1)
+	file, err := client.FileContainingSymbol(call)
+	if err != nil || file == nil {
+		return nil, reflectionSupport(err)
+	}
+
+	files := map[string]*desc.FileDescriptor{}
+	files[file.GetName()] = file
+
+	return getMethodDesc(call, files)
 }
 
 func getMethodDesc(call string, files map[string]*desc.FileDescriptor) (*desc.MethodDescriptor, error) {
@@ -161,4 +178,14 @@ func parseServiceMethod(svcAndMethod string) (string, string, error) {
 
 func newInvalidMethodNameError(svcAndMethod string) error {
 	return fmt.Errorf("method name must be package.Service.Method or package.Service/Method: %q", svcAndMethod)
+}
+
+func reflectionSupport(err error) error {
+	if err == nil {
+		return nil
+	}
+	if stat, ok := status.FromError(err); ok && stat.Code() == codes.Unimplemented {
+		return errors.New("server does not support the reflection API")
+	}
+	return err
 }

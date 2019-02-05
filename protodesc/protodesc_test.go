@@ -1,9 +1,16 @@
 package protodesc
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
+	"github.com/bojand/ghz/internal"
+	"github.com/jhump/protoreflect/grpcreflect"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
 func TestProtodesc_GetMethodDescFromProto(t *testing.T) {
@@ -112,4 +119,72 @@ func testParseServiceMethodSuccess(t *testing.T, svcAndMethod string, expectedSe
 func testParseServiceMethodError(t *testing.T, svcAndMethod string) {
 	_, _, err := parseServiceMethod(svcAndMethod)
 	assert.Error(t, err)
+}
+
+func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
+
+	_, s, err := internal.StartServer(false)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	t.Run("test known call", func(t *testing.T) {
+		var opts []grpc.DialOption
+		opts = append(opts, grpc.WithInsecure())
+		ctx := context.Background()
+		conn, err := grpc.DialContext(ctx, internal.TestLocalhost, opts...)
+		assert.NoError(t, err)
+
+		md := make(metadata.MD)
+
+		refCtx := metadata.NewOutgoingContext(ctx, md)
+
+		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(conn))
+
+		mtd, err := GetMethodDescFromReflect("helloworld.Greeter.SayHello", refClient)
+		fmt.Println(mtd)
+		assert.NoError(t, err)
+		assert.NotNil(t, mtd)
+		assert.Equal(t, "SayHello", mtd.GetName())
+	})
+
+	t.Run("test known call with /", func(t *testing.T) {
+		var opts []grpc.DialOption
+		opts = append(opts, grpc.WithInsecure())
+		ctx := context.Background()
+		conn, err := grpc.DialContext(ctx, internal.TestLocalhost, opts...)
+		assert.NoError(t, err)
+
+		md := make(metadata.MD)
+
+		refCtx := metadata.NewOutgoingContext(ctx, md)
+
+		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(conn))
+
+		mtd, err := GetMethodDescFromReflect("helloworld.Greeter/SayHello", refClient)
+		assert.NoError(t, err)
+		assert.NotNil(t, mtd)
+		assert.Equal(t, "SayHello", mtd.GetName())
+	})
+
+	t.Run("test unknown known call", func(t *testing.T) {
+		var opts []grpc.DialOption
+		opts = append(opts, grpc.WithInsecure())
+		ctx := context.Background()
+		conn, err := grpc.DialContext(ctx, internal.TestLocalhost, opts...)
+		assert.NoError(t, err)
+
+		md := make(metadata.MD)
+
+		refCtx := metadata.NewOutgoingContext(ctx, md)
+
+		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(conn))
+
+		mtd, err := GetMethodDescFromReflect("helloworld.Greeter/SayHelloAsdf", refClient)
+		assert.Error(t, err)
+		assert.Nil(t, mtd)
+	})
 }

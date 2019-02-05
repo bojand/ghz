@@ -9,7 +9,7 @@ The `ghz` command line has numerous command line options.  You can run `ghz --he
 
 ### `-proto`
 
-The path to The Protocol Buffer .proto file for input.
+The path to The Protocol Buffer .proto file for input. If no `-proto` or `-protoset` options are used, we attempt to perform [server reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md).
 
 ### `-protoset`
 
@@ -19,6 +19,8 @@ To create a protoset file, invoke `protoc` with the `*.proto` files that define 
 ```sh
 protoc --proto_path=. --descriptor_set_out=bundle.protoset *.proto
 ```
+
+If no `-proto` or `-protoset` options are used, we attempt to perform server reflection.
 
 ### `-call`
 
@@ -109,6 +111,10 @@ Request metadata as stringified JSON.
 ### `-M`
 
 Path for call metadata JSON file. For example, `-M /home/user/metadata.json` or `-M ./metadata.json`.
+
+### `-rmd`
+
+Reflect metadata as stringified JSON used only for reflection request.
 
 ### `-o`
 

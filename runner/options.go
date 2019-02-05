@@ -52,6 +52,7 @@ type RunConfig struct {
 	data     []byte
 	binary   bool
 	metadata []byte
+	rmd      *map[string]string
 
 	// misc
 	name string
@@ -421,6 +422,19 @@ func WithStreamInterval(d time.Duration) Option {
 	}
 }
 
+// WithReflectionMetadata specifies the metadata to be used as a map
+// 	md := make(map[string]string)
+// 	md["token"] = "foobar"
+// 	md["request-id"] = "123"
+// 	WithReflectionMetadata(&md)
+func WithReflectionMetadata(md *map[string]string) Option {
+	return func(o *RunConfig) error {
+		o.rmd = md
+
+		return nil
+	}
+}
+
 func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 	call = strings.TrimSpace(call)
 	host = strings.TrimSpace(host)
@@ -449,10 +463,6 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 
 	if c.host == "" {
 		return nil, errors.New("Host required")
-	}
-
-	if c.proto == "" && c.protoset == "" {
-		return nil, errors.New("Must provide proto or protoset")
 	}
 
 	creds, err := createClientTransportCredentials(
