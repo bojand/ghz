@@ -52,14 +52,16 @@ func main() {
 
 	conf, err := config.Read(cfgPath)
 	if err != nil {
-		panic(err)
+		handleError(err)
 	}
 
 	db, err := database.New(conf.Database.Type, conf.Database.Connection, conf.Log.Level == "debug")
 	if err != nil {
-		panic(err)
+		handleError(err)
 	}
-	defer db.Close()
+	defer func() {
+		handleError(db.Close())
+	}()
 
 	info := &api.ApplicationInfo{
 		Version:   version,
@@ -70,11 +72,20 @@ func main() {
 
 	server, err := router.New(db, info, conf)
 	if err != nil {
-		panic(err)
+		handleError(err)
 	}
 
 	router.PrintRoutes(server)
 
 	hostPort := net.JoinHostPort("", strconv.FormatUint(uint64(conf.Server.Port), 10))
 	server.Logger.Fatal(server.Start(hostPort))
+}
+
+func handleError(err error) {
+	if err != nil {
+		if errString := err.Error(); errString != "" {
+			fmt.Fprintln(os.Stderr, errString)
+		}
+		os.Exit(1)
+	}
 }
