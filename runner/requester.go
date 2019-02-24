@@ -326,17 +326,20 @@ func (b *Requester) makeRequest() error {
 		ctx = metadata.NewOutgoingContext(ctx, *reqMD)
 	}
 
+	// RPC errors are handled via stats handler
+
 	if b.mtd.IsClientStreaming() && b.mtd.IsServerStreaming() {
-		return b.makeBidiRequest(&ctx, streamInput)
+		_ = b.makeBidiRequest(&ctx, streamInput)
 	}
 	if b.mtd.IsClientStreaming() {
-		return b.makeClientStreamingRequest(&ctx, streamInput)
+		_ = b.makeClientStreamingRequest(&ctx, streamInput)
 	}
 	if b.mtd.IsServerStreaming() {
-		return b.makeServerStreamingRequest(&ctx, input)
+		_ = b.makeServerStreamingRequest(&ctx, input)
 	}
+
 	// TODO: handle response?
-	_, err = b.stub.InvokeRpc(ctx, b.mtd, input)
+	_, _ = b.stub.InvokeRpc(ctx, b.mtd, input)
 	return err
 }
 
