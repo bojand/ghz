@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -27,7 +26,7 @@ type ReportPrinter struct {
 // Print the report using the given format
 // If format is "csv" detailed listing is printer in csv format.
 // Otherwise the summary of results is printed.
-func (rp *ReportPrinter) Print(format string) {
+func (rp *ReportPrinter) Print(format string) error {
 	switch format {
 	case "", "csv":
 		outputTmpl := defaultTmpl
@@ -37,44 +36,38 @@ func (rp *ReportPrinter) Print(format string) {
 		buf := &bytes.Buffer{}
 		templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(outputTmpl))
 		if err := templ.Execute(buf, *rp.Report); err != nil {
-			log.Println("error:", err.Error())
-			return
+			return err
 		}
-
-		rp.printf(buf.String())
-
-		rp.printf("\n")
+		buf.WriteString("\n")
+		return rp.printf(buf.String())
 	case "json", "pretty":
 		rep, err := json.Marshal(*rp.Report)
 		if err != nil {
-			log.Println("error:", err.Error())
-			return
+			return err
 		}
 
 		if format == "pretty" {
 			var out bytes.Buffer
 			err = json.Indent(&out, rep, "", "  ")
 			if err != nil {
-				log.Println("error:", err.Error())
-				return
+				return err
 			}
 			rep = out.Bytes()
 		}
-
-		rp.printf(string(rep))
+		return rp.printf(string(rep))
 	case "html":
 		buf := &bytes.Buffer{}
 		templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(htmlTmpl))
 		if err := templ.Execute(buf, *rp.Report); err != nil {
-			log.Println("error:", err.Error())
-			return
+			return err
 		}
-
-		rp.printf(buf.String())
+		return rp.printf(buf.String())
 	case "influx-summary":
-		rp.printf(rp.getInfluxLine())
+		return rp.printf(rp.getInfluxLine())
 	case "influx-details":
-		rp.printInfluxDetails()
+		return rp.printInfluxDetails()
+	default:
+		return fmt.Errorf("unknown format: %s", format)
 	}
 }
 
@@ -90,7 +83,7 @@ func (rp *ReportPrinter) getInfluxLine() string {
 	return fmt.Sprintf("%v,%v %v %v", measurement, tags, fields, timestamp)
 }
 
-func (rp *ReportPrinter) printInfluxDetails() {
+func (rp *ReportPrinter) printInfluxDetails() error {
 	measurement := "ghz_detail"
 	commonTags := rp.getInfluxTags(false)
 
@@ -112,8 +105,11 @@ func (rp *ReportPrinter) printInfluxDetails() {
 
 		fields := strings.Join(values, ",")
 
-		fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v\n", measurement, tags, fields, timestamp))
+		if _, err := fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v\n", measurement, tags, fields, timestamp)); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
@@ -239,8 +235,9 @@ func (rp *ReportPrinter) getInfluxFields() string {
 	return strings.Join(s, ",")
 }
 
-func (rp *ReportPrinter) printf(s string, v ...interface{}) {
-	fmt.Fprintf(rp.Out, s, v...)
+func (rp *ReportPrinter) printf(s string, v ...interface{}) error {
+	_, err := fmt.Fprintf(rp.Out, s, v...)
+	return err
 }
 
 var tmplFuncMap = template.FuncMap{
@@ -336,9 +333,11 @@ func formatStatusCode(statusCodeDist map[string]int) string {
 	buf := &bytes.Buffer{}
 	w := tabwriter.NewWriter(buf, 0, 0, padding, ' ', 0)
 	for status, count := range statusCodeDist {
-		fmt.Fprintf(w, "  [%+s]\t%+v responses\t\n", status, count)
+		// bytes.Buffer can be assumed to not fail on write
+		_, _ = fmt.Fprintf(w, "  [%+s]\t%+v responses\t\n", status, count)
 	}
-	w.Flush()
+	// bytes.Buffer can be assumed to not fail on write
+	_ = w.Flush()
 	return buf.String()
 }
 
@@ -347,9 +346,11 @@ func formatErrorDist(errDist map[string]int) string {
 	buf := &bytes.Buffer{}
 	w := tabwriter.NewWriter(buf, 0, 0, padding, ' ', 0)
 	for status, count := range errDist {
-		fmt.Fprintf(w, "  [%+v]\t%+s\t\n", count, status)
+		// bytes.Buffer can be assumed to not fail on write
+		_, _ = fmt.Fprintf(w, "  [%+v]\t%+s\t\n", count, status)
 	}
-	w.Flush()
+	// bytes.Buffer can be assumed to not fail on write
+	_ = w.Flush()
 	return buf.String()
 }
 
@@ -396,14 +397,14 @@ duration (ms),status,error{{ range $i, $v := .Details }}
     <script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/papaparse@4.5.0/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/britecharts@2/dist/bundled/britecharts.min.js"></script>
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/britecharts/dist/css/britecharts.min.css" type="text/css" /></head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" />
 
   </head>
-	
+
 	<body>
-	
+
 		<section class="section">
 
 		<div class="container">
@@ -415,7 +416,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 			{{ end }}
 		</div>
 		<br />
-		
+
 		<div class="container">
       <nav class="breadcrumb has-bullet-separator" aria-label="breadcrumbs">
         <ul>
@@ -473,14 +474,14 @@ duration (ms),status,error{{ range $i, $v := .Details }}
       </nav>
       <hr />
 		</div>
-		
+
 		{{ if gt (len .Tags) 0 }}
 
 			<div class="container">
 				<div class="field is-grouped">
 
 				{{ range $tag, $val := .Tags }}
-					
+
 					<div class="control">
 						<div class="tags has-addons">
 							<span class="tag is-dark">{{ $tag }}</span>
@@ -494,7 +495,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 			</div>
 			<br />
 		{{ end }}
-	  
+
 	  <div class="container">
 			<div class="columns">
 				<div class="column is-narrow">
@@ -614,9 +615,9 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 					</div>
 				</div>
 			</div>
-			
+
 			{{ if gt (len .ErrorDist) 0 }}
-				
+
 				<br />
 				<div class="container">
 					<div class="columns">
@@ -658,14 +659,14 @@ duration (ms),status,error{{ range $i, $v := .Details }}
               <a name="data">
                 <h3>Data</h3>
               </a>
-              
+
               <a class="button" id="dlJSON">JSON</a>
               <a class="button" id="dlCSV">CSV</a>
             </div>
           </div>
         </div>
 			</div>
-			
+
 			<div class="container">
         <hr />
         <div class="content has-text-centered">
@@ -675,7 +676,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
           <a href="https://github.com/bojand/ghz"><i class="icon is-medium fab fa-github"></i></a>
         </div>
       </div>
-		
+
 		</section>
 
   </body>
@@ -771,11 +772,11 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 	setJSONDownloadLink();
 
 	setCSVDownloadLink();
-	
+
 	</script>
 
 	<script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
-	
+
 </html>
 `
 )

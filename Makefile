@@ -100,7 +100,7 @@ staticcheck:
 # Lint runs all linters. This is the main lint target to run.
 # TODO: add errcheck and staticcheck when the code is updated to pass them
 .PHONY: lint
-lint: golint
+lint: golint errcheck
 
 # Test runs go test on GO_PKGS. This does not produce code coverage.
 .PHONY: test

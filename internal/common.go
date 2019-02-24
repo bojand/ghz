@@ -11,13 +11,15 @@ import (
 	"github.com/bojand/ghz/internal/helloworld"
 )
 
-// TestPort is the port
+// TestPort is the port.
 var TestPort string
 
-// TestLocalhost is the localhost
+// TestLocalhost is the localhost.
 var TestLocalhost string
 
-// StartServer starts server
+// StartServer starts the server.
+//
+// For testing only.
 func StartServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 	lis, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -44,7 +46,7 @@ func StartServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 	TestLocalhost = "localhost:" + TestPort
 
 	go func() {
-		s.Serve(lis)
+		_ = s.Serve(lis)
 	}()
 
 	return gs, s, err

@@ -147,7 +147,7 @@ func main() {
 		var conf config
 		err := configor.Load(&conf, cfgPath)
 		if err != nil {
-			errAndExit(err.Error())
+			handleError(err)
 		}
 
 		cfg = &conf
@@ -159,7 +159,7 @@ func main() {
 		var err error
 		cfg, err = createConfigFromArgs()
 		if err != nil {
-			errAndExit(err.Error())
+			handleError(err)
 		}
 	}
 
@@ -220,7 +220,7 @@ func main() {
 
 	report, err := runner.Run(cfg.Call, cfg.Host, options...)
 	if err != nil {
-		errAndExit(err.Error())
+		handleError(err)
 	}
 
 	output := os.Stdout
@@ -228,23 +228,29 @@ func main() {
 	if outputPath != "" {
 		f, err := os.Create(outputPath)
 		if err != nil {
-			errAndExit(err.Error())
+			handleError(err)
 		}
-		defer f.Close()
+		defer func() {
+			handleError(f.Close())
+		}()
 		output = f
 	}
 
 	p := printer.ReportPrinter{
 		Report: report,
-		Out:    output}
+		Out:    output,
+	}
 
-	p.Print(cfg.Format)
+	handleError(p.Print(cfg.Format))
 }
 
-func errAndExit(msg string) {
-	fmt.Fprintf(os.Stderr, msg)
-	fmt.Fprintf(os.Stderr, "\n")
-	os.Exit(1)
+func handleError(err error) {
+	if err != nil {
+		if errString := err.Error(); errString != "" {
+			fmt.Fprintln(os.Stderr, errString)
+		}
+		os.Exit(1)
+	}
 }
 
 func usageAndExit(msg string) {

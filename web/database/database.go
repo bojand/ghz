@@ -16,7 +16,9 @@ const dbName = "../test/test.db"
 
 // New creates a new wrapper for the gorm database framework.
 func New(dialect, connection string, log bool) (*Database, error) {
-	createDirectoryIfSqlite(dialect, connection)
+	if err := createDirectoryIfSqlite(dialect, connection); err != nil {
+		return nil, err
+	}
 
 	db, err := gorm.Open(dialect, connection)
 	if err != nil {
@@ -47,14 +49,15 @@ func New(dialect, connection string, log bool) (*Database, error) {
 	return &Database{DB: db}, nil
 }
 
-func createDirectoryIfSqlite(dialect string, connection string) {
+func createDirectoryIfSqlite(dialect string, connection string) error {
 	if dialect == "sqlite3" {
 		if _, err := os.Stat(filepath.Dir(connection)); os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(connection), 0777); err != nil {
-				panic(err)
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 // Database is a wrapper for the gorm framework.
@@ -63,6 +66,6 @@ type Database struct {
 }
 
 // Close closes the gorm database connection.
-func (d *Database) Close() {
-	d.DB.Close()
+func (d *Database) Close() error {
+	return d.DB.Close()
 }
