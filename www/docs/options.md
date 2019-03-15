@@ -112,6 +112,10 @@ Request metadata as stringified JSON.
 
 Path for call metadata JSON file. For example, `-M /home/user/metadata.json` or `-M ./metadata.json`.
 
+### `-si`
+
+Stream interval duration. Spread stream sends by given amount. Only applies to client and bidi streaming calls. Example: `100ms`
+
 ### `-rmd`
 
 Reflect metadata as stringified JSON used only for reflection request.
