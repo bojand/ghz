@@ -109,6 +109,9 @@
   0.0.0.0:50051
 </code></pre>
 <p>Note that only one of <code>-proto</code> or <code>-protoset</code> options will be used. <code>-proto</code> takes precedence.</p>
+<p>Alternatively <code>ghz</code> can be used with <a href="https://github.com/uber/prototool">Prototool</a> using the <a href="https://github.com/uber/prototool/tree/dev/docs#prototool-descriptor-set"><code>descriptor-set</code></a> command:</p>
+<pre><code class="hljs">ghz -protoset <span class="hljs-constructor">$(<span class="hljs-params">prototool</span> <span class="hljs-params">descriptor</span>-<span class="hljs-params">set</span> --<span class="hljs-params">include</span>-<span class="hljs-params">imports</span> --<span class="hljs-params">tmp</span>)</span><span class="hljs-operator"> ...
+</span></code></pre>
 <p>Finally we can specify all settings, including the target host, conviniently in a JSON or TOML config file.</p>
 <pre><code class="hljs css language-sh">ghz -config ./config.json
 </code></pre>
