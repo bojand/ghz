@@ -401,9 +401,9 @@ func (b *Requester) makeServerStreamingRequest(ctx *context.Context, input *dyna
 func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Message) error {
 	str, err := b.stub.InvokeRpcBidiStream(*ctx, b.mtd)
 	if err != nil {
-		fmt.Printf("Stream creation failed: %+v\n", err)
 		return err
 	}
+
 	counter := 0
 
 	streamInput := *input
@@ -420,12 +420,10 @@ func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Mess
 	go func() {
 		for {
 			_, err := str.RecvMsg()
-			if err != nil && err != io.EOF {
-				fmt.Printf("error receiving: %+v\n", err)
-			}
+
 			if err != nil {
 				close(recvDone)
-				return
+				break
 			}
 		}
 	}()
@@ -445,6 +443,7 @@ func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Mess
 			wait = time.Tick(b.config.streamInterval)
 			<-wait
 		}
+
 		err = str.SendMsg(payload)
 		counter++
 	}
@@ -452,6 +451,7 @@ func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Mess
 	if err == nil {
 		<-recvDone
 	}
+
 	return nil
 }
 
