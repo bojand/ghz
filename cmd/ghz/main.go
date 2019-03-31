@@ -65,7 +65,7 @@ var (
 
 	cpus = kingpin.Flag("cpus", "Number of cpu cores to use.").Default(strconv.FormatUint(uint64(nCPUs), 10)).Uint()
 
-	host = kingpin.Arg("host", "Host and port to test.").Required().String()
+	host = kingpin.Arg("host", "Host and port to test.").String()
 )
 
 func main() {
