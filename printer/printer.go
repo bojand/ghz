@@ -38,7 +38,7 @@ func (rp *ReportPrinter) Print(format string) error {
 		if err := templ.Execute(buf, *rp.Report); err != nil {
 			return err
 		}
-		buf.WriteString("\n")
+		// buf.WriteString("\n")
 		return rp.printf(buf.String())
 	case "json", "pretty":
 		rep, err := json.Marshal(*rp.Report)
@@ -364,8 +364,7 @@ func cleanInfluxString(input string) string {
 var (
 	defaultTmpl = `
 Summary:
-{{ if .Name }}  Name:		{{ .Name }}
-{{ end }}  Count:	{{ .Count }}
+{{ if .Name }}  Name:		{{ .Name }}{{ end }}  Count:	{{ .Count }}
   Total:	{{ formatNanoUnit .Total }}
   Slowest:	{{ formatNanoUnit .Slowest }}
   Fastest:	{{ formatNanoUnit .Fastest }}
@@ -376,8 +375,9 @@ Response time histogram:
 {{ histogram .Histogram }}
 Latency distribution:{{ range .LatencyDistribution }}
   {{ .Percentage }}%% in {{ formatNanoUnit .Latency }} {{ end }}
-Status code distribution:
-{{ formatStatusCode .StatusCodeDist }}
+
+{{ if gt (len .StatusCodeDist) 0 }}Status code distribution:
+{{ formatStatusCode .StatusCodeDist }}{{ end }}
 {{ if gt (len .ErrorDist) 0 }}Error distribution:
 {{ formatErrorDist .ErrorDist }}{{ end }}
 `

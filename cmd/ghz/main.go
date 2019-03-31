@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -24,20 +23,20 @@ var (
 
 	nCPUs = runtime.GOMAXPROCS(-1)
 
-	cPath = kingpin.Flag("config", "Path to the JSON or TOML config file that specifies all the test run settings.").String()
+	cPath = kingpin.Flag("config", "Path to the JSON or TOML config file that specifies all the test run settings.").PlaceHolder(" ").String()
 
-	proto    = kingpin.Flag("proto", `The Protocol Buffer .proto file.`).String()
-	protoset = kingpin.Flag("protoset", "The compiled protoset file. Alternative to proto. -proto takes precedence.").String()
-	call     = kingpin.Flag("call", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`).String()
-	paths    = kingpin.Flag("import-paths", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.").Short('i').PlaceHolder("PATHS").String()
+	proto    = kingpin.Flag("proto", `The Protocol Buffer .proto file.`).PlaceHolder(" ").String()
+	protoset = kingpin.Flag("protoset", "The compiled protoset file. Alternative to proto. -proto takes precedence.").PlaceHolder(" ").String()
+	call     = kingpin.Flag("call", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`).PlaceHolder(" ").String()
+	paths    = kingpin.Flag("import-paths", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.").Short('i').PlaceHolder(" ").String()
 
-	cacert     = kingpin.Flag("cacert", "File containing trusted root certificates for verifying the server.").String()
-	cert       = kingpin.Flag("cert", "File containing client certificate (public key), to present to the server. Must also provide -key option.").String()
-	key        = kingpin.Flag("key", "File containing client private key, to present to the server. Must also provide -cert option.").String()
-	cname      = kingpin.Flag("cname", "Server name override when validating TLS certificate - useful for self signed certs.").String()
+	cacert     = kingpin.Flag("cacert", "File containing trusted root certificates for verifying the server.").PlaceHolder(" ").String()
+	cert       = kingpin.Flag("cert", "File containing client certificate (public key), to present to the server. Must also provide -key option.").PlaceHolder(" ").String()
+	key        = kingpin.Flag("key", "File containing client private key, to present to the server. Must also provide -cert option.").PlaceHolder(" ").String()
+	cname      = kingpin.Flag("cname", "Server name override when validating TLS certificate - useful for self signed certs.").PlaceHolder(" ").String()
 	skipVerify = kingpin.Flag("skipTLS", "Skip TLS client verification of the server's certificate chain and host name.").Default("false").Bool()
 	insecure   = kingpin.Flag("insecure", "Use plaintext and insecure connection.").Default("false").Bool()
-	authority  = kingpin.Flag("authority", "Value to be used as the :authority pseudo-header. Only works if -insecure is used.").String()
+	authority  = kingpin.Flag("authority", "Value to be used as the :authority pseudo-header. Only works if -insecure is used.").PlaceHolder(" ").String()
 
 	c = kingpin.Flag("concurrency", "Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.").Short('c').Default("50").Uint()
 	n = kingpin.Flag("total", "Number of requests to run. Default is 200.").Short('n').Default("200").Uint()
@@ -46,23 +45,23 @@ var (
 	z = kingpin.Flag("duration", "Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.").Short('z').Default("0").Duration()
 	x = kingpin.Flag("max-duration", "Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits. Examples: -x 10s -x 3m.").Short('x').Default("0").Duration()
 
-	data     = kingpin.Flag("data", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.").Short('d').String()
-	dataPath = kingpin.Flag("data-file", "File path for call data JSON file. Examples: /home/user/file.json or ./file.json.").Short('D').PlaceHolder("PATH").String()
+	data     = kingpin.Flag("data", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.").Short('d').PlaceHolder(" ").String()
+	dataPath = kingpin.Flag("data-file", "File path for call data JSON file. Examples: /home/user/file.json or ./file.json.").Short('D').PlaceHolder("PATH").PlaceHolder(" ").String()
 	binData  = kingpin.Flag("binary", "The call data comes as serialized binary message read from stdin.").Short('b').Default("false").Bool()
-	binPath  = kingpin.Flag("binary-file", "File path for the call data as serialized binary message.").Short('B').PlaceHolder("PATH").String()
-	md       = kingpin.Flag("metadata", "Request metadata as stringified JSON.").Short('m').String()
-	mdPath   = kingpin.Flag("metadata-file", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.").Short('M').PlaceHolder("PATH").String()
+	binPath  = kingpin.Flag("binary-file", "File path for the call data as serialized binary message.").Short('B').PlaceHolder(" ").String()
+	md       = kingpin.Flag("metadata", "Request metadata as stringified JSON.").Short('m').PlaceHolder(" ").String()
+	mdPath   = kingpin.Flag("metadata-file", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.").Short('M').PlaceHolder(" ").String()
 	si       = kingpin.Flag("stream-interval", "Interval for stream requests between message sends.").Default("0").Duration()
 	rmd      = kingpin.Flag("reflect-metadata", "Reflect metadata as stringified JSON used only for reflection request.").PlaceHolder(" ").String()
 
-	output = kingpin.Flag("output", "Output path. If none provided stdout is used.").Short('o').PlaceHolder("PATH").String()
-	format = kingpin.Flag("format", "Output format. If none provided, a summary is printed.").Short('O').String()
+	output = kingpin.Flag("output", "Output path. If none provided stdout is used.").Short('o').PlaceHolder(" ").String()
+	format = kingpin.Flag("format", "Output format. If none provided, a summary is printed.").Short('O').PlaceHolder(" ").String()
 
 	ct = kingpin.Flag("connect-timeout", "Connection timeout in seconds for the initial connection dial. Default is 10.").Default("10").Uint()
 	kt = kingpin.Flag("keepalive", "Keepalive time in seconds. Only used if present and above 0.").Default("0").Uint()
 
-	name = kingpin.Flag("name", "User specified name for the test.").String()
-	tags = kingpin.Flag("tags", "JSON representation of user-defined string tags.").String()
+	name = kingpin.Flag("name", "User specified name for the test.").PlaceHolder(" ").String()
+	tags = kingpin.Flag("tags", "JSON representation of user-defined string tags.").PlaceHolder(" ").String()
 
 	cpus = kingpin.Flag("cpus", "Number of cpu cores to use.").Default(strconv.FormatUint(uint64(nCPUs), 10)).Uint()
 
@@ -82,21 +81,14 @@ func main() {
 	if cfgPath != "" {
 		var conf config
 		err := configor.Load(&conf, cfgPath)
-		if err != nil {
-			handleError(err)
-		}
+		kingpin.FatalIfError(err, "")
 
 		cfg = &conf
 	} else {
-		if flag.NArg() < 1 {
-			usageAndExit("")
-		}
 
 		var err error
 		cfg, err = createConfigFromArgs()
-		if err != nil {
-			handleError(err)
-		}
+		kingpin.FatalIfError(err, "")
 	}
 
 	// init / fix up durations
@@ -166,9 +158,11 @@ func main() {
 		if err != nil {
 			handleError(err)
 		}
+
 		defer func() {
 			handleError(f.Close())
 		}()
+
 		output = f
 	}
 
@@ -189,19 +183,7 @@ func handleError(err error) {
 	}
 }
 
-func usageAndExit(msg string) {
-	if msg != "" {
-		fmt.Fprintf(os.Stderr, msg)
-		fmt.Fprintf(os.Stderr, "\n\n")
-	}
-	flag.Usage()
-	fmt.Fprintf(os.Stderr, "\n")
-	os.Exit(1)
-}
-
 func createConfigFromArgs() (*config, error) {
-	host := flag.Args()[0]
-
 	iPaths := []string{}
 	pathsTrimmed := strings.TrimSpace(*paths)
 	if pathsTrimmed != "" {
@@ -250,7 +232,7 @@ func createConfigFromArgs() (*config, error) {
 	}
 
 	cfg := &config{
-		Host:            host,
+		Host:            *host,
 		Proto:           *proto,
 		Protoset:        *protoset,
 		Call:            *call,

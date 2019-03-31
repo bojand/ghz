@@ -37,6 +37,7 @@ Latency distribution:
   90% in 38.89 ms
   95% in 55.45 ms
   99% in 69.60 ms
+
 Status code distribution:
   [Unavailable]        3 responses
   [PermissionDenied]   3 responses
