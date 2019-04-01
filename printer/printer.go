@@ -38,7 +38,7 @@ func (rp *ReportPrinter) Print(format string) error {
 		if err := templ.Execute(buf, *rp.Report); err != nil {
 			return err
 		}
-		// buf.WriteString("\n")
+
 		return rp.printf(buf.String())
 	case "json", "pretty":
 		rep, err := json.Marshal(*rp.Report)
