@@ -1,12 +1,12 @@
-x = "1m"
-n = 40
-c = 5
+"max-duration" = "1m"
+total = 40
+concurrency = 5
 proto = "../../testdata/greeter.proto"
 call = "helloworld.Greeter.SayHello"
-D = "../../testdata/data.json"
+"data-file" = "../../testdata/data.json"
 host = "0.0.0.0:50051"
 insecure = true
-O = "pretty"
+format = "pretty"
 
-[m]
+[metadata]
 rn = "{{.RequestNumber}}"
