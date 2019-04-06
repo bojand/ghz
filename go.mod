@@ -3,6 +3,7 @@ module github.com/bojand/ghz
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/bojand/hri v1.1.0
 	github.com/denisenkom/go-mssqldb v0.0.0-20190121005146-b04fd42d9952 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
@@ -38,6 +39,7 @@ require (
 	golang.org/x/crypto v0.0.0-20190103213133-ff983b9c42bc // indirect
 	golang.org/x/net v0.0.0-20190110200230-915654e7eabc
 	google.golang.org/grpc v1.17.0
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe

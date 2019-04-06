@@ -11,20 +11,20 @@ An example JSON config file:
 {
     "proto": "/path/to/greeter.proto",
     "call": "helloworld.Greeter.SayHello",
-    "n": 2000,
-    "c": 50,
-    "d": {
+    "total": 2000,
+    "concurrency": 50,
+    "data": {
         "name": "Joe"
     },
-    "m": {
+    "metadata": {
         "foo": "bar",
         "trace_id": "{{.RequestNumber}}",
         "timestamp": "{{.TimestampUnix}}"
     },
-    "i": [
+    "import-paths": [
         "/path/to/protos"
     ],
-    "x": "10s",
+    "max-duration": "10s",
     "host": "0.0.0.0:50051"
 }
 ```
@@ -32,19 +32,19 @@ An example JSON config file:
 An example TOML config file:
 
 ```toml
-x = "7s"
-n = 5000
-c = 50
+"max-duration" = "7s"
+total = 5000
+concurrency = 50
 proto = "../../testdata/greeter.proto"
 call = "helloworld.Greeter.SayHello"
 host = "0.0.0.0:50051"
 insecure = true
-o = "pretty.json"
-O = "pretty"
+output = "pretty.json"
+format = "pretty"
 
-[d]
+[data]
 name = "Bob {{.TimestampUnix}}"
 
-[m]
+[metadata]
 rn = "{{.RequestNumber}}"
 ```

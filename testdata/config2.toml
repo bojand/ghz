@@ -1,14 +1,14 @@
 name = "pretty-json-test"
-x = "3m"
-n = 5000
-c = 20
+"max-duration" = "3m"
+total = 5000
+concurrency = 20
 proto = "../../testdata/greeter.proto"
 call = "helloworld.Greeter.SayHello"
-B = "../../testdata/hello_request_data.bin"
+"binary-file" = "../../testdata/hello_request_data.bin"
 host = "0.0.0.0:50051"
 insecure = true
-o = "pretty.json"
-O = "pretty"
+output = "pretty.json"
+format = "pretty"
 
-[m]
+[metadata]
 rn = "{{.RequestNumber}}"

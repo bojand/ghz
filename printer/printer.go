@@ -38,7 +38,7 @@ func (rp *ReportPrinter) Print(format string) error {
 		if err := templ.Execute(buf, *rp.Report); err != nil {
 			return err
 		}
-		buf.WriteString("\n")
+
 		return rp.printf(buf.String())
 	case "json", "pretty":
 		rep, err := json.Marshal(*rp.Report)
@@ -129,10 +129,10 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 
 	s = append(s, fmt.Sprintf(`call="%v"`, options.Call))
 	s = append(s, fmt.Sprintf(`host="%v"`, options.Host))
-	s = append(s, fmt.Sprintf("n=%v", options.N))
-	s = append(s, fmt.Sprintf("c=%v", options.C))
+	s = append(s, fmt.Sprintf("n=%v", options.Total))
+	s = append(s, fmt.Sprintf("c=%v", options.Concurrency))
 	s = append(s, fmt.Sprintf("qps=%v", options.QPS))
-	s = append(s, fmt.Sprintf("z=%v", options.Z.Nanoseconds()))
+	s = append(s, fmt.Sprintf("z=%v", options.Duration.Nanoseconds()))
 	s = append(s, fmt.Sprintf("timeout=%v", options.Timeout.Seconds()))
 	s = append(s, fmt.Sprintf("dial_timeout=%v", options.DialTimeout.Seconds()))
 	s = append(s, fmt.Sprintf("keepalive=%v", options.KeepaliveTime.Seconds()))
@@ -364,8 +364,7 @@ func cleanInfluxString(input string) string {
 var (
 	defaultTmpl = `
 Summary:
-{{ if .Name }}  Name:		{{ .Name }}
-{{ end }}  Count:	{{ .Count }}
+{{ if .Name }}  Name:		{{ .Name }}{{ end }}  Count:	{{ .Count }}
   Total:	{{ formatNanoUnit .Total }}
   Slowest:	{{ formatNanoUnit .Slowest }}
   Fastest:	{{ formatNanoUnit .Fastest }}
@@ -376,8 +375,9 @@ Response time histogram:
 {{ histogram .Histogram }}
 Latency distribution:{{ range .LatencyDistribution }}
   {{ .Percentage }}%% in {{ formatNanoUnit .Latency }} {{ end }}
-Status code distribution:
-{{ formatStatusCode .StatusCodeDist }}
+
+{{ if gt (len .StatusCodeDist) 0 }}Status code distribution:
+{{ formatStatusCode .StatusCodeDist }}{{ end }}
 {{ if gt (len .ErrorDist) 0 }}Error distribution:
 {{ formatErrorDist .ErrorDist }}{{ end }}
 `

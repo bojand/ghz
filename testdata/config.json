@@ -1,15 +1,15 @@
 {
-  "n": 5000,
-  "c": 50,
-  "x": "7s",
-  "z": "12s",
-  "si": "500ms",
+  "total": 5000,
+  "concurrency": 50,
+  "max-duration": "7s",
+  "duration": "12s",
+  "stream-interval": "500ms",
   "proto": "../../testdata/greeter.proto",
   "call": "helloworld.Greeter.SayHello",
-  "d": {
+  "data": {
     "name": "Bob {{.TimestampUnix}}"
   },
-  "m": {
+  "metadata": {
     "rn": "{{.RequestNumber}}"
   },
   "host": "0.0.0.0:50051",

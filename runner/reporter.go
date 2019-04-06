@@ -27,25 +27,32 @@ type Reporter struct {
 
 // Options represents the request options
 type Options struct {
-	Call          string             `json:"call,omitempty"`
-	Proto         string             `json:"proto,omitempty"`
-	Protoset      string             `json:"protoset,omitempty"`
-	Host          string             `json:"host,omitempty"`
-	Cert          string             `json:"cert,omitempty"`
-	CName         string             `json:"cname,omitempty"`
-	N             uint               `json:"n,omitempty"`
-	C             uint               `json:"c,omitempty"`
-	QPS           uint               `json:"qps,omitempty"`
-	Z             time.Duration      `json:"z,omitempty"`
-	Timeout       time.Duration      `json:"timeout,omitempty"`
-	DialTimeout   time.Duration      `json:"dialTimeout,omitempty"`
-	KeepaliveTime time.Duration      `json:"keepAlice,omitempty"`
-	Data          interface{}        `json:"data,omitempty"`
-	Binary        bool               `json:"binary"`
-	Metadata      *map[string]string `json:"metadata,omitempty"`
-	Insecure      bool               `json:"insecure"`
-	CPUs          int                `json:"CPUs"`
-	Name          string             `json:"name,omitempty"`
+	Host          string        `json:"host,omitempty"`
+	Proto         string        `json:"proto,omitempty"`
+	Protoset      string        `json:"protoset,omitempty"`
+	ImportPaths   []string      `json:"import-paths,omitempty"`
+	Call          string        `json:"call,omitempty"`
+	CACert        string        `json:"cacert,omitempty"`
+	Cert          string        `json:"cert,omitempty"`
+	Key           string        `json:"key,omitempty"`
+	SkipTLS       bool          `json:"skipTLS,omitempty"`
+	CName         string        `json:"cname,omitempty"`
+	Authority     string        `json:"authority,omitempty"`
+	Insecure      bool          `json:"insecure"`
+	Total         uint          `json:"total,omitempty"`
+	Concurrency   uint          `json:"concurrency,omitempty"`
+	QPS           uint          `json:"qps,omitempty"`
+	Duration      time.Duration `json:"duration,omitempty"`
+	Timeout       time.Duration `json:"timeout,omitempty"`
+	DialTimeout   time.Duration `json:"dial-timeout,omitempty"`
+	KeepaliveTime time.Duration `json:"keepalive,omitempty"`
+
+	Data     interface{}        `json:"data,omitempty"`
+	Binary   bool               `json:"binary"`
+	Metadata *map[string]string `json:"metadata,omitempty"`
+
+	CPUs int    `json:"CPUs"`
+	Name string `json:"name,omitempty"`
 }
 
 // Report holds the data for the full test
@@ -165,21 +172,26 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		StatusCodeDist: r.statusCodeDist}
 
 	rep.Options = Options{
-		Call:          r.config.call,
+		Host:          r.config.host,
 		Proto:         r.config.proto,
 		Protoset:      r.config.protoset,
-		Host:          r.config.host,
+		ImportPaths:   r.config.importPaths,
+		Call:          r.config.call,
+		CACert:        r.config.cacert,
 		Cert:          r.config.cert,
+		Key:           r.config.key,
 		CName:         r.config.cname,
-		N:             uint(r.config.n),
-		C:             uint(r.config.c),
+		SkipTLS:       r.config.skipVerify,
+		Insecure:      r.config.insecure,
+		Authority:     r.config.authority,
+		Total:         uint(r.config.n),
+		Concurrency:   uint(r.config.c),
 		QPS:           uint(r.config.qps),
-		Z:             r.config.z,
+		Duration:      r.config.z,
 		Timeout:       r.config.timeout,
 		DialTimeout:   r.config.dialTimeout,
 		KeepaliveTime: r.config.keepaliveTime,
 		Binary:        r.config.binary,
-		Insecure:      r.config.insecure,
 		CPUs:          r.config.cpus,
 		Name:          r.config.name,
 	}

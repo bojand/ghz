@@ -44,11 +44,11 @@ func TestPrinter_getInfluxLine(t *testing.T) {
 					"Internal":         3,
 					"DeadlineExceeded": 2},
 				Options: runner.Options{
-					Call:  "helloworld.Greeter.SayHello",
-					Proto: "/apis/greeter.proto",
-					Host:  "0.0.0.0:50051",
-					N:     200,
-					C:     50,
+					Call:        "helloworld.Greeter.SayHello",
+					Proto:       "/apis/greeter.proto",
+					Host:        "0.0.0.0:50051",
+					Total:       200,
+					Concurrency: 50,
 					Data: map[string]interface{}{
 						"name": "Bob Smith",
 					},
@@ -163,11 +163,11 @@ func TestPrinter_printInfluxDetails(t *testing.T) {
 					"Internal":         3,
 					"DeadlineExceeded": 2},
 				Options: runner.Options{
-					Call:  "helloworld.Greeter.SayHello",
-					Proto: "/apis/greeter.proto",
-					Host:  "0.0.0.0:50051",
-					N:     200,
-					C:     50,
+					Call:        "helloworld.Greeter.SayHello",
+					Proto:       "/apis/greeter.proto",
+					Host:        "0.0.0.0:50051",
+					Total:       200,
+					Concurrency: 50,
 					Data: map[string]interface{}{
 						"name": "Bob Smith",
 					},

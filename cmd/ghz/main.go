@@ -2,142 +2,77 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bojand/ghz/printer"
 	"github.com/bojand/ghz/runner"
 	"github.com/jinzhu/configor"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
 
-	cPath = flag.String("config", "", "Path to the JSON or TOML config file that specifies all the test run settings.")
+	nCPUs = runtime.GOMAXPROCS(-1)
 
-	proto    = flag.String("proto", "", `The Protocol Buffer .proto file.`)
-	protoset = flag.String("protoset", "", `The compiled protoset file. Alternative to proto. -proto takes precedence.`)
-	call     = flag.String("call", "", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`)
-	paths    = flag.String("i", "", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.")
+	cPath = kingpin.Flag("config", "Path to the JSON or TOML config file that specifies all the test run settings.").PlaceHolder(" ").String()
 
-	cacert     = flag.String("cacert", "", "File containing trusted root certificates for verifying the server.")
-	cert       = flag.String("cert", "", "File containing client certificate (public key), to present to the server. Must also provide -key option.")
-	key        = flag.String("key", "", "File containing client private key, to present to the server. Must also provide -cert option.")
-	cname      = flag.String("cname", "", "Server name override when validating TLS certificate - useful for self signed certs.")
-	skipVerify = flag.Bool("skipTLS", false, "Skip TLS client verification of the server's certificate chain and host name.")
-	insecure   = flag.Bool("insecure", false, "Use plaintext and insecure connection.")
-	authority  = flag.String("authority", "", "Value to be used as the :authority pseudo-header. Only works if -insecure is used.")
+	proto    = kingpin.Flag("proto", `The Protocol Buffer .proto file.`).PlaceHolder(" ").String()
+	protoset = kingpin.Flag("protoset", "The compiled protoset file. Alternative to proto. -proto takes precedence.").PlaceHolder(" ").String()
+	call     = kingpin.Flag("call", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`).PlaceHolder(" ").String()
+	paths    = kingpin.Flag("import-paths", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.").Short('i').PlaceHolder(" ").String()
 
-	c = flag.Uint("c", 50, "Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.")
-	n = flag.Uint("n", 200, "Number of requests to run. Default is 200.")
-	q = flag.Uint("q", 0, "Rate limit, in queries per second (QPS). Default is no rate limit.")
-	t = flag.Uint("t", 20, "Timeout for each request in seconds. Default is 20, use 0 for infinite.")
-	z = flag.Duration("z", 0, "Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.")
-	x = flag.Duration("x", 0, "Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits. Examples: -x 10s -x 3m.")
+	cacert     = kingpin.Flag("cacert", "File containing trusted root certificates for verifying the server.").PlaceHolder(" ").String()
+	cert       = kingpin.Flag("cert", "File containing client certificate (public key), to present to the server. Must also provide -key option.").PlaceHolder(" ").String()
+	key        = kingpin.Flag("key", "File containing client private key, to present to the server. Must also provide -cert option.").PlaceHolder(" ").String()
+	cname      = kingpin.Flag("cname", "Server name override when validating TLS certificate - useful for self signed certs.").PlaceHolder(" ").String()
+	skipVerify = kingpin.Flag("skipTLS", "Skip TLS client verification of the server's certificate chain and host name.").Default("false").Bool()
+	insecure   = kingpin.Flag("insecure", "Use plaintext and insecure connection.").Default("false").Bool()
+	authority  = kingpin.Flag("authority", "Value to be used as the :authority pseudo-header. Only works if -insecure is used.").PlaceHolder(" ").String()
 
-	data     = flag.String("d", "", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
-	dataPath = flag.String("D", "", "File path for call data JSON file. Examples: /home/user/file.json or ./file.json.")
-	binData  = flag.Bool("b", false, "The call data comes as serialized binary message read from stdin.")
-	binPath  = flag.String("B", "", "File path for the call data as serialized binary message.")
-	md       = flag.String("m", "", "Request metadata as stringified JSON.")
-	mdPath   = flag.String("M", "", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.")
-	si       = flag.Duration("si", 0, "Interval for stream requests between message sends.")
-	rmd      = flag.String("rmd", "", "Reflect metadata as stringified JSON used only for reflection request.")
+	c = kingpin.Flag("concurrency", "Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.").Short('c').Default("50").Uint()
+	n = kingpin.Flag("total", "Number of requests to run. Default is 200.").Short('n').Default("200").Uint()
+	q = kingpin.Flag("qps", "Rate limit, in queries per second (QPS). Default is no rate limit.").Default("0").Short('q').Uint()
+	t = kingpin.Flag("timeout", "Timeout for each request in seconds. Default is 20, use 0 for infinite.").Default("20").Short('t').Uint()
+	z = kingpin.Flag("duration", "Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.").Short('z').Default("0").Duration()
+	x = kingpin.Flag("max-duration", "Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits. Examples: -x 10s -x 3m.").Short('x').Default("0").Duration()
 
-	output = flag.String("o", "", "Output path. If none provided stdout is used.")
-	format = flag.String("O", "", "Output format. If none provided, a summary is printed.")
+	data     = kingpin.Flag("data", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.").Short('d').PlaceHolder(" ").String()
+	dataPath = kingpin.Flag("data-file", "File path for call data JSON file. Examples: /home/user/file.json or ./file.json.").Short('D').PlaceHolder("PATH").PlaceHolder(" ").String()
+	binData  = kingpin.Flag("binary", "The call data comes as serialized binary message read from stdin.").Short('b').Default("false").Bool()
+	binPath  = kingpin.Flag("binary-file", "File path for the call data as serialized binary message.").Short('B').PlaceHolder(" ").String()
+	md       = kingpin.Flag("metadata", "Request metadata as stringified JSON.").Short('m').PlaceHolder(" ").String()
+	mdPath   = kingpin.Flag("metadata-file", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.").Short('M').PlaceHolder(" ").String()
+	si       = kingpin.Flag("stream-interval", "Interval for stream requests between message sends.").Default("0").Duration()
+	rmd      = kingpin.Flag("reflect-metadata", "Reflect metadata as stringified JSON used only for reflection request.").PlaceHolder(" ").String()
 
-	ct = flag.Uint("T", 10, "Connection timeout in seconds for the initial connection dial. Default is 10.")
-	kt = flag.Uint("L", 0, "Keepalive time in seconds. Only used if present and above 0.")
+	output = kingpin.Flag("output", "Output path. If none provided stdout is used.").Short('o').PlaceHolder(" ").String()
+	format = kingpin.Flag("format", "Output format. If none provided, a summary is printed.").Short('O').PlaceHolder(" ").String()
 
-	name = flag.String("name", "", "User specified name for the test.")
-	tags = flag.String("tags", "", "JSON representation of user-defined string tags.")
+	ct = kingpin.Flag("connect-timeout", "Connection timeout in seconds for the initial connection dial. Default is 10.").Default("10").Uint()
+	kt = kingpin.Flag("keepalive", "Keepalive time in seconds. Only used if present and above 0.").Default("0").Uint()
 
-	cpus = flag.Uint("cpus", uint(runtime.GOMAXPROCS(-1)), "Number of used cpu cores.")
+	name = kingpin.Flag("name", "User specified name for the test.").PlaceHolder(" ").String()
+	tags = kingpin.Flag("tags", "JSON representation of user-defined string tags.").PlaceHolder(" ").String()
 
-	v = flag.Bool("v", false, "Print the version.")
+	cpus = kingpin.Flag("cpus", "Number of cpu cores to use.").Default(strconv.FormatUint(uint64(nCPUs), 10)).Uint()
+
+	host = kingpin.Arg("host", "Host and port to test.").String()
 )
 
-var usage = `Usage: ghz [options...] host
-Options:
-
--config	Path to the JSON or TOML config file that specifies all the test run settings.
-
--proto		The Protocol Buffer .proto file.
--protoset	The compiled protoset file. Alternative to proto. -proto takes precedence.
--call		A fully-qualified method name in 'package.Service/Method' or 'package.Service.Method' format.
--i		Comma separated list of proto import paths. The current working directory and the directory
-		of the protocol buffer file are automatically added to the import list.
--rmd		Reflect metadata as stringified JSON used only for reflection request.
-
--cacert		File containing trusted root certificates for verifying the server.
--cert		File containing client certificate (public key), to present to the server. Must also provide -key option.
--key 		File containing client private key, to present to the server. Must also provide -cert option.
--cname		Server name override when validating TLS certificate - useful for self signed certs.
--skipTLS	Skip TLS client verification of the server's certificate chain and host name.
--insecure	Use plaintext and insecure connection.
--authority	Value to be used as the :authority pseudo-header. Only works if -insecure is used.
-
--c  Number of requests to run concurrently.
-    Total number of requests cannot be smaller than the concurrency level. Default is 50.
--n  Number of requests to run. Default is 200.
--q  Rate limit, in queries per second (QPS). Default is no rate limit.
--t  Timeout for each request in seconds. Default is 20, use 0 for infinite.
--z  Duration of application to send requests. When duration is reached, application stops and exits.
-    If duration is specified, n is ignored. Examples: -z 10s -z 3m.
--x  Maximum duration of application to send requests with n setting respected.
-    If duration is reached before n requests are completed, application stops and exits.
-    Examples: -x 10s -x 3m.
-
--d  The call data as stringified JSON.
-    If the value is '@' then the request contents are read from stdin.
--D  Path for call data JSON file. Examples: /home/user/file.json or ./file.json.
--b  The call data comes as serialized binary message read from stdin.
--B  Path for the call data as serialized binary message.
--m  Request metadata as stringified JSON.
--M  Path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
-
--si Stream interval duration. Spread stream sends by given amount.
-    Only applies to client and bidi streaming calls. Example: 100ms
-
--o  Output path. If none provided stdout is used.
--O  Output type. If none provided, a summary is printed.
-    "csv" outputs the response metrics in comma-separated values format.
-    "json" outputs the metrics report in JSON format.
-    "pretty" outputs the metrics report in pretty JSON format.
-    "html" outputs the metrics report as HTML.
-    "influx-summary" outputs the metrics summary as influxdb line protocol.
-    "influx-details" outputs the metrics details as influxdb line protocol.
-
--T  Connection timeout in seconds for the initial connection dial. Default is 10.
--L  Keepalive time in seconds. Only used if present and above 0.
-
--name  User specified name for the test.
--tags  JSON representation of user-defined string tags.
-
--cpus  Number of used cpu cores. (default for current machine is %d cores)
-
--v  Print the version.
-`
-
 func main() {
-	flag.Usage = func() {
-		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, runtime.NumCPU()))
-	}
-
-	flag.Parse()
-
-	if *v {
-		fmt.Println(version)
-		os.Exit(0)
-	}
+	kingpin.Version(version)
+	kingpin.CommandLine.HelpFlag.Short('h')
+	kingpin.CommandLine.VersionFlag.Short('v')
+	kingpin.Parse()
 
 	cfgPath := strings.TrimSpace(*cPath)
 
@@ -146,21 +81,14 @@ func main() {
 	if cfgPath != "" {
 		var conf config
 		err := configor.Load(&conf, cfgPath)
-		if err != nil {
-			handleError(err)
-		}
+		kingpin.FatalIfError(err, "")
 
 		cfg = &conf
 	} else {
-		if flag.NArg() < 1 {
-			usageAndExit("")
-		}
 
 		var err error
 		cfg, err = createConfigFromArgs()
-		if err != nil {
-			handleError(err)
-		}
+		kingpin.FatalIfError(err, "")
 	}
 
 	// init / fix up durations
@@ -230,9 +158,11 @@ func main() {
 		if err != nil {
 			handleError(err)
 		}
+
 		defer func() {
 			handleError(f.Close())
 		}()
+
 		output = f
 	}
 
@@ -253,19 +183,7 @@ func handleError(err error) {
 	}
 }
 
-func usageAndExit(msg string) {
-	if msg != "" {
-		fmt.Fprintf(os.Stderr, msg)
-		fmt.Fprintf(os.Stderr, "\n\n")
-	}
-	flag.Usage()
-	fmt.Fprintf(os.Stderr, "\n")
-	os.Exit(1)
-}
-
 func createConfigFromArgs() (*config, error) {
-	host := flag.Args()[0]
-
 	iPaths := []string{}
 	pathsTrimmed := strings.TrimSpace(*paths)
 	if pathsTrimmed != "" {
@@ -314,7 +232,7 @@ func createConfigFromArgs() (*config, error) {
 	}
 
 	cfg := &config{
-		Host:            host,
+		Host:            *host,
 		Proto:           *proto,
 		Protoset:        *protoset,
 		Call:            *call,
