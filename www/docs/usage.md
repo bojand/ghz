@@ -4,7 +4,7 @@ title: Usage
 ---
 
 ```
-usage: ghz [<flags>] <host>
+usage: ghz [<flags>] [<host>]
 
 Flags:
   -h, --help                Show context-sensitive help (also try --help-long and --help-man).
@@ -45,5 +45,5 @@ Flags:
   -v, --version             Show application version.
 
 Args:
-  <host>  Host and port to test.
+  [<host>]  Host and port to test.
 ```
