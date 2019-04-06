@@ -57,4 +57,4 @@ Would result in server getting the following metadata map represented here in JS
 }
 ```
 
-See [example calls](example_calls.md) for some more usage examples.
+See [example calls](examples.md) for some more usage examples.
