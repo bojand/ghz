@@ -36,7 +36,7 @@ Flags:
       --stream-interval=0   Interval for stream requests between message sends.
       --reflect-metadata=   Reflect metadata as stringified JSON used only for reflection request.
   -o, --output=             Output path. If none provided stdout is used.
-  -O, --format=             Output format. If none provided, a summary is printed.
+  -O, --format=             Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.
       --connect-timeout=10  Connection timeout in seconds for the initial connection dial. Default is 10.
       --keepalive=0         Keepalive time in seconds. Only used if present and above 0.
       --name=               User specified name for the test.

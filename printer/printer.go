@@ -28,7 +28,7 @@ type ReportPrinter struct {
 // Otherwise the summary of results is printed.
 func (rp *ReportPrinter) Print(format string) error {
 	switch format {
-	case "", "csv":
+	case "summary", "csv":
 		outputTmpl := defaultTmpl
 		if format == "csv" {
 			outputTmpl = csvTmpl

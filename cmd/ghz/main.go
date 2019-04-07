@@ -55,7 +55,7 @@ var (
 	rmd      = kingpin.Flag("reflect-metadata", "Reflect metadata as stringified JSON used only for reflection request.").PlaceHolder(" ").String()
 
 	output = kingpin.Flag("output", "Output path. If none provided stdout is used.").Short('o').PlaceHolder(" ").String()
-	format = kingpin.Flag("format", "Output format. If none provided, a summary is printed.").Short('O').PlaceHolder(" ").String()
+	format = kingpin.Flag("format", "Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.").Short('O').Default("summary").PlaceHolder(" ").Enum("summary", "csv", "json", "pretty", "html", "influx-summary", "influx-details")
 
 	ct = kingpin.Flag("connect-timeout", "Connection timeout in seconds for the initial connection dial. Default is 10.").Default("10").Uint()
 	kt = kingpin.Flag("keepalive", "Keepalive time in seconds. Only used if present and above 0.").Default("0").Uint()
