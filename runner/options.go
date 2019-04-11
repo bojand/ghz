@@ -40,6 +40,9 @@ type RunConfig struct {
 	c   int
 	qps int
 
+	// number of connections
+	nConns int
+
 	// timeouts
 	z             time.Duration
 	timeout       time.Duration
