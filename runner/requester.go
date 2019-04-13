@@ -33,13 +33,14 @@ type callResult struct {
 
 // Requester is used for doing the requests
 type Requester struct {
-	cc    []*grpc.ClientConn
+	conns []*grpc.ClientConn
 	stubs []grpcdynamic.Stub
 
 	mtd      *desc.MethodDescriptor
 	reporter *Reporter
 
-	config  *RunConfig
+	config *RunConfig
+
 	results chan *callResult
 	stopCh  chan bool
 	start   time.Time
@@ -67,13 +68,8 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		stopReason: ReasonNormalEnd,
 		results:    make(chan *callResult, min(c.c*1000, maxResult)),
 		stopCh:     make(chan bool, c.c),
-		cc:         make([]*grpc.ClientConn, 0, c.nConns),
+		conns:      make([]*grpc.ClientConn, 0, c.nConns),
 		stubs:      make([]grpcdynamic.Stub, 0, c.nConns),
-	}
-
-	// TODO REMOVE
-	if reqr.config.nConns <= 0 {
-		reqr.config.nConns = 5
 	}
 
 	if c.proto != "" {
@@ -83,7 +79,7 @@ func newRequester(c *RunConfig) (*Requester, error) {
 	} else {
 		// use reflection to get method decriptor
 		var cc *grpc.ClientConn
-		// temporary connection for reflection, do not store as requester.cc
+		// temporary connection for reflection, do not store as requester connections
 		cc, err = reqr.newClientConn(false)
 		if err != nil {
 			return nil, err
@@ -140,6 +136,7 @@ func (b *Requester) Run() (*Report, error) {
 	b.lock.Lock()
 	b.start = start
 
+	// create a client stub for each connection
 	for n := 0; n < b.config.nConns; n++ {
 		stub := grpcdynamic.NewStub(cc[n])
 		b.stubs = append(b.stubs, stub)
@@ -189,8 +186,8 @@ func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
-	if len(b.cc) == b.config.nConns {
-		return b.cc, nil
+	if len(b.conns) == b.config.nConns {
+		return b.conns, nil
 	}
 
 	for n := 0; n < b.config.nConns; n++ {
@@ -199,24 +196,24 @@ func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
 			return nil, err
 		}
 
-		b.cc = append(b.cc, c)
+		b.conns = append(b.conns, c)
 	}
 
-	return b.cc, nil
+	return b.conns, nil
 }
 
 func (b *Requester) closeClientConns() {
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	if b.cc == nil {
+	if b.conns == nil {
 		return
 	}
 
-	for _, cc := range b.cc {
+	for _, cc := range b.conns {
 		_ = cc.Close()
 	}
 
-	b.cc = nil
+	b.conns = nil
 }
 
 func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, error) {
@@ -261,11 +258,17 @@ func (b *Requester) runWorkers() error {
 
 	errC := make(chan error, b.config.c)
 
-	n := 0 // connection counter
 	// Ignore the case where b.N % b.C != 0.
-	for i := 0; i < b.config.c; i++ {
+
+	n := 0                            // connection counter
+	for i := 0; i < b.config.c; i++ { // concurrency counter
 
 		wID := "g" + strconv.Itoa(i) + "c" + strconv.Itoa(n)
+
+		if len(b.config.name) > 0 {
+			wID = b.config.name + ":" + wID
+		}
+
 		w := Worker{
 			stub:       b.stubs[n],
 			mtd:        b.mtd,
@@ -279,7 +282,7 @@ func (b *Requester) runWorkers() error {
 
 		n++ // increment connection counter
 
-		// wrap around if needed
+		// wrap around connections if needed
 		if n == b.config.nConns {
 			n = 0
 		}

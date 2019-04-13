@@ -12,9 +12,10 @@ func TestCallTemplateData_New(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, 100)
+	ctd := newCallTemplateData(md, "worker_id_123", 100)
 
 	assert.NotNil(t, ctd)
+	assert.Equal(t, "worker_id_123", ctd.WorkerID)
 	assert.Equal(t, int64(100), ctd.RequestNumber)
 	assert.Equal(t, "helloworld.Greeter.SayHello", ctd.FullyQualifiedName)
 	assert.Equal(t, "SayHello", ctd.MethodName)
@@ -32,7 +33,7 @@ func TestCallTemplateData_ExecuteData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, 200)
+	ctd := newCallTemplateData(md, "worker_id_123", 200)
 
 	assert.NotNil(t, ctd)
 
@@ -48,8 +49,8 @@ func TestCallTemplateData_ExecuteData(t *testing.T) {
 			false,
 		},
 		{"with template",
-			`{"name":"{{.RequestNumber}} bob {{.FullyQualifiedName}} {{.MethodName}} {{.ServiceName}} {{.InputName}} {{.OutputName}} {{.IsClientStreaming}} {{.IsServerStreaming}}"}`,
-			[]byte(`{"name":"200 bob helloworld.Greeter.SayHello SayHello Greeter HelloRequest HelloReply false false"}`),
+			`{"name":"{{.WorkerID}} {{.RequestNumber}} bob {{.FullyQualifiedName}} {{.MethodName}} {{.ServiceName}} {{.InputName}} {{.OutputName}} {{.IsClientStreaming}} {{.IsServerStreaming}}"}`,
+			[]byte(`{"name":"worker_id_123 200 bob helloworld.Greeter.SayHello SayHello Greeter HelloRequest HelloReply false false"}`),
 			false,
 		},
 		{"with unknown action",
@@ -83,7 +84,7 @@ func TestCallTemplateData_ExecuteMetadata(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, 200)
+	ctd := newCallTemplateData(md, "worker_id_123", 200)
 
 	assert.NotNil(t, ctd)
 
