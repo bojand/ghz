@@ -82,6 +82,10 @@ Duration of application to send requests. When duration is reached, application 
 
 Maximum duration of application to send requests with `n` setting respected. If duration is reached before `n` requests are completed, application stops and exits. Examples: `-x 10s` or `-x 3m`.
 
+### `--connections`
+
+By default we use a single gRPC connection for the whole test run, and the concurrency (`-c`) is achieved using goroutine workers sharing this single connection. The number of gRPC connections used can be controlled using this parameter. This parameter cannot exceed concurrency option. The specified number of connections will be distributed evenly to be shared among the concurrency goroutine workers. So for example a concurrency of `10` and using `5` connections will result in `10` goroutine workers, each pair of `2` workers sharing `1` of the `5` connections. Each worker will get its share of the total number of requests specified using `-n` option.
+
 ### `-d`, `--data`
 
 The call data as stringified JSON. If the value is `@` then the request contents are read from standard input (stdin). Example: `-d '{"name":"Bob"}'`.

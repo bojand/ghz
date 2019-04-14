@@ -45,6 +45,7 @@ Flags:
   -z, --duration=0          Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.
   -x, --max-duration=0      Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits.
                             Examples: -x 10s -x 3m.
+      --connections=1       Number of connections to use. Concurrency is distributed evenly among all the connections. Default is 1.
   -d, --data=               The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.
   -D, --data-file=          File path for call data JSON file. Examples: /home/user/file.json or ./file.json.
   -b, --binary              The call data comes as serialized binary message read from stdin.
