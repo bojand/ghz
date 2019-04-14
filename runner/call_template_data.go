@@ -11,7 +11,7 @@ import (
 
 // call template data
 type callTemplateData struct {
-	WorkerID           string // the unique worker ID / number
+	WorkerID           string // unique worker ID
 	RequestNumber      int64  // unique incrememnted request number for each request
 	FullyQualifiedName string // fully-qualified name of the method call
 	MethodName         string // shorter call method name
