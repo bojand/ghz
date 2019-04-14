@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/stats"
 )
 
 // CallType represents one of the gRPC call types:
@@ -27,8 +28,10 @@ var Bidi CallType = "bidi"
 // Greeter implements the GreeterServer for tests
 type Greeter struct {
 	streamData []*HelloReply
-	mutex      *sync.RWMutex
 
+	Stats *HWStatsHandler
+
+	mutex      *sync.RWMutex
 	callCounts map[CallType]int
 }
 
@@ -107,6 +110,12 @@ func (s *Greeter) ResetCounters() {
 	s.callCounts[ClientStream] = 0
 	s.callCounts[Bidi] = 0
 	s.mutex.Unlock()
+
+	if s.Stats != nil {
+		s.Stats.mutex.Lock()
+		s.Stats.connCount = 0
+		s.Stats.mutex.Unlock()
+	}
 }
 
 // GetCount gets the count for specific call type
@@ -118,6 +127,11 @@ func (s *Greeter) GetCount(key CallType) int {
 		return val
 	}
 	return -1
+}
+
+// GetConnectionCount gets the connection count
+func (s *Greeter) GetConnectionCount() int {
+	return s.Stats.GetConnectionCount()
 }
 
 // NewGreeter creates new greeter server
@@ -136,4 +150,51 @@ func NewGreeter() *Greeter {
 	m[Bidi] = 0
 
 	return &Greeter{streamData: streamData, callCounts: m, mutex: &sync.RWMutex{}}
+}
+
+// NewHWStats creates new stats handler
+func NewHWStats() *HWStatsHandler {
+	return &HWStatsHandler{connCount: 0, mutex: &sync.RWMutex{}}
+}
+
+// HWStatsHandler is for gRPC stats
+type HWStatsHandler struct {
+	mutex     *sync.RWMutex
+	connCount int
+}
+
+// GetConnectionCount gets the connection count
+func (c *HWStatsHandler) GetConnectionCount() int {
+	c.mutex.RLock()
+	val := c.connCount
+	c.mutex.RUnlock()
+
+	return val
+}
+
+// HandleConn handle the connection
+func (c *HWStatsHandler) HandleConn(ctx context.Context, cs stats.ConnStats) {
+	fmt.Println("!!! HandleConn")
+	// no-op
+}
+
+// TagConn exists to satisfy gRPC stats.Handler.
+func (c *HWStatsHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) context.Context {
+	fmt.Println("!!! TagConn")
+
+	c.mutex.Lock()
+	c.connCount++
+	c.mutex.Unlock()
+
+	return ctx
+}
+
+// HandleRPC implements per-RPC tracing and stats instrumentation.
+func (c *HWStatsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
+	// no-op
+}
+
+// TagRPC implements per-RPC context management.
+func (c *HWStatsHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) context.Context {
+	return ctx
 }
