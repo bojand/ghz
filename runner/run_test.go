@@ -108,6 +108,9 @@ func TestRunUnary(t *testing.T) {
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 12, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
 	})
 
 	t.Run("test QPS", func(t *testing.T) {
@@ -210,6 +213,58 @@ func TestRunUnary(t *testing.T) {
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 5, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+	})
+
+	t.Run("test connections", func(t *testing.T) {
+		gs.ResetCounters()
+
+		msg := &helloworld.HelloRequest{}
+		msg.Name = "bob"
+
+		binData, err := proto.Marshal(msg)
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(5),
+			WithConcurrency(5),
+			WithConnections(5),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithBinaryData(binData),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 5, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 5, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 5, connCount)
 	})
 }
 
@@ -266,6 +321,9 @@ func TestRunServerStreaming(t *testing.T) {
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 15, count)
+
+	connCount := gs.GetConnectionCount()
+	assert.Equal(t, 1, connCount)
 }
 
 func TestRunClientStreaming(t *testing.T) {
@@ -328,6 +386,9 @@ func TestRunClientStreaming(t *testing.T) {
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 16, count)
+
+	connCount := gs.GetConnectionCount()
+	assert.Equal(t, 1, connCount)
 }
 
 func TestRunClientStreamingBinary(t *testing.T) {
@@ -384,6 +445,9 @@ func TestRunClientStreamingBinary(t *testing.T) {
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 24, count)
+
+	connCount := gs.GetConnectionCount()
+	assert.Equal(t, 1, connCount)
 }
 
 func TestRunBidi(t *testing.T) {
@@ -446,6 +510,9 @@ func TestRunBidi(t *testing.T) {
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 20, count)
+
+	connCount := gs.GetConnectionCount()
+	assert.Equal(t, 1, connCount)
 }
 
 func TestRunUnarySecure(t *testing.T) {
@@ -500,6 +567,9 @@ func TestRunUnarySecure(t *testing.T) {
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 18, count)
+
+	connCount := gs.GetConnectionCount()
+	assert.Equal(t, 1, connCount)
 }
 
 func TestRunUnaryProtoset(t *testing.T) {
@@ -560,6 +630,9 @@ func TestRunUnaryProtoset(t *testing.T) {
 
 	count := gs.GetCount(callType)
 	assert.Equal(t, 21, count)
+
+	connCount := gs.GetConnectionCount()
+	assert.Equal(t, 1, connCount)
 }
 
 func TestRunUnaryReflection(t *testing.T) {
@@ -594,6 +667,9 @@ func TestRunUnaryReflection(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, report)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
 	})
 
 	t.Run("Unary streaming", func(t *testing.T) {
@@ -656,6 +732,9 @@ func TestRunUnaryReflection(t *testing.T) {
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 21, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 2, connCount) // 1 extra connection for reflection
 	})
 
 	t.Run("Client streaming", func(t *testing.T) {
@@ -717,5 +796,8 @@ func TestRunUnaryReflection(t *testing.T) {
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 16, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 2, connCount) // 1 extra connection for reflection
 	})
 }

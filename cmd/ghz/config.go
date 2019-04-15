@@ -43,6 +43,7 @@ type config struct {
 	Insecure        bool               `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
 	N               uint               `json:"total" toml:"total" yaml:"total" default:"200"`
 	C               uint               `json:"concurrency" toml:"concurrency" yaml:"concurrency" default:"50"`
+	Connections     uint               `json:"connections" toml:"connections" yaml:"connections" default:"1"`
 	QPS             uint               `json:"qps" toml:"qps" yaml:"qps"`
 	Z               Duration           `json:"duration" toml:"duration" yaml:"duration"`
 	X               Duration           `json:"max-duration" toml:"max-duration" yaml:"max-duration"`

@@ -40,6 +40,9 @@ type RunConfig struct {
 	c   int
 	qps int
 
+	// number of connections
+	nConns int
+
 	// timeouts
 	z             time.Duration
 	timeout       time.Duration
@@ -435,26 +438,46 @@ func WithReflectionMetadata(md *map[string]string) Option {
 	}
 }
 
+// WithConnections specifies the number of gRPC connections to use
+//	WithConnections(5)
+func WithConnections(c uint) Option {
+	return func(o *RunConfig) error {
+		if c > 0 {
+			o.nConns = int(c)
+		}
+
+		return nil
+	}
+}
+
 func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 	call = strings.TrimSpace(call)
 	host = strings.TrimSpace(host)
 
+	// init with defaults
 	c := &RunConfig{
 		call:        call,
 		host:        host,
 		n:           200,
 		c:           50,
+		nConns:      1,
 		timeout:     time.Duration(20 * time.Second),
 		dialTimeout: time.Duration(10 * time.Second),
 		cpus:        runtime.GOMAXPROCS(-1),
 	}
 
+	// apply options
 	for _, option := range options {
 		err := option(c)
 
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// checks
+	if c.nConns > c.c {
+		return nil, errors.New("Number of connections cannot be greater than concurrency")
 	}
 
 	if c.call == "" {

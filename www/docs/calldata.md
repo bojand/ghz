@@ -9,6 +9,9 @@ Data and metadata can specify [template actions](https://golang.org/pkg/text/tem
 // call template data
 type callTemplateData struct {
 
+	// unique worker ID
+	WorkerID		   string
+
 	// unique incremented request number for each request
 	RequestNumber      int64
 

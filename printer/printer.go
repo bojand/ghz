@@ -364,7 +364,8 @@ func cleanInfluxString(input string) string {
 var (
 	defaultTmpl = `
 Summary:
-{{ if .Name }}  Name:		{{ .Name }}{{ end }}  Count:	{{ .Count }}
+{{ if .Name }}  Name:		{{ .Name }}
+{{ end }}  Count:	{{ .Count }}
   Total:	{{ formatNanoUnit .Total }}
   Slowest:	{{ formatNanoUnit .Slowest }}
   Fastest:	{{ formatNanoUnit .Fastest }}

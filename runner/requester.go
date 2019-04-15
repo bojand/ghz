@@ -3,9 +3,8 @@ package runner
 import (
 	"context"
 	"fmt"
-	"io"
+	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/bojand/ghz/protodesc"
@@ -34,12 +33,14 @@ type callResult struct {
 
 // Requester is used for doing the requests
 type Requester struct {
-	cc       *grpc.ClientConn
-	stub     grpcdynamic.Stub
+	conns []*grpc.ClientConn
+	stubs []grpcdynamic.Stub
+
 	mtd      *desc.MethodDescriptor
 	reporter *Reporter
 
-	config  *RunConfig
+	config *RunConfig
+
 	results chan *callResult
 	stopCh  chan bool
 	start   time.Time
@@ -67,6 +68,8 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		stopReason: ReasonNormalEnd,
 		results:    make(chan *callResult, min(c.c*1000, maxResult)),
 		stopCh:     make(chan bool, c.c),
+		conns:      make([]*grpc.ClientConn, 0, c.nConns),
+		stubs:      make([]grpcdynamic.Stub, 0, c.nConns),
 	}
 
 	if c.proto != "" {
@@ -76,7 +79,7 @@ func newRequester(c *RunConfig) (*Requester, error) {
 	} else {
 		// use reflection to get method decriptor
 		var cc *grpc.ClientConn
-		// temporary connection for reflection, do not store as requester.cc
+		// temporary connection for reflection, do not store as requester connections
 		cc, err = reqr.newClientConn(false)
 		if err != nil {
 			return nil, err
@@ -125,14 +128,20 @@ func newRequester(c *RunConfig) (*Requester, error) {
 func (b *Requester) Run() (*Report, error) {
 	start := time.Now()
 
-	cc, err := b.openClientConn()
+	cc, err := b.openClientConns()
 	if err != nil {
 		return nil, err
 	}
 
 	b.lock.Lock()
 	b.start = start
-	b.stub = grpcdynamic.NewStub(cc)
+
+	// create a client stub for each connection
+	for n := 0; n < b.config.nConns; n++ {
+		stub := grpcdynamic.NewStub(cc[n])
+		b.stubs = append(b.stubs, stub)
+	}
+
 	b.reporter = newReporter(b.results, b.config)
 	b.lock.Unlock()
 
@@ -143,7 +152,7 @@ func (b *Requester) Run() (*Report, error) {
 	err = b.runWorkers()
 
 	report := b.Finish()
-	b.closeClientConn()
+	b.closeClientConns()
 
 	return report, err
 }
@@ -159,7 +168,7 @@ func (b *Requester) Stop(reason StopReason) {
 	b.stopReason = reason
 	b.lock.Unlock()
 
-	b.closeClientConn()
+	b.closeClientConns()
 }
 
 // Finish finishes the test run
@@ -173,28 +182,38 @@ func (b *Requester) Finish() *Report {
 	return b.reporter.Finalize(b.stopReason, total)
 }
 
-func (b *Requester) openClientConn() (*grpc.ClientConn, error) {
+func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	if b.cc != nil {
-		return b.cc, nil
+
+	if len(b.conns) == b.config.nConns {
+		return b.conns, nil
 	}
-	cc, err := b.newClientConn(true)
-	if err != nil {
-		return nil, err
+
+	for n := 0; n < b.config.nConns; n++ {
+		c, err := b.newClientConn(true)
+		if err != nil {
+			return nil, err
+		}
+
+		b.conns = append(b.conns, c)
 	}
-	b.cc = cc
-	return b.cc, nil
+
+	return b.conns, nil
 }
 
-func (b *Requester) closeClientConn() {
+func (b *Requester) closeClientConns() {
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	if b.cc == nil {
+	if b.conns == nil {
 		return
 	}
-	_ = b.cc.Close()
-	b.cc = nil
+
+	for _, cc := range b.conns {
+		_ = cc.Close()
+	}
+
+	b.conns = nil
 }
 
 func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, error) {
@@ -238,10 +257,38 @@ func (b *Requester) runWorkers() error {
 	}
 
 	errC := make(chan error, b.config.c)
+
 	// Ignore the case where b.N % b.C != 0.
-	for i := 0; i < b.config.c; i++ {
+
+	n := 0                            // connection counter
+	for i := 0; i < b.config.c; i++ { // concurrency counter
+
+		wID := "g" + strconv.Itoa(i) + "c" + strconv.Itoa(n)
+
+		if len(b.config.name) > 0 {
+			wID = b.config.name + ":" + wID
+		}
+
+		w := Worker{
+			stub:       b.stubs[n],
+			mtd:        b.mtd,
+			config:     b.config,
+			stopCh:     b.stopCh,
+			qpsTick:    b.qpsTick,
+			reqCounter: &b.reqCounter,
+			nReq:       nReqPerWorker,
+			workerID:   wID,
+		}
+
+		n++ // increment connection counter
+
+		// wrap around connections if needed
+		if n == b.config.nConns {
+			n = 0
+		}
+
 		go func() {
-			errC <- b.runWorker(nReqPerWorker)
+			errC <- w.runWorker()
 		}()
 	}
 
@@ -250,209 +297,6 @@ func (b *Requester) runWorkers() error {
 		err = multierr.Append(err, <-errC)
 	}
 	return err
-}
-
-func (b *Requester) runWorker(n int) error {
-	var throttle <-chan time.Time
-	if b.config.qps > 0 {
-		throttle = time.Tick(b.qpsTick)
-	}
-
-	var err error
-	for i := 0; i < n; i++ {
-		// Check if application is stopped. Do not send into a closed channel.
-		select {
-		case <-b.stopCh:
-			return nil
-		default:
-			if b.config.qps > 0 {
-				<-throttle
-			}
-			err = multierr.Append(err, b.makeRequest())
-		}
-	}
-	return err
-}
-
-func (b *Requester) makeRequest() error {
-
-	reqNum := atomic.AddInt64(&b.reqCounter, 1)
-
-	ctd := newCallTemplateData(b.mtd, reqNum)
-
-	var input *dynamic.Message
-	var streamInput *[]*dynamic.Message
-
-	if !b.config.binary {
-		data, err := ctd.executeData(string(b.config.data))
-		if err != nil {
-			return err
-		}
-		input, streamInput, err = createPayloads(string(data), b.mtd)
-		if err != nil {
-			return err
-		}
-	} else {
-		var err error
-		input, streamInput, err = createPayloadsFromBin(b.config.data, b.mtd)
-		if err != nil {
-			return err
-		}
-	}
-
-	mdMap, err := ctd.executeMetadata(string(b.config.metadata))
-	if err != nil {
-		return err
-	}
-
-	var reqMD *metadata.MD
-	if mdMap != nil && len(*mdMap) > 0 {
-		md := metadata.New(*mdMap)
-		reqMD = &md
-	}
-
-	ctx := context.Background()
-	var cancel context.CancelFunc
-
-	if b.config.timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, b.config.timeout)
-	} else {
-		ctx, cancel = context.WithCancel(ctx)
-	}
-	defer cancel()
-
-	// include the metadata
-	if reqMD != nil {
-		ctx = metadata.NewOutgoingContext(ctx, *reqMD)
-	}
-
-	// RPC errors are handled via stats handler
-
-	if b.mtd.IsClientStreaming() && b.mtd.IsServerStreaming() {
-		_ = b.makeBidiRequest(&ctx, streamInput)
-	}
-	if b.mtd.IsClientStreaming() {
-		_ = b.makeClientStreamingRequest(&ctx, streamInput)
-	}
-	if b.mtd.IsServerStreaming() {
-		_ = b.makeServerStreamingRequest(&ctx, input)
-	}
-
-	// TODO: handle response?
-	_, _ = b.stub.InvokeRpc(ctx, b.mtd, input)
-	return err
-}
-
-func (b *Requester) makeClientStreamingRequest(ctx *context.Context, input *[]*dynamic.Message) error {
-	str, err := b.stub.InvokeRpcClientStream(*ctx, b.mtd)
-	counter := 0
-	// TODO: need to handle and propagate errors
-	for err == nil {
-		streamInput := *input
-		inputLen := len(streamInput)
-		if input == nil || inputLen == 0 {
-			// TODO: need to handle error
-			_, _ = str.CloseAndReceive()
-			break
-		}
-
-		if counter == inputLen {
-			// TODO: need to handle error
-			_, _ = str.CloseAndReceive()
-			break
-		}
-
-		payload := streamInput[counter]
-
-		var wait <-chan time.Time
-		if b.config.streamInterval > 0 {
-			wait = time.Tick(b.config.streamInterval)
-			<-wait
-		}
-
-		err = str.SendMsg(payload)
-		if err == io.EOF {
-			// We get EOF on send if the server says "go away"
-			// We have to use CloseAndReceive to get the actual code
-			// TODO: need to handle error
-			_, _ = str.CloseAndReceive()
-			break
-		}
-		counter++
-	}
-	return nil
-}
-
-func (b *Requester) makeServerStreamingRequest(ctx *context.Context, input *dynamic.Message) error {
-	str, err := b.stub.InvokeRpcServerStream(*ctx, b.mtd, input)
-	// TODO: need to handle and propagate errors
-	for err == nil {
-		_, err := str.RecvMsg()
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			break
-		}
-	}
-	return nil
-}
-
-func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Message) error {
-	str, err := b.stub.InvokeRpcBidiStream(*ctx, b.mtd)
-	if err != nil {
-		return err
-	}
-
-	counter := 0
-
-	streamInput := *input
-	inputLen := len(streamInput)
-
-	recvDone := make(chan bool)
-
-	if input == nil || inputLen == 0 {
-		// TODO: need to handle error
-		_ = str.CloseSend()
-		return nil
-	}
-
-	go func() {
-		for {
-			_, err := str.RecvMsg()
-
-			if err != nil {
-				close(recvDone)
-				break
-			}
-		}
-	}()
-
-	// TODO: need to handle and propagate errors
-	for err == nil {
-		if counter == inputLen {
-			// TODO: need to handle error
-			_ = str.CloseSend()
-			break
-		}
-
-		payload := streamInput[counter]
-
-		var wait <-chan time.Time
-		if b.config.streamInterval > 0 {
-			wait = time.Tick(b.config.streamInterval)
-			<-wait
-		}
-
-		err = str.SendMsg(payload)
-		counter++
-	}
-
-	if err == nil {
-		<-recvDone
-	}
-
-	return nil
 }
 
 func min(a, b int) int {

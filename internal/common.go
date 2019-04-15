@@ -36,11 +36,17 @@ func StartServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
 	}
 
+	stats := helloworld.NewHWStats()
+
+	opts = append(opts, grpc.StatsHandler(stats))
+
 	s := grpc.NewServer(opts...)
 
 	gs := helloworld.NewGreeter()
 	helloworld.RegisterGreeterServer(s, gs)
 	reflection.Register(s)
+
+	gs.Stats = stats
 
 	TestPort = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
 	TestLocalhost = "localhost:" + TestPort

@@ -278,6 +278,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with data from reader", func(t *testing.T) {
 
 		file, _ := os.Open("../testdata/data.json")
+		defer file.Close()
 
 		c, err := newConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
@@ -292,6 +293,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 200, c.n)
 		assert.Equal(t, 50, c.c)
 		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, 1, c.nConns)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(0), c.z)
 		assert.Equal(t, time.Duration(0), c.keepaliveTime)
@@ -305,5 +307,56 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+	})
+
+	t.Run("with connections", func(t *testing.T) {
+
+		file, _ := os.Open("../testdata/data.json")
+		defer file.Close()
+
+		c, err := newConfig("call", "localhost:50050",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithDataFromReader(file),
+			WithConnections(5),
+		)
+
+		assert.NoError(t, err)
+
+		assert.Equal(t, "call", c.call)
+		assert.Equal(t, "localhost:50050", c.host)
+		assert.Equal(t, false, c.insecure)
+		assert.Equal(t, 200, c.n)
+		assert.Equal(t, 50, c.c)
+		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, 5, c.nConns)
+		assert.Equal(t, false, c.binary)
+		assert.Equal(t, time.Duration(0), c.z)
+		assert.Equal(t, time.Duration(0), c.keepaliveTime)
+		assert.Equal(t, time.Duration(20*time.Second), c.timeout)
+		assert.Equal(t, time.Duration(10*time.Second), c.dialTimeout)
+		assert.Equal(t, runtime.GOMAXPROCS(-1), c.cpus)
+		assert.Empty(t, c.name)
+		assert.NotEmpty(t, c.data)
+		assert.False(t, c.binary)
+		assert.Empty(t, c.metadata)
+		assert.Equal(t, "testdata/data.proto", string(c.proto))
+		assert.Equal(t, "", string(c.protoset))
+		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+	})
+
+	t.Run("with invalid connections > concurrency", func(t *testing.T) {
+
+		file, _ := os.Open("../testdata/data.json")
+		defer file.Close()
+
+		c, err := newConfig("call", "localhost:50050",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithDataFromReader(file),
+			WithConcurrency(5),
+			WithConnections(6),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
 	})
 }

@@ -61,6 +61,20 @@ ghz --proto ./greeter.proto \
   0.0.0.0:50051
 ```
 
+Using custom number of connections:
+
+```sh
+ghz --proto ./greeter.proto \
+  --call helloworld.Greeter.SayHello \
+  -d '{"name":"Joe"}' \
+  -n 2000 \
+  -c 20 \
+  --connections=10 \
+  0.0.0.0:50051
+```
+
+`10` connections will be shared among `20` goroutine workers. Each pair of `2` goroutines will share a single connection.
+
 Client streaming data can be sent as an array, each element representing a single message:
 
 ```sh
