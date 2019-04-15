@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Examples · ghz</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;A simple insecure unary call:&lt;/p&gt;
-"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Examples · ghz"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ghz.sh/index.html"/><meta property="og:description" content="&lt;p&gt;A simple insecure unary call:&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Examples · ghz"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ghz.sh/"/><meta property="og:description" content="&lt;p&gt;A simple insecure unary call:&lt;/p&gt;
 "/><meta property="og:image" content="https://ghz.sh/img/green_fwd2.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://ghz.sh/img/green_fwd2.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/green_fwd2.svg" alt="ghz"/><h2 class="headerTitleWithLogo">ghz</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/intro" target="_self">CLI</a></li><li class=""><a href="/docs/web/intro" target="_self">Web</a></li><li class=""><a href="https://godoc.org/github.com/bojand/ghz" target="_self">GoDoc</a></li><li class=""><a href="https://github.com/bojand/ghz" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><i></i></div><h2><i>›</i><span>Guide</span></h2></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Guide</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/intro">Introduction</a></li><li class="navListItem"><a class="navItem" href="/docs/install">Installation</a></li><li class="navListItem"><a class="navItem" href="/docs/usage">Usage</a></li><li class="navListItem"><a class="navItem" href="/docs/options">Options Reference</a></li><li class="navListItem"><a class="navItem" href="/docs/calldata">Call Template Data</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/examples">Examples</a></li><li class="navListItem"><a class="navItem" href="/docs/example_config">Configuration Files</a></li><li class="navListItem"><a class="navItem" href="/docs/output">Output</a></li><li class="navListItem"><a class="navItem" href="/docs/extras">Extras</a></li><li class="navListItem"><a class="navItem" href="/docs/package">Package</a></li></ul></div></div></section></div><script>
             var coll = document.getElementsByClassName('collapsible');
             var checkActiveCategory = true;
@@ -90,6 +90,16 @@
   -c 20 \
   0.0.0.0:50051
 </code></pre>
+<p>Using custom number of connections:</p>
+<pre><code class="hljs css language-sh">ghz --proto ./greeter.proto \
+  --call helloworld.Greeter.SayHello \
+  -d <span class="hljs-string">'{"name":"Joe"}'</span> \
+  -n 2000 \
+  -c 20 \
+  --connections=10 \
+  0.0.0.0:50051
+</code></pre>
+<p><code>10</code> connections will be shared among <code>20</code> goroutine workers. Each pair of <code>2</code> goroutines will share a single connection.</p>
 <p>Client streaming data can be sent as an array, each element representing a single message:</p>
 <pre><code class="hljs css language-sh">ghz --proto ./greeter.proto \
   --call helloworld.Greeter.SayHelloCS \
