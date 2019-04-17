@@ -3,7 +3,9 @@ package helloworld
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"sync"
+	"time"
 
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/stats"
@@ -35,11 +37,18 @@ type Greeter struct {
 	callCounts map[CallType]int
 }
 
+func RandomSleep() {
+	msCount := rand.Intn(4) + 1
+	time.Sleep(time.Millisecond * time.Duration(msCount))
+}
+
 // SayHello implements helloworld.GreeterServer
 func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, error) {
 	s.mutex.Lock()
 	s.callCounts[Unary]++
 	s.mutex.Unlock()
+
+	RandomSleep()
 
 	return &HelloReply{Message: "Hello " + in.Name}, nil
 }
@@ -49,6 +58,8 @@ func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) e
 	s.mutex.Lock()
 	s.callCounts[ServerStream]++
 	s.mutex.Unlock()
+
+	RandomSleep()
 
 	for _, msg := range s.streamData {
 		if err := stream.Send(msg); err != nil {
@@ -64,6 +75,8 @@ func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 	s.mutex.Lock()
 	s.callCounts[ClientStream]++
 	s.mutex.Unlock()
+
+	RandomSleep()
 
 	msgCount := 0
 
@@ -85,6 +98,8 @@ func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 	s.mutex.Lock()
 	s.callCounts[Bidi]++
 	s.mutex.Unlock()
+
+	RandomSleep()
 
 	for {
 		in, err := stream.Recv()
