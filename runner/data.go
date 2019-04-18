@@ -12,8 +12,8 @@ import (
 )
 
 // creates a message from a map
-// marshal to JSON then use jsonb to marshal to message
-// this way we follow protobuf more closely and allow cammelCase properties.
+// marshal to JSON then use jsonpb to marshal to message
+// this way we follow protobuf more closely and allow camelCase properties.
 func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error {
 	strData, err := json.Marshal(data)
 	if err != nil {
