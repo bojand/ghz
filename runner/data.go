@@ -28,71 +28,55 @@ func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error 
 	return nil
 }
 
-func createPayloads(data string, mtd *desc.MethodDescriptor) (*dynamic.Message, *[]*dynamic.Message, error) {
+func createPayloads(data string, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
 	md := mtd.GetInputType()
-	var input *dynamic.Message
-	var streamInput []*dynamic.Message
+	var inputs []*dynamic.Message
 
 	if len(data) > 0 {
 		if strings.IndexRune(data, '[') == 0 {
 			dataArray := make([]map[string]interface{}, 5)
 			err := json.Unmarshal([]byte(data), &dataArray)
 			if err != nil {
-				return nil, nil, fmt.Errorf("Error unmarshalling payload. Data: '%v' Error: %v", data, err.Error())
+				return nil, fmt.Errorf("Error unmarshalling payload. Data: '%v' Error: %v", data, err.Error())
 			}
 
 			elems := len(dataArray)
 			if elems > 0 {
-				streamInput = make([]*dynamic.Message, elems)
+				inputs = make([]*dynamic.Message, elems)
 			}
 
 			for i, elem := range dataArray {
 				elemMsg := dynamic.NewMessage(md)
 				err := messageFromMap(elemMsg, &elem)
 				if err != nil {
-					return nil, nil, fmt.Errorf("Error creating message: %v", err.Error())
+					return nil, fmt.Errorf("Error creating message: %v", err.Error())
 				}
 
-				streamInput[i] = elemMsg
+				inputs[i] = elemMsg
 			}
 		} else {
-			input = dynamic.NewMessage(md)
-			err := jsonpb.UnmarshalString(data, input)
+			inputs = make([]*dynamic.Message, 1)
+			inputs[0] = dynamic.NewMessage(md)
+			err := jsonpb.UnmarshalString(data, inputs[0])
 			if err != nil {
-				return nil, nil, fmt.Errorf("Error creating message from data. Data: '%v' Error: %v", data, err.Error())
+				return nil, fmt.Errorf("Error creating message from data. Data: '%v' Error: %v", data, err.Error())
 			}
 		}
 	}
 
-	if mtd.IsClientStreaming() && len(streamInput) == 0 && input != nil {
-		streamInput = make([]*dynamic.Message, 1)
-		streamInput[0] = input
-		input = nil
-	}
-
-	if !mtd.IsClientStreaming() && input == nil && len(streamInput) > 0 {
-		input = streamInput[0]
-		streamInput = nil
-	}
-
-	return input, &streamInput, nil
+	return &inputs, nil
 }
 
-func createPayloadsFromBin(binData []byte, mtd *desc.MethodDescriptor) (*dynamic.Message, *[]*dynamic.Message, error) {
+func createPayloadsFromBin(binData []byte, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
 	md := mtd.GetInputType()
-	input := dynamic.NewMessage(md)
-	streamInput := make([]*dynamic.Message, 1)
 
-	err := proto.Unmarshal(binData, input)
+	inputs := make([]*dynamic.Message, 1)
+	inputs[0] = dynamic.NewMessage(md)
+
+	err := proto.Unmarshal(binData, inputs[0])
 	if err != nil {
-		return nil, nil, fmt.Errorf("Error creating message from binary data: %v", err.Error())
+		return nil, fmt.Errorf("Error creating message from binary data: %v", err.Error())
 	}
 
-	if mtd.IsClientStreaming() && input != nil {
-		streamInput = make([]*dynamic.Message, 1)
-		streamInput[0] = input
-		input = nil
-	}
-
-	return input, &streamInput, nil
+	return &inputs, nil
 }

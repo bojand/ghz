@@ -43,10 +43,9 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NotNil(t, mtdTestUnaryTwo)
 
 	t.Run("get nil, empty when empty", func(t *testing.T) {
-		single, streaming, err := createPayloads("", mtdUnary)
+		inputs, err := createPayloads("", mtdUnary)
 		assert.NoError(t, err)
-		assert.Nil(t, single)
-		assert.Empty(t, streaming)
+		assert.Empty(t, inputs)
 	})
 
 	t.Run("fail for invalid data shape", func(t *testing.T) {
@@ -56,11 +55,12 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloads(string(jsonData), mtdUnary)
 		assert.Error(t, err)
-		assert.Nil(t, single)
-		assert.Nil(t, streaming)
+		assert.Nil(t, inputs)
 	})
+
+	// TODO: update tests below that comment
 
 	t.Run("create single object from map for unary", func(t *testing.T) {
 		m1 := make(map[string]interface{})
@@ -68,10 +68,11 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloads(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
 	t.Run("create array from map for client streaming", func(t *testing.T) {
@@ -80,11 +81,11 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloads(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
-		assert.Nil(t, single)
-		assert.NotNil(t, streaming)
-		assert.Len(t, *streaming, 1)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
 	t.Run("create slice of messages from slice for client streaming", func(t *testing.T) {
@@ -98,11 +99,10 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloads(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
-		assert.Nil(t, single)
-		assert.NotNil(t, streaming)
-		assert.Len(t, *streaming, 2)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 2)
 	})
 
 	t.Run("fail on invalid shape of data in slice for client streaming", func(t *testing.T) {
@@ -120,10 +120,9 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloads(string(jsonData), mtdClientStreaming)
 		assert.Error(t, err)
-		assert.Nil(t, single)
-		assert.Nil(t, streaming)
+		assert.Nil(t, inputs)
 	})
 
 	t.Run("get object for slice and unary", func(t *testing.T) {
@@ -140,10 +139,10 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloads(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 3)
 	})
 
 	t.Run("create single object from map for unary with camelCase property", func(t *testing.T) {
@@ -152,10 +151,11 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdTestUnary)
+		inputs, err := createPayloads(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
 	t.Run("create single object from map for unary with snake_case property", func(t *testing.T) {
@@ -164,10 +164,11 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdTestUnary)
+		inputs, err := createPayloads(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
 	t.Run("create single object from map for unary with nested camelCase property", func(t *testing.T) {
@@ -179,10 +180,11 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
+		inputs, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
 	t.Run("create single object from map for unary with nested snake_case property", func(t *testing.T) {
@@ -194,9 +196,10 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
+		inputs, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 }

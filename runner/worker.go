@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// Worker is used for doing a single stream of requests in parallerl
+// Worker is used for doing a single stream of requests in parallel
 type Worker struct {
 	stub grpcdynamic.Stub
 	mtd  *desc.MethodDescriptor
@@ -57,21 +57,20 @@ func (w *Worker) makeRequest() error {
 
 	ctd := newCallTemplateData(w.mtd, w.workerID, reqNum)
 
-	var input *dynamic.Message
-	var streamInput *[]*dynamic.Message
+	var inputs *[]*dynamic.Message
 
 	if !w.config.binary {
 		data, err := ctd.executeData(string(w.config.data))
 		if err != nil {
 			return err
 		}
-		input, streamInput, err = createPayloads(string(data), w.mtd)
+		inputs, err = createPayloads(string(data), w.mtd)
 		if err != nil {
 			return err
 		}
 	} else {
 		var err error
-		input, streamInput, err = createPayloadsFromBin(w.config.data, w.mtd)
+		inputs, err = createPayloadsFromBin(w.config.data, w.mtd)
 		if err != nil {
 			return err
 		}
@@ -106,17 +105,17 @@ func (w *Worker) makeRequest() error {
 	// RPC errors are handled via stats handler
 
 	if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
-		_ = w.makeBidiRequest(&ctx, streamInput)
+		_ = w.makeBidiRequest(&ctx, inputs)
 	}
 	if w.mtd.IsClientStreaming() {
-		_ = w.makeClientStreamingRequest(&ctx, streamInput)
+		_ = w.makeClientStreamingRequest(&ctx, inputs)
 	}
 	if w.mtd.IsServerStreaming() {
-		_ = w.makeServerStreamingRequest(&ctx, input)
+		_ = w.makeServerStreamingRequest(&ctx, (*inputs)[0])
 	}
 
 	// TODO: handle response?
-	_, _ = w.stub.InvokeRpc(ctx, w.mtd, input)
+	_, _ = w.stub.InvokeRpc(ctx, w.mtd, (*inputs)[0])
 	return err
 }
 
