@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync/atomic"
 	"time"
@@ -110,12 +111,19 @@ func (w *Worker) makeRequest() error {
 	if w.mtd.IsClientStreaming() {
 		_ = w.makeClientStreamingRequest(&ctx, inputs)
 	}
-	if w.mtd.IsServerStreaming() {
-		_ = w.makeServerStreamingRequest(&ctx, (*inputs)[0])
-	}
 
+	inputsLen := len(*inputs)
+	if inputsLen == 0 {
+		return fmt.Errorf("Error: can't create a request without payload. Check your data");
+	}
+	inputIdx := int(reqNum % int64(inputsLen))
+
+	if w.mtd.IsServerStreaming() {
+		_ = w.makeServerStreamingRequest(&ctx, (*inputs)[inputIdx])
+	}
 	// TODO: handle response?
-	_, _ = w.stub.InvokeRpc(ctx, w.mtd, (*inputs)[0])
+	_, _ = w.stub.InvokeRpc(ctx, w.mtd, (*inputs)[inputIdx])
+
 	return err
 }
 
