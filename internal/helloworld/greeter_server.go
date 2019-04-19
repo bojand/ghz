@@ -15,7 +15,7 @@ import (
 // unary, client streaming, server streaming, bidi
 type CallType string
 
-// Unary is a uniry call
+// Unary is a unary call
 var Unary CallType = "unary"
 
 // ClientStream is a client streaming call
@@ -35,31 +35,48 @@ type Greeter struct {
 
 	mutex      *sync.RWMutex
 	callCounts map[CallType]int
+	calls map[CallType][][]*HelloRequest
 }
 
-func RandomSleep() {
+func randomSleep() {
 	msCount := rand.Intn(4) + 1
 	time.Sleep(time.Millisecond * time.Duration(msCount))
 }
 
+func (s *Greeter) recordCall(ct CallType) int {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.callCounts[ct]++
+	var messages []*HelloRequest
+	s.calls[ct] = append(s.calls[ct], messages)
+
+	return len(s.calls[ct]) - 1
+}
+
+func (s *Greeter) recordMessage(ct CallType, callIdx int, msg *HelloRequest) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.calls[ct][callIdx] = append(s.calls[ct][callIdx], msg)
+}
+
 // SayHello implements helloworld.GreeterServer
 func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, error) {
-	s.mutex.Lock()
-	s.callCounts[Unary]++
-	s.mutex.Unlock()
+	callIdx := s.recordCall(Unary)
+	s.recordMessage(Unary, callIdx, in)
 
-	RandomSleep()
+	randomSleep()
 
 	return &HelloReply{Message: "Hello " + in.Name}, nil
 }
 
 // SayHellos lists all hellos
 func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) error {
-	s.mutex.Lock()
-	s.callCounts[ServerStream]++
-	s.mutex.Unlock()
+	callIdx := s.recordCall(ServerStream)
+	s.recordMessage(ServerStream, callIdx, req)
 
-	RandomSleep()
+	randomSleep()
 
 	for _, msg := range s.streamData {
 		if err := stream.Send(msg); err != nil {
@@ -72,16 +89,14 @@ func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) e
 
 // SayHelloCS is client streaming handler
 func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
-	s.mutex.Lock()
-	s.callCounts[ClientStream]++
-	s.mutex.Unlock()
+	callIdx := s.recordCall(ClientStream)
 
-	RandomSleep()
+	randomSleep()
 
 	msgCount := 0
 
 	for {
-		_, err := stream.Recv()
+		in, err := stream.Recv()
 		if err == io.EOF {
 			msgStr := fmt.Sprintf("Hello count: %d", msgCount)
 			return stream.SendAndClose(&HelloReply{Message: msgStr})
@@ -89,17 +104,16 @@ func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 		if err != nil {
 			return err
 		}
+		s.recordMessage(ClientStream, callIdx, in)
 		msgCount++
 	}
 }
 
 // SayHelloBidi duplex call handler
 func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
-	s.mutex.Lock()
-	s.callCounts[Bidi]++
-	s.mutex.Unlock()
+	callIdx := s.recordCall(Bidi)
 
-	RandomSleep()
+	randomSleep()
 
 	for {
 		in, err := stream.Recv()
@@ -110,6 +124,7 @@ func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 			return err
 		}
 
+		s.recordMessage(Bidi, callIdx, in)
 		msg := "Hello " + in.Name
 		if err := stream.Send(&HelloReply{Message: msg}); err != nil {
 			return err
@@ -120,10 +135,19 @@ func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 // ResetCounters resets the call counts
 func (s *Greeter) ResetCounters() {
 	s.mutex.Lock()
+
+	s.callCounts = make(map[CallType]int)
 	s.callCounts[Unary] = 0
 	s.callCounts[ServerStream] = 0
 	s.callCounts[ClientStream] = 0
 	s.callCounts[Bidi] = 0
+
+	s.calls = make(map[CallType][][]*HelloRequest)
+	s.calls[Unary] = make([][]*HelloRequest, 0)
+	s.calls[ServerStream] = make([][]*HelloRequest, 0)
+	s.calls[ClientStream] = make([][]*HelloRequest, 0)
+	s.calls[Bidi] = make([][]*HelloRequest, 0)
+
 	s.mutex.Unlock()
 
 	if s.Stats != nil {
@@ -144,6 +168,17 @@ func (s *Greeter) GetCount(key CallType) int {
 	return -1
 }
 
+func (s *Greeter) GetCalls(key CallType) [][]*HelloRequest {
+	s.mutex.Lock()
+	val, ok := s.calls[key]
+	s.mutex.Unlock()
+
+	if ok {
+		return val
+	}
+	return nil
+}
+
 // GetConnectionCount gets the connection count
 func (s *Greeter) GetConnectionCount() int {
 	return s.Stats.GetConnectionCount()
@@ -158,13 +193,10 @@ func NewGreeter() *Greeter {
 		&HelloReply{Message: "Hello Sara"},
 	}
 
-	m := make(map[CallType]int)
-	m[Unary] = 0
-	m[ServerStream] = 0
-	m[ClientStream] = 0
-	m[Bidi] = 0
+	greeter := &Greeter{streamData: streamData, mutex: &sync.RWMutex{}}
+	greeter.ResetCounters()
 
-	return &Greeter{streamData: streamData, callCounts: m, mutex: &sync.RWMutex{}}
+	return greeter
 }
 
 // NewHWStats creates new stats handler

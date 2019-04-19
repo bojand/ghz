@@ -42,7 +42,7 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mtdTestUnaryTwo)
 
-	t.Run("get nil, empty when empty", func(t *testing.T) {
+	t.Run("get empty when empty", func(t *testing.T) {
 		inputs, err := createPayloads("", mtdUnary)
 		assert.NoError(t, err)
 		assert.Empty(t, inputs)
@@ -60,9 +60,7 @@ func TestData_createPayloads(t *testing.T) {
 		assert.Nil(t, inputs)
 	})
 
-	// TODO: update tests below that comment
-
-	t.Run("create single object from map for unary", func(t *testing.T) {
+	t.Run("create slice with single element from map for unary", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -75,7 +73,7 @@ func TestData_createPayloads(t *testing.T) {
 		assert.NotNil(t, (*inputs)[0])
 	})
 
-	t.Run("create array from map for client streaming", func(t *testing.T) {
+	t.Run("create slice with single element from map for client streaming", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -125,7 +123,7 @@ func TestData_createPayloads(t *testing.T) {
 		assert.Nil(t, inputs)
 	})
 
-	t.Run("get object for slice and unary", func(t *testing.T) {
+	t.Run("create slice of messages from slice for unary", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -145,7 +143,7 @@ func TestData_createPayloads(t *testing.T) {
 		assert.Len(t, *inputs, 3)
 	})
 
-	t.Run("create single object from map for unary with camelCase property", func(t *testing.T) {
+	t.Run("create slice with single object from map for unary with camelCase property", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["paramOne"] = "bob"
 
@@ -158,7 +156,7 @@ func TestData_createPayloads(t *testing.T) {
 		assert.NotNil(t, (*inputs)[0])
 	})
 
-	t.Run("create single object from map for unary with snake_case property", func(t *testing.T) {
+	t.Run("create slice with single object from map for unary with snake_case property", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["param_one"] = "bob"
 
@@ -171,7 +169,7 @@ func TestData_createPayloads(t *testing.T) {
 		assert.NotNil(t, (*inputs)[0])
 	})
 
-	t.Run("create single object from map for unary with nested camelCase property", func(t *testing.T) {
+	t.Run("create slice with single object from map for unary with nested camelCase property", func(t *testing.T) {
 		inner := make(map[string]interface{})
 		inner["paramOne"] = "bob"
 
@@ -187,7 +185,7 @@ func TestData_createPayloads(t *testing.T) {
 		assert.NotNil(t, (*inputs)[0])
 	})
 
-	t.Run("create single object from map for unary with nested snake_case property", func(t *testing.T) {
+	t.Run("create slice with single object from map for unary with nested snake_case property", func(t *testing.T) {
 		inner := make(map[string]interface{})
 		inner["param_one"] = "bob"
 

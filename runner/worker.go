@@ -116,7 +116,7 @@ func (w *Worker) makeRequest() error {
 	if inputsLen == 0 {
 		return fmt.Errorf("Error: can't create a request without payload. Check your data");
 	}
-	inputIdx := int(reqNum % int64(inputsLen))
+	inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
 
 	if w.mtd.IsServerStreaming() {
 		_ = w.makeServerStreamingRequest(&ctx, (*inputs)[inputIdx])
