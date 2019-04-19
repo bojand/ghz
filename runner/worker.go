@@ -65,13 +65,14 @@ func (w *Worker) makeRequest() error {
 		if err != nil {
 			return err
 		}
-		inputs, err = createPayloads(string(data), w.mtd)
+		inputs, err = createPayloadsFromJson(string(data), w.mtd)
 		if err != nil {
 			return err
 		}
 	} else {
 		var err error
-		inputs, err = createPayloadsFromBin(w.config.data, w.mtd)
+		// todo we need an explicit way to choose between binary formats, it's impossible to distinguish from data itself
+		inputs, err = createPayloadsFromBinSingleMessage(w.config.data, w.mtd)
 		if err != nil {
 			return err
 		}
@@ -114,7 +115,7 @@ func (w *Worker) makeRequest() error {
 
 	inputsLen := len(*inputs)
 	if inputsLen == 0 {
-		return fmt.Errorf("Error: can't create a request without payload. Check your data");
+		return fmt.Errorf("no data provided for request")
 	}
 	inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
 

@@ -3,6 +3,7 @@ package runner
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -28,7 +29,7 @@ func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error 
 	return nil
 }
 
-func createPayloads(data string, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
+func createPayloadsFromJson(data string, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
 	md := mtd.GetInputType()
 	var inputs []*dynamic.Message
 
@@ -67,15 +68,51 @@ func createPayloads(data string, mtd *desc.MethodDescriptor) (*[]*dynamic.Messag
 	return &inputs, nil
 }
 
-func createPayloadsFromBin(binData []byte, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
+func createPayloadsFromBinSingleMessage(binData []byte, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
+	var inputs []*dynamic.Message
 	md := mtd.GetInputType()
 
-	inputs := make([]*dynamic.Message, 1)
-	inputs[0] = dynamic.NewMessage(md)
+	// return empty array if no data
+	if len(binData) == 0 {
+		return &inputs, nil
+	}
 
-	err := proto.Unmarshal(binData, inputs[0])
+	// try to unmarshal input as a single message
+	singleMessage := dynamic.NewMessage(md)
+	err := proto.Unmarshal(binData, singleMessage)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating message from binary data: %v", err.Error())
+	}
+	inputs = make([]*dynamic.Message, 1)
+	inputs[0] = singleMessage
+
+	return &inputs, nil
+}
+
+func createPayloadsFromBinCountDelimited(binData []byte, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
+	var inputs []*dynamic.Message
+	md := mtd.GetInputType()
+
+	// return empty array if no data
+	if len(binData) == 0 {
+		return &inputs, nil
+	}
+
+	// try to unmarshal input as several count-delimited messages
+	buffer := proto.NewBuffer(binData)
+	for {
+		msg := dynamic.NewMessage(md)
+		err := buffer.DecodeMessage(msg)
+
+		if err == io.ErrUnexpectedEOF {
+			break
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("Error creating message from binary data: %v", err.Error())
+		}
+
+		inputs = append(inputs, msg)
 	}
 
 	return &inputs, nil

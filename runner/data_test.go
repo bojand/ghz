@@ -2,6 +2,8 @@ package runner
 
 import (
 	"encoding/json"
+	"github.com/bojand/ghz/testdata"
+	"github.com/golang/protobuf/proto"
 	"testing"
 
 	"github.com/bojand/ghz/protodesc"
@@ -43,7 +45,7 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NotNil(t, mtdTestUnaryTwo)
 
 	t.Run("get empty when empty", func(t *testing.T) {
-		inputs, err := createPayloads("", mtdUnary)
+		inputs, err := createPayloadsFromJson("", mtdUnary)
 		assert.NoError(t, err)
 		assert.Empty(t, inputs)
 	})
@@ -55,7 +57,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdUnary)
 		assert.Error(t, err)
 		assert.Nil(t, inputs)
 	})
@@ -66,7 +68,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -79,7 +81,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -97,7 +99,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		inputs, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 2)
@@ -118,7 +120,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		inputs, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdClientStreaming)
 		assert.Error(t, err)
 		assert.Nil(t, inputs)
 	})
@@ -137,7 +139,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		inputs, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 3)
@@ -149,7 +151,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloads(string(jsonData), mtdTestUnary)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -162,7 +164,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloads(string(jsonData), mtdTestUnary)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -178,7 +180,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -194,10 +196,43 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
+		inputs, err := createPayloadsFromJson(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
 		assert.NotNil(t, (*inputs)[0])
+	})
+
+	t.Run("create slice from single message binary data", func(t *testing.T) {
+		msg1 := &helloworld.HelloRequest{}
+		msg1.Name = "bob"
+
+		binData, err := proto.Marshal(msg1)
+
+		inputs, err := createPayloadsFromBinSingleMessage(binData, mtdUnary)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.EqualValues(t, msg1.GetName(), (*inputs)[0].GetFieldByName("name"))
+	})
+
+	t.Run("create slice from count-delimited binary data", func(t *testing.T) {
+		msg1 := &helloworld.HelloRequest{}
+		msg1.Name = "bob"
+		msg2 := &helloworld.HelloRequest{}
+		msg2.Name = "alice"
+
+		buf := proto.Buffer{}
+		_ = buf.EncodeMessage(msg1)
+		_ = buf.EncodeMessage(msg2)
+
+		inputs, err := createPayloadsFromBinCountDelimited(buf.Bytes(), mtdUnary)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 2)
+		assert.EqualValues(t, msg1.GetName(), (*inputs)[0].GetFieldByName("name"))
+		assert.EqualValues(t, msg2.GetName(), (*inputs)[1].GetFieldByName("name"))
 	})
 }
