@@ -27,6 +27,10 @@ type ReportPrinter struct {
 // If format is "csv" detailed listing is printer in csv format.
 // Otherwise the summary of results is printed.
 func (rp *ReportPrinter) Print(format string) error {
+	if format == "" {
+		format = "summary"
+	}
+
 	switch format {
 	case "summary", "csv":
 		outputTmpl := defaultTmpl
