@@ -350,49 +350,48 @@ func TestRunUnary(t *testing.T) {
 		assert.Equal(t, []string {"0", "1", "2", "0", "1", "2"}, names)
 	})
 
-	// todo fix this test
-	//t.Run("test round-robin binary", func(t *testing.T) {
-	//	gs.ResetCounters()
-	//
-	//	buf := proto.Buffer{}
-	//	for i := 0; i < 3; i++ {
-	//		msg := &helloworld.HelloRequest{}
-	//		msg.Name = strconv.Itoa(i)
-	//		err = buf.EncodeMessage(msg)
-	//		assert.NoError(t, err)
-	//	}
-	//	binData := buf.Bytes()
-	//
-	//	report, err := Run(
-	//		"helloworld.Greeter.SayHello",
-	//		internal.TestLocalhost,
-	//		WithProtoFile("../testdata/greeter.proto", []string{}),
-	//		WithTotalRequests(6),
-	//		WithConcurrency(1),
-	//		WithTimeout(time.Duration(20*time.Second)),
-	//		WithDialTimeout(time.Duration(20*time.Second)),
-	//		WithInsecure(true),
-	//		WithBinaryDataCountDelimited(binData),
-	//	)
-	//
-	//	assert.NoError(t, err)
-	//	assert.NotNil(t, report)
-	//
-	//	count := gs.GetCount(callType)
-	//	assert.Equal(t, 6, count)
-	//
-	//	calls := gs.GetCalls(callType)
-	//	assert.NotNil(t, calls)
-	//	assert.Len(t, calls, 6)
-	//	names := make([]string, 0)
-	//	for _, msgs := range calls {
-	//		for _, msg := range msgs {
-	//			names = append(names, msg.GetName())
-	//		}
-	//	}
-	//
-	//	assert.Equal(t, []string {"0", "1", "2", "0", "1", "2"}, names)
-	//})
+	t.Run("test round-robin binary", func(t *testing.T) {
+		gs.ResetCounters()
+
+		buf := proto.Buffer{}
+		for i := 0; i < 3; i++ {
+			msg := &helloworld.HelloRequest{}
+			msg.Name = strconv.Itoa(i)
+			err = buf.EncodeMessage(msg)
+			assert.NoError(t, err)
+		}
+		binData := buf.Bytes()
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(6),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithInsecure(true),
+			WithBinaryData(binData),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 6, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 6)
+		names := make([]string, 0)
+		for _, msgs := range calls {
+			for _, msg := range msgs {
+				names = append(names, msg.GetName())
+			}
+		}
+
+		assert.Equal(t, []string {"0", "1", "2", "0", "1", "2"}, names)
+	})
 }
 
 func TestRunServerStreaming(t *testing.T) {

@@ -71,8 +71,7 @@ func (w *Worker) makeRequest() error {
 		}
 	} else {
 		var err error
-		// todo we need an explicit way to choose between binary formats, it's impossible to distinguish from data itself
-		inputs, err = createPayloadsFromBinSingleMessage(w.config.data, w.mtd)
+		inputs, err = createPayloadsFromBin(w.config.data, w.mtd)
 		if err != nil {
 			return err
 		}
