@@ -56,7 +56,7 @@ type config struct {
 	MetadataPath    string             `json:"metadata-file" toml:"metadata-file" yaml:"metadata-file"`
 	SI              Duration           `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
 	Output          string             `json:"output" toml:"output" yaml:"output"`
-	Format          string             `json:"format" toml:"format" yaml:"format"`
+	Format          string             `json:"format" toml:"format" yaml:"format" default:"summary"`
 	DialTimeout     uint               `json:"connect-timeout" toml:"connect-timeout" yaml:"connect-timeout" default:"10"`
 	KeepaliveTime   uint               `json:"keepalive" toml:"keepalive" yaml:"keepalive"`
 	CPUs            uint               `json:"cpus" toml:"cpus" yaml:"cpus"`
