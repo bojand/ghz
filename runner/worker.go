@@ -25,6 +25,7 @@ type Worker struct {
 	reqCounter *int64
 	nReq       int
 	workerID   string
+	cachedMessages *[]*dynamic.Message
 }
 
 func (w *Worker) runWorker() error {
@@ -58,23 +59,9 @@ func (w *Worker) makeRequest() error {
 
 	ctd := newCallTemplateData(w.mtd, w.workerID, reqNum)
 
-	var inputs *[]*dynamic.Message
-
-	if !w.config.binary {
-		data, err := ctd.executeData(string(w.config.data))
-		if err != nil {
-			return err
-		}
-		inputs, err = createPayloadsFromJson(string(data), w.mtd)
-		if err != nil {
-			return err
-		}
-	} else {
-		var err error
-		inputs, err = createPayloadsFromBin(w.config.data, w.mtd)
-		if err != nil {
-			return err
-		}
+	inputs, err := w.getMessages(ctd)
+	if err != nil {
+		return err
 	}
 
 	mdMap, err := ctd.executeMetadata(string(w.config.metadata))
@@ -125,6 +112,36 @@ func (w *Worker) makeRequest() error {
 	_, _ = w.stub.InvokeRpc(ctx, w.mtd, (*inputs)[inputIdx])
 
 	return err
+}
+
+func (w *Worker) getMessages(ctd *callTemplateData) (*[]*dynamic.Message, error) {
+	var inputs *[]*dynamic.Message
+
+	if w.cachedMessages != nil {
+		return w.cachedMessages, nil
+	}
+
+	if !w.config.binary {
+		data, err := ctd.executeData(string(w.config.data))
+		if err != nil {
+			return nil, err
+		}
+		inputs, err = createPayloadsFromJson(string(data), w.mtd)
+		if err != nil {
+			return nil, err
+		}
+		// Json messages are not cached due to templating
+	} else {
+		var err error
+		inputs, err = createPayloadsFromBin(w.config.data, w.mtd)
+		if err != nil {
+			return nil, err
+		}
+
+		w.cachedMessages = inputs
+	}
+
+	return inputs, nil
 }
 
 func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input *[]*dynamic.Message) error {
