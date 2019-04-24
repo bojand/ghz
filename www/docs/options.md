@@ -90,9 +90,9 @@ By default we use a single gRPC connection for the whole test run, and the concu
 
 The call data as stringified JSON. If the value is `@` then the request contents are read from standard input (stdin). Example: `-d '{"name":"Bob"}'`.
 
-For unary requests if we get an array of data we take the first element and use that as a single message for all requests in a test run.
+For unary requests we accept a single message or an array of messages. In case of a single message we repeat the unary call with this message throughout the test. In case of array the messages will be sent in round-robin fashion. For example with `-d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'` the server will get Joe, Kate and Sara requests repeatedly.
 
-For client streaming or bi-directional calls we can accept a JSON array of messages, and each element representing a single message within the stream call. For example: `-d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'` can be used as input for a client streaming or bidi call. In case of streaming calls if a single object is given for data then it is automatically converted to an array with single element. For example `-d '{"name":"Joe"}'` is equivalent to `-d '[{"name":"Joe"}]`.
+For client streaming or bi-directional calls we accept a JSON array of messages, each element representing a single message within the stream call. For example: `-d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'` can be used as input for a client streaming or bidi call. In case of streaming calls if a single object is given for data then it is automatically converted to an array with single element. For example `-d '{"name":"Joe"}'` is equivalent to `-d '[{"name":"Joe"}]`. Round-robin for streaming requests is not supported.
 
 In case of client streaming we send all the messages in the input array and then we close and receive.
 
@@ -102,11 +102,29 @@ The path for call data JSON file. For example, `-D /home/user/file.json` or `-D 
 
 ### `-b`, `--binary`
 
-The call data comes as serialized binary message read from standard input. See [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message) on how to generate a bianry file for usage.
+The call data comes as serialized protocol buffer messages read from standard input. 
+
+We support two formats of binary data: single message and multiple count-delimited messages. See [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message) on how to serialize a single message. 
+
+For multiple messages prefix each message with its length in bytes. See [streaming multiple messages](https://developers.google.com/protocol-buffers/docs/techniques#streaming) in protobuf documentation.
+
+Code example:
+```go
+msg1 := &helloworld.HelloRequest{}
+msg1.Name = "Alice"
+msg2 := &helloworld.HelloRequest{}
+msg2.Name = "Bob"
+
+buf := proto.Buffer{}
+_ = buf.EncodeMessage(msg1)
+_ = buf.EncodeMessage(msg2)
+			
+binData := buf.Bytes() // pass this as input
+```
 
 ### `-B`, `--binary-file`
 
-Path for the call data as serialized binary message.
+Path for the call data as serialized binary message. The format is the same as for `-b` switch.
 
 ### `-m`, `--metadata`
 

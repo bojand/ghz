@@ -50,6 +50,16 @@ ghz --proto ./greeter.proto \
   0.0.0.0:50051 < ./hello_request_data.bin
 ```
 
+Round-robin of messages for unary call:
+
+```sh
+ghz --insecure \
+  --proto ./greeter.proto \
+  --call helloworld.Greeter.SayHello \
+  -d '[{"name":"Joe"},{"name":"Bob"}]' \
+  0.0.0.0:50051
+```
+
 Custom number of requests and concurrency:
 
 ```sh
