@@ -29,7 +29,7 @@ func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error 
 	return nil
 }
 
-func createPayloadsFromJson(data string, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
+func createPayloadsFromJSON(data string, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
 	md := mtd.GetInputType()
 	var inputs []*dynamic.Message
 

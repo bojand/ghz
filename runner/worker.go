@@ -126,7 +126,7 @@ func (w *Worker) getMessages(ctd *callTemplateData) (*[]*dynamic.Message, error)
 		if err != nil {
 			return nil, err
 		}
-		inputs, err = createPayloadsFromJson(string(data), w.mtd)
+		inputs, err = createPayloadsFromJSON(string(data), w.mtd)
 		if err != nil {
 			return nil, err
 		}

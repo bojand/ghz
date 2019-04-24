@@ -168,6 +168,7 @@ func (s *Greeter) GetCount(key CallType) int {
 	return -1
 }
 
+// GetCalls gets the received messages for specific call type
 func (s *Greeter) GetCalls(key CallType) [][]*HelloRequest {
 	s.mutex.Lock()
 	val, ok := s.calls[key]

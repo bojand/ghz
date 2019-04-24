@@ -45,7 +45,7 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NotNil(t, mtdTestUnaryTwo)
 
 	t.Run("get empty when empty", func(t *testing.T) {
-		inputs, err := createPayloadsFromJson("", mtdUnary)
+		inputs, err := createPayloadsFromJSON("", mtdUnary)
 		assert.NoError(t, err)
 		assert.Empty(t, inputs)
 	})
@@ -57,7 +57,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdUnary)
 		assert.Error(t, err)
 		assert.Nil(t, inputs)
 	})
@@ -68,7 +68,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -81,7 +81,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -99,7 +99,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 2)
@@ -120,7 +120,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdClientStreaming)
 		assert.Error(t, err)
 		assert.Nil(t, inputs)
 	})
@@ -139,7 +139,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 3)
@@ -151,7 +151,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdTestUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -164,7 +164,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdTestUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -180,7 +180,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdTestUnaryTwo)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
@@ -196,7 +196,7 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		inputs, err := createPayloadsFromJson(string(jsonData), mtdTestUnaryTwo)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
 		assert.Len(t, *inputs, 1)
