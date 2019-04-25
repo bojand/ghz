@@ -49,8 +49,8 @@ var (
 
 	data     = kingpin.Flag("data", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.").Short('d').PlaceHolder(" ").String()
 	dataPath = kingpin.Flag("data-file", "File path for call data JSON file. Examples: /home/user/file.json or ./file.json.").Short('D').PlaceHolder("PATH").PlaceHolder(" ").String()
-	binData  = kingpin.Flag("binary", "The call data comes as serialized binary message read from stdin.").Short('b').Default("false").Bool()
-	binPath  = kingpin.Flag("binary-file", "File path for the call data as serialized binary message.").Short('B').PlaceHolder(" ").String()
+	binData  = kingpin.Flag("binary", "The call data comes as serialized binary message or multiple count-prefixed messages read from stdin.").Short('b').Default("false").Bool()
+	binPath  = kingpin.Flag("binary-file", "File path for the call data as serialized binary message or multiple count-prefixed messages.").Short('B').PlaceHolder(" ").String()
 	md       = kingpin.Flag("metadata", "Request metadata as stringified JSON.").Short('m').PlaceHolder(" ").String()
 	mdPath   = kingpin.Flag("metadata-file", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.").Short('M').PlaceHolder(" ").String()
 	si       = kingpin.Flag("stream-interval", "Interval for stream requests between message sends.").Default("0").Duration()
