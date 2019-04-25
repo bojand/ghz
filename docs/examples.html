@@ -82,6 +82,13 @@
   --call helloworld.Greeter.SayHello \
   0.0.0.0:50051 &lt; ./hello_request_data.bin
 </code></pre>
+<p>Round-robin of messages for unary call:</p>
+<pre><code class="hljs css language-sh">ghz --insecure \
+  --proto ./greeter.proto \
+  --call helloworld.Greeter.SayHello \
+  -d <span class="hljs-string">'[{"name":"Joe"},{"name":"Bob"}]'</span> \
+  0.0.0.0:50051
+</code></pre>
 <p>Custom number of requests and concurrency:</p>
 <pre><code class="hljs css language-sh">ghz --proto ./greeter.proto \
   --call helloworld.Greeter.SayHello \
