@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync/atomic"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// Worker is used for doing a single stream of requests in parallerl
+// Worker is used for doing a single stream of requests in parallel
 type Worker struct {
 	stub grpcdynamic.Stub
 	mtd  *desc.MethodDescriptor
@@ -24,6 +25,7 @@ type Worker struct {
 	reqCounter *int64
 	nReq       int
 	workerID   string
+	cachedMessages *[]*dynamic.Message
 }
 
 func (w *Worker) runWorker() error {
@@ -57,24 +59,9 @@ func (w *Worker) makeRequest() error {
 
 	ctd := newCallTemplateData(w.mtd, w.workerID, reqNum)
 
-	var input *dynamic.Message
-	var streamInput *[]*dynamic.Message
-
-	if !w.config.binary {
-		data, err := ctd.executeData(string(w.config.data))
-		if err != nil {
-			return err
-		}
-		input, streamInput, err = createPayloads(string(data), w.mtd)
-		if err != nil {
-			return err
-		}
-	} else {
-		var err error
-		input, streamInput, err = createPayloadsFromBin(w.config.data, w.mtd)
-		if err != nil {
-			return err
-		}
+	inputs, err := w.getMessages(ctd)
+	if err != nil {
+		return err
 	}
 
 	mdMap, err := ctd.executeMetadata(string(w.config.metadata))
@@ -106,18 +93,55 @@ func (w *Worker) makeRequest() error {
 	// RPC errors are handled via stats handler
 
 	if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
-		_ = w.makeBidiRequest(&ctx, streamInput)
+		_ = w.makeBidiRequest(&ctx, inputs)
 	}
 	if w.mtd.IsClientStreaming() {
-		_ = w.makeClientStreamingRequest(&ctx, streamInput)
-	}
-	if w.mtd.IsServerStreaming() {
-		_ = w.makeServerStreamingRequest(&ctx, input)
+		_ = w.makeClientStreamingRequest(&ctx, inputs)
 	}
 
+	inputsLen := len(*inputs)
+	if inputsLen == 0 {
+		return fmt.Errorf("no data provided for request")
+	}
+	inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
+
+	if w.mtd.IsServerStreaming() {
+		_ = w.makeServerStreamingRequest(&ctx, (*inputs)[inputIdx])
+	}
 	// TODO: handle response?
-	_, _ = w.stub.InvokeRpc(ctx, w.mtd, input)
+	_, _ = w.stub.InvokeRpc(ctx, w.mtd, (*inputs)[inputIdx])
+
 	return err
+}
+
+func (w *Worker) getMessages(ctd *callTemplateData) (*[]*dynamic.Message, error) {
+	var inputs *[]*dynamic.Message
+
+	if w.cachedMessages != nil {
+		return w.cachedMessages, nil
+	}
+
+	if !w.config.binary {
+		data, err := ctd.executeData(string(w.config.data))
+		if err != nil {
+			return nil, err
+		}
+		inputs, err = createPayloadsFromJSON(string(data), w.mtd)
+		if err != nil {
+			return nil, err
+		}
+		// Json messages are not cached due to templating
+	} else {
+		var err error
+		inputs, err = createPayloadsFromBin(w.config.data, w.mtd)
+		if err != nil {
+			return nil, err
+		}
+
+		w.cachedMessages = inputs
+	}
+
+	return inputs, nil
 }
 
 func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input *[]*dynamic.Message) error {

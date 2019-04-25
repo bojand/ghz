@@ -2,6 +2,8 @@ package runner
 
 import (
 	"encoding/json"
+	"github.com/bojand/ghz/testdata"
+	"github.com/golang/protobuf/proto"
 	"testing"
 
 	"github.com/bojand/ghz/protodesc"
@@ -42,11 +44,10 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mtdTestUnaryTwo)
 
-	t.Run("get nil, empty when empty", func(t *testing.T) {
-		single, streaming, err := createPayloads("", mtdUnary)
+	t.Run("get empty when empty", func(t *testing.T) {
+		inputs, err := createPayloadsFromJSON("", mtdUnary)
 		assert.NoError(t, err)
-		assert.Nil(t, single)
-		assert.Empty(t, streaming)
+		assert.Empty(t, inputs)
 	})
 
 	t.Run("fail for invalid data shape", func(t *testing.T) {
@@ -56,35 +57,35 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdUnary)
 		assert.Error(t, err)
-		assert.Nil(t, single)
-		assert.Nil(t, streaming)
+		assert.Nil(t, inputs)
 	})
 
-	t.Run("create single object from map for unary", func(t *testing.T) {
+	t.Run("create slice with single element from map for unary", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
-	t.Run("create array from map for client streaming", func(t *testing.T) {
+	t.Run("create slice with single element from map for client streaming", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
-		assert.Nil(t, single)
-		assert.NotNil(t, streaming)
-		assert.Len(t, *streaming, 1)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
 	t.Run("create slice of messages from slice for client streaming", func(t *testing.T) {
@@ -98,11 +99,10 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
-		assert.Nil(t, single)
-		assert.NotNil(t, streaming)
-		assert.Len(t, *streaming, 2)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 2)
 	})
 
 	t.Run("fail on invalid shape of data in slice for client streaming", func(t *testing.T) {
@@ -120,13 +120,12 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdClientStreaming)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdClientStreaming)
 		assert.Error(t, err)
-		assert.Nil(t, single)
-		assert.Nil(t, streaming)
+		assert.Nil(t, inputs)
 	})
 
-	t.Run("get object for slice and unary", func(t *testing.T) {
+	t.Run("create slice of messages from slice for unary", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -140,37 +139,39 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(s)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 3)
 	})
 
-	t.Run("create single object from map for unary with camelCase property", func(t *testing.T) {
+	t.Run("create slice with single object from map for unary with camelCase property", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["paramOne"] = "bob"
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdTestUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
-	t.Run("create single object from map for unary with snake_case property", func(t *testing.T) {
+	t.Run("create slice with single object from map for unary with snake_case property", func(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["param_one"] = "bob"
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdTestUnary)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
-	t.Run("create single object from map for unary with nested camelCase property", func(t *testing.T) {
+	t.Run("create slice with single object from map for unary with nested camelCase property", func(t *testing.T) {
 		inner := make(map[string]interface{})
 		inner["paramOne"] = "bob"
 
@@ -179,13 +180,14 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
 	})
 
-	t.Run("create single object from map for unary with nested snake_case property", func(t *testing.T) {
+	t.Run("create slice with single object from map for unary with nested snake_case property", func(t *testing.T) {
 		inner := make(map[string]interface{})
 		inner["param_one"] = "bob"
 
@@ -194,9 +196,52 @@ func TestData_createPayloads(t *testing.T) {
 
 		jsonData, _ := json.Marshal(m1)
 
-		single, streaming, err := createPayloads(string(jsonData), mtdTestUnaryTwo)
+		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
-		assert.NotNil(t, single)
-		assert.Empty(t, streaming)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.NotNil(t, (*inputs)[0])
+	})
+
+	t.Run("create slice from single message binary data", func(t *testing.T) {
+		msg1 := &helloworld.HelloRequest{}
+		msg1.Name = "bob"
+
+		binData, err := proto.Marshal(msg1)
+
+		inputs, err := createPayloadsFromBin(binData, mtdUnary)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 1)
+		assert.EqualValues(t, msg1.GetName(), (*inputs)[0].GetFieldByName("name"))
+	})
+
+	t.Run("create slice from count-delimited binary data", func(t *testing.T) {
+		msg1 := &helloworld.HelloRequest{}
+		msg1.Name = "bob"
+		msg2 := &helloworld.HelloRequest{}
+		msg2.Name = "alice"
+
+		buf := proto.Buffer{}
+		_ = buf.EncodeMessage(msg1)
+		_ = buf.EncodeMessage(msg2)
+
+		inputs, err := createPayloadsFromBin(buf.Bytes(), mtdUnary)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 2)
+		assert.EqualValues(t, msg1.GetName(), (*inputs)[0].GetFieldByName("name"))
+		assert.EqualValues(t, msg2.GetName(), (*inputs)[1].GetFieldByName("name"))
+	})
+
+	t.Run("on empty binary data returns empty slice", func(t *testing.T) {
+		buf := make([]byte, 0)
+		inputs, err := createPayloadsFromBin(buf, mtdUnary)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, inputs)
+		assert.Len(t, *inputs, 0)
 	})
 }

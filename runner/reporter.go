@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Reporter gethers all the results
+// Reporter gathers all the results
 type Reporter struct {
 	config *RunConfig
 

@@ -77,7 +77,7 @@ func newRequester(c *RunConfig) (*Requester, error) {
 	} else if c.protoset != "" {
 		mtd, err = protodesc.GetMethodDescFromProtoSet(c.call, c.protoset)
 	} else {
-		// use reflection to get method decriptor
+		// use reflection to get method descriptor
 		var cc *grpc.ClientConn
 		// temporary connection for reflection, do not store as requester connections
 		cc, err = reqr.newClientConn(false)

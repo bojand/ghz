@@ -30,8 +30,8 @@ Flags:
       --connections=1       Number of connections to use. Concurrency is distributed evenly among all the connections. Default is 1.
   -d, --data=               The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.
   -D, --data-file=          File path for call data JSON file. Examples: /home/user/file.json or ./file.json.
-  -b, --binary              The call data comes as serialized binary message read from stdin.
-  -B, --binary-file=        File path for the call data as serialized binary message.
+  -b, --binary              The call data comes as serialized binary message or multiple count-prefixed messages read from stdin.
+  -B, --binary-file=        File path for the call data as serialized binary message or multiple count-prefixed messages.
   -m, --metadata=           Request metadata as stringified JSON.
   -M, --metadata-file=      File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
       --stream-interval=0   Interval for stream requests between message sends.

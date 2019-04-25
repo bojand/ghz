@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -265,6 +266,131 @@ func TestRunUnary(t *testing.T) {
 
 		connCount := gs.GetConnectionCount()
 		assert.Equal(t, 5, connCount)
+	})
+
+	t.Run("test round-robin c = 2", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make([]map[string]interface{}, 3)
+		for i:= 0; i < 3; i++ {
+			data[i] = make(map[string]interface{})
+			data[i]["name"] = strconv.Itoa(i)
+		}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(6),
+			WithConcurrency(2),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithInsecure(true),
+			WithData(data),
+			)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 6, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 6)
+		names := make([]string, 0)
+		for _, msgs := range calls {
+			for _, msg := range msgs {
+				names = append(names, msg.GetName())
+			}
+		}
+
+		// we don't expect to have the same order of elements since requests are concurrent
+		assert.ElementsMatch(t, []string {"0", "1", "2", "0", "1", "2"}, names)
+	})
+
+	t.Run("test round-robin c = 1", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make([]map[string]interface{}, 3)
+		for i:= 0; i < 3; i++ {
+			data[i] = make(map[string]interface{})
+			data[i]["name"] = strconv.Itoa(i)
+		}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(6),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithInsecure(true),
+			WithData(data),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 6, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 6)
+		names := make([]string, 0)
+		for _, msgs := range calls {
+			for _, msg := range msgs {
+				names = append(names, msg.GetName())
+			}
+		}
+
+		// we expect the same order of messages with single worker
+		assert.Equal(t, []string {"0", "1", "2", "0", "1", "2"}, names)
+	})
+
+	t.Run("test round-robin binary", func(t *testing.T) {
+		gs.ResetCounters()
+
+		buf := proto.Buffer{}
+		for i := 0; i < 3; i++ {
+			msg := &helloworld.HelloRequest{}
+			msg.Name = strconv.Itoa(i)
+			err = buf.EncodeMessage(msg)
+			assert.NoError(t, err)
+		}
+		binData := buf.Bytes()
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(6),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithInsecure(true),
+			WithBinaryData(binData),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 6, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 6)
+		names := make([]string, 0)
+		for _, msgs := range calls {
+			for _, msg := range msgs {
+				names = append(names, msg.GetName())
+			}
+		}
+
+		assert.Equal(t, []string {"0", "1", "2", "0", "1", "2"}, names)
 	})
 }
 

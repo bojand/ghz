@@ -25,3 +25,5 @@ build
 node_modules
 .cache
 coverage.html
+
+.idea
