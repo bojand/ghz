@@ -222,8 +222,8 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 
 		rep.Fastest = time.Duration(fastestNum * float64(time.Second))
 		rep.Slowest = time.Duration(slowestNum * float64(time.Second))
-		rep.Histogram = histogram(&lats, slowestNum, fastestNum)
-		rep.LatencyDistribution = latencies(&lats)
+		rep.Histogram = histogram(lats, slowestNum, fastestNum)
+		rep.LatencyDistribution = latencies(lats)
 
 		rep.Details = make([]ResultDetail, len(r.lats))
 		for i, num := range r.lats {
@@ -240,15 +240,14 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 	return rep
 }
 
-func latencies(latencies *[]float64) []LatencyDistribution {
-	lats := *latencies
+func latencies(latencies []float64) []LatencyDistribution {
 	pctls := []int{10, 25, 50, 75, 90, 95, 99}
 	data := make([]float64, len(pctls))
 	j := 0
-	for i := 0; i < len(lats) && j < len(pctls); i++ {
-		current := i * 100 / len(lats)
+	for i := 0; i < len(latencies) && j < len(pctls); i++ {
+		current := i * 100 / len(latencies)
 		if current >= pctls[j] {
-			data[j] = lats[i]
+			data[j] = latencies[i]
 			j++
 		}
 	}
@@ -262,8 +261,7 @@ func latencies(latencies *[]float64) []LatencyDistribution {
 	return res
 }
 
-func histogram(latencies *[]float64, slowest, fastest float64) []Bucket {
-	lats := *latencies
+func histogram(latencies []float64, slowest, fastest float64) []Bucket {
 	bc := 10
 	buckets := make([]float64, bc+1)
 	counts := make([]int, bc+1)
@@ -274,8 +272,8 @@ func histogram(latencies *[]float64, slowest, fastest float64) []Bucket {
 	buckets[bc] = slowest
 	var bi int
 	var max int
-	for i := 0; i < len(lats); {
-		if lats[i] <= buckets[bi] {
+	for i := 0; i < len(latencies); {
+		if latencies[i] <= buckets[bi] {
 			i++
 			counts[bi]++
 			if max < counts[bi] {
@@ -290,7 +288,7 @@ func histogram(latencies *[]float64, slowest, fastest float64) []Bucket {
 		res[i] = Bucket{
 			Mark:      buckets[i],
 			Count:     counts[i],
-			Frequency: float64(counts[i]) / float64(len(lats)),
+			Frequency: float64(counts[i]) / float64(len(latencies)),
 		}
 	}
 	return res

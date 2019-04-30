@@ -164,8 +164,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 	counter := 0
 	// TODO: need to handle and propagate errors
 	for err == nil {
-		streamInput := input
-		inputLen := len(streamInput)
+		inputLen := len(input)
 		if input == nil || inputLen == 0 {
 			// TODO: need to handle error
 			_, _ = str.CloseAndReceive()
@@ -178,7 +177,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 			break
 		}
 
-		payload := streamInput[counter]
+		payload := input[counter]
 
 		var wait <-chan time.Time
 		if w.config.streamInterval > 0 {
@@ -222,8 +221,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 
 	counter := 0
 
-	streamInput := input
-	inputLen := len(streamInput)
+	inputLen := len(input)
 
 	recvDone := make(chan bool)
 
@@ -252,7 +250,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 			break
 		}
 
-		payload := streamInput[counter]
+		payload := input[counter]
 
 		var wait <-chan time.Time
 		if w.config.streamInterval > 0 {
