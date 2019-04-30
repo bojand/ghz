@@ -68,7 +68,7 @@ func (w *Worker) makeRequest() error {
 	var err error
 
 	// try the optimized path for JSON data for non client-streaming
-	if !w.config.binary && len(w.arrayJSONData) > 0 {
+	if !w.config.binary && !w.mtd.IsClientStreaming() && len(w.arrayJSONData) > 0 {
 		indx := int((reqNum - 1) % int64(len(w.arrayJSONData))) // we want to start from inputs[0] so dec reqNum
 		if inputs, err = w.getMessages(ctd, []byte(w.arrayJSONData[indx])); err != nil {
 			return err
