@@ -17,16 +17,19 @@ builds:
       - windows
     goarch:
       - amd64
-archive:
-  replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    amd64: x86_64
+archives:
+  - id: ghz
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ .Tag }}-next"
+release:
+  prerelease: auto
 changelog:
   sort: asc
   filters:

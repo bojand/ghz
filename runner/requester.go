@@ -2,8 +2,10 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -48,6 +50,8 @@ type Requester struct {
 	qpsTick time.Duration
 
 	reqCounter int64
+
+	arrayJSONData []string
 
 	stopReason StopReason
 	lock       sync.Mutex
@@ -119,6 +123,27 @@ func newRequester(c *RunConfig) (*Requester, error) {
 
 	// fill in the rest
 	reqr.mtd = mtd
+
+	// fill in JSON string array data for optimization for non client-streaming
+	reqr.arrayJSONData = nil
+	if !c.binary && !reqr.mtd.IsClientStreaming() {
+		if strings.IndexRune(string(c.data), '[') == 0 { // it's an array
+			var dat []map[string]interface{}
+			if err := json.Unmarshal(c.data, &dat); err != nil {
+				return nil, err
+			}
+
+			reqr.arrayJSONData = make([]string, len(dat))
+			for i, d := range dat {
+				var strd []byte
+				if strd, err = json.Marshal(d); err != nil {
+					return nil, err
+				}
+
+				reqr.arrayJSONData[i] = string(strd)
+			}
+		}
+	}
 
 	return reqr, nil
 }
@@ -270,14 +295,15 @@ func (b *Requester) runWorkers() error {
 		}
 
 		w := Worker{
-			stub:       b.stubs[n],
-			mtd:        b.mtd,
-			config:     b.config,
-			stopCh:     b.stopCh,
-			qpsTick:    b.qpsTick,
-			reqCounter: &b.reqCounter,
-			nReq:       nReqPerWorker,
-			workerID:   wID,
+			stub:          b.stubs[n],
+			mtd:           b.mtd,
+			config:        b.config,
+			stopCh:        b.stopCh,
+			qpsTick:       b.qpsTick,
+			reqCounter:    &b.reqCounter,
+			nReq:          nReqPerWorker,
+			workerID:      wID,
+			arrayJSONData: b.arrayJSONData,
 		}
 
 		n++ // increment connection counter

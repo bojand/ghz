@@ -71,8 +71,8 @@ func TestData_createPayloads(t *testing.T) {
 		inputs, err := createPayloadsFromJSON(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 1)
-		assert.NotNil(t, (*inputs)[0])
+		assert.Len(t, inputs, 1)
+		assert.NotNil(t, inputs[0])
 	})
 
 	t.Run("create slice with single element from map for client streaming", func(t *testing.T) {
@@ -84,8 +84,8 @@ func TestData_createPayloads(t *testing.T) {
 		inputs, err := createPayloadsFromJSON(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 1)
-		assert.NotNil(t, (*inputs)[0])
+		assert.Len(t, inputs, 1)
+		assert.NotNil(t, inputs[0])
 	})
 
 	t.Run("create slice of messages from slice for client streaming", func(t *testing.T) {
@@ -102,7 +102,7 @@ func TestData_createPayloads(t *testing.T) {
 		inputs, err := createPayloadsFromJSON(string(jsonData), mtdClientStreaming)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 2)
+		assert.Len(t, inputs, 2)
 	})
 
 	t.Run("fail on invalid shape of data in slice for client streaming", func(t *testing.T) {
@@ -142,7 +142,7 @@ func TestData_createPayloads(t *testing.T) {
 		inputs, err := createPayloadsFromJSON(string(jsonData), mtdUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 3)
+		assert.Len(t, inputs, 3)
 	})
 
 	t.Run("create slice with single object from map for unary with camelCase property", func(t *testing.T) {
@@ -154,8 +154,8 @@ func TestData_createPayloads(t *testing.T) {
 		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 1)
-		assert.NotNil(t, (*inputs)[0])
+		assert.Len(t, inputs, 1)
+		assert.NotNil(t, inputs[0])
 	})
 
 	t.Run("create slice with single object from map for unary with snake_case property", func(t *testing.T) {
@@ -167,8 +167,8 @@ func TestData_createPayloads(t *testing.T) {
 		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnary)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 1)
-		assert.NotNil(t, (*inputs)[0])
+		assert.Len(t, inputs, 1)
+		assert.NotNil(t, inputs[0])
 	})
 
 	t.Run("create slice with single object from map for unary with nested camelCase property", func(t *testing.T) {
@@ -183,8 +183,8 @@ func TestData_createPayloads(t *testing.T) {
 		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 1)
-		assert.NotNil(t, (*inputs)[0])
+		assert.Len(t, inputs, 1)
+		assert.NotNil(t, inputs[0])
 	})
 
 	t.Run("create slice with single object from map for unary with nested snake_case property", func(t *testing.T) {
@@ -199,8 +199,8 @@ func TestData_createPayloads(t *testing.T) {
 		inputs, err := createPayloadsFromJSON(string(jsonData), mtdTestUnaryTwo)
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 1)
-		assert.NotNil(t, (*inputs)[0])
+		assert.Len(t, inputs, 1)
+		assert.NotNil(t, inputs[0])
 	})
 
 	t.Run("create slice from single message binary data", func(t *testing.T) {
@@ -213,8 +213,8 @@ func TestData_createPayloads(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 1)
-		assert.EqualValues(t, msg1.GetName(), (*inputs)[0].GetFieldByName("name"))
+		assert.Len(t, inputs, 1)
+		assert.EqualValues(t, msg1.GetName(), inputs[0].GetFieldByName("name"))
 	})
 
 	t.Run("create slice from count-delimited binary data", func(t *testing.T) {
@@ -231,9 +231,9 @@ func TestData_createPayloads(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 2)
-		assert.EqualValues(t, msg1.GetName(), (*inputs)[0].GetFieldByName("name"))
-		assert.EqualValues(t, msg2.GetName(), (*inputs)[1].GetFieldByName("name"))
+		assert.Len(t, inputs, 2)
+		assert.EqualValues(t, msg1.GetName(), inputs[0].GetFieldByName("name"))
+		assert.EqualValues(t, msg2.GetName(), inputs[1].GetFieldByName("name"))
 	})
 
 	t.Run("on empty binary data returns empty slice", func(t *testing.T) {
@@ -242,6 +242,6 @@ func TestData_createPayloads(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
-		assert.Len(t, *inputs, 0)
+		assert.Len(t, inputs, 0)
 	})
 }

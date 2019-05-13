@@ -29,7 +29,7 @@ func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error 
 	return nil
 }
 
-func createPayloadsFromJSON(data string, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
+func createPayloadsFromJSON(data string, mtd *desc.MethodDescriptor) ([]*dynamic.Message, error) {
 	md := mtd.GetInputType()
 	var inputs []*dynamic.Message
 
@@ -65,16 +65,16 @@ func createPayloadsFromJSON(data string, mtd *desc.MethodDescriptor) (*[]*dynami
 		}
 	}
 
-	return &inputs, nil
+	return inputs, nil
 }
 
-func createPayloadsFromBinSingleMessage(binData []byte, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
-	var inputs []*dynamic.Message
+func createPayloadsFromBinSingleMessage(binData []byte, mtd *desc.MethodDescriptor) ([]*dynamic.Message, error) {
+	inputs := make([]*dynamic.Message, 0, 1)
 	md := mtd.GetInputType()
 
 	// return empty array if no data
 	if len(binData) == 0 {
-		return &inputs, nil
+		return inputs, nil
 	}
 
 	// try to unmarshal input as a single message
@@ -83,19 +83,19 @@ func createPayloadsFromBinSingleMessage(binData []byte, mtd *desc.MethodDescript
 	if err != nil {
 		return nil, fmt.Errorf("Error creating message from binary data: %v", err.Error())
 	}
-	inputs = make([]*dynamic.Message, 1)
-	inputs[0] = singleMessage
 
-	return &inputs, nil
+	inputs = append(inputs, singleMessage)
+
+	return inputs, nil
 }
 
-func createPayloadsFromBinCountDelimited(binData []byte, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
-	var inputs []*dynamic.Message
+func createPayloadsFromBinCountDelimited(binData []byte, mtd *desc.MethodDescriptor) ([]*dynamic.Message, error) {
+	inputs := make([]*dynamic.Message, 0)
 	md := mtd.GetInputType()
 
 	// return empty array if no data
 	if len(binData) == 0 {
-		return &inputs, nil
+		return inputs, nil
 	}
 
 	// try to unmarshal input as several count-delimited messages
@@ -115,13 +115,13 @@ func createPayloadsFromBinCountDelimited(binData []byte, mtd *desc.MethodDescrip
 		inputs = append(inputs, msg)
 	}
 
-	return &inputs, nil
+	return inputs, nil
 }
 
-func createPayloadsFromBin(binData []byte, mtd *desc.MethodDescriptor) (*[]*dynamic.Message, error) {
+func createPayloadsFromBin(binData []byte, mtd *desc.MethodDescriptor) ([]*dynamic.Message, error) {
 	inputs, err := createPayloadsFromBinCountDelimited(binData, mtd)
 
-	if err == nil && len(*inputs) > 0 {
+	if err == nil && len(inputs) > 0 {
 		return inputs, err
 	}
 

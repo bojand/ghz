@@ -25,7 +25,12 @@ type Worker struct {
 	reqCounter *int64
 	nReq       int
 	workerID   string
-	cachedMessages *[]*dynamic.Message
+
+	// cached messages only for binary
+	cachedMessages []*dynamic.Message
+
+	// non-binary json optimization
+	arrayJSONData []string
 }
 
 func (w *Worker) runWorker() error {
@@ -59,9 +64,19 @@ func (w *Worker) makeRequest() error {
 
 	ctd := newCallTemplateData(w.mtd, w.workerID, reqNum)
 
-	inputs, err := w.getMessages(ctd)
-	if err != nil {
-		return err
+	var inputs []*dynamic.Message
+	var err error
+
+	// try the optimized path for JSON data for non client-streaming
+	if !w.config.binary && !w.mtd.IsClientStreaming() && len(w.arrayJSONData) > 0 {
+		indx := int((reqNum - 1) % int64(len(w.arrayJSONData))) // we want to start from inputs[0] so dec reqNum
+		if inputs, err = w.getMessages(ctd, []byte(w.arrayJSONData[indx])); err != nil {
+			return err
+		}
+	} else {
+		if inputs, err = w.getMessages(ctd, w.config.data); err != nil {
+			return err
+		}
 	}
 
 	mdMap, err := ctd.executeMetadata(string(w.config.metadata))
@@ -99,30 +114,30 @@ func (w *Worker) makeRequest() error {
 		_ = w.makeClientStreamingRequest(&ctx, inputs)
 	}
 
-	inputsLen := len(*inputs)
+	inputsLen := len(inputs)
 	if inputsLen == 0 {
 		return fmt.Errorf("no data provided for request")
 	}
 	inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
 
 	if w.mtd.IsServerStreaming() {
-		_ = w.makeServerStreamingRequest(&ctx, (*inputs)[inputIdx])
+		_ = w.makeServerStreamingRequest(&ctx, inputs[inputIdx])
 	}
 	// TODO: handle response?
-	_, _ = w.stub.InvokeRpc(ctx, w.mtd, (*inputs)[inputIdx])
+	_, _ = w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx])
 
 	return err
 }
 
-func (w *Worker) getMessages(ctd *callTemplateData) (*[]*dynamic.Message, error) {
-	var inputs *[]*dynamic.Message
+func (w *Worker) getMessages(ctd *callTemplateData, inputData []byte) ([]*dynamic.Message, error) {
+	var inputs []*dynamic.Message
 
 	if w.cachedMessages != nil {
 		return w.cachedMessages, nil
 	}
 
 	if !w.config.binary {
-		data, err := ctd.executeData(string(w.config.data))
+		data, err := ctd.executeData(string(inputData))
 		if err != nil {
 			return nil, err
 		}
@@ -133,7 +148,7 @@ func (w *Worker) getMessages(ctd *callTemplateData) (*[]*dynamic.Message, error)
 		// Json messages are not cached due to templating
 	} else {
 		var err error
-		inputs, err = createPayloadsFromBin(w.config.data, w.mtd)
+		inputs, err = createPayloadsFromBin(inputData, w.mtd)
 		if err != nil {
 			return nil, err
 		}
@@ -144,13 +159,12 @@ func (w *Worker) getMessages(ctd *callTemplateData) (*[]*dynamic.Message, error)
 	return inputs, nil
 }
 
-func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input *[]*dynamic.Message) error {
+func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynamic.Message) error {
 	str, err := w.stub.InvokeRpcClientStream(*ctx, w.mtd)
 	counter := 0
 	// TODO: need to handle and propagate errors
 	for err == nil {
-		streamInput := *input
-		inputLen := len(streamInput)
+		inputLen := len(input)
 		if input == nil || inputLen == 0 {
 			// TODO: need to handle error
 			_, _ = str.CloseAndReceive()
@@ -163,7 +177,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input *[]*dyna
 			break
 		}
 
-		payload := streamInput[counter]
+		payload := input[counter]
 
 		var wait <-chan time.Time
 		if w.config.streamInterval > 0 {
@@ -199,7 +213,7 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 	return nil
 }
 
-func (w *Worker) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Message) error {
+func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message) error {
 	str, err := w.stub.InvokeRpcBidiStream(*ctx, w.mtd)
 	if err != nil {
 		return err
@@ -207,8 +221,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Message
 
 	counter := 0
 
-	streamInput := *input
-	inputLen := len(streamInput)
+	inputLen := len(input)
 
 	recvDone := make(chan bool)
 
@@ -237,7 +250,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Message
 			break
 		}
 
-		payload := streamInput[counter]
+		payload := input[counter]
 
 		var wait <-chan time.Time
 		if w.config.streamInterval > 0 {
