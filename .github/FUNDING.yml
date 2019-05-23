@@ -1,5 +1,6 @@
 # Thank you for your support 🙌
 
 github: bojand
-custom: https://www.paypal.me/bojandj
-custom: https://www.buymeacoffee.com/bojand
+custom:
+  paypal: https://www.paypal.me/bojandj
+  buymeacoffee: https://www.buymeacoffee.com/bojand
