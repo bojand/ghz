@@ -60,11 +60,11 @@ Path to the JSON or TOML [config file](example_config.md) that specifies all the
 
 ### `-c`, `--concurrency`
 
-Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is `50`. For example to do requests in series without any concurrency set to `1`.
+Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is `50`. For example to do requests in series without any concurrency set to `1`. `ghz` takes the `concurrency` argument and spawns that many worker goroutines. By default all goroutine workers share a single connection.
 
 ### `-n`, `--total`
 
-The total number of requests to run. Default is `200`. The combination of `-c` and `-n` are critical in how the benchmarking is done. `ghz` takes the `-c` argument and spawns that make worker goroutines. In parallel these goroutines each do their share (`c / n`) requests. So for example with the default `-c 50 -n 200` options we would spawn `50` goroutines which in parallel each do `40` requests.
+The total number of requests to run. Default is `200`. The combination of `-c` and `-n` are critical in how the benchmarking is done. `ghz` takes the `-c` argument and spawns that many worker goroutines. In parallel these goroutines each do their share (`c / n`) requests. So for example with the default `-c 50 -n 200` options we would spawn `50` goroutines which in parallel each do `40` requests.
 
 ### `-q`, `--qps`
 
