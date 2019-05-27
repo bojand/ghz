@@ -26,6 +26,7 @@ func Run(call, host string, options ...Option) (*Report, error) {
 	oldCPUs := runtime.NumCPU()
 
 	runtime.GOMAXPROCS(c.cpus)
+	defer runtime.GOMAXPROCS(oldCPUs)
 
 	reqr, err := newRequester(c)
 
@@ -48,9 +49,6 @@ func Run(call, host string, options ...Option) (*Report, error) {
 	}
 
 	rep, err := reqr.Run()
-
-	// reset
-	runtime.GOMAXPROCS(oldCPUs)
 
 	return rep, err
 }
