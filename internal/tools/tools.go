@@ -4,7 +4,7 @@
 package tools
 
 import (
-	_ "github.com/golang/lint/golint"      // tool
+	_ "http://golang.org/x/lint/golint"      // tool
 	_ "github.com/kisielk/errcheck"        // tool
 	_ "honnef.co/go/tools/cmd/staticcheck" // tool
 )
