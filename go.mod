@@ -13,7 +13,6 @@ require (
 	github.com/go-playground/validator v9.25.0+incompatible
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
-	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1
 	github.com/golang/protobuf v1.2.0
 	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/jhump/protoreflect v1.1.0

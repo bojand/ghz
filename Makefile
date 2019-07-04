@@ -82,7 +82,7 @@ clean:
 # Golint runs the golint linter.
 .PHONY: golint
 golint:
-	$(AT) go install github.com/golang/lint/golint
+	$(AT) go install golang.org/x/lint/golint
 	golint -set_exit_status $(GO_PKGS)
 
 # Errcheck runs the errcheck linter.
