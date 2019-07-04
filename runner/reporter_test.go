@@ -50,7 +50,10 @@ func TestReport_CorrectDetails(t *testing.T) {
 	}
 	callResultsChan <- &cr2
 
+	close(callResultsChan)
+	<-reporter.done
 	report := reporter.Finalize("stop reason", time.Second)
+
 	assert.Equal(t, 2, len(report.Details))
 	assert.Equal(t, ResultDetail{Error: "", Latency: cr1.duration, Status: cr1.status, Timestamp: cr1.timestamp}, report.Details[0])
 	assert.Equal(t, ResultDetail{Error: cr2.err.Error(), Latency: cr2.duration, Status: cr2.status, Timestamp: cr2.timestamp}, report.Details[1])
