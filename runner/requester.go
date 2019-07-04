@@ -28,9 +28,10 @@ const maxResult = 1000000
 
 // result of a call
 type callResult struct {
-	err      error
-	status   string
-	duration time.Duration
+	err       error
+	status    string
+	duration  time.Duration
+	timestamp time.Time
 }
 
 // Requester is used for doing the requests

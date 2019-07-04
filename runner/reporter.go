@@ -154,7 +154,7 @@ func (r *Reporter) Run() {
 				r.lats = append(r.lats, res.duration.Seconds())
 				r.errors = append(r.errors, "")
 				r.statuses = append(r.statuses, res.status)
-				r.timestamps = append(r.timestamps, time.Now())
+				r.timestamps = append(r.timestamps, res.timestamp)
 			}
 		}
 	}
