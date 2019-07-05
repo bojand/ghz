@@ -135,16 +135,16 @@ func newReporter(results chan *callResult, c *RunConfig) *Reporter {
 func (r *Reporter) Run() {
 	for res := range r.results {
 		errStr := ""
-		if res.err != nil {
-			errStr = res.err.Error()
-		}
 
 		r.totalCount++
 		r.totalLatenciesSec += res.duration.Seconds()
 		r.statusCodeDist[res.status]++
+
 		if res.err != nil {
+			errStr = res.err.Error()
 			r.errorDist[errStr]++
 		}
+		
 		if len(r.details) < maxResult {
 			r.details = append(r.details, ResultDetail{
 				Latency:   res.duration,
