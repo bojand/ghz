@@ -1,13 +1,13 @@
-x = "7s"
-n = 5000
-c = 50
+"max-duration" = "7s"
+total = 5000
+concurrency = 50
 proto = "../../testdata/greeter.proto"
 call = "helloworld.Greeter.SayHello"
 host = "0.0.0.0:50051"
 insecure = true
 
-[d]
+[data]
 name = "Bob {{.TimestampUnix}}"
 
-[m]
+[metadata]
 rn = "{{.RequestNumber}}"

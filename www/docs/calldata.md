@@ -9,6 +9,9 @@ Data and metadata can specify [template actions](https://golang.org/pkg/text/tem
 // call template data
 type callTemplateData struct {
 
+	// unique worker ID
+	WorkerID		   string
+
 	// unique incremented request number for each request
 	RequestNumber      int64
 
@@ -57,4 +60,4 @@ Would result in server getting the following metadata map represented here in JS
 }
 ```
 
-See [example calls](example_calls.md) for some more usage examples.
+See [example calls](examples.md) for some more usage examples.

@@ -5,13 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bojand/ghz/internal"
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
 
 func TestStatsHandler(t *testing.T) {
-	_, s, err := startServer(false)
+	_, s, err := internal.StartServer(false)
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
@@ -30,7 +31,10 @@ func TestStatsHandler(t *testing.T) {
 		done <- true
 	}()
 
-	conn, err := grpc.Dial(localhost, grpc.WithInsecure(), grpc.WithStatsHandler(&statsHandler{rChan}))
+	conn, err := grpc.Dial(
+		internal.TestLocalhost,
+		grpc.WithInsecure(),
+		grpc.WithStatsHandler(&statsHandler{rChan}))
 
 	if err != nil {
 		assert.FailNow(t, err.Error())

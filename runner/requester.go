@@ -2,20 +2,25 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
+	"strconv"
+	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
+	"github.com/bojand/ghz/protodesc"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
+	"github.com/jhump/protoreflect/grpcreflect"
 
+	"go.uber.org/multierr"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
+
+	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
 // Max size of the buffer of result channel.
@@ -23,19 +28,22 @@ const maxResult = 1000000
 
 // result of a call
 type callResult struct {
-	err      error
-	status   string
-	duration time.Duration
+	err       error
+	status    string
+	duration  time.Duration
+	timestamp time.Time
 }
 
 // Requester is used for doing the requests
 type Requester struct {
-	cc       *grpc.ClientConn
-	stub     grpcdynamic.Stub
+	conns []*grpc.ClientConn
+	stubs []grpcdynamic.Stub
+
 	mtd      *desc.MethodDescriptor
 	reporter *Reporter
 
-	config  *RunConfig
+	config *RunConfig
+
 	results chan *callResult
 	stopCh  chan bool
 	start   time.Time
@@ -44,15 +52,15 @@ type Requester struct {
 
 	reqCounter int64
 
+	arrayJSONData []string
+
 	stopReason StopReason
+	lock       sync.Mutex
 }
 
-func newRequester(mtd *desc.MethodDescriptor, c *RunConfig) (*Requester, error) {
-	md := mtd.GetInputType()
-	payloadMessage := dynamic.NewMessage(md)
-	if payloadMessage == nil {
-		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
-	}
+func newRequester(c *RunConfig) (*Requester, error) {
+	var err error
+	var mtd *desc.MethodDescriptor
 
 	var qpsTick time.Duration
 	if c.qps > 0 {
@@ -61,9 +69,82 @@ func newRequester(mtd *desc.MethodDescriptor, c *RunConfig) (*Requester, error) 
 
 	reqr := &Requester{
 		config:     c,
-		mtd:        mtd,
 		qpsTick:    qpsTick,
-		stopReason: ReasonNormalEnd}
+		stopReason: ReasonNormalEnd,
+		results:    make(chan *callResult, min(c.c*1000, maxResult)),
+		stopCh:     make(chan bool, c.c),
+		conns:      make([]*grpc.ClientConn, 0, c.nConns),
+		stubs:      make([]grpcdynamic.Stub, 0, c.nConns),
+	}
+
+	if c.proto != "" {
+		mtd, err = protodesc.GetMethodDescFromProto(c.call, c.proto, c.importPaths)
+	} else if c.protoset != "" {
+		mtd, err = protodesc.GetMethodDescFromProtoSet(c.call, c.protoset)
+	} else {
+		// use reflection to get method descriptor
+		var cc *grpc.ClientConn
+		// temporary connection for reflection, do not store as requester connections
+		cc, err = reqr.newClientConn(false)
+		if err != nil {
+			return nil, err
+		}
+
+		defer func() {
+			// purposefully ignoring error as we do not care if there
+			// is an error on close
+			_ = cc.Close()
+		}()
+
+		// cancel is ignored here as connection.Close() is used.
+		// See https://godoc.org/google.golang.org/grpc#DialContext
+		ctx, _ := context.WithTimeout(context.Background(), c.dialTimeout)
+
+		md := make(metadata.MD)
+		if c.rmd != nil && len(*c.rmd) > 0 {
+			md = metadata.New(*c.rmd)
+		}
+
+		refCtx := metadata.NewOutgoingContext(ctx, md)
+
+		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(cc))
+
+		mtd, err = protodesc.GetMethodDescFromReflect(c.call, refClient)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	md := mtd.GetInputType()
+	payloadMessage := dynamic.NewMessage(md)
+	if payloadMessage == nil {
+		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
+	}
+
+	// fill in the rest
+	reqr.mtd = mtd
+
+	// fill in JSON string array data for optimization for non client-streaming
+	reqr.arrayJSONData = nil
+	if !c.binary && !reqr.mtd.IsClientStreaming() {
+		if strings.IndexRune(string(c.data), '[') == 0 { // it's an array
+			var dat []map[string]interface{}
+			if err := json.Unmarshal(c.data, &dat); err != nil {
+				return nil, err
+			}
+
+			reqr.arrayJSONData = make([]string, len(dat))
+			for i, d := range dat {
+				var strd []byte
+				if strd, err = json.Marshal(d); err != nil {
+					return nil, err
+				}
+
+				reqr.arrayJSONData[i] = string(strd)
+			}
+		}
+	}
 
 	return reqr, nil
 }
@@ -71,31 +152,35 @@ func newRequester(mtd *desc.MethodDescriptor, c *RunConfig) (*Requester, error) 
 // Run makes all the requests and returns a report of results
 // It blocks until all work is done.
 func (b *Requester) Run() (*Report, error) {
-	b.results = make(chan *callResult, min(b.config.c*1000, maxResult))
-	b.stopCh = make(chan bool, b.config.c)
-	b.start = time.Now()
+	start := time.Now()
 
-	cc, err := b.connect()
+	cc, err := b.openClientConns()
 	if err != nil {
 		return nil, err
 	}
 
-	b.cc = cc
-	defer cc.Close()
+	b.lock.Lock()
+	b.start = start
 
-	b.stub = grpcdynamic.NewStub(cc)
+	// create a client stub for each connection
+	for n := 0; n < b.config.nConns; n++ {
+		stub := grpcdynamic.NewStub(cc[n])
+		b.stubs = append(b.stubs, stub)
+	}
 
 	b.reporter = newReporter(b.results, b.config)
+	b.lock.Unlock()
 
 	go func() {
 		b.reporter.Run()
 	}()
 
-	b.runWorkers()
+	err = b.runWorkers()
 
 	report := b.Finish()
+	b.closeClientConns()
 
-	return report, nil
+	return report, err
 }
 
 // Stop stops the test
@@ -105,7 +190,11 @@ func (b *Requester) Stop(reason StopReason) {
 		b.stopCh <- true
 	}
 
+	b.lock.Lock()
 	b.stopReason = reason
+	b.lock.Unlock()
+
+	b.closeClientConns()
 }
 
 // Finish finishes the test run
@@ -119,14 +208,52 @@ func (b *Requester) Finish() *Report {
 	return b.reporter.Finalize(b.stopReason, total)
 }
 
-func (b *Requester) connect() (*grpc.ClientConn, error) {
-	var opts []grpc.DialOption
-	credOptions, err := createClientCredOption(b.config)
-	if err != nil {
-		return nil, err
+func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
+	b.lock.Lock()
+	defer b.lock.Unlock()
+
+	if len(b.conns) == b.config.nConns {
+		return b.conns, nil
 	}
 
-	opts = append(opts, credOptions)
+	for n := 0; n < b.config.nConns; n++ {
+		c, err := b.newClientConn(true)
+		if err != nil {
+			return nil, err
+		}
+
+		b.conns = append(b.conns, c)
+	}
+
+	return b.conns, nil
+}
+
+func (b *Requester) closeClientConns() {
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	if b.conns == nil {
+		return
+	}
+
+	for _, cc := range b.conns {
+		_ = cc.Close()
+	}
+
+	b.conns = nil
+}
+
+func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+
+	if b.config.insecure {
+		opts = append(opts, grpc.WithInsecure())
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(b.config.creds))
+	}
+
+	if b.config.authority != "" {
+		opts = append(opts, grpc.WithAuthority(b.config.authority))
+	}
 
 	ctx := context.Background()
 	ctx, _ = context.WithTimeout(ctx, b.config.dialTimeout)
@@ -140,205 +267,63 @@ func (b *Requester) connect() (*grpc.ClientConn, error) {
 		}))
 	}
 
-	opts = append(opts, grpc.WithStatsHandler(&statsHandler{b.results}))
+	if withStatsHandler {
+		opts = append(opts, grpc.WithStatsHandler(&statsHandler{b.results}))
+	}
 
 	// create client connection
 	return grpc.DialContext(ctx, b.config.host, opts...)
 }
 
-func (b *Requester) runWorkers() {
-	var wg sync.WaitGroup
-	wg.Add(b.config.c)
-
+func (b *Requester) runWorkers() error {
 	nReqPerWorker := b.config.n / b.config.c
 
-	// Ignore the case where b.N % b.C != 0.
-	for i := 0; i < b.config.c; i++ {
-		go func() {
-			defer wg.Done()
+	if b.config.c == 0 {
+		return nil
+	}
 
-			b.runWorker(nReqPerWorker)
+	errC := make(chan error, b.config.c)
+
+	// Ignore the case where b.N % b.C != 0.
+
+	n := 0                            // connection counter
+	for i := 0; i < b.config.c; i++ { // concurrency counter
+
+		wID := "g" + strconv.Itoa(i) + "c" + strconv.Itoa(n)
+
+		if len(b.config.name) > 0 {
+			wID = b.config.name + ":" + wID
+		}
+
+		w := Worker{
+			stub:          b.stubs[n],
+			mtd:           b.mtd,
+			config:        b.config,
+			stopCh:        b.stopCh,
+			qpsTick:       b.qpsTick,
+			reqCounter:    &b.reqCounter,
+			nReq:          nReqPerWorker,
+			workerID:      wID,
+			arrayJSONData: b.arrayJSONData,
+		}
+
+		n++ // increment connection counter
+
+		// wrap around connections if needed
+		if n == b.config.nConns {
+			n = 0
+		}
+
+		go func() {
+			errC <- w.runWorker()
 		}()
 	}
-	wg.Wait()
-}
 
-func (b *Requester) runWorker(n int) {
-	var throttle <-chan time.Time
-	if b.config.qps > 0 {
-		throttle = time.Tick(b.qpsTick)
+	var err error
+	for i := 0; i < b.config.c; i++ {
+		err = multierr.Append(err, <-errC)
 	}
-
-	for i := 0; i < n; i++ {
-		// Check if application is stopped. Do not send into a closed channel.
-		select {
-		case <-b.stopCh:
-			return
-		default:
-			if b.config.qps > 0 {
-				<-throttle
-			}
-
-			err := b.makeRequest()
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-		}
-	}
-}
-
-func (b *Requester) makeRequest() error {
-
-	reqNum := atomic.AddInt64(&b.reqCounter, 1)
-
-	ctd := newCallTemplateData(b.mtd, reqNum)
-
-	var input *dynamic.Message
-	var streamInput *[]*dynamic.Message
-
-	if !b.config.binary {
-		data, err := ctd.executeData(string(b.config.data))
-		if err != nil {
-			return err
-		}
-		input, streamInput, err = createPayloads(string(data), b.mtd)
-		if err != nil {
-			return err
-		}
-	} else {
-		var err error
-		input, streamInput, err = createPayloadsFromBin(b.config.data, b.mtd)
-		if err != nil {
-			return err
-		}
-	}
-
-	mdMap, err := ctd.executeMetadata(string(b.config.metadata))
-	if err != nil {
-		return err
-	}
-
-	var reqMD *metadata.MD
-	if mdMap != nil && len(*mdMap) > 0 {
-		md := metadata.New(*mdMap)
-		reqMD = &md
-	}
-
-	ctx := context.Background()
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	ctx, _ = context.WithTimeout(ctx, b.config.timeout)
-
-	// include the metadata
-	if reqMD != nil {
-		ctx = metadata.NewOutgoingContext(ctx, *reqMD)
-	}
-
-	if b.mtd.IsClientStreaming() && b.mtd.IsServerStreaming() {
-		b.makeBidiRequest(&ctx, streamInput)
-	} else if b.mtd.IsClientStreaming() {
-		b.makeClientStreamingRequest(&ctx, streamInput)
-	} else if b.mtd.IsServerStreaming() {
-		b.makeServerStreamingRequest(&ctx, input)
-	} else {
-		b.stub.InvokeRpc(ctx, b.mtd, input)
-	}
-
-	return nil
-}
-
-func (b *Requester) makeClientStreamingRequest(ctx *context.Context, input *[]*dynamic.Message) {
-	str, err := b.stub.InvokeRpcClientStream(*ctx, b.mtd)
-	counter := 0
-	for err == nil {
-		streamInput := *input
-		inputLen := len(streamInput)
-		if input == nil || inputLen == 0 {
-			str.CloseAndReceive()
-			break
-		}
-
-		if counter == inputLen {
-			str.CloseAndReceive()
-			break
-		}
-
-		payload := streamInput[counter]
-		err = str.SendMsg(payload)
-		if err == io.EOF {
-			// We get EOF on send if the server says "go away"
-			// We have to use CloseAndReceive to get the actual code
-			str.CloseAndReceive()
-			break
-		}
-		counter++
-	}
-}
-
-func (b *Requester) makeServerStreamingRequest(ctx *context.Context, input *dynamic.Message) {
-	str, err := b.stub.InvokeRpcServerStream(*ctx, b.mtd, input)
-	for err == nil {
-		_, err := str.RecvMsg()
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			break
-		}
-	}
-}
-
-func (b *Requester) makeBidiRequest(ctx *context.Context, input *[]*dynamic.Message) {
-	str, err := b.stub.InvokeRpcBidiStream(*ctx, b.mtd)
-	counter := 0
-	for err == nil {
-		streamInput := *input
-		inputLen := len(streamInput)
-		if input == nil || inputLen == 0 {
-			str.CloseSend()
-			break
-		}
-
-		if counter == inputLen {
-			str.CloseSend()
-			break
-		}
-
-		payload := streamInput[counter]
-		err = str.SendMsg(payload)
-		counter++
-	}
-
-	for err == nil {
-		_, err := str.RecvMsg()
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			break
-		}
-	}
-}
-
-func createClientCredOption(config *RunConfig) (grpc.DialOption, error) {
-	if config.insecure {
-		credOptions := grpc.WithInsecure()
-		return credOptions, nil
-	}
-
-	if config.cert != "" {
-		creds, err := credentials.NewClientTLSFromFile(config.cert, config.cname)
-		if err != nil {
-			return nil, err
-		}
-		credOptions := grpc.WithTransportCredentials(creds)
-		return credOptions, nil
-	}
-
-	credOptions := grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, ""))
-	return credOptions, nil
+	return err
 }
 
 func min(a, b int) int {

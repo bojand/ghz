@@ -27,7 +27,11 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	s := echo.New()
 
 	s.Logger.SetLevel(getLogLevel(conf))
-	s.Logger.SetOutput(getLogOutput(conf))
+	output, err := getLogOutput(conf)
+	if err != nil {
+		return nil, err
+	}
+	s.Logger.SetOutput(output)
 
 	s.Validator = &CustomValidator{validator: validator.New()}
 
@@ -103,13 +107,13 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	// load the precompiled statik fs
 	statikFS, err := fs.New()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	// get the index file
 	indexFile, err := fs.ReadFile(statikFS, "/index.html")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	// wrap the handler
@@ -163,24 +167,24 @@ func getLogLevel(config *config.Config) log.Lvl {
 	}
 }
 
-func getLogOutput(config *config.Config) io.Writer {
+func getLogOutput(config *config.Config) (io.Writer, error) {
 	logPath := strings.TrimSpace(config.Log.Path)
 	if logPath == "" {
-		return os.Stdout
+		return os.Stdout, nil
 	}
 
 	if _, err := os.Stat(filepath.Dir(logPath)); os.IsNotExist(err) {
 		if err := os.MkdirAll(filepath.Dir(logPath), 0777); err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 
 	f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return f
+	return f, nil
 }
 
 // PrintRoutes prints routes in the server

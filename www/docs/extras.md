@@ -3,6 +3,8 @@ id: extras
 title: Extras
 ---
 
+## Grafana dashboards
+
 For conveniance we include prebuilt [Grafana](http://grafana.com/) dashboards for [summary](/extras/influx-summary-grafana-dashboard.json) and [details](/extras/influx-details-grafana-dashboard.json).
 
 #### Summary Grafana Dashboard
@@ -20,3 +22,11 @@ For conveniance we include prebuilt [Grafana](http://grafana.com/) dashboards fo
 	<img src="/img/influx-details-grafana-dashboard.png" alt="Details Grafana Dashboard">
 	<br>
 </div>
+
+## Prototool
+
+`ghz` can be used with [Prototool](https://github.com/uber/prototool) using the [`descriptor-set`](https://github.com/uber/prototool/tree/dev/docs#prototool-descriptor-set) command:
+
+```
+ghz -protoset $(prototool descriptor-set --include-imports --tmp) ...
+```

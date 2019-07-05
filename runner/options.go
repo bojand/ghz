@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/credentials"
 )
 
 // RunConfig represents the request Configs
@@ -22,15 +25,23 @@ type RunConfig struct {
 	importPaths []string
 	protoset    string
 
-	// securit settings
-	cert     string
-	cname    string
-	insecure bool
+	// security settings
+	creds      credentials.TransportCredentials
+	cacert     string
+	cert       string
+	key        string
+	cname      string
+	skipVerify bool
+	insecure   bool
+	authority  string
 
 	// test
 	n   int
 	c   int
 	qps int
+
+	// number of connections
+	nConns int
 
 	// timeouts
 	z             time.Duration
@@ -38,10 +49,13 @@ type RunConfig struct {
 	dialTimeout   time.Duration
 	keepaliveTime time.Duration
 
+	streamInterval time.Duration
+
 	// data
 	data     []byte
 	binary   bool
 	metadata []byte
+	rmd      *map[string]string
 
 	// misc
 	name string
@@ -53,13 +67,45 @@ type RunConfig struct {
 type Option func(*RunConfig) error
 
 // WithCertificate specifies the certificate options for the run
-//	WithCertificate("certfile.crt", "")
-func WithCertificate(cert string, cname string) Option {
+//	WithCertificate("client.crt", "client.key")
+func WithCertificate(cert, key string) Option {
+	return func(o *RunConfig) error {
+		cert = strings.TrimSpace(cert)
+		key = strings.TrimSpace(key)
+
+		o.cert = cert
+		o.key = key
+
+		return nil
+	}
+}
+
+// WithServerNameOverride specifies the certificate options for the run
+func WithServerNameOverride(cname string) Option {
+	return func(o *RunConfig) error {
+		o.cname = cname
+
+		return nil
+	}
+}
+
+// WithAuthority specifies the value to be used as the :authority pseudo-header.
+// This only works with WithInsecure option.
+func WithAuthority(authority string) Option {
+	return func(o *RunConfig) error {
+		o.authority = authority
+
+		return nil
+	}
+}
+
+// WithRootCertificate specifies the root certificate options for the run
+//	WithRootCertificate("ca.crt")
+func WithRootCertificate(cert string) Option {
 	return func(o *RunConfig) error {
 		cert = strings.TrimSpace(cert)
 
-		o.cert = cert
-		o.cname = cname
+		o.cacert = cert
 
 		return nil
 	}
@@ -70,6 +116,15 @@ func WithCertificate(cert string, cname string) Option {
 func WithInsecure(insec bool) Option {
 	return func(o *RunConfig) error {
 		o.insecure = insec
+
+		return nil
+	}
+}
+
+// WithSkipTLSVerify skip client side TLS verification of server certificate
+func WithSkipTLSVerify(skip bool) Option {
+	return func(o *RunConfig) error {
+		o.skipVerify = skip
 
 		return nil
 	}
@@ -361,26 +416,68 @@ func WithProtoset(protoset string) Option {
 	}
 }
 
+// WithStreamInterval sets the stream interval
+func WithStreamInterval(d time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.streamInterval = d
+
+		return nil
+	}
+}
+
+// WithReflectionMetadata specifies the metadata to be used as a map
+// 	md := make(map[string]string)
+// 	md["token"] = "foobar"
+// 	md["request-id"] = "123"
+// 	WithReflectionMetadata(&md)
+func WithReflectionMetadata(md *map[string]string) Option {
+	return func(o *RunConfig) error {
+		o.rmd = md
+
+		return nil
+	}
+}
+
+// WithConnections specifies the number of gRPC connections to use
+//	WithConnections(5)
+func WithConnections(c uint) Option {
+	return func(o *RunConfig) error {
+		if c > 0 {
+			o.nConns = int(c)
+		}
+
+		return nil
+	}
+}
+
 func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 	call = strings.TrimSpace(call)
 	host = strings.TrimSpace(host)
 
+	// init with defaults
 	c := &RunConfig{
 		call:        call,
 		host:        host,
 		n:           200,
 		c:           50,
+		nConns:      1,
 		timeout:     time.Duration(20 * time.Second),
 		dialTimeout: time.Duration(10 * time.Second),
 		cpus:        runtime.GOMAXPROCS(-1),
 	}
 
+	// apply options
 	for _, option := range options {
 		err := option(c)
 
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// checks
+	if c.nConns > c.c {
+		return nil, errors.New("Number of connections cannot be greater than concurrency")
 	}
 
 	if c.call == "" {
@@ -391,9 +488,56 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		return nil, errors.New("Host required")
 	}
 
-	if c.proto == "" && c.protoset == "" {
-		return nil, errors.New("Must provide proto or protoset")
+	creds, err := createClientTransportCredentials(
+		c.skipVerify,
+		c.cacert,
+		c.cert,
+		c.key,
+		c.cname,
+	)
+
+	if err != nil {
+		return nil, err
 	}
 
+	c.creds = creds
+
 	return c, nil
+}
+
+func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFile, clientKeyFile, cname string) (credentials.TransportCredentials, error) {
+	var tlsConf tls.Config
+
+	if clientCertFile != "" {
+		// Load the client certificates from disk
+		certificate, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("could not load client key pair: %v", err)
+		}
+		tlsConf.Certificates = []tls.Certificate{certificate}
+	}
+
+	if skipVerify == true {
+		tlsConf.InsecureSkipVerify = true
+	} else if cacertFile != "" {
+		// Create a certificate pool from the certificate authority
+		certPool := x509.NewCertPool()
+		ca, err := ioutil.ReadFile(cacertFile)
+		if err != nil {
+			return nil, fmt.Errorf("could not read ca certificate: %v", err)
+		}
+
+		// Append the certificates from the CA
+		if ok := certPool.AppendCertsFromPEM(ca); !ok {
+			return nil, errors.New("failed to append ca certs")
+		}
+
+		tlsConf.RootCAs = certPool
+	}
+
+	if cname != "" {
+		tlsConf.ServerName = cname
+	}
+
+	return credentials.NewTLS(&tlsConf), nil
 }

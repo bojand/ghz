@@ -1,0 +1,21 @@
+total = 500
+concurrency = 1
+"stream-interval" = "200ms"
+"max-duration" = "7s"
+duration = "12s"
+proto = "../../testdata/greeter.proto"
+call = "helloworld.Greeter.SayHelloBidi"
+host = "0.0.0.0:50051"
+insecure = true
+
+[[data]]
+name = "Bob 1 {{.TimestampUnix}}"
+[[data]]
+name = "Bob 2 {{.TimestampUnix}}"
+[[data]]
+name = "Bob 3 {{.TimestampUnix}}"
+[[data]]
+name = "Bob 4 {{.TimestampUnix}}"
+
+[metadata]
+rn = "{{.RequestNumber}}"

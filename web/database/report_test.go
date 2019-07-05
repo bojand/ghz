@@ -494,6 +494,23 @@ func TestDatabase_Report(t *testing.T) {
 		assert.Equal(t, uint(1), list[0].ID)
 	})
 
+	t.Run("FindLatestReportForProject", func(t *testing.T) {
+		r := new(model.Report)
+		r, err = db.FindLatestReportForProject(pid2)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, r)
+		assert.Equal(t, rid3, r.ID)
+	})
+
+	t.Run("FindLatestReportForProject invalid id", func(t *testing.T) {
+		r := new(model.Report)
+		r, err = db.FindLatestReportForProject(12345)
+
+		assert.NoError(t, err)
+		assert.Nil(t, r)
+	})
+
 	t.Run("DeleteReport()", func(t *testing.T) {
 		p := &model.Report{}
 		p.ID = rid3

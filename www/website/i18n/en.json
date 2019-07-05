@@ -8,11 +8,11 @@
       "calldata": {
         "title": "Call Template Data"
       },
-      "example_call": {
-        "title": "Examples"
-      },
       "example_config": {
         "title": "Configuration Files"
+      },
+      "examples": {
+        "title": "Examples"
       },
       "extras": {
         "title": "Extras"

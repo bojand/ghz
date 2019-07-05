@@ -37,6 +37,7 @@ Latency distribution:
   90% in 38.89 ms
   95% in 55.45 ms
   99% in 69.60 ms
+
 Status code distribution:
   [Unavailable]        3 responses
   [PermissionDenied]   3 responses
@@ -89,12 +90,12 @@ Using `-O json` outputs JSON data, and `-O pretty` outputs JSON in pretty format
 Using `-O influx-summary` outputs the summary data as [InfluxDB Line Protocol](https://docs.influxdata.com/influxdb/v1.6/concepts/glossary/#line-protocol). Sample output:
 
 ```
-ghz_run,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=1000,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"{{.InputName}}\"}",metadata="{\"rn\":\"{{.RequestNumber}}\"}",errors=74,has_errors=true count=1000,total=50000556,average=1771308,fastest=248603,slowest=7241944,rps=19999.78,median=1715940,p95=4354194,errors=74 128802790
+ghz_run,name="Greeter\ SayHello",proto="./greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=200,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"Bob\ Smith\"}",metadata="",tags="{\"created\ by\":\"Joe\ Developer\"\,\"env\":\"staging\"}",errors=0,has_errors=false count=200,total=214737065,average=37806598,fastest=25759157,slowest=77504712,rps=931.37,median=36947515,p95=47421426,errors=0 1548107303068421000
 ```
 
 Use `-O influx-details` to get the individual details for each request:
 
 ```
-ghz_detail,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=1000,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"{{.InputName}}\"}",metadata="{\"rn\":\"{{.RequestNumber}}\"}",hasError=false latency=5157328,error=,status=OK 681023506
-ghz_detail,proto="/testdata/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=1000,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"{{.InputName}}\"}",metadata="{\"rn\":\"{{.RequestNumber}}\"}",hasError=false latency=4990499,error=,status=OK 681029613
+ghz_detail,name="Greeter\ SayHello",proto="./greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=200,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"Bob\ Smith\"}",metadata="",tags="{\"created\ by\":\"Joe\ Developer\"\,\"env\":\"staging\"}",hasError=false latency=79044469,error="",status="OK" 1548107176979991000
+ghz_detail,name="Greeter\ SayHello",proto="./greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=200,c=50,qps=0,z=0,timeout=20,dial_timeout=10,keepalive=0,data="{\"name\":\"Bob\ Smith\"}",metadata="",tags="{\"created\ by\":\"Joe\ Developer\"\,\"env\":\"staging\"}",hasError=false latency=43011582,error="",status="OK" 1548107177023123000
 ```

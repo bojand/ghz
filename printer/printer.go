@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/alecthomas/template"
 	"github.com/bojand/ghz/runner"
@@ -26,9 +26,13 @@ type ReportPrinter struct {
 // Print the report using the given format
 // If format is "csv" detailed listing is printer in csv format.
 // Otherwise the summary of results is printed.
-func (rp *ReportPrinter) Print(format string) {
+func (rp *ReportPrinter) Print(format string) error {
+	if format == "" {
+		format = "summary"
+	}
+
 	switch format {
-	case "", "csv":
+	case "summary", "csv":
 		outputTmpl := defaultTmpl
 		if format == "csv" {
 			outputTmpl = csvTmpl
@@ -36,44 +40,38 @@ func (rp *ReportPrinter) Print(format string) {
 		buf := &bytes.Buffer{}
 		templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(outputTmpl))
 		if err := templ.Execute(buf, *rp.Report); err != nil {
-			log.Println("error:", err.Error())
-			return
+			return err
 		}
 
-		rp.printf(buf.String())
-
-		rp.printf("\n")
+		return rp.printf(buf.String())
 	case "json", "pretty":
 		rep, err := json.Marshal(*rp.Report)
 		if err != nil {
-			log.Println("error:", err.Error())
-			return
+			return err
 		}
 
 		if format == "pretty" {
 			var out bytes.Buffer
 			err = json.Indent(&out, rep, "", "  ")
 			if err != nil {
-				log.Println("error:", err.Error())
-				return
+				return err
 			}
 			rep = out.Bytes()
 		}
-
-		rp.printf(string(rep))
+		return rp.printf(string(rep))
 	case "html":
 		buf := &bytes.Buffer{}
 		templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(htmlTmpl))
 		if err := templ.Execute(buf, *rp.Report); err != nil {
-			log.Println("error:", err.Error())
-			return
+			return err
 		}
-
-		rp.printf(buf.String())
+		return rp.printf(buf.String())
 	case "influx-summary":
-		rp.printf(rp.getInfluxLine())
+		return rp.printf(rp.getInfluxLine())
 	case "influx-details":
-		rp.printInfluxDetails()
+		return rp.printInfluxDetails()
+	default:
+		return fmt.Errorf("unknown format: %s", format)
 	}
 }
 
@@ -81,20 +79,23 @@ func (rp *ReportPrinter) getInfluxLine() string {
 	measurement := "ghz_run"
 	tags := rp.getInfluxTags(true)
 	fields := rp.getInfluxFields()
-	timestamp := rp.Report.Date.Nanosecond()
+	timestamp := rp.Report.Date.UnixNano()
+	if timestamp < 0 {
+		timestamp = 0
+	}
 
 	return fmt.Sprintf("%v,%v %v %v", measurement, tags, fields, timestamp)
 }
 
-func (rp *ReportPrinter) printInfluxDetails() {
+func (rp *ReportPrinter) printInfluxDetails() error {
 	measurement := "ghz_detail"
 	commonTags := rp.getInfluxTags(false)
 
 	for _, v := range rp.Report.Details {
 		values := make([]string, 3)
 		values[0] = fmt.Sprintf("latency=%v", v.Latency.Nanoseconds())
-		values[1] = fmt.Sprintf("error=%v", v.Error)
-		values[2] = fmt.Sprintf("status=%v", v.Status)
+		values[1] = fmt.Sprintf(`error="%v"`, cleanInfluxString(v.Error))
+		values[2] = fmt.Sprintf(`status="%v"`, v.Status)
 
 		tags := commonTags
 
@@ -104,53 +105,84 @@ func (rp *ReportPrinter) printInfluxDetails() {
 			tags = tags + ",hasError=false"
 		}
 
-		timestamp := v.Timestamp.Nanosecond()
+		timestamp := v.Timestamp.UnixNano()
 
 		fields := strings.Join(values, ",")
 
-		fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v\n", measurement, tags, fields, timestamp))
+		if _, err := fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v\n", measurement, tags, fields, timestamp)); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 	s := make([]string, 0, 10)
 
 	if rp.Report.Name != "" {
-		s = append(s, fmt.Sprintf(`name="%v"`, rp.Report.Name))
+		s = append(s, fmt.Sprintf(`name="%v"`, cleanInfluxString(strings.TrimSpace(rp.Report.Name))))
 	}
 
-	s = append(s, fmt.Sprintf(`proto="%v"`, rp.Report.Options.Proto))
-	s = append(s, fmt.Sprintf(`call="%v"`, rp.Report.Options.Call))
-	s = append(s, fmt.Sprintf(`host="%v"`, rp.Report.Options.Host))
-	s = append(s, fmt.Sprintf("n=%v", rp.Report.Options.N))
-	s = append(s, fmt.Sprintf("c=%v", rp.Report.Options.C))
-	s = append(s, fmt.Sprintf("qps=%v", rp.Report.Options.QPS))
-	s = append(s, fmt.Sprintf("z=%v", rp.Report.Options.Z.Nanoseconds()))
-	s = append(s, fmt.Sprintf("timeout=%v", rp.Report.Options.Timeout))
-	s = append(s, fmt.Sprintf("dial_timeout=%v", rp.Report.Options.DialTimeout))
-	s = append(s, fmt.Sprintf("keepalive=%v", rp.Report.Options.KeepaliveTime))
+	options := rp.Report.Options
 
-	dataStr := ""
-	dataBytes, err := json.Marshal(rp.Report.Options.Data)
-	if err == nil {
+	if options.Proto != "" {
+		s = append(s, fmt.Sprintf(`proto="%v"`, options.Proto))
+	} else if options.Protoset != "" {
+		s = append(s, fmt.Sprintf(`Protoset="%v"`, options.Protoset))
+	}
+
+	s = append(s, fmt.Sprintf(`call="%v"`, options.Call))
+	s = append(s, fmt.Sprintf(`host="%v"`, options.Host))
+	s = append(s, fmt.Sprintf("n=%v", options.Total))
+	s = append(s, fmt.Sprintf("c=%v", options.Concurrency))
+	s = append(s, fmt.Sprintf("qps=%v", options.QPS))
+	s = append(s, fmt.Sprintf("z=%v", options.Duration.Nanoseconds()))
+	s = append(s, fmt.Sprintf("timeout=%v", options.Timeout.Seconds()))
+	s = append(s, fmt.Sprintf("dial_timeout=%v", options.DialTimeout.Seconds()))
+	s = append(s, fmt.Sprintf("keepalive=%v", options.KeepaliveTime.Seconds()))
+
+	dataStr := `""`
+	dataBytes, err := json.Marshal(options.Data)
+	if err == nil && len(dataBytes) > 0 {
 		dataBytes, err = json.Marshal(string(dataBytes))
 		if err == nil {
 			dataStr = string(dataBytes)
 		}
 	}
 
+	dataStr = cleanInfluxString(dataStr)
+
 	s = append(s, fmt.Sprintf("data=%s", dataStr))
 
-	mdStr := ""
-	mdBytes, err := json.Marshal(rp.Report.Options.Metadata)
-	if err == nil {
-		mdBytes, err = json.Marshal(string(mdBytes))
+	mdStr := `""`
+	if options.Metadata != nil {
+		mdBytes, err := json.Marshal(options.Metadata)
 		if err == nil {
-			mdStr = string(mdBytes)
+			mdBytes, err = json.Marshal(string(mdBytes))
+			if err == nil {
+				mdStr = string(mdBytes)
+			}
 		}
+
+		mdStr = cleanInfluxString(mdStr)
 	}
 
 	s = append(s, fmt.Sprintf("metadata=%s", mdStr))
+
+	callTagsStr := `""`
+	if len(rp.Report.Tags) > 0 {
+		callTagsBytes, err := json.Marshal(rp.Report.Tags)
+		if err == nil {
+			callTagsBytes, err = json.Marshal(string(callTagsBytes))
+			if err == nil {
+				callTagsStr = string(callTagsBytes)
+			}
+		}
+
+		callTagsStr = cleanInfluxString(callTagsStr)
+	}
+
+	s = append(s, fmt.Sprintf("tags=%s", callTagsStr))
 
 	if addErrors {
 		errCount := 0
@@ -207,8 +239,9 @@ func (rp *ReportPrinter) getInfluxFields() string {
 	return strings.Join(s, ",")
 }
 
-func (rp *ReportPrinter) printf(s string, v ...interface{}) {
-	fmt.Fprintf(rp.Out, s, v...)
+func (rp *ReportPrinter) printf(s string, v ...interface{}) error {
+	_, err := fmt.Fprintf(rp.Out, s, v...)
+	return err
 }
 
 var tmplFuncMap = template.FuncMap{
@@ -220,6 +253,8 @@ var tmplFuncMap = template.FuncMap{
 	"formatPercent":    formatPercent,
 	"formatStatusCode": formatStatusCode,
 	"formatErrorDist":  formatErrorDist,
+	"formatDate":       formatDate,
+	"formatNanoUnit":   formatNanoUnit,
 }
 
 func jsonify(v interface{}, pretty bool) string {
@@ -237,8 +272,26 @@ func jsonify(v interface{}, pretty bool) string {
 	return string(out.Bytes())
 }
 
+func formatNanoUnit(d time.Duration) string {
+	v := d.Nanoseconds()
+	if v < 10000 {
+		return fmt.Sprintf("%+v ns", v)
+	}
+
+	valMs := float64(v) / 1000000.0
+	if valMs < 1000 {
+		return fmt.Sprintf("%4.2f ms", valMs)
+	}
+
+	return fmt.Sprintf("%4.2f s", float64(valMs)/1000.0)
+}
+
 func formatMilli(duration float64) string {
 	return fmt.Sprintf("%4.2f", duration*1000)
+}
+
+func formatDate(d time.Time) string {
+	return d.Format("Mon Jan _2 2006 @ 15:04:05")
 }
 
 func formatSeconds(duration float64) string {
@@ -270,7 +323,13 @@ func histogram(buckets []runner.Bucket) string {
 }
 
 func formatMarkMs(m float64) string {
-	return fmt.Sprintf("'%4.3f ms'", m*1000)
+	m = m * 1000.0
+
+	if m < 1 {
+		return fmt.Sprintf("'%4.4f ms'", m)
+	}
+
+	return fmt.Sprintf("'%4.2f ms'", m)
 }
 
 func formatStatusCode(statusCodeDist map[string]int) string {
@@ -278,9 +337,11 @@ func formatStatusCode(statusCodeDist map[string]int) string {
 	buf := &bytes.Buffer{}
 	w := tabwriter.NewWriter(buf, 0, 0, padding, ' ', 0)
 	for status, count := range statusCodeDist {
-		fmt.Fprintf(w, "  [%+s]\t%+v responses\t\n", status, count)
+		// bytes.Buffer can be assumed to not fail on write
+		_, _ = fmt.Fprintf(w, "  [%+s]\t%+v responses\t\n", status, count)
 	}
-	w.Flush()
+	// bytes.Buffer can be assumed to not fail on write
+	_ = w.Flush()
 	return buf.String()
 }
 
@@ -289,10 +350,19 @@ func formatErrorDist(errDist map[string]int) string {
 	buf := &bytes.Buffer{}
 	w := tabwriter.NewWriter(buf, 0, 0, padding, ' ', 0)
 	for status, count := range errDist {
-		fmt.Fprintf(w, "  [%+v]\t%+s\t\n", count, status)
+		// bytes.Buffer can be assumed to not fail on write
+		_, _ = fmt.Fprintf(w, "  [%+v]\t%+s\t\n", count, status)
 	}
-	w.Flush()
+	// bytes.Buffer can be assumed to not fail on write
+	_ = w.Flush()
 	return buf.String()
+}
+
+func cleanInfluxString(input string) string {
+	input = strings.Replace(input, " ", "\\ ", -1)
+	input = strings.Replace(input, ",", "\\,", -1)
+	input = strings.Replace(input, "=", "\\=", -1)
+	return input
 }
 
 var (
@@ -300,18 +370,19 @@ var (
 Summary:
 {{ if .Name }}  Name:		{{ .Name }}
 {{ end }}  Count:	{{ .Count }}
-  Total:	{{ formatMilli .Total.Seconds }} ms
-  Slowest:	{{ formatMilli .Slowest.Seconds }} ms
-  Fastest:	{{ formatMilli .Fastest.Seconds }} ms
-  Average:	{{ formatMilli .Average.Seconds }} ms
+  Total:	{{ formatNanoUnit .Total }}
+  Slowest:	{{ formatNanoUnit .Slowest }}
+  Fastest:	{{ formatNanoUnit .Fastest }}
+  Average:	{{ formatNanoUnit .Average }}
   Requests/sec:	{{ formatSeconds .Rps }}
 
 Response time histogram:
 {{ histogram .Histogram }}
 Latency distribution:{{ range .LatencyDistribution }}
-  {{ .Percentage }}%% in {{ formatMilli .Latency.Seconds }} ms{{ end }}
-Status code distribution:
-{{ formatStatusCode .StatusCodeDist }}
+  {{ .Percentage }}%% in {{ formatNanoUnit .Latency }} {{ end }}
+
+{{ if gt (len .StatusCodeDist) 0 }}Status code distribution:
+{{ formatStatusCode .StatusCodeDist }}{{ end }}
 {{ if gt (len .ErrorDist) 0 }}Error distribution:
 {{ formatErrorDist .ErrorDist }}{{ end }}
 `
@@ -331,16 +402,26 @@ duration (ms),status,error{{ range $i, $v := .Details }}
     <script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/papaparse@4.5.0/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/britecharts@2/dist/bundled/britecharts.min.js"></script>
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/britecharts/dist/css/britecharts.min.css" type="text/css" /></head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" />
 
   </head>
-	
+
 	<body>
-	
+
 		<section class="section">
-		
+
+		<div class="container">
+			{{ if .Name }}
+			<h1 class="title">{{ .Name }}</h1>
+			{{ end }}
+			{{ if .Date }}
+				<h2 class="subtitle">{{ formatDate .Date }}</h2>
+			{{ end }}
+		</div>
+		<br />
+
 		<div class="container">
       <nav class="breadcrumb has-bullet-separator" aria-label="breadcrumbs">
         <ul>
@@ -398,14 +479,14 @@ duration (ms),status,error{{ range $i, $v := .Details }}
       </nav>
       <hr />
 		</div>
-		
+
 		{{ if gt (len .Tags) 0 }}
 
 			<div class="container">
 				<div class="field is-grouped">
 
 				{{ range $tag, $val := .Tags }}
-					
+
 					<div class="control">
 						<div class="tags has-addons">
 							<span class="tag is-dark">{{ $tag }}</span>
@@ -419,7 +500,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 			</div>
 			<br />
 		{{ end }}
-	  
+
 	  <div class="container">
 			<div class="columns">
 				<div class="column is-narrow">
@@ -429,31 +510,25 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 						</a>
 						<table class="table">
 							<tbody>
-							  {{ if .Name }}
-								<tr>
-									<th>Name</th>
-									<td>{{ .Name }}</td>
-								</tr>
-								{{ end }}
 								<tr>
 									<th>Count</th>
 									<td>{{ .Count }}</td>
 								</tr>
 								<tr>
 									<th>Total</th>
-									<td>{{ formatMilli .Total.Seconds }} ms</td>
+									<td>{{ formatNanoUnit .Total }}</td>
 								</tr>
 								<tr>
 									<th>Slowest</th>
-								<td>{{ formatMilli .Slowest.Seconds }} ms</td>
+								<td>{{ formatNanoUnit .Slowest }}</td>
 								</tr>
 								<tr>
 									<th>Fastest</th>
-									<td>{{ formatMilli .Fastest.Seconds }} ms</td>
+									<td>{{ formatNanoUnit .Fastest }}</td>
 								</tr>
 								<tr>
 									<th>Average</th>
-									<td>{{ formatMilli .Average.Seconds }} ms</td>
+									<td>{{ formatNanoUnit .Average }}</td>
 								</tr>
 								<tr>
 									<th>Requests / sec</th>
@@ -507,7 +582,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 					<tbody>
 						<tr>
 							{{ range .LatencyDistribution }}
-								<td>{{ formatMilli .Latency.Seconds }} ms</td>
+								<td>{{ formatNanoUnit .Latency }}</td>
 							{{ end }}
 						</tr>
 					</tbody>
@@ -545,9 +620,9 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 					</div>
 				</div>
 			</div>
-			
+
 			{{ if gt (len .ErrorDist) 0 }}
-				
+
 				<br />
 				<div class="container">
 					<div class="columns">
@@ -589,14 +664,14 @@ duration (ms),status,error{{ range $i, $v := .Details }}
               <a name="data">
                 <h3>Data</h3>
               </a>
-              
+
               <a class="button" id="dlJSON">JSON</a>
               <a class="button" id="dlCSV">CSV</a>
             </div>
           </div>
         </div>
 			</div>
-			
+
 			<div class="container">
         <hr />
         <div class="content has-text-centered">
@@ -606,7 +681,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
           <a href="https://github.com/bojand/ghz"><i class="icon is-medium fab fa-github"></i></a>
         </div>
       </div>
-		
+
 		</section>
 
   </body>
@@ -702,11 +777,11 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 	setJSONDownloadLink();
 
 	setCSVDownloadLink();
-	
+
 	</script>
 
 	<script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
-	
+
 </html>
 `
 )

@@ -1,4 +1,4 @@
-package runner
+package internal
 
 import (
 	"net"
@@ -6,14 +6,21 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/bojand/ghz/internal/helloworld"
 )
 
-var port string
-var localhost string
+// TestPort is the port.
+var TestPort string
 
-func startServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
+// TestLocalhost is the localhost.
+var TestLocalhost string
+
+// StartServer starts the server.
+//
+// For testing only.
+func StartServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 	lis, err := net.Listen("tcp", ":0")
 	if err != nil {
 		return nil, nil, err
@@ -29,17 +36,23 @@ func startServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
 	}
 
+	stats := helloworld.NewHWStats()
+
+	opts = append(opts, grpc.StatsHandler(stats))
+
 	s := grpc.NewServer(opts...)
 
 	gs := helloworld.NewGreeter()
 	helloworld.RegisterGreeterServer(s, gs)
-	// reflection.Register(s)
+	reflection.Register(s)
 
-	port = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
-	localhost = "localhost:" + port
+	gs.Stats = stats
+
+	TestPort = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
+	TestLocalhost = "localhost:" + TestPort
 
 	go func() {
-		s.Serve(lis)
+		_ = s.Serve(lis)
 	}()
 
 	return gs, s, err

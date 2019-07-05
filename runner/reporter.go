@@ -6,19 +6,16 @@ import (
 	"time"
 )
 
-// Reporter gethers all the results
+// Reporter gathers all the results
 type Reporter struct {
 	config *RunConfig
 
 	results chan *callResult
 	done    chan bool
 
-	avgTotal float64
+	totalLatenciesSec float64
 
-	lats       []float64
-	errors     []string
-	statuses   []string
-	timestamps []time.Time
+	details []ResultDetail
 
 	errorDist      map[string]int
 	statusCodeDist map[string]int
@@ -27,25 +24,33 @@ type Reporter struct {
 
 // Options represents the request options
 type Options struct {
-	Call          string             `json:"call,omitempty"`
-	Proto         string             `json:"proto,omitempty"`
-	Protoset      string             `json:"protoset,omitempty"`
-	Host          string             `json:"host,omitempty"`
-	Cert          string             `json:"cert,omitempty"`
-	CName         string             `json:"cname,omitempty"`
-	N             uint               `json:"n,omitempty"`
-	C             uint               `json:"c,omitempty"`
-	QPS           uint               `json:"qps,omitempty"`
-	Z             time.Duration      `json:"z,omitempty"`
-	Timeout       time.Duration      `json:"timeout,omitempty"`
-	DialTimeout   time.Duration      `json:"dialTimeout,omitempty"`
-	KeepaliveTime time.Duration      `json:"keepAlice,omitempty"`
-	Data          interface{}        `json:"data,omitempty"`
-	Binary        bool               `json:"binary"`
-	Metadata      *map[string]string `json:"metadata,omitempty"`
-	Insecure      bool               `json:"insecure"`
-	CPUs          int                `json:"CPUs"`
-	Name          string             `json:"name,omitempty"`
+	Host          string        `json:"host,omitempty"`
+	Proto         string        `json:"proto,omitempty"`
+	Protoset      string        `json:"protoset,omitempty"`
+	ImportPaths   []string      `json:"import-paths,omitempty"`
+	Call          string        `json:"call,omitempty"`
+	CACert        string        `json:"cacert,omitempty"`
+	Cert          string        `json:"cert,omitempty"`
+	Key           string        `json:"key,omitempty"`
+	SkipTLS       bool          `json:"skipTLS,omitempty"`
+	CName         string        `json:"cname,omitempty"`
+	Authority     string        `json:"authority,omitempty"`
+	Insecure      bool          `json:"insecure"`
+	Total         uint          `json:"total,omitempty"`
+	Concurrency   uint          `json:"concurrency,omitempty"`
+	QPS           uint          `json:"qps,omitempty"`
+	Connections   uint          `json:"connections,omitempty"`
+	Duration      time.Duration `json:"duration,omitempty"`
+	Timeout       time.Duration `json:"timeout,omitempty"`
+	DialTimeout   time.Duration `json:"dial-timeout,omitempty"`
+	KeepaliveTime time.Duration `json:"keepalive,omitempty"`
+
+	Data     interface{}        `json:"data,omitempty"`
+	Binary   bool               `json:"binary"`
+	Metadata *map[string]string `json:"metadata,omitempty"`
+
+	CPUs int    `json:"CPUs"`
+	Name string `json:"name,omitempty"`
 }
 
 // Report holds the data for the full test
@@ -53,7 +58,7 @@ type Report struct {
 	Name      string     `json:"name,omitempty"`
 	EndReason StopReason `json:"endReason,omitempty"`
 
-	Options *Options  `json:"options,omitempty"`
+	Options Options   `json:"options,omitempty"`
 	Date    time.Time `json:"date"`
 
 	Count   uint64        `json:"count"`
@@ -116,38 +121,37 @@ func newReporter(results chan *callResult, c *RunConfig) *Reporter {
 	cap := min(c.n, maxResult)
 
 	return &Reporter{
-		config:         c,
-		results:        results,
-		done:           make(chan bool, 1),
+		config:  c,
+		results: results,
+		done:    make(chan bool, 1),
+		details: make([]ResultDetail, 0, cap),
+
 		statusCodeDist: make(map[string]int),
 		errorDist:      make(map[string]int),
-		lats:           make([]float64, 0, cap),
 	}
 }
 
 // Run runs the reporter
 func (r *Reporter) Run() {
 	for res := range r.results {
+		errStr := ""
+
 		r.totalCount++
-		r.avgTotal += res.duration.Seconds()
+		r.totalLatenciesSec += res.duration.Seconds()
+		r.statusCodeDist[res.status]++
+
 		if res.err != nil {
-			errStr := res.err.Error()
+			errStr = res.err.Error()
 			r.errorDist[errStr]++
-			r.statusCodeDist[res.status]++
-
-			if len(r.errors) < maxResult {
-				r.errors = append(r.errors, errStr)
-				r.statuses = append(r.statuses, res.status)
-			}
-		} else {
-			r.statusCodeDist[res.status]++
-
-			if len(r.lats) < maxResult {
-				r.lats = append(r.lats, res.duration.Seconds())
-				r.errors = append(r.errors, "")
-				r.statuses = append(r.statuses, res.status)
-				r.timestamps = append(r.timestamps, time.Now())
-			}
+		}
+		
+		if len(r.details) < maxResult {
+			r.details = append(r.details, ResultDetail{
+				Latency:   res.duration,
+				Timestamp: res.timestamp,
+				Status:    res.status,
+				Error:     errStr,
+			})
 		}
 	}
 	r.done <- true
@@ -164,22 +168,28 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		ErrorDist:      r.errorDist,
 		StatusCodeDist: r.statusCodeDist}
 
-	rep.Options = &Options{
-		Call:          r.config.call,
+	rep.Options = Options{
+		Host:          r.config.host,
 		Proto:         r.config.proto,
 		Protoset:      r.config.protoset,
-		Host:          r.config.host,
+		ImportPaths:   r.config.importPaths,
+		Call:          r.config.call,
+		CACert:        r.config.cacert,
 		Cert:          r.config.cert,
+		Key:           r.config.key,
 		CName:         r.config.cname,
-		N:             uint(r.config.n),
-		C:             uint(r.config.c),
+		SkipTLS:       r.config.skipVerify,
+		Insecure:      r.config.insecure,
+		Authority:     r.config.authority,
+		Total:         uint(r.config.n),
+		Concurrency:   uint(r.config.c),
 		QPS:           uint(r.config.qps),
-		Z:             r.config.z,
+		Connections:   uint(r.config.nConns),
+		Duration:      r.config.z,
 		Timeout:       r.config.timeout,
 		DialTimeout:   r.config.dialTimeout,
 		KeepaliveTime: r.config.keepaliveTime,
 		Binary:        r.config.binary,
-		Insecure:      r.config.insecure,
 		CPUs:          r.config.cpus,
 		Name:          r.config.name,
 	}
@@ -190,51 +200,44 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 
 	_ = json.Unmarshal(r.config.tags, &rep.Tags)
 
-	if len(r.lats) > 0 {
-		average := r.avgTotal / float64(r.totalCount)
-		avgDuration := time.Duration(average * float64(time.Second))
-		rep.Average = avgDuration
+	if len(r.details) > 0 {
+		average := r.totalLatenciesSec / float64(r.totalCount)
+		rep.Average = time.Duration(average * float64(time.Second))
 
-		rps := float64(r.totalCount) / total.Seconds()
-		rep.Rps = rps
+		rep.Rps = float64(r.totalCount) / total.Seconds()
 
-		lats := make([]float64, len(r.lats))
-		copy(lats, r.lats)
-		sort.Float64s(lats)
-
-		var fastestNum, slowestNum float64
-		fastestNum = lats[0]
-		slowestNum = lats[len(lats)-1]
-
-		rep.Fastest = time.Duration(fastestNum * float64(time.Second))
-		rep.Slowest = time.Duration(slowestNum * float64(time.Second))
-		rep.Histogram = histogram(&lats, slowestNum, fastestNum)
-		rep.LatencyDistribution = latencies(&lats)
-
-		rep.Details = make([]ResultDetail, len(r.lats))
-		for i, num := range r.lats {
-			lat := time.Duration(num * float64(time.Second))
-			rep.Details[i] = ResultDetail{
-				Latency:   lat,
-				Error:     r.errors[i],
-				Status:    r.statuses[i],
-				Timestamp: r.timestamps[i],
+		okLats := make([]float64, 0)
+		for _, d := range r.details {
+			if d.Error == "" {
+				okLats = append(okLats, d.Latency.Seconds())
 			}
 		}
+		sort.Float64s(okLats)
+		if len(okLats) > 0 {
+			var fastestNum, slowestNum float64
+			fastestNum = okLats[0]
+			slowestNum = okLats[len(okLats)-1]
+
+			rep.Fastest = time.Duration(fastestNum * float64(time.Second))
+			rep.Slowest = time.Duration(slowestNum * float64(time.Second))
+			rep.Histogram = histogram(okLats, slowestNum, fastestNum)
+			rep.LatencyDistribution = latencies(okLats)
+		}
+
+		rep.Details = r.details
 	}
 
 	return rep
 }
 
-func latencies(latencies *[]float64) []LatencyDistribution {
-	lats := *latencies
+func latencies(latencies []float64) []LatencyDistribution {
 	pctls := []int{10, 25, 50, 75, 90, 95, 99}
 	data := make([]float64, len(pctls))
 	j := 0
-	for i := 0; i < len(lats) && j < len(pctls); i++ {
-		current := i * 100 / len(lats)
+	for i := 0; i < len(latencies) && j < len(pctls); i++ {
+		current := i * 100 / len(latencies)
 		if current >= pctls[j] {
-			data[j] = lats[i]
+			data[j] = latencies[i]
 			j++
 		}
 	}
@@ -248,8 +251,7 @@ func latencies(latencies *[]float64) []LatencyDistribution {
 	return res
 }
 
-func histogram(latencies *[]float64, slowest, fastest float64) []Bucket {
-	lats := *latencies
+func histogram(latencies []float64, slowest, fastest float64) []Bucket {
 	bc := 10
 	buckets := make([]float64, bc+1)
 	counts := make([]int, bc+1)
@@ -260,8 +262,8 @@ func histogram(latencies *[]float64, slowest, fastest float64) []Bucket {
 	buckets[bc] = slowest
 	var bi int
 	var max int
-	for i := 0; i < len(lats); {
-		if lats[i] <= buckets[bi] {
+	for i := 0; i < len(latencies); {
+		if latencies[i] <= buckets[bi] {
 			i++
 			counts[bi]++
 			if max < counts[bi] {
@@ -276,7 +278,7 @@ func histogram(latencies *[]float64, slowest, fastest float64) []Bucket {
 		res[i] = Bucket{
 			Mark:      buckets[i],
 			Count:     counts[i],
-			Frequency: float64(counts[i]) / float64(len(lats)),
+			Frequency: float64(counts[i]) / float64(len(latencies)),
 		}
 	}
 	return res

@@ -24,70 +24,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Nil(t, c)
 	})
 
-	t.Run("fail without proto or protoset", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050")
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty proto", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithProtoFile("  ", []string{}),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
 	t.Run("fail with invalid extension", func(t *testing.T) {
 		c, err := newConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.bin", []string{}),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty protoset", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithProtoset("  "),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty cert", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithCertificate("  ", ""),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty JSON data", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithData("  "),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with empty name", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithName("  "),
-		)
-
-		assert.Error(t, err)
-		assert.Nil(t, c)
-	})
-
-	t.Run("fail with invalid JSON data", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
-			WithData(`asdf:{"foo"}`),
 		)
 
 		assert.Error(t, err)
@@ -125,7 +64,6 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with options", func(t *testing.T) {
 		c, err := newConfig(
 			"call", "localhost:50050",
-			WithCertificate("certfile", "somecname"),
 			WithInsecure(true),
 			WithTotalRequests(100),
 			WithConcurrency(20),
@@ -146,8 +84,6 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "call", c.call)
 		assert.Equal(t, "localhost:50050", c.host)
 		assert.Equal(t, true, c.insecure)
-		assert.Equal(t, "certfile", c.cert)
-		assert.Equal(t, "somecname", c.cname)
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
@@ -169,8 +105,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with binary data, protoset and metadata file", func(t *testing.T) {
 		c, err := newConfig(
 			"call", "localhost:50050",
-			WithCertificate("certfile", "somecname"),
-			WithInsecure(true),
+			WithCertificate("../testdata/localhost.crt", "../testdata/localhost.key"),
+			WithServerNameOverride("cname"),
+			WithAuthority("someauth"),
 			WithTotalRequests(100),
 			WithConcurrency(20),
 			WithQPS(5),
@@ -189,9 +126,11 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 		assert.Equal(t, "call", c.call)
 		assert.Equal(t, "localhost:50050", c.host)
-		assert.Equal(t, true, c.insecure)
-		assert.Equal(t, "certfile", c.cert)
-		assert.Equal(t, "somecname", c.cname)
+		assert.Equal(t, false, c.insecure)
+		assert.Equal(t, "../testdata/localhost.crt", c.cert)
+		assert.Equal(t, "../testdata/localhost.key", c.key)
+		assert.Equal(t, "cname", c.cname)
+		assert.Equal(t, "someauth", c.authority)
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
@@ -206,6 +145,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, `{"request-id": "{{.RequestNumber}}"}`, string(c.metadata))
 		assert.Equal(t, "", string(c.proto))
 		assert.Equal(t, "testdata/bundle.protoset", string(c.protoset))
+		assert.NotNil(t, c.creds)
 	})
 
 	t.Run("with data interface and metadata map", func(t *testing.T) {
@@ -228,10 +168,13 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		tags["env"] = "staging"
 		tags["created by"] = "joe developer"
 
+		rmd := make(map[string]string)
+		rmd["auth"] = "bizbaz"
+
 		c, err := newConfig(
 			"call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
-			WithCertificate("certfile", "somecname"),
+			WithCertificate("../testdata/localhost.crt", "../testdata/localhost.key"),
 			WithInsecure(true),
 			WithTotalRequests(100),
 			WithConcurrency(20),
@@ -245,6 +188,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithData(d),
 			WithMetadata(&md),
 			WithTags(&tags),
+			WithReflectionMetadata(&rmd),
 		)
 
 		assert.NoError(t, err)
@@ -252,8 +196,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "call", c.call)
 		assert.Equal(t, "localhost:50050", c.host)
 		assert.Equal(t, true, c.insecure)
-		assert.Equal(t, "certfile", c.cert)
-		assert.Equal(t, "somecname", c.cname)
+		assert.Equal(t, "../testdata/localhost.crt", c.cert)
+		assert.Equal(t, "../testdata/localhost.key", c.key)
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
@@ -270,6 +214,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+		assert.NotNil(t, c.creds)
+		assert.Equal(t, map[string]string{"auth": "bizbaz"}, *c.rmd)
 	})
 
 	t.Run("with binary data from file", func(t *testing.T) {
@@ -332,6 +278,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with data from reader", func(t *testing.T) {
 
 		file, _ := os.Open("../testdata/data.json")
+		defer file.Close()
 
 		c, err := newConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
@@ -346,6 +293,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 200, c.n)
 		assert.Equal(t, 50, c.c)
 		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, 1, c.nConns)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(0), c.z)
 		assert.Equal(t, time.Duration(0), c.keepaliveTime)
@@ -359,5 +307,56 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+	})
+
+	t.Run("with connections", func(t *testing.T) {
+
+		file, _ := os.Open("../testdata/data.json")
+		defer file.Close()
+
+		c, err := newConfig("call", "localhost:50050",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithDataFromReader(file),
+			WithConnections(5),
+		)
+
+		assert.NoError(t, err)
+
+		assert.Equal(t, "call", c.call)
+		assert.Equal(t, "localhost:50050", c.host)
+		assert.Equal(t, false, c.insecure)
+		assert.Equal(t, 200, c.n)
+		assert.Equal(t, 50, c.c)
+		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, 5, c.nConns)
+		assert.Equal(t, false, c.binary)
+		assert.Equal(t, time.Duration(0), c.z)
+		assert.Equal(t, time.Duration(0), c.keepaliveTime)
+		assert.Equal(t, time.Duration(20*time.Second), c.timeout)
+		assert.Equal(t, time.Duration(10*time.Second), c.dialTimeout)
+		assert.Equal(t, runtime.GOMAXPROCS(-1), c.cpus)
+		assert.Empty(t, c.name)
+		assert.NotEmpty(t, c.data)
+		assert.False(t, c.binary)
+		assert.Empty(t, c.metadata)
+		assert.Equal(t, "testdata/data.proto", string(c.proto))
+		assert.Equal(t, "", string(c.protoset))
+		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+	})
+
+	t.Run("with invalid connections > concurrency", func(t *testing.T) {
+
+		file, _ := os.Open("../testdata/data.json")
+		defer file.Close()
+
+		c, err := newConfig("call", "localhost:50050",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithDataFromReader(file),
+			WithConcurrency(5),
+			WithConnections(6),
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, c)
 	})
 }

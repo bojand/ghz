@@ -36,6 +36,8 @@ func TestHistogram_BeforeSave(t *testing.T) {
 }
 
 func TestHistogram(t *testing.T) {
+	os.Remove(dbName)
+
 	defer os.Remove(dbName)
 
 	db, err := gorm.Open("sqlite3", dbName)

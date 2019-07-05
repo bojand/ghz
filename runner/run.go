@@ -5,10 +5,6 @@ import (
 	"os/signal"
 	"runtime"
 	"time"
-
-	"github.com/bojand/ghz/protodesc"
-
-	"github.com/jhump/protoreflect/desc"
 )
 
 // Run executes the test
@@ -27,22 +23,12 @@ func Run(call, host string, options ...Option) (*Report, error) {
 		return nil, err
 	}
 
-	var mtd *desc.MethodDescriptor
-	if c.proto != "" {
-		mtd, err = protodesc.GetMethodDescFromProto(call, c.proto, c.importPaths)
-	} else {
-		mtd, err = protodesc.GetMethodDescFromProtoSet(call, c.protoset)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
 	oldCPUs := runtime.NumCPU()
 
 	runtime.GOMAXPROCS(c.cpus)
+	defer runtime.GOMAXPROCS(oldCPUs)
 
-	reqr, err := newRequester(mtd, c)
+	reqr, err := newRequester(c)
 
 	if err != nil {
 		return nil, err
@@ -63,9 +49,6 @@ func Run(call, host string, options ...Option) (*Report, error) {
 	}
 
 	rep, err := reqr.Run()
-
-	// reset
-	runtime.GOMAXPROCS(oldCPUs)
 
 	return rep, err
 }

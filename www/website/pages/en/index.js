@@ -101,9 +101,9 @@ class Index extends React.Component {
       <Block layout="threeColumn">
         {[
           {
-            content: 'Use proto files with import paths, or prebuilt protoset bundle files',
+            content: 'Use proto file, or prebuilt protoset bundle, or server reflection',
             imageAlign: 'top',
-            title: 'Proto and Protoset',
+            title: 'Use Proto, Protoset or Reflection',
           },
           {
             content: 'View test results in various fomats including CLI, CSV, JSON, HTML and InfluxData',

@@ -11,7 +11,8 @@ import (
 
 // call template data
 type callTemplateData struct {
-	RequestNumber      int64  // unique incrememnted request number for each request
+	WorkerID           string // unique worker ID
+	RequestNumber      int64  // unique incremented request number for each request
 	FullyQualifiedName string // fully-qualified name of the method call
 	MethodName         string // shorter call method name
 	ServiceName        string // the service name
@@ -24,10 +25,11 @@ type callTemplateData struct {
 }
 
 // newCallTemplateData returns new call template data
-func newCallTemplateData(mtd *desc.MethodDescriptor, reqNum int64) *callTemplateData {
+func newCallTemplateData(mtd *desc.MethodDescriptor, workerID string, reqNum int64) *callTemplateData {
 	now := time.Now()
 
 	return &callTemplateData{
+		WorkerID:           workerID,
 		RequestNumber:      reqNum,
 		FullyQualifiedName: mtd.GetFullyQualifiedName(),
 		MethodName:         mtd.GetName(),
