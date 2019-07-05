@@ -13,12 +13,9 @@ type Reporter struct {
 	results chan *callResult
 	done    chan bool
 
-	avgTotal float64
+	totalLatenciesSec float64
 
-	lats       []float64
-	errors     []string
-	statuses   []string
-	timestamps []time.Time
+	details []ResultDetail
 
 	errorDist      map[string]int
 	statusCodeDist map[string]int
@@ -124,38 +121,37 @@ func newReporter(results chan *callResult, c *RunConfig) *Reporter {
 	cap := min(c.n, maxResult)
 
 	return &Reporter{
-		config:         c,
-		results:        results,
-		done:           make(chan bool, 1),
+		config:  c,
+		results: results,
+		done:    make(chan bool, 1),
+		details: make([]ResultDetail, 0, cap),
+
 		statusCodeDist: make(map[string]int),
 		errorDist:      make(map[string]int),
-		lats:           make([]float64, 0, cap),
 	}
 }
 
 // Run runs the reporter
 func (r *Reporter) Run() {
 	for res := range r.results {
-		r.totalCount++
-		r.avgTotal += res.duration.Seconds()
+		errStr := ""
 		if res.err != nil {
-			errStr := res.err.Error()
+			errStr = res.err.Error()
+		}
+
+		r.totalCount++
+		r.totalLatenciesSec += res.duration.Seconds()
+		r.statusCodeDist[res.status]++
+		if res.err != nil {
 			r.errorDist[errStr]++
-			r.statusCodeDist[res.status]++
-
-			if len(r.errors) < maxResult {
-				r.errors = append(r.errors, errStr)
-				r.statuses = append(r.statuses, res.status)
-			}
-		} else {
-			r.statusCodeDist[res.status]++
-
-			if len(r.lats) < maxResult {
-				r.lats = append(r.lats, res.duration.Seconds())
-				r.errors = append(r.errors, "")
-				r.statuses = append(r.statuses, res.status)
-				r.timestamps = append(r.timestamps, time.Now())
-			}
+		}
+		if len(r.details) < maxResult {
+			r.details = append(r.details, ResultDetail{
+				Latency:   res.duration,
+				Timestamp: res.timestamp,
+				Status:    res.status,
+				Error:     errStr,
+			})
 		}
 	}
 	r.done <- true
@@ -204,37 +200,31 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 
 	_ = json.Unmarshal(r.config.tags, &rep.Tags)
 
-	if len(r.lats) > 0 {
-		average := r.avgTotal / float64(r.totalCount)
-		avgDuration := time.Duration(average * float64(time.Second))
-		rep.Average = avgDuration
+	if len(r.details) > 0 {
+		average := r.totalLatenciesSec / float64(r.totalCount)
+		rep.Average = time.Duration(average * float64(time.Second))
 
-		rps := float64(r.totalCount) / total.Seconds()
-		rep.Rps = rps
+		rep.Rps = float64(r.totalCount) / total.Seconds()
 
-		lats := make([]float64, len(r.lats))
-		copy(lats, r.lats)
-		sort.Float64s(lats)
-
-		var fastestNum, slowestNum float64
-		fastestNum = lats[0]
-		slowestNum = lats[len(lats)-1]
-
-		rep.Fastest = time.Duration(fastestNum * float64(time.Second))
-		rep.Slowest = time.Duration(slowestNum * float64(time.Second))
-		rep.Histogram = histogram(lats, slowestNum, fastestNum)
-		rep.LatencyDistribution = latencies(lats)
-
-		rep.Details = make([]ResultDetail, len(r.lats))
-		for i, num := range r.lats {
-			lat := time.Duration(num * float64(time.Second))
-			rep.Details[i] = ResultDetail{
-				Latency:   lat,
-				Error:     r.errors[i],
-				Status:    r.statuses[i],
-				Timestamp: r.timestamps[i],
+		okLats := make([]float64, 0)
+		for _, d := range r.details {
+			if d.Error == "" {
+				okLats = append(okLats, d.Latency.Seconds())
 			}
 		}
+		sort.Float64s(okLats)
+		if len(okLats) > 0 {
+			var fastestNum, slowestNum float64
+			fastestNum = okLats[0]
+			slowestNum = okLats[len(okLats)-1]
+
+			rep.Fastest = time.Duration(fastestNum * float64(time.Second))
+			rep.Slowest = time.Duration(slowestNum * float64(time.Second))
+			rep.Histogram = histogram(okLats, slowestNum, fastestNum)
+			rep.LatencyDistribution = latencies(okLats)
+		}
+
+		rep.Details = r.details
 	}
 
 	return rep
