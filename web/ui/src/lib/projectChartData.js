@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import Chart from 'chart.js'
 
 import { colors } from './colors'
 import { formatFloat } from './common'
@@ -103,66 +104,82 @@ function createLineChart (reports) {
 
   const cubicInterpolationMode = 'monotone' // set to 'default' to get cubic
   const lineTension = undefined // set to 0 to have straing lines
+  const borderWidth = 1.5
+  const pointRadius = 2
+
+  const color = Chart.helpers.color
 
   const datasets = [
     {
       label: 'Average',
-      backgroundColor: colors.skyBlue,
+      backgroundColor: color(colors.skyBlue).alpha(0.5).lighten(0.5).rgb(),
       borderColor: colors.blue,
       fill: false,
       data: avgData,
       yAxisID: 'y-axis-lat',
       cubicInterpolationMode,
-      lineTension
+      lineTension,
+      borderWidth,
+      pointRadius
     },
     {
       label: 'Fastest',
-      backgroundColor: colors.green,
+      backgroundColor: color(colors.green).alpha(0.5).lighten(0.5).rgb(),
       borderColor: colors.green,
       fill: false,
       data: fastData,
       yAxisID: 'y-axis-lat',
       cubicInterpolationMode,
+      borderWidth,
+      pointRadius,
       lineTension
     },
     {
       label: 'Slowest',
-      backgroundColor: colors.red,
+      backgroundColor: color(colors.red).alpha(0.5).lighten(0.5).rgb(),
       borderColor: colors.red,
       fill: false,
       data: slowData,
       yAxisID: 'y-axis-lat',
       cubicInterpolationMode,
+      borderWidth,
+      pointRadius,
       lineTension
     },
     {
       label: '95th',
-      backgroundColor: colors.orange,
+      backgroundColor: color(colors.orange).alpha(0.5).lighten(0.5).rgb(),
       borderColor: colors.orange,
       fill: false,
       data: n5Data,
       yAxisID: 'y-axis-lat',
       cubicInterpolationMode,
+      borderWidth,
+      pointRadius,
       lineTension
     },
     {
       label: '99th',
-      backgroundColor: colors.purple,
+      backgroundColor: color(colors.purple).alpha(0.5).lighten(0.5).rgb(),
       borderColor: colors.purple,
       fill: false,
       data: n9Data,
       yAxisID: 'y-axis-lat',
       cubicInterpolationMode,
+      borderWidth,
+      pointRadius,
       lineTension
     },
     {
       label: 'RPS',
-      backgroundColor: colors.grey,
+      backgroundColor: Color(colors.grey).alpha(0.5).lighten(0.5).rgb(),
       borderColor: colors.grey,
-      fill: false,
+      fill: 'start',
       data: rpsData,
       yAxisID: 'y-axis-rps',
       cubicInterpolationMode,
+      borderWidth,
+      pointRadius,
       lineTension
     }
   ]
