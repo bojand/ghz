@@ -3,6 +3,7 @@ module github.com/bojand/ghz
 require (
 	cloud.google.com/go v0.41.0 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/bojand/hri v1.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-playground/locales v0.12.1 // indirect
