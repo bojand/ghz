@@ -1,3 +1,10 @@
+# TODO Look into enabling all with some exception where practical
+# linters:
+#   enable-all: true
+#   disable:
+#     - gochecknoglobals
+#     - dupl
+#     - lll
 issues:
   exclude-rules:
     # Exclude lostcancel govet rule specifically for requester.go
