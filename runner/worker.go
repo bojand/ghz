@@ -202,7 +202,7 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 	str, err := w.stub.InvokeRpcServerStream(*ctx, w.mtd, input)
 	// TODO: need to handle and propagate errors
 	for err == nil {
-		_, err := str.RecvMsg()
+		_, err = str.RecvMsg()
 		if err != nil {
 			if err == io.EOF {
 				err = nil

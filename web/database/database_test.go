@@ -40,6 +40,7 @@ func TestWithAlreadyExistingSqliteFolder(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = os.MkdirAll("test/somepath", 0777)
+	assert.NoError(t, err)
 
 	db, err := New("sqlite3", "test/somepath/testdb.db", false)
 	assert.Nil(t, err)

@@ -57,7 +57,7 @@ func (d *Database) ListProjects(limit, page uint, sortField, order string) ([]*m
 	}
 
 	offset := uint(0)
-	if page >= 0 && limit >= 0 {
+	if page > 0 && limit > 0 {
 		offset = page * limit
 	}
 

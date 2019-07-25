@@ -178,6 +178,7 @@ func TestRunUnary(t *testing.T) {
 		msg.Name = "bob"
 
 		binData, err := proto.Marshal(msg)
+		assert.NoError(t, err)
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
@@ -226,6 +227,7 @@ func TestRunUnary(t *testing.T) {
 		msg.Name = "bob"
 
 		binData, err := proto.Marshal(msg)
+		assert.NoError(t, err)
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
@@ -534,6 +536,7 @@ func TestRunClientStreamingBinary(t *testing.T) {
 	msg.Name = "bob"
 
 	binData, err := proto.Marshal(msg)
+	assert.NoError(t, err)
 
 	report, err := Run(
 		"helloworld.Greeter.SayHelloCS",
