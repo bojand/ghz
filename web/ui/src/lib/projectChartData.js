@@ -174,7 +174,7 @@ function createLineChart (reports) {
       label: 'RPS',
       backgroundColor: Color(colors.grey).alpha(0.5).lighten(0.5).rgb(),
       borderColor: colors.grey,
-      fill: 'start',
+      fill: false,
       data: rpsData,
       yAxisID: 'y-axis-rps',
       cubicInterpolationMode,
