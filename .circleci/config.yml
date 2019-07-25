@@ -5,6 +5,7 @@ jobs:
       - image: circleci/golang:1.11
     steps:
       - checkout
+      - run: make setup
       - run: make
 workflows:
   version: 2
