@@ -75,27 +75,27 @@ func TestHistogram(t *testing.T) {
 		h := Histogram{
 			Report: &r,
 			Buckets: []*runner.Bucket{
-				&runner.Bucket{
+				{
 					Mark:      0.01,
 					Count:     1,
 					Frequency: 0.005,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.02,
 					Count:     10,
 					Frequency: 0.01,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.03,
 					Count:     50,
 					Frequency: 0.1,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.05,
 					Count:     60,
 					Frequency: 0.15,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.1,
 					Count:     15,
 					Frequency: 0.07,
@@ -144,27 +144,27 @@ func TestHistogram(t *testing.T) {
 		ch := Histogram{
 			ReportID: rid,
 			Buckets: []*runner.Bucket{
-				&runner.Bucket{
+				{
 					Mark:      0.02,
 					Count:     2,
 					Frequency: 0.006,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.02,
 					Count:     10,
 					Frequency: 0.01,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.03,
 					Count:     50,
 					Frequency: 0.1,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.05,
 					Count:     60,
 					Frequency: 0.15,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.2,
 					Count:     16,
 					Frequency: 0.08,
@@ -206,12 +206,12 @@ func TestHistogram(t *testing.T) {
 		ch := Histogram{
 			ReportID: 123213,
 			Buckets: []*runner.Bucket{
-				&runner.Bucket{
+				{
 					Mark:      0.01,
 					Count:     1,
 					Frequency: 0.005,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.02,
 					Count:     10,
 					Frequency: 0.01,

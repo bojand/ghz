@@ -52,27 +52,27 @@ func TestDatabase_Report(t *testing.T) {
 			"DeadlineExceeded": 2}
 
 		r.LatencyDistribution = []*runner.LatencyDistribution{
-			&runner.LatencyDistribution{
+			{
 				Percentage: 25,
 				Latency:    time.Duration(1 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 50,
 				Latency:    time.Duration(5 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 75,
 				Latency:    time.Duration(10 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 90,
 				Latency:    time.Duration(15 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 95,
 				Latency:    time.Duration(20 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 99,
 				Latency:    time.Duration(25 * time.Millisecond),
 			},
@@ -127,27 +127,27 @@ func TestDatabase_Report(t *testing.T) {
 			"DeadlineExceeded": 4}
 
 		r.LatencyDistribution = []*runner.LatencyDistribution{
-			&runner.LatencyDistribution{
+			{
 				Percentage: 25,
 				Latency:    time.Duration(2 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 50,
 				Latency:    time.Duration(6 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 75,
 				Latency:    time.Duration(11 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 90,
 				Latency:    time.Duration(16 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 95,
 				Latency:    time.Duration(21 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 99,
 				Latency:    time.Duration(27 * time.Millisecond),
 			},
@@ -197,27 +197,27 @@ func TestDatabase_Report(t *testing.T) {
 			"DeadlineExceeded": 2}
 
 		r.LatencyDistribution = []*runner.LatencyDistribution{
-			&runner.LatencyDistribution{
+			{
 				Percentage: 25,
 				Latency:    time.Duration(3 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 50,
 				Latency:    time.Duration(7 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 75,
 				Latency:    time.Duration(12 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 90,
 				Latency:    time.Duration(17 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 95,
 				Latency:    time.Duration(22 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 99,
 				Latency:    time.Duration(30 * time.Millisecond),
 			},

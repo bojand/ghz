@@ -210,7 +210,8 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 			break
 		}
 	}
-	return nil
+
+	return err
 }
 
 func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message) error {

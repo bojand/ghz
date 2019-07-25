@@ -61,6 +61,8 @@ unexport GOROOT
 export GO111MODULE := on
 # Set the location where we install Golang binaries via go install to TMP_BIN.
 export GOBIN := $(abspath $(TMP_BIN))
+# Set BINDIR location needed by golangci-lint install script, otherwise it goes to ./bin
+export BINDIR := $(GOBIN)
 # Add GOBIN to to the front of the PATH. This allows us to invoke binaries we install.
 export PATH := :$(GOBIN):$(PATH)
 
@@ -69,6 +71,12 @@ GO_MODULE := $(shell grep '^module ' go.mod | cut -f 2 -d ' ')
 
 # Run all by default when "make" is invoked.
 .DEFAULT_GOAL := all
+
+# Install all the build and lint dependencies
+setup:
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
+	go mod download
+.PHONY: setup
 
 # All runs the default lint, test, and code coverage targets.
 .PHONY: all
@@ -79,33 +87,20 @@ all: lint cover
 clean:
 	rm -rf $(TMP_BASE)
 
-# Golint runs the golint linter.
-.PHONY: golint
-golint:
-	$(AT) go install golang.org/x/lint/golint
-	golint -set_exit_status $(GO_PKGS)
-
-# Errcheck runs the errcheck linter.
-.PHONY: errcheck
-errcheck:
-	$(AT) go install github.com/kisielk/errcheck
-	errcheck -ignoretests $(GO_PKGS)
-
-# Staticcheck runs the staticcheck linter.
-.PHONY: staticcheck
-staticcheck:
-	$(AT) go install honnef.co/go/tools/cmd/staticcheck
-	staticcheck --tests=false $(GO_PKGS)
-
 # Lint runs all linters. This is the main lint target to run.
-# TODO: add errcheck and staticcheck when the code is updated to pass them
 .PHONY: lint
-lint: golint errcheck
+lint: 
+	golangci-lint run ./...
 
 # Test runs go test on GO_PKGS. This does not produce code coverage.
 .PHONY: test
 test:
 	go test $(GO_TEST_FLAGS) $(GO_PKGS)
+
+# gofmt and goimports all go files
+fmt:
+	find . -name '*.go' -not -wholename './vendor/*' | while read -r file; do gofmt -w -s "$$file"; goimports -w "$$file"; done
+.PHONY: fmt
 
 # Cover runs go_test on GO_PKGS and produces code coverage in multiple formats.
 # A coverage.html file for human viewing will be at $(TMP_COVERAGE)/coverage.html

@@ -66,27 +66,27 @@ func TestReportAPI(t *testing.T) {
 			"DeadlineExceeded": 2}
 
 		r.LatencyDistribution = []*runner.LatencyDistribution{
-			&runner.LatencyDistribution{
+			{
 				Percentage: 25,
 				Latency:    time.Duration(1 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 50,
 				Latency:    time.Duration(5 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 75,
 				Latency:    time.Duration(10 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 90,
 				Latency:    time.Duration(15 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 95,
 				Latency:    time.Duration(20 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 99,
 				Latency:    time.Duration(25 * time.Millisecond),
 			},
@@ -129,27 +129,27 @@ func TestReportAPI(t *testing.T) {
 				"DeadlineExceeded": 2}
 
 			r.LatencyDistribution = []*runner.LatencyDistribution{
-				&runner.LatencyDistribution{
+				{
 					Percentage: 25,
 					Latency:    time.Duration(1 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 50,
 					Latency:    time.Duration(5 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 75,
 					Latency:    time.Duration(10 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 90,
 					Latency:    time.Duration(15 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 95,
 					Latency:    time.Duration(20 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 99,
 					Latency:    time.Duration(25 * time.Millisecond),
 				},
@@ -201,27 +201,27 @@ func TestReportAPI(t *testing.T) {
 			"DeadlineExceeded": 4}
 
 		r.LatencyDistribution = []*runner.LatencyDistribution{
-			&runner.LatencyDistribution{
+			{
 				Percentage: 25,
 				Latency:    time.Duration(1 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 50,
 				Latency:    time.Duration(5 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 75,
 				Latency:    time.Duration(10 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 90,
 				Latency:    time.Duration(15 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 95,
 				Latency:    time.Duration(20 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 99,
 				Latency:    time.Duration(25 * time.Millisecond),
 			},
@@ -262,27 +262,27 @@ func TestReportAPI(t *testing.T) {
 				"DeadlineExceeded": 4}
 
 			r.LatencyDistribution = []*runner.LatencyDistribution{
-				&runner.LatencyDistribution{
+				{
 					Percentage: 25,
 					Latency:    time.Duration(1 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 50,
 					Latency:    time.Duration(5 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 75,
 					Latency:    time.Duration(10 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 90,
 					Latency:    time.Duration(15 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 95,
 					Latency:    time.Duration(20 * time.Millisecond),
 				},
-				&runner.LatencyDistribution{
+				{
 					Percentage: 99,
 					Latency:    time.Duration(25 * time.Millisecond),
 				},

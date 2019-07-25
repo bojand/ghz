@@ -76,10 +76,6 @@ func (api *ExportAPI) GetExport(ctx echo.Context) error {
 	if format == "csv" {
 		outputTmpl := csvTmpl
 
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Bad Request: "+err.Error())
-		}
-
 		buf := &bytes.Buffer{}
 		templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(outputTmpl))
 		if err := templ.Execute(buf, &details); err != nil {

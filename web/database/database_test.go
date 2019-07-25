@@ -36,11 +36,14 @@ func TestCreateSqliteFolder(t *testing.T) {
 
 func TestWithAlreadyExistingSqliteFolder(t *testing.T) {
 	// ensure path not exists
-	os.RemoveAll("test/somepath")
-	os.MkdirAll("test/somepath", 0777)
+	err := os.RemoveAll("test/somepath")
+	assert.NoError(t, err)
+
+	err = os.MkdirAll("test/somepath", 0777)
 
 	db, err := New("sqlite3", "test/somepath/testdb.db", false)
 	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.DirExists(t, "test/somepath")
 	db.Close()
 
