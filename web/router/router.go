@@ -38,10 +38,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	s.Pre(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
 		Skipper: func(ctx echo.Context) bool {
 			path := ctx.Request().URL.Path
-			if strings.Contains(path, "/api") {
-				return false
-			}
-			return true
+			return !strings.Contains(path, "/api")
 		},
 	}))
 

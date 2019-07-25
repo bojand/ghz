@@ -269,7 +269,7 @@ func jsonify(v interface{}, pretty bool) string {
 		return string(d)
 	}
 
-	return string(out.Bytes())
+	return out.String()
 }
 
 func formatNanoUnit(d time.Duration) string {

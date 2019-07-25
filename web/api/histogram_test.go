@@ -61,27 +61,27 @@ func TestHistogramAPI(t *testing.T) {
 			"DeadlineExceeded": 2}
 
 		r.LatencyDistribution = []*runner.LatencyDistribution{
-			&runner.LatencyDistribution{
+			{
 				Percentage: 25,
 				Latency:    time.Duration(1 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 50,
 				Latency:    time.Duration(5 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 75,
 				Latency:    time.Duration(10 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 90,
 				Latency:    time.Duration(15 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 95,
 				Latency:    time.Duration(20 * time.Millisecond),
 			},
-			&runner.LatencyDistribution{
+			{
 				Percentage: 99,
 				Latency:    time.Duration(25 * time.Millisecond),
 			},
@@ -90,27 +90,27 @@ func TestHistogramAPI(t *testing.T) {
 		h := model.Histogram{
 			Report: &r,
 			Buckets: []*runner.Bucket{
-				&runner.Bucket{
+				{
 					Mark:      0.01,
 					Count:     1,
 					Frequency: 0.005,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.02,
 					Count:     10,
 					Frequency: 0.01,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.03,
 					Count:     50,
 					Frequency: 0.1,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.05,
 					Count:     60,
 					Frequency: 0.15,
 				},
-				&runner.Bucket{
+				{
 					Mark:      0.1,
 					Count:     15,
 					Frequency: 0.07,

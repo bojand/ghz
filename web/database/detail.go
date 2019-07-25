@@ -26,12 +26,10 @@ func (d *Database) CreateDetailsBatch(rid uint, s []*model.Detail) (uint, uint) 
 	NC := 10
 
 	var nErr uint32
-	nErr = 0
 
 	sem := make(chan bool, NC)
 
 	var nCreated, errCount uint
-	errCount = 0
 
 	for _, item := range s {
 		sem <- true

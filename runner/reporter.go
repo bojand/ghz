@@ -144,7 +144,7 @@ func (r *Reporter) Run() {
 			errStr = res.err.Error()
 			r.errorDist[errStr]++
 		}
-		
+
 		if len(r.details) < maxResult {
 			r.details = append(r.details, ResultDetail{
 				Latency:   res.duration,

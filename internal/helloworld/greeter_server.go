@@ -35,7 +35,7 @@ type Greeter struct {
 
 	mutex      *sync.RWMutex
 	callCounts map[CallType]int
-	calls map[CallType][][]*HelloRequest
+	calls      map[CallType][][]*HelloRequest
 }
 
 func randomSleep() {
@@ -188,10 +188,10 @@ func (s *Greeter) GetConnectionCount() int {
 // NewGreeter creates new greeter server
 func NewGreeter() *Greeter {
 	streamData := []*HelloReply{
-		&HelloReply{Message: "Hello Bob"},
-		&HelloReply{Message: "Hello Kate"},
-		&HelloReply{Message: "Hello Jim"},
-		&HelloReply{Message: "Hello Sara"},
+		{Message: "Hello Bob"},
+		{Message: "Hello Kate"},
+		{Message: "Hello Jim"},
+		{Message: "Hello Sara"},
 	}
 
 	greeter := &Greeter{streamData: streamData, mutex: &sync.RWMutex{}}

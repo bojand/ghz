@@ -1,0 +1,16 @@
+# TODO Look into enabling all with some exception where practical
+# linters:
+#   enable-all: true
+#   disable:
+#     - gochecknoglobals
+#     - dupl
+#     - lll
+issues:
+  exclude-rules:
+    # Exclude lostcancel govet rule specifically for requester.go
+    # Since we purpocefully do that. See comments in code.
+    - path: runner/requester.go
+      text: "lostcancel"
+    # TODO Look into fixing time.Tick() usage SA1015 in worker.go
+    - path: runner/worker.go
+      text: "SA1015"

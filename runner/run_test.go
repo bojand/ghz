@@ -178,6 +178,7 @@ func TestRunUnary(t *testing.T) {
 		msg.Name = "bob"
 
 		binData, err := proto.Marshal(msg)
+		assert.NoError(t, err)
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
@@ -226,6 +227,7 @@ func TestRunUnary(t *testing.T) {
 		msg.Name = "bob"
 
 		binData, err := proto.Marshal(msg)
+		assert.NoError(t, err)
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
@@ -272,7 +274,7 @@ func TestRunUnary(t *testing.T) {
 		gs.ResetCounters()
 
 		data := make([]map[string]interface{}, 3)
-		for i:= 0; i < 3; i++ {
+		for i := 0; i < 3; i++ {
 			data[i] = make(map[string]interface{})
 			data[i]["name"] = strconv.Itoa(i)
 		}
@@ -287,7 +289,7 @@ func TestRunUnary(t *testing.T) {
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithInsecure(true),
 			WithData(data),
-			)
+		)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, report)
@@ -306,14 +308,14 @@ func TestRunUnary(t *testing.T) {
 		}
 
 		// we don't expect to have the same order of elements since requests are concurrent
-		assert.ElementsMatch(t, []string {"0", "1", "2", "0", "1", "2"}, names)
+		assert.ElementsMatch(t, []string{"0", "1", "2", "0", "1", "2"}, names)
 	})
 
 	t.Run("test round-robin c = 1", func(t *testing.T) {
 		gs.ResetCounters()
 
 		data := make([]map[string]interface{}, 3)
-		for i:= 0; i < 3; i++ {
+		for i := 0; i < 3; i++ {
 			data[i] = make(map[string]interface{})
 			data[i]["name"] = strconv.Itoa(i)
 		}
@@ -347,7 +349,7 @@ func TestRunUnary(t *testing.T) {
 		}
 
 		// we expect the same order of messages with single worker
-		assert.Equal(t, []string {"0", "1", "2", "0", "1", "2"}, names)
+		assert.Equal(t, []string{"0", "1", "2", "0", "1", "2"}, names)
 	})
 
 	t.Run("test round-robin binary", func(t *testing.T) {
@@ -390,7 +392,7 @@ func TestRunUnary(t *testing.T) {
 			}
 		}
 
-		assert.Equal(t, []string {"0", "1", "2", "0", "1", "2"}, names)
+		assert.Equal(t, []string{"0", "1", "2", "0", "1", "2"}, names)
 	})
 }
 
@@ -534,6 +536,7 @@ func TestRunClientStreamingBinary(t *testing.T) {
 	msg.Name = "bob"
 
 	binData, err := proto.Marshal(msg)
+	assert.NoError(t, err)
 
 	report, err := Run(
 		"helloworld.Greeter.SayHelloCS",

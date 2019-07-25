@@ -21,7 +21,7 @@ type Detail struct {
 	runner.ResultDetail
 }
 
-const layoutISO string = "2006-01-02T15:04:05.666Z"
+const layoutISO string = "2006-01-02T15:04:05.000Z"
 const layoutISO2 string = "2006-01-02T15:04:05-0700"
 
 // UnmarshalJSON for Detail
