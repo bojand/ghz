@@ -99,7 +99,7 @@ test:
 
 # gofmt and goimports all go files
 fmt:
-	find . -name '*.go' -not -wholename './vendor/*' | while read -r file; do gofmt -w -s "$$file"; goimports -w "$$file"; done
+	find . -name '*.go' | while read -r file; do gofmt -w -s "$$file"; goimports -w "$$file"; done
 .PHONY: fmt
 
 # Cover runs go_test on GO_PKGS and produces code coverage in multiple formats.

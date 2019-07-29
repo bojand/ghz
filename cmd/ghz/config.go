@@ -47,7 +47,7 @@ type config struct {
 	QPS             uint               `json:"qps" toml:"qps" yaml:"qps"`
 	Z               Duration           `json:"duration" toml:"duration" yaml:"duration"`
 	X               Duration           `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
-	Timeout         uint               `json:"timeout" toml:"timeout" yaml:"timeout" default:"20"`
+	Timeout         Duration           `json:"timeout" toml:"timeout" yaml:"timeout" default:"20s"`
 	Data            interface{}        `json:"data,omitempty" toml:"data,omitempty" yaml:"data,omitempty"`
 	DataPath        string             `json:"data-file" toml:"data-file" yaml:"data-file"`
 	BinData         []byte             `json:"-" toml:"-" yaml:"-"`
@@ -57,8 +57,8 @@ type config struct {
 	SI              Duration           `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
 	Output          string             `json:"output" toml:"output" yaml:"output"`
 	Format          string             `json:"format" toml:"format" yaml:"format" default:"summary"`
-	DialTimeout     uint               `json:"connect-timeout" toml:"connect-timeout" yaml:"connect-timeout" default:"10"`
-	KeepaliveTime   uint               `json:"keepalive" toml:"keepalive" yaml:"keepalive"`
+	DialTimeout     Duration           `json:"connect-timeout" toml:"connect-timeout" yaml:"connect-timeout" default:"10s"`
+	KeepaliveTime   Duration           `json:"keepalive" toml:"keepalive" yaml:"keepalive"`
 	CPUs            uint               `json:"cpus" toml:"cpus" yaml:"cpus"`
 	ImportPaths     []string           `json:"import-paths,omitempty" toml:"import-paths,omitempty" yaml:"import-paths,omitempty"`
 	Name            string             `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
@@ -72,9 +72,10 @@ type config struct {
 func (c *config) UnmarshalJSON(data []byte) error {
 	type Alias config
 	aux := &struct {
-		Z  string `json:"z"`
-		X  string `json:"x"`
-		SI string `json:"si"`
+		Z       string `json:"z"`
+		X       string `json:"x"`
+		SI      string `json:"si"`
+		Timeout string `json:"timeout"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -90,26 +91,41 @@ func (c *config) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	zd, err := time.ParseDuration(aux.Z)
-	if err != nil {
-		return nil
+	if aux.Z != "" {
+		zd, err := time.ParseDuration(aux.Z)
+		if err != nil {
+			return nil
+		}
+
+		c.Z = Duration(zd)
 	}
 
-	c.Z = Duration(zd)
+	if aux.X != "" {
+		xd, err := time.ParseDuration(aux.X)
+		if err != nil {
+			return nil
+		}
 
-	xd, err := time.ParseDuration(aux.X)
-	if err != nil {
-		return nil
+		c.X = Duration(xd)
 	}
 
-	c.X = Duration(xd)
+	if aux.SI != "" {
+		sid, err := time.ParseDuration(aux.SI)
+		if err != nil {
+			return nil
+		}
 
-	sid, err := time.ParseDuration(aux.SI)
-	if err != nil {
-		return nil
+		c.SI = Duration(sid)
 	}
 
-	c.SI = Duration(sid)
+	if aux.Timeout != "" {
+		td, err := time.ParseDuration(aux.Timeout)
+		if err != nil {
+			return nil
+		}
+
+		c.Timeout = Duration(td)
+	}
 
 	return nil
 }
@@ -119,14 +135,16 @@ func (c config) MarshalJSON() ([]byte, error) {
 	type Alias config
 	return json.Marshal(&struct {
 		*Alias
-		Z  string `json:"z"`
-		X  string `json:"x"`
-		SI string `json:"si"`
+		Z       string `json:"z"`
+		X       string `json:"x"`
+		SI      string `json:"si"`
+		Timeout string `json:"timeout"`
 	}{
-		Alias: (*Alias)(&c),
-		Z:     c.Z.String(),
-		X:     c.X.String(),
-		SI:    c.SI.String(),
+		Alias:   (*Alias)(&c),
+		Z:       c.Z.String(),
+		X:       c.X.String(),
+		SI:      c.SI.String(),
+		Timeout: c.Timeout.String(),
 	})
 }
 
