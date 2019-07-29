@@ -1,5 +1,6 @@
 builds:
-  - main: ./cmd/ghz
+  - id: ghz
+    main: ./cmd/ghz
     binary: ghz
     env:
       - CGO_ENABLED=0
@@ -9,7 +10,8 @@ builds:
       - windows
     goarch:
       - amd64
-  - main: ./cmd/ghz-web
+  - id: ghz-web
+    main: ./cmd/ghz-web
     binary: ghz-web
     goos:
       - darwin
