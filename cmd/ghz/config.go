@@ -135,14 +135,16 @@ func (c config) MarshalJSON() ([]byte, error) {
 	type Alias config
 	return json.Marshal(&struct {
 		*Alias
-		Z  string `json:"z"`
-		X  string `json:"x"`
-		SI string `json:"si"`
+		Z       string `json:"z"`
+		X       string `json:"x"`
+		SI      string `json:"si"`
+		Timeout string `json:"timeout"`
 	}{
-		Alias: (*Alias)(&c),
-		Z:     c.Z.String(),
-		X:     c.X.String(),
-		SI:    c.SI.String(),
+		Alias:   (*Alias)(&c),
+		Z:       c.Z.String(),
+		X:       c.X.String(),
+		SI:      c.SI.String(),
+		Timeout: c.Timeout.String(),
 	})
 }
 
