@@ -72,7 +72,7 @@ Rate limit for each worker goroutine in queries per second (QPS). Default is no 
 
 ### `-t`, `--timeout`
 
-Timeout for each request in seconds. Default is `20`, use 0 for infinite.
+Timeout for each request. Default is `20s`, use zero value for infinite.
 
 ### `-z`, `--duration`
 
@@ -165,11 +165,11 @@ Comma separated list of proto import paths. The current working directory and th
 
 ### `--connect-timeout`
 
-Connection timeout in seconds for the initial connection dial. Default is `10`.
+Connection timeout duration for the initial connection dial. Default is `10s`.
 
 ### `--keepalive`
 
-Keepalive time in seconds. Only used if present and above `0`.
+Keepalive time duration. Only used if present and above `0`.
 
 ### `--name`
 
