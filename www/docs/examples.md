@@ -122,7 +122,7 @@ Alternatively `ghz` can be used with [Prototool](https://github.com/uber/prototo
 ghz -protoset $(prototool descriptor-set --include-imports --tmp) ...
 ```
 
-Finally we can specify all settings, including the target host, conviniently in a JSON or TOML config file.
+Finally we can specify all settings, including the target host, conveniently in a JSON or TOML config file.
 
 ```sh
 ghz -config ./config.json
