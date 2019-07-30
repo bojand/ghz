@@ -86,6 +86,7 @@ all: lint cover
 .PHONY: clean
 clean:
 	rm -rf $(TMP_BASE)
+	rm -rf dist
 
 # Lint runs all linters. This is the main lint target to run.
 .PHONY: lint
