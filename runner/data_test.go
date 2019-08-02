@@ -2,10 +2,11 @@ package runner
 
 import (
 	"encoding/json"
-	"github.com/bojand/ghz/testdata"
-	"github.com/golang/protobuf/proto"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
+
+	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/bojand/ghz/protodesc"
 
 	"github.com/stretchr/testify/assert"
@@ -208,6 +209,7 @@ func TestData_createPayloads(t *testing.T) {
 		msg1.Name = "bob"
 
 		binData, err := proto.Marshal(msg1)
+		assert.NoError(t, err)
 
 		inputs, err := createPayloadsFromBin(binData, mtdUnary)
 

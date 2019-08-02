@@ -200,7 +200,7 @@ func (b *Requester) Stop(reason StopReason) {
 // Finish finishes the test run
 func (b *Requester) Finish() *Report {
 	close(b.results)
-	total := time.Now().Sub(b.start)
+	total := time.Since(b.start)
 
 	// Wait until the reporter is done.
 	<-b.reporter.done

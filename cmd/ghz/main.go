@@ -41,7 +41,7 @@ var (
 	c = kingpin.Flag("concurrency", "Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.").Short('c').Default("50").Uint()
 	n = kingpin.Flag("total", "Number of requests to run. Default is 200.").Short('n').Default("200").Uint()
 	q = kingpin.Flag("qps", "Rate limit, in queries per second (QPS). Default is no rate limit.").Default("0").Short('q').Uint()
-	t = kingpin.Flag("timeout", "Timeout for each request in seconds. Default is 20, use 0 for infinite.").Default("20").Short('t').Uint()
+	t = kingpin.Flag("timeout", "Timeout for each request. Default is 20s, use 0 for infinite.").Default("20s").Short('t').Duration()
 	z = kingpin.Flag("duration", "Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.").Short('z').Default("0").Duration()
 	x = kingpin.Flag("max-duration", "Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits. Examples: -x 10s -x 3m.").Short('x').Default("0").Duration()
 
@@ -59,8 +59,8 @@ var (
 	output = kingpin.Flag("output", "Output path. If none provided stdout is used.").Short('o').PlaceHolder(" ").String()
 	format = kingpin.Flag("format", "Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.").Short('O').Default("summary").PlaceHolder(" ").Enum("summary", "csv", "json", "pretty", "html", "influx-summary", "influx-details")
 
-	ct = kingpin.Flag("connect-timeout", "Connection timeout in seconds for the initial connection dial. Default is 10.").Default("10").Uint()
-	kt = kingpin.Flag("keepalive", "Keepalive time in seconds. Only used if present and above 0.").Default("0").Uint()
+	ct = kingpin.Flag("connect-timeout", "Connection timeout for the initial connection dial. Default is 10s.").Default("10s").Duration()
+	kt = kingpin.Flag("keepalive", "Keepalive time duration. Only used if present and above 0.").Default("0").Duration()
 
 	name = kingpin.Flag("name", "User specified name for the test.").PlaceHolder(" ").String()
 	tags = kingpin.Flag("tags", "JSON representation of user-defined string tags.").PlaceHolder(" ").String()
@@ -115,10 +115,10 @@ func main() {
 		runner.WithConcurrency(cfg.C),
 		runner.WithTotalRequests(cfg.N),
 		runner.WithQPS(cfg.QPS),
-		runner.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
+		runner.WithTimeout(time.Duration(cfg.Timeout)),
 		runner.WithRunDuration(time.Duration(cfg.Z)),
-		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)*time.Second),
-		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)*time.Second),
+		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)),
+		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)),
 		runner.WithName(cfg.Name),
 		runner.WithCPUs(cfg.CPUs),
 		runner.WithMetadata(cfg.Metadata),
@@ -252,7 +252,7 @@ func createConfigFromArgs() (*config, error) {
 		QPS:             *q,
 		Z:               Duration(*z),
 		X:               Duration(*x),
-		Timeout:         *t,
+		Timeout:         Duration(*t),
 		Data:            dataObj,
 		DataPath:        *dataPath,
 		BinData:         binaryData,
@@ -263,8 +263,8 @@ func createConfigFromArgs() (*config, error) {
 		Output:          *output,
 		Format:          *format,
 		ImportPaths:     iPaths,
-		DialTimeout:     *ct,
-		KeepaliveTime:   *kt,
+		DialTimeout:     Duration(*ct),
+		KeepaliveTime:   Duration(*kt),
 		CPUs:            *cpus,
 		Name:            *name,
 		Tags:            &tagsMap,

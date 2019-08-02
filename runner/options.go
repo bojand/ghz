@@ -517,7 +517,7 @@ func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFil
 		tlsConf.Certificates = []tls.Certificate{certificate}
 	}
 
-	if skipVerify == true {
+	if skipVerify {
 		tlsConf.InsecureSkipVerify = true
 	} else if cacertFile != "" {
 		// Create a certificate pool from the certificate authority
