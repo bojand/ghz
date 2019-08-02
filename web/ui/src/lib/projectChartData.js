@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import Chart from 'chart.js'
+import color from 'chartjs-color'
 
 import { colors } from './colors'
 import { formatFloat } from './common'
@@ -104,15 +104,13 @@ function createLineChart (reports) {
 
   const cubicInterpolationMode = 'monotone' // set to 'default' to get cubic
   const lineTension = undefined // set to 0 to have straing lines
-  const borderWidth = 1.5
-  const pointRadius = 2
-
-  const color = Chart.helpers.color
+  const borderWidth = 1.75
+  const pointRadius = 1.75
 
   const datasets = [
     {
       label: 'Average',
-      backgroundColor: color(colors.skyBlue).alpha(0.5).lighten(0.5).rgb(),
+      backgroundColor: color(colors.skyBlue).alpha(0.5).lighten(0.5).rgbString(),
       borderColor: colors.blue,
       fill: false,
       data: avgData,
@@ -124,7 +122,7 @@ function createLineChart (reports) {
     },
     {
       label: 'Fastest',
-      backgroundColor: color(colors.green).alpha(0.5).lighten(0.5).rgb(),
+      backgroundColor: color(colors.green).alpha(0.5).lighten(0.5).rgbString(),
       borderColor: colors.green,
       fill: false,
       data: fastData,
@@ -136,7 +134,7 @@ function createLineChart (reports) {
     },
     {
       label: 'Slowest',
-      backgroundColor: color(colors.red).alpha(0.5).lighten(0.5).rgb(),
+      backgroundColor: color(colors.red).alpha(0.5).lighten(0.5).rgbString(),
       borderColor: colors.red,
       fill: false,
       data: slowData,
@@ -148,7 +146,7 @@ function createLineChart (reports) {
     },
     {
       label: '95th',
-      backgroundColor: color(colors.orange).alpha(0.5).lighten(0.5).rgb(),
+      backgroundColor: color(colors.orange).alpha(0.5).lighten(0.5).rgbString(),
       borderColor: colors.orange,
       fill: false,
       data: n5Data,
@@ -160,7 +158,7 @@ function createLineChart (reports) {
     },
     {
       label: '99th',
-      backgroundColor: color(colors.purple).alpha(0.5).lighten(0.5).rgb(),
+      backgroundColor: color(colors.purple).alpha(0.5).lighten(0.5).rgbString(),
       borderColor: colors.purple,
       fill: false,
       data: n9Data,
@@ -172,7 +170,7 @@ function createLineChart (reports) {
     },
     {
       label: 'RPS',
-      backgroundColor: Color(colors.grey).alpha(0.5).lighten(0.5).rgb(),
+      backgroundColor: color(colors.grey).alpha(0.5).lighten(0.1).rgbString(),
       borderColor: colors.grey,
       fill: false,
       data: rpsData,
