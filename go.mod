@@ -13,7 +13,6 @@ require (
 	github.com/jhump/protoreflect v1.4.4
 	github.com/jinzhu/configor v1.1.0
 	github.com/jinzhu/gorm v1.9.10
-	github.com/kisielk/errcheck v1.2.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.9
@@ -26,10 +25,8 @@ require (
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
 	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
-	golang.org/x/tools v0.0.0-20190703212419-2214986f1668 // indirect
 	google.golang.org/genproto v0.0.0-20190701230453-710ae3a149df // indirect
-	google.golang.org/grpc v1.22.0
+	google.golang.org/grpc v1.23.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc
 )
