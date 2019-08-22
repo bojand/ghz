@@ -115,6 +115,7 @@ func main() {
 		runner.WithConcurrency(cfg.C),
 		runner.WithTotalRequests(cfg.N),
 		runner.WithQPS(cfg.QPS),
+		runner.WithQPS2(cfg.QPS2),
 		runner.WithTimeout(time.Duration(cfg.Timeout)),
 		runner.WithRunDuration(time.Duration(cfg.Z)),
 		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)),

@@ -36,17 +36,14 @@ type callResult struct {
 
 // Requester is used for doing the requests
 type Requester struct {
-	conns []*grpc.ClientConn
-	stubs []grpcdynamic.Stub
-
-	mtd      *desc.MethodDescriptor
-	reporter *Reporter
+	mtd *desc.MethodDescriptor
 
 	config *RunConfig
 
-	results chan *callResult
-	stopCh  chan bool
-	start   time.Time
+	results      chan *callResult
+	stopCh       chan bool
+	tickerStopCh chan bool
+	start        time.Time
 
 	qpsTick time.Duration
 
@@ -54,8 +51,14 @@ type Requester struct {
 
 	arrayJSONData []string
 
+	throttle <-chan time.Time
+
+	lock sync.Mutex
+
+	reporter   *Reporter
+	stubs      []grpcdynamic.Stub
+	conns      []*grpc.ClientConn
 	stopReason StopReason
-	lock       sync.Mutex
 }
 
 func newRequester(c *RunConfig) (*Requester, error) {
@@ -68,13 +71,14 @@ func newRequester(c *RunConfig) (*Requester, error) {
 	}
 
 	reqr := &Requester{
-		config:     c,
-		qpsTick:    qpsTick,
-		stopReason: ReasonNormalEnd,
-		results:    make(chan *callResult, min(c.c*1000, maxResult)),
-		stopCh:     make(chan bool, c.c),
-		conns:      make([]*grpc.ClientConn, 0, c.nConns),
-		stubs:      make([]grpcdynamic.Stub, 0, c.nConns),
+		config:       c,
+		qpsTick:      qpsTick,
+		stopReason:   ReasonNormalEnd,
+		results:      make(chan *callResult, min(c.c*1000, maxResult)),
+		stopCh:       make(chan bool, c.c),
+		tickerStopCh: make(chan bool, 1),
+		conns:        make([]*grpc.ClientConn, 0, c.nConns),
+		stubs:        make([]grpcdynamic.Stub, 0, c.nConns),
 	}
 
 	if c.proto != "" {
@@ -190,6 +194,8 @@ func (b *Requester) Stop(reason StopReason) {
 		b.stopCh <- true
 	}
 
+	b.tickerStopCh <- true
+
 	b.lock.Lock()
 	b.stopReason = reason
 	b.lock.Unlock()
@@ -275,11 +281,64 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	return grpc.DialContext(ctx, b.config.host, opts...)
 }
 
+func (b *Requester) startTicker(output chan time.Time) {
+	qpsDiff := (float64)(b.config.qps2 - b.config.qps)
+	testDur := b.config.z
+	stepDur := 1 * time.Second
+	// stepDiff := (qpsDiff / (testDur.Seconds())) * stepDur.Seconds()
+	start := time.Now()
+
+	qps := (float64)(b.config.qps)
+	b.qpsTick = time.Duration(1e6/(qps)) * time.Microsecond
+	ticker := time.NewTicker(b.qpsTick)
+	stepStart := start
+	total := 0
+	count := 0
+	for true {
+		select {
+		case tick := <-ticker.C:
+			{
+				count++
+				total++
+				if tick.Before(stepStart.Add(stepDur)) {
+					output <- tick
+				} else {
+					ticker.Stop()
+
+					stepStart = time.Now()
+					qps = (float64)(b.config.qps) + (qpsDiff/testDur.Seconds())*stepStart.Sub(start).Seconds()
+					b.qpsTick = time.Duration(1e6/(qps)) * time.Microsecond
+					ticker = time.NewTicker(b.qpsTick)
+
+					output <- tick
+
+					count = 0
+				}
+			}
+		case <-b.tickerStopCh:
+			{
+				ticker.Stop()
+				return
+			}
+		}
+	}
+}
+
 func (b *Requester) runWorkers() error {
 	nReqPerWorker := b.config.n / b.config.c
 
 	if b.config.c == 0 {
 		return nil
+	}
+
+	if b.config.qps > 0 {
+		if b.config.qps2 > 0 && b.config.qps != b.config.qps2 {
+			throttle := make(chan time.Time)
+			b.throttle = throttle
+			go b.startTicker(throttle)
+		} else {
+			b.throttle = time.Tick(b.qpsTick)
+		}
 	}
 
 	errC := make(chan error, b.config.c)
@@ -305,6 +364,7 @@ func (b *Requester) runWorkers() error {
 			nReq:          nReqPerWorker,
 			workerID:      wID,
 			arrayJSONData: b.arrayJSONData,
+			throttle:      b.throttle,
 		}
 
 		n++ // increment connection counter

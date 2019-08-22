@@ -36,9 +36,10 @@ type RunConfig struct {
 	authority  string
 
 	// test
-	n   int
-	c   int
-	qps int
+	n    int
+	c    int
+	qps  int
+	qps2 int
 
 	// number of connections
 	nConns int
@@ -155,6 +156,16 @@ func WithConcurrency(c uint) Option {
 func WithQPS(qps uint) Option {
 	return func(o *RunConfig) error {
 		o.qps = int(qps)
+
+		return nil
+	}
+}
+
+// WithQPS2 specifies the QPS (queries per second) limit option
+//	WithQPS2(10)
+func WithQPS2(qps2 uint) Option {
+	return func(o *RunConfig) error {
+		o.qps2 = int(qps2)
 
 		return nil
 	}

@@ -38,7 +38,7 @@ func (c *statsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 			st = s.Code().String()
 		}
 
-		c.results <- &callResult{rpcStats.Error, st, duration, end}
+		c.results <- &callResult{rpcStats.Error, st, duration, rpcStats.BeginTime}
 	}
 }
 

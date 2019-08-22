@@ -45,6 +45,7 @@ type config struct {
 	C               uint               `json:"concurrency" toml:"concurrency" yaml:"concurrency" default:"50"`
 	Connections     uint               `json:"connections" toml:"connections" yaml:"connections" default:"1"`
 	QPS             uint               `json:"qps" toml:"qps" yaml:"qps"`
+	QPS2            uint               `json:"qps2" toml:"qps2" yaml:"qps2"`
 	Z               Duration           `json:"duration" toml:"duration" yaml:"duration"`
 	X               Duration           `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
 	Timeout         Duration           `json:"timeout" toml:"timeout" yaml:"timeout" default:"20s"`

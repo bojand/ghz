@@ -39,6 +39,7 @@ type Options struct {
 	Total         uint          `json:"total,omitempty"`
 	Concurrency   uint          `json:"concurrency,omitempty"`
 	QPS           uint          `json:"qps,omitempty"`
+	QPS2          uint          `json:"qps2,omitempty"`
 	Connections   uint          `json:"connections,omitempty"`
 	Duration      time.Duration `json:"duration,omitempty"`
 	Timeout       time.Duration `json:"timeout,omitempty"`
@@ -184,6 +185,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		Total:         uint(r.config.n),
 		Concurrency:   uint(r.config.c),
 		QPS:           uint(r.config.qps),
+		QPS2:          uint(r.config.qps2),
 		Connections:   uint(r.config.nConns),
 		Duration:      r.config.z,
 		Timeout:       r.config.timeout,

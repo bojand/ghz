@@ -26,6 +26,8 @@ type Worker struct {
 	nReq       int
 	workerID   string
 
+	throttle <-chan time.Time
+
 	// cached messages only for binary
 	cachedMessages []*dynamic.Message
 
@@ -34,27 +36,29 @@ type Worker struct {
 }
 
 func (w *Worker) runWorker() error {
-	var throttle <-chan time.Time
-	if w.config.qps > 0 {
-		throttle = time.Tick(w.qpsTick)
-	}
-
 	var err error
 	for i := 0; i < w.nReq; i++ {
-		// Check if application is stopped. Do not send into a closed channel.
-		select {
-		case <-w.stopCh:
-			return nil
-		default:
-			if w.config.qps > 0 {
-				<-throttle
+		if w.config.qps > 0 {
+			// Check if application is stopped. Do not send into a closed channel.
+			select {
+			case <-w.stopCh:
+				return nil
+			case <-w.throttle:
+				rErr := w.makeRequest()
+				err = multierr.Append(err, rErr)
 			}
-
-			rErr := w.makeRequest()
-
-			err = multierr.Append(err, rErr)
+		} else {
+			// Check if application is stopped. Do not send into a closed channel.
+			select {
+			case <-w.stopCh:
+				return nil
+			default:
+				rErr := w.makeRequest()
+				err = multierr.Append(err, rErr)
+			}
 		}
 	}
+
 	return err
 }
 
