@@ -26,6 +26,16 @@ type ReportPrinter struct {
 // Print the report using the given format
 // If format is "csv" detailed listing is printer in csv format.
 // Otherwise the summary of results is printed.
+//
+// Supported Format:
+//
+// 		summary
+// 		csv
+// 		json
+// 		pretty
+// 		html
+// 		influx-summary
+// 		influx-details
 func (rp *ReportPrinter) Print(format string) error {
 	if format == "" {
 		format = "summary"
