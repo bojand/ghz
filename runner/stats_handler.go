@@ -26,9 +26,9 @@ func (c *statsHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) cont
 
 // HandleRPC implements per-RPC tracing and stats instrumentation.
 func (c *statsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
-	switch _ := rs.(type) {
+	switch rs := rs.(type) {
 	case *stats.End:
-		rpcStats := rs.(*stats.End)
+		rpcStats := rs
 		end := time.Now()
 		duration := end.Sub(rpcStats.BeginTime)
 
