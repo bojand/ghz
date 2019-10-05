@@ -13,7 +13,7 @@ The path to The Protocol Buffer .proto file for input. If no `-proto` or `-proto
 
 ### `--protoset`
 
-Alternatively we use use compiled protoset file (containing compiled descriptors, produced by `protoc`) as input.
+Alternatively we use compiled protoset file (containing compiled descriptors, produced by `protoc`) as input.
 To create a protoset file, invoke `protoc` with the `*.proto` files that define the service. For example:
 
 ```sh

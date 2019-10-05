@@ -3,7 +3,7 @@ id: package
 title: Package
 ---
 
-`ghz` can be used programatically as Go package within Go applications. See detailed [godoc](https://godoc.org/github.com/bojand/ghz) documentation. Example usage:
+`ghz` can be used programmatically as Go package within Go applications. See detailed [godoc](https://godoc.org/github.com/bojand/ghz) documentation. Example usage:
 
 
 ```go
