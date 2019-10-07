@@ -119,7 +119,7 @@ func (rp *ReportPrinter) printInfluxDetails() error {
 
 		fields := strings.Join(values, ",")
 
-		if _, err := fmt.Fprintf(rp.Out, fmt.Sprintf("%v,%v %v %v\n", measurement, tags, fields, timestamp)); err != nil {
+		if _, err := fmt.Fprintf(rp.Out, "%v,%v %v %v\n", measurement, tags, fields, timestamp); err != nil {
 			return err
 		}
 	}
