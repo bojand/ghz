@@ -53,7 +53,7 @@ func (rp *ReportPrinter) Print(format string) error {
 			return err
 		}
 
-		return rp.printf(buf.String())
+		return rp.print(buf.String())
 	case "json", "pretty":
 		rep, err := json.Marshal(*rp.Report)
 		if err != nil {
@@ -68,16 +68,16 @@ func (rp *ReportPrinter) Print(format string) error {
 			}
 			rep = out.Bytes()
 		}
-		return rp.printf(string(rep))
+		return rp.print(string(rep))
 	case "html":
 		buf := &bytes.Buffer{}
 		templ := template.Must(template.New("tmpl").Funcs(tmplFuncMap).Parse(htmlTmpl))
 		if err := templ.Execute(buf, *rp.Report); err != nil {
 			return err
 		}
-		return rp.printf(buf.String())
+		return rp.print(buf.String())
 	case "influx-summary":
-		return rp.printf(rp.getInfluxLine())
+		return rp.print(rp.getInfluxLine())
 	case "influx-details":
 		return rp.printInfluxDetails()
 	default:
@@ -249,8 +249,8 @@ func (rp *ReportPrinter) getInfluxFields() string {
 	return strings.Join(s, ",")
 }
 
-func (rp *ReportPrinter) printf(s string, v ...interface{}) error {
-	_, err := fmt.Fprintf(rp.Out, s, v...)
+func (rp *ReportPrinter) print(s string) error {
+	_, err := fmt.Fprint(rp.Out, s)
 	return err
 }
 
