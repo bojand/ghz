@@ -134,8 +134,8 @@ class Index extends React.Component {
           <a href={"https://github.com/bojand/ghz/releases/latest"}>
             <img src={"https://img.shields.io/github/release/bojand/ghz.svg?style=flat-square"} alt={"Release"} />
           </a>
-          <a href={"https://circleci.com/gh/bojand/ghz"} style={{ margin: '5px' }}>
-            <img src={"https://img.shields.io/circleci/project/github/bojand/ghz/master.svg?style=flat-square"} alt={"Build status"} />
+          <a href={"https://github.com/bojand/ghz/actions?workflow=build"} style={{ margin: '5px' }}>
+            <img src={"https://github.com/bojand/ghz/workflows/build/badge.svg"} alt={"Build status"} />
           </a>
           <a href={"https://goreportcard.com/report/github.com/bojand/ghz"}>
             <img src={"https://goreportcard.com/badge/github.com/bojand/ghz?style=flat-square"} alt={"Go Report Card"} />
