@@ -2,7 +2,7 @@ name: certs
 
 on:
   schedule:
-    - cron:  '10 0 1 * *'
+    - cron: '10 0 1 * *'
 
 jobs:
   build:
