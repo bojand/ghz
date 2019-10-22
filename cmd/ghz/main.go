@@ -117,6 +117,7 @@ func main() {
 		runner.WithQPS(cfg.QPS),
 		runner.WithTimeout(time.Duration(cfg.Timeout)),
 		runner.WithRunDuration(time.Duration(cfg.Z)),
+		runner.WithDurationStopAction(cfg.ZStop),
 		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)),
 		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)),
 		runner.WithName(cfg.Name),

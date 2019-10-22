@@ -34,7 +34,7 @@ func TestStatsHandler(t *testing.T) {
 	conn, err := grpc.Dial(
 		internal.TestLocalhost,
 		grpc.WithInsecure(),
-		grpc.WithStatsHandler(&statsHandler{rChan}))
+		grpc.WithStatsHandler(&statsHandler{results: rChan}))
 
 	if err != nil {
 		assert.FailNow(t, err.Error())
