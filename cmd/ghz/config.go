@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -46,6 +47,7 @@ type config struct {
 	Connections     uint               `json:"connections" toml:"connections" yaml:"connections" default:"1"`
 	QPS             uint               `json:"qps" toml:"qps" yaml:"qps"`
 	Z               Duration           `json:"duration" toml:"duration" yaml:"duration"`
+	ZStop           string             `json:"duration-stop" toml:"duration-stop" yaml:"duration-stop" default:"close"`
 	X               Duration           `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
 	Timeout         Duration           `json:"timeout" toml:"timeout" yaml:"timeout" default:"20s"`
 	Data            interface{}        `json:"data,omitempty" toml:"data,omitempty" yaml:"data,omitempty"`
@@ -98,6 +100,11 @@ func (c *config) UnmarshalJSON(data []byte) error {
 		}
 
 		c.Z = Duration(zd)
+	}
+
+	aux.ZStop = strings.ToLower(aux.ZStop)
+	if aux.ZStop != "close" && aux.ZStop != "ignore" && aux.ZStop != "wait" {
+		aux.ZStop = "close"
 	}
 
 	if aux.X != "" {

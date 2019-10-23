@@ -36,8 +36,9 @@ type callResult struct {
 
 // Requester is used for doing the requests
 type Requester struct {
-	conns []*grpc.ClientConn
-	stubs []grpcdynamic.Stub
+	conns    []*grpc.ClientConn
+	stubs    []grpcdynamic.Stub
+	handlers []*statsHandler
 
 	mtd      *desc.MethodDescriptor
 	reporter *Reporter
@@ -185,16 +186,23 @@ func (b *Requester) Run() (*Report, error) {
 
 // Stop stops the test
 func (b *Requester) Stop(reason StopReason) {
+	b.lock.Lock()
+	b.stopReason = reason
+	b.lock.Unlock()
+
 	// Send stop signal so that workers can stop gracefully.
 	for i := 0; i < b.config.c; i++ {
 		b.stopCh <- true
 	}
 
-	b.lock.Lock()
-	b.stopReason = reason
-	b.lock.Unlock()
-
-	b.closeClientConns()
+	if b.config.zstop == "close" {
+		b.closeClientConns()
+	} else if b.config.zstop == "ignore" {
+		for _, h := range b.handlers {
+			h.Ignore(true)
+		}
+		b.closeClientConns()
+	}
 }
 
 // Finish finishes the test run
@@ -268,7 +276,9 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	}
 
 	if withStatsHandler {
-		opts = append(opts, grpc.WithStatsHandler(&statsHandler{b.results}))
+		sh := &statsHandler{results: b.results}
+		b.handlers = append(b.handlers, sh)
+		opts = append(opts, grpc.WithStatsHandler(sh))
 	}
 
 	// create client connection

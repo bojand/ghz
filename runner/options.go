@@ -49,6 +49,8 @@ type RunConfig struct {
 	dialTimeout   time.Duration
 	keepaliveTime time.Duration
 
+	zstop string
+
 	streamInterval time.Duration
 
 	// data
@@ -165,6 +167,21 @@ func WithQPS(qps uint) Option {
 func WithRunDuration(z time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.z = z
+
+		return nil
+	}
+}
+
+// WithDurationStopAction specifies how run duration (Z) timeout is handled
+// Possible options are "close", "ignore", and "wait"
+//	WithDurationStopAction("ignore")
+func WithDurationStopAction(action string) Option {
+	return func(o *RunConfig) error {
+		action = strings.ToLower(action)
+
+		if action == "close" || action == "wait" || action == "ignore" {
+			o.zstop = action
+		}
 
 		return nil
 	}
@@ -464,6 +481,7 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		timeout:     time.Duration(20 * time.Second),
 		dialTimeout: time.Duration(10 * time.Second),
 		cpus:        runtime.GOMAXPROCS(-1),
+		zstop:       "close",
 	}
 
 	// apply options

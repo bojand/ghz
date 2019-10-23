@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc/stats"
@@ -11,6 +12,9 @@ import (
 // StatsHandler is for gRPC stats
 type statsHandler struct {
 	results chan *callResult
+
+	lock   sync.RWMutex
+	ignore bool
 }
 
 // HandleConn handle the connection
@@ -28,18 +32,32 @@ func (c *statsHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) cont
 func (c *statsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 	switch rs := rs.(type) {
 	case *stats.End:
-		rpcStats := rs
-		end := time.Now()
-		duration := end.Sub(rpcStats.BeginTime)
+		ign := false
+		c.lock.RLock()
+		ign = c.ignore
+		c.lock.RUnlock()
 
-		var st string
-		s, ok := status.FromError(rpcStats.Error)
-		if ok {
-			st = s.Code().String()
+		if !ign {
+			rpcStats := rs
+			end := time.Now()
+			duration := end.Sub(rpcStats.BeginTime)
+
+			var st string
+			s, ok := status.FromError(rpcStats.Error)
+			if ok {
+				st = s.Code().String()
+			}
+
+			c.results <- &callResult{rpcStats.Error, st, duration, end}
 		}
-
-		c.results <- &callResult{rpcStats.Error, st, duration, end}
 	}
+}
+
+func (c *statsHandler) Ignore(val bool) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.ignore = val
 }
 
 // TagRPC implements per-RPC context management.
