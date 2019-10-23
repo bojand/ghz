@@ -186,14 +186,14 @@ func (b *Requester) Run() (*Report, error) {
 
 // Stop stops the test
 func (b *Requester) Stop(reason StopReason) {
+	b.lock.Lock()
+	b.stopReason = reason
+	b.lock.Unlock()
+
 	// Send stop signal so that workers can stop gracefully.
 	for i := 0; i < b.config.c; i++ {
 		b.stopCh <- true
 	}
-
-	b.lock.Lock()
-	b.stopReason = reason
-	b.lock.Unlock()
 
 	if b.config.zstop == "close" {
 		b.closeClientConns()

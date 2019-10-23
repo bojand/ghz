@@ -13,7 +13,7 @@ import (
 type statsHandler struct {
 	results chan *callResult
 
-	lock   sync.Mutex
+	lock   sync.RWMutex
 	ignore bool
 }
 
@@ -32,7 +32,12 @@ func (c *statsHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) cont
 func (c *statsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 	switch rs := rs.(type) {
 	case *stats.End:
-		if !c.ignore {
+		ign := false
+		c.lock.RLock()
+		ign = c.ignore
+		c.lock.RUnlock()
+
+		if !ign {
 			rpcStats := rs
 			end := time.Now()
 			duration := end.Sub(rpcStats.BeginTime)
