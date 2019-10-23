@@ -59,6 +59,7 @@ func StartServer(secure bool) (*helloworld.Greeter, *grpc.Server, error) {
 	return gs, s, err
 }
 
+// StartSleepServer starts the sleep test server
 func StartSleepServer(secure bool) (*sleep.SleepService, *grpc.Server, error) {
 	lis, err := net.Listen("tcp", ":0")
 	if err != nil {
