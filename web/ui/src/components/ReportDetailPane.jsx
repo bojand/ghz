@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {
   Pane, Heading, Table, Icon,
-  Tooltip, Text, Badge, Button, Link, toaster
+  Tooltip, Text, Badge, Button, toaster
 } from 'evergreen-ui'
 import _ from 'lodash'
 import { Provider, Subscribe } from 'unstated'

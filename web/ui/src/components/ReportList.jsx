@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Tooltip, TextInput, Button, Text } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Tooltip, TextInput, Button, Text, Checkbox } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
 import { format as formatAgo } from 'timeago.js'
 
@@ -12,9 +12,10 @@ import {
 } from '../lib/common'
 
 import StatusBadge from './StatusBadge'
+import { CornerDialog } from 'evergreen-ui/commonjs/corner-dialog'
 
 class ReportList extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this.state = {
@@ -23,7 +24,9 @@ class ReportList extends Component {
       sort: 'date',
       page: 0,
       compareId1: '',
-      compareId2: ''
+      compareId2: '',
+      selected: {},
+      selectAllChecked: false
     }
   }
 
@@ -71,6 +74,23 @@ class ReportList extends Component {
     this.setState({ page })
   }
 
+  onSelectAll (checked) {
+    const { selected } = this.state
+    const reports = this.props.reportStore.state.reports
+    reports.forEach(report => {
+      selected[report.id] = checked
+    })
+
+    this.setState({ selected, selectAllChecked: checked })
+  }
+
+  onCheckChange (id, checked) {
+    console.log(id, checked)
+    const { selected } = this.state
+    selected[id] = checked
+    this.setState({ selected })
+  }
+
   render () {
     const { state: { reports, total } } = this.props.reportStore
 
@@ -107,6 +127,14 @@ class ReportList extends Component {
 
         <Table marginY={20}>
           <Table.Head>
+            <Table.TextHeaderCell maxWidth={40}>
+              <Pane display='flex'>
+                <Checkbox
+                  name='select-all-chk'
+                  onChange={e => this.onSelectAll(e.target.checked)}
+                  checked={this.state.selectAllChecked} />
+              </Pane>
+            </Table.TextHeaderCell>
             <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               <Pane display='flex'>
                 ID
@@ -146,6 +174,12 @@ class ReportList extends Component {
           <Table.Body>
             {reports.map(p => (
               <Table.Row key={p.id}>
+                <Table.TextCell maxWidth={40} >
+                  <Checkbox
+                    name={`chk-${p.id}`}
+                    onChange={e => this.onCheckChange(p.id, e.target.checked)}
+                    checked={this.state.selected[p.id]} />
+                </Table.TextCell>
                 <Table.TextCell maxWidth={80} textProps={{ size: 400 }}>
                   {p.name
                     ? (
