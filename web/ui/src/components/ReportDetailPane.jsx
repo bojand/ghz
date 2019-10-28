@@ -101,21 +101,17 @@ class ReportDetailPane extends Component {
 
           <Pane>
             <Pane display='flex'>
-              <RouterLink to={`/compare/${currentReport.id}/previous`}>
+              <RouterLink to={`/compare/${currentReport.id}/previous`} style={{ textDecoration: 'none' }}>
                 {prevReport && <Button iconBefore='comparison' appearance='minimal' intent='none' height={32} marginRight={12}>
                   COMPARE TO PREVIOUS
                 </Button>}
               </RouterLink>
-              <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
-                <Button iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
-                  JSON
-                </Button>
-              </Link>
-              <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
-                <Button iconBefore='label' appearance='minimal' intent='none' height={32} marginRight={12}>
-                  CSV
-                </Button>
-              </Link>
+              <Button is='a' href={`${appRoot}/api/reports/${currentReport.id}/export?format=json`} target='_blank' iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
+                JSON
+              </Button>
+              <Button is='a' href={`${appRoot}/api/reports/${currentReport.id}/export?format=csv`} target='_blank' iconBefore='label' appearance='minimal' intent='none' height={32} marginRight={12}>
+                CSV
+              </Button>
               {this.state.deleteVisible
                 ? <DeleteDialog
                   dataType='report'
