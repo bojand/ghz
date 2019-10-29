@@ -1,6 +1,8 @@
 package database
 
 import (
+	"strconv"
+
 	"github.com/bojand/ghz/web/model"
 )
 
@@ -37,6 +39,29 @@ func (d *Database) CreateReport(r *model.Report) error {
 // DeleteReport deletes an existing report
 func (d *Database) DeleteReport(r *model.Report) error {
 	return d.DB.Delete(r).Error
+}
+
+// DeleteReportBulk performans a bulk of deletes
+func (d *Database) DeleteReportBulk(ids []uint) error {
+	nItems := len(ids)
+	ids2 := make([]string, nItems, nItems)
+	for i, id := range ids {
+		idStr := strconv.FormatUint(uint64(id), 10)
+		ids2[i] = idStr
+	}
+
+	query := "id IN ("
+	for i, id := range ids2 {
+
+		query += id
+		if i < nItems-1 {
+			query += ", "
+		}
+	}
+
+	query += ")"
+
+	return d.DB.Where(query).Delete(&model.Report{}).Error
 }
 
 // FindPreviousReport find previous report for the report id
