@@ -15,7 +15,7 @@ func TestDatabase_Report(t *testing.T) {
 
 	defer os.Remove(dbName)
 
-	db, err := New("sqlite3", dbName, false)
+	db, err := New("sqlite3", dbName, true)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}
@@ -517,11 +517,12 @@ func TestDatabase_Report(t *testing.T) {
 	})
 
 	t.Run("DeleteReportBulk()", func(t *testing.T) {
-		ids := []uint{rid, rid2}
+		ids := []uint{rid, 123, rid2}
 
-		err := db.DeleteReportBulk(ids)
+		n, err := db.DeleteReportBulk(ids)
 
 		assert.NoError(t, err)
+		assert.Equal(t, 2, n)
 
 		r2 := new(model.Report)
 		err = db.DB.First(r2, rid).Error

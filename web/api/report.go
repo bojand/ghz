@@ -16,6 +16,7 @@ type ReportDatabase interface {
 	FindReportByID(uint) (*model.Report, error)
 	FindPreviousReport(uint) (*model.Report, error)
 	DeleteReport(*model.Report) error
+	DeleteReportBulk([]uint) (int, error)
 	ListReports(limit, page uint, sortField, order string) ([]*model.Report, error)
 	ListReportsForProject(pid, limit, page uint, sortField, order string) ([]*model.Report, error)
 }
@@ -29,6 +30,11 @@ type ReportAPI struct {
 type ReportList struct {
 	Total uint            `json:"total"`
 	Data  []*model.Report `json:"data"`
+}
+
+// DeleteReportBulkRequest is the request to delete bulk reports
+type DeleteReportBulkRequest struct {
+	IDs []uint `json:"ids"`
 }
 
 // ListReportsForProject lists reports for a project
@@ -157,6 +163,32 @@ func (api *ReportAPI) DeleteReport(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, report)
+}
+
+// DeleteReportBulk deletes bulk reports
+func (api *ReportAPI) DeleteReportBulk(ctx echo.Context) error {
+	del := new(DeleteReportBulkRequest)
+	var err error
+
+	if err := ctx.Bind(del); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if ctx.Echo().Validator != nil {
+		if err := ctx.Validate(del); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	n, err := api.DB.DeleteReportBulk(del.IDs)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	m := make(map[string]int)
+	m["deleted"] = n
+
+	return ctx.JSON(http.StatusOK, m)
 }
 
 // GetPreviousReport gets a previous report

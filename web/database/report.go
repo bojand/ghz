@@ -42,7 +42,7 @@ func (d *Database) DeleteReport(r *model.Report) error {
 }
 
 // DeleteReportBulk performans a bulk of deletes
-func (d *Database) DeleteReportBulk(ids []uint) error {
+func (d *Database) DeleteReportBulk(ids []uint) (int, error) {
 	nItems := len(ids)
 	ids2 := make([]string, nItems, nItems)
 	for i, id := range ids {
@@ -52,16 +52,36 @@ func (d *Database) DeleteReportBulk(ids []uint) error {
 
 	query := "id IN ("
 	for i, id := range ids2 {
-
 		query += id
 		if i < nItems-1 {
 			query += ", "
 		}
 	}
-
 	query += ")"
 
-	return d.DB.Where(query).Delete(&model.Report{}).Error
+	existing := make([]*model.Report, 0, nItems)
+
+	err := d.DB.Where(query).Find(&existing).Error
+	if err != nil {
+		return 0, err
+	}
+
+	nExisting := len(existing)
+	query = "id IN ("
+	for i, rep := range existing {
+		query += strconv.FormatUint(uint64(rep.ID), 10)
+		if i < nExisting-1 {
+			query += ", "
+		}
+	}
+	query += ")"
+
+	err = d.DB.Where(query).Delete(&model.Report{}).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return nExisting, err
 }
 
 // FindPreviousReport find previous report for the report id

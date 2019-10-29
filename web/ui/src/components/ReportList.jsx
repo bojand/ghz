@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Tooltip, Button, Text, Checkbox } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Tooltip, Button, Text, Checkbox, toaster } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
 import { format as formatAgo } from 'timeago.js'
 
@@ -14,7 +14,7 @@ import {
 import StatusBadge from './StatusBadge'
 
 class ReportList extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this.state = {
@@ -60,8 +60,15 @@ class ReportList extends Component {
     }
   }
 
-  deleteBulk () {
-    console.log('delete bulk')
+  async deleteBulk () {
+    console.log(this.state.selected)
+    const selectedIds = (Object.keys(this.state.selected)).map(v => Number.parseInt(v))
+    const res = await this.props.reportStore.deleteReports(selectedIds)
+    if (res && typeof res.deleted === 'number') {
+      toaster.success(`Deleted ${res.deleted} reports.`)
+      this.props.reportStore.fetchReports(
+        this.state.ordering, this.state.sort, this.state.page, this.state.projectId)
+    }
   }
 
   fetchPage (page) {
@@ -91,6 +98,7 @@ class ReportList extends Component {
 
   onCheckChange (id, checked) {
     console.log(id, checked)
+
     const { selected } = this.state
     if (checked) {
       selected[id] = checked
