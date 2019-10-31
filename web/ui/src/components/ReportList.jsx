@@ -14,7 +14,7 @@ import {
 import StatusBadge from './StatusBadge'
 
 class ReportList extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props)
 
     this.state = {
@@ -61,7 +61,6 @@ class ReportList extends Component {
   }
 
   async deleteBulk () {
-    console.log(this.state.selected)
     const selectedIds = (Object.keys(this.state.selected)).map(v => Number.parseInt(v))
     const res = await this.props.reportStore.deleteReports(selectedIds)
     if (res && typeof res.deleted === 'number') {
@@ -97,8 +96,6 @@ class ReportList extends Component {
   }
 
   onCheckChange (id, checked) {
-    console.log(id, checked)
-
     const { selected } = this.state
     if (checked) {
       selected[id] = checked
