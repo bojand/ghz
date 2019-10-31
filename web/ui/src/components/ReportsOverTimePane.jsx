@@ -22,11 +22,12 @@ export default class ReportsOverTimePane extends Component {
       const currentList = this.props.reportStore.state.reports
       const prevList = prevProps.reportStore.state.reports
 
-      if ((currentList.length === 0 && prevList.length > 0) &&
-        !this.props.reportStore.state.isFetching) {
-        await this.props.reportStore.fetchReports(
-          'desc', 'date', 0, this.props.projectId
-        )
+      if (!this.props.reportStore.state.isFetching) {
+        if ((currentList.length === 0 && prevList.length > 0) || (prevList.length > currentList.length)) {
+          await this.props.reportStore.fetchReports(
+            'desc', 'date', 0, this.props.projectId
+          )
+        }
       }
     }
   }
@@ -44,9 +45,11 @@ export default class ReportsOverTimePane extends Component {
         <Pane display='flex' alignItems='center' marginTop={6}>
           <Heading size={600}>HISTORY</Heading>
         </Pane>
-        <Pane paddingX={20} paddingTop={20}><HistoryChart
-          reports={reports}
-          projectId={this.state.projectId} />
+        <Pane paddingX={20} paddingTop={20}>
+          <HistoryChart
+            reports={reports}
+            projectId={this.state.projectId}
+          />
         </Pane>
       </Pane>
     )

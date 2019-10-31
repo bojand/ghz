@@ -39,7 +39,7 @@ class ProjectDetailPane extends Component {
     const ok = await this.props.projectStore.deleteProject(id)
     if (ok) {
       toaster.success(`Project ${name} deleted.`)
-      this.props.history.push(`/projects`)
+      this.props.history.push('/projects')
     }
   }
 
@@ -62,14 +62,15 @@ class ProjectDetailPane extends Component {
                 project={currentProject}
                 isShown={this.state.editProjectVisible}
                 onDone={() => this.setState({ editProjectVisible: false })}
-              /> : null
-            }
+                /> : null}
             <Button
               onClick={() => this.setState({ editProjectVisible: !this.state.editProjectVisible })}
               marginLeft={14}
               iconBefore='edit'
               appearance='minimal'
-              intent='none'>EDIT</Button>
+              intent='none'
+            >EDIT
+            </Button>
           </Pane>
           <Pane display='flex'>
             {this.state.deleteVisible
@@ -79,13 +80,14 @@ class ProjectDetailPane extends Component {
                 isShown={this.state.deleteVisible}
                 onConfirm={() => this.deleteProject()}
                 onCancel={() => this.setState({ deleteVisible: !this.state.deleteVisible })}
-              /> : null
-            }
+                /> : null}
             <Button
               iconBefore='trash'
               appearance='minimal'
               intent='danger'
-              onClick={() => this.setState({ deleteVisible: !this.state.deleteVisible })}>DELETE</Button>
+              onClick={() => this.setState({ deleteVisible: !this.state.deleteVisible })}
+            >DELETE
+            </Button>
           </Pane>
         </Pane>
         <Paragraph>{currentProject.description}</Paragraph>

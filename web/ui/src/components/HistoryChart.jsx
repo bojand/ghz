@@ -10,22 +10,22 @@ export default class HistoryChart extends Component {
   constructor (props) {
     super(props)
 
-    this.config = null
-  }
-
-  componentDidMount () {
-    this.config = createLineChart(this.props.reports)
+    this.state = {
+      config: createLineChart(this.props.reports)
+    }
   }
 
   componentDidUpdate (prevProps) {
-    if (!this.config ||
-      (prevProps.projectId !== this.props.projectId)) {
-      this.config = createLineChart(this.props.reports)
+    if ((prevProps.projectId !== this.props.projectId) ||
+      (prevProps.reports.length !== this.props.reports.length)) {
+      const config = createLineChart(this.props.reports)
+      this.setState({ config })
     }
   }
 
   render () {
-    if (!this.config) {
+    const { config } = this.state
+    if (!config) {
       return (
         <Pane />
       )
@@ -33,7 +33,7 @@ export default class HistoryChart extends Component {
 
     return (
       <Pane>
-        <Line data={this.config.data} options={this.config.options} />
+        <Line data={config.data} options={config.options} />
       </Pane>
     )
   }

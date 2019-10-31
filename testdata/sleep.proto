@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package main;
+
+service SleepService {
+	rpc SleepFor(SleepRequest) returns (SleepResponse);
+}
+
+message SleepRequest {
+	int64 Milliseconds = 1;
+}
+
+message SleepResponse {}
+

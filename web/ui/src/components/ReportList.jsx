@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Tooltip, TextInput, Button, Text } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, Tooltip, Button, Text, Checkbox, toaster } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
 import { format as formatAgo } from 'timeago.js'
 
@@ -22,8 +22,8 @@ class ReportList extends Component {
       ordering: Order.DESC,
       sort: 'date',
       page: 0,
-      compareId1: '',
-      compareId2: ''
+      selected: {},
+      selectAllChecked: false
     }
   }
 
@@ -54,9 +54,19 @@ class ReportList extends Component {
   }
 
   compare () {
-    const { compareId1, compareId2 } = this.state
-    if (compareId1 && compareId2) {
-      this.props.history.push(`/compare/${compareId1}/${compareId2}`)
+    const selectedIds = Object.keys(this.state.selected)
+    if (selectedIds.length === 2 && selectedIds[0] && selectedIds[1]) {
+      this.props.history.push(`/compare/${selectedIds[0]}/${selectedIds[1]}`)
+    }
+  }
+
+  async deleteBulk () {
+    const selectedIds = (Object.keys(this.state.selected)).map(v => Number.parseInt(v))
+    const res = await this.props.reportStore.deleteReports(selectedIds)
+    if (res && typeof res.deleted === 'number') {
+      toaster.success(`Deleted ${res.deleted} reports.`)
+      this.props.reportStore.fetchReports(
+        this.state.ordering, this.state.sort, this.state.page, this.state.projectId)
     }
   }
 
@@ -71,10 +81,37 @@ class ReportList extends Component {
     this.setState({ page })
   }
 
+  onSelectAll (checked) {
+    const { selected } = this.state
+    const reports = this.props.reportStore.state.reports
+    reports.forEach(report => {
+      if (checked) {
+        selected[report.id] = checked
+      } else {
+        delete selected[report.id]
+      }
+    })
+
+    this.setState({ selected, selectAllChecked: checked })
+  }
+
+  onCheckChange (id, checked) {
+    const { selected } = this.state
+    if (checked) {
+      selected[id] = checked
+    } else {
+      delete selected[id]
+    }
+
+    this.setState({ selected })
+  }
+
   render () {
     const { state: { reports, total } } = this.props.reportStore
 
     const totalPerPage = 20
+
+    const nSelected = Object.keys(this.state.selected).length
 
     return (
       <Pane>
@@ -83,30 +120,39 @@ class ReportList extends Component {
             <Heading size={600}>REPORTS</Heading>
           </Pane>
           <Pane>
-            <TextInput
-              name='text-input-id1'
-              placeholder='report id 1'
+            <Button
+              iconBefore='comparison'
+              appearance='minimal'
+              intent='none'
+              disabled={!(nSelected === 2)}
+              onClick={() => this.compare()}
               marginRight={12}
-              width={80}
-              value={this.state.compareId1}
-              onChange={ev => this.setState({ compareId1: ev.target.value })}
-            />
-            <TextInput
-              name='text-input-id2'
-              placeholder='report id 2'
-              marginRight={12}
-              width={80}
-              value={this.state.compareId2}
-              onChange={ev => this.setState({ compareId2: ev.target.value })}
-            />
-            <Button iconBefore='comparison' appearance='minimal' intent='none' onClick={() => this.compare()}>
+            >
               COMPARE
+            </Button>
+            <Button
+              iconBefore='trash'
+              appearance='minimal'
+              intent='danger'
+              disabled={nSelected === 0}
+              onClick={() => this.deleteBulk()}
+            >
+              DELETE
             </Button>
           </Pane>
         </Pane>
 
         <Table marginY={20}>
           <Table.Head>
+            <Table.TextHeaderCell maxWidth={40}>
+              <Pane display='flex'>
+                <Checkbox
+                  name='select-all-chk'
+                  onChange={e => this.onSelectAll(e.target.checked)}
+                  checked={this.state.selectAllChecked}
+                />
+              </Pane>
+            </Table.TextHeaderCell>
             <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               <Pane display='flex'>
                 ID
@@ -146,6 +192,13 @@ class ReportList extends Component {
           <Table.Body>
             {reports.map(p => (
               <Table.Row key={p.id}>
+                <Table.TextCell maxWidth={40}>
+                  <Checkbox
+                    name={`chk-${p.id}`}
+                    onChange={e => this.onCheckChange(p.id, e.target.checked)}
+                    checked={this.state.selected[p.id]}
+                  />
+                </Table.TextCell>
                 <Table.TextCell maxWidth={80} textProps={{ size: 400 }}>
                   {p.name
                     ? (
@@ -176,7 +229,8 @@ class ReportList extends Component {
                   {formatFloat(p.rps)}
                 </Table.TextCell>
                 <Table.TextCell
-                  display='flex' textAlign='center' alignItems='center' maxWidth={80}>
+                  display='flex' textAlign='center' alignItems='center' maxWidth={80}
+                >
                   <StatusBadge status={p.status} marginRight={8} />
                 </Table.TextCell>
               </Table.Row>

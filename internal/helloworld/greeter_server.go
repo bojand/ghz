@@ -222,14 +222,11 @@ func (c *HWStatsHandler) GetConnectionCount() int {
 
 // HandleConn handle the connection
 func (c *HWStatsHandler) HandleConn(ctx context.Context, cs stats.ConnStats) {
-	fmt.Println("!!! HandleConn")
 	// no-op
 }
 
 // TagConn exists to satisfy gRPC stats.Handler.
 func (c *HWStatsHandler) TagConn(ctx context.Context, cti *stats.ConnTagInfo) context.Context {
-	fmt.Println("!!! TagConn")
-
 	c.mutex.Lock()
 	c.connCount++
 	c.mutex.Unlock()

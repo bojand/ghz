@@ -13,7 +13,7 @@ The path to The Protocol Buffer .proto file for input. If no `-proto` or `-proto
 
 ### `--protoset`
 
-Alternatively we use use compiled protoset file (containing compiled descriptors, produced by `protoc`) as input.
+Alternatively we use compiled protoset file (containing compiled descriptors, produced by `protoc`) as input.
 To create a protoset file, invoke `protoc` with the `*.proto` files that define the service. For example:
 
 ```sh
@@ -77,6 +77,10 @@ Timeout for each request. Default is `20s`, use zero value for infinite.
 ### `-z`, `--duration`
 
 Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, `n` is ignored. Examples: `-z 10s` or `-z 3m`.
+
+### `--duration-stop`
+
+Option on how to handle in-flight requests when duration specified using `duration` option is reached. Options are `close`, `wait`, and `ignore`. `close` will cause the connections to close immediately, and any requests that have yet to complete will likely error out and be reported with `transport is closing` error. `wait` will make all in-flight requests to be completed and reported. These requests still have the regular request `timeout` constraint. Finally, `ignore` option is similar to `close` that the connections are terminated immediately, however any in-flight requests that complete are completely ignored in the reporting.
 
 ### `-x`, `--max-duration`
 

@@ -515,4 +515,20 @@ func TestDatabase_Report(t *testing.T) {
 
 		assert.Error(t, err)
 	})
+
+	t.Run("DeleteReportBulk()", func(t *testing.T) {
+		ids := []uint{rid, 123, rid2}
+
+		n, err := db.DeleteReportBulk(ids)
+
+		assert.NoError(t, err)
+		assert.Equal(t, 2, n)
+
+		r2 := new(model.Report)
+		err = db.DB.First(r2, rid).Error
+		assert.Error(t, err)
+
+		err = db.DB.First(r2, rid2).Error
+		assert.Error(t, err)
+	})
 }

@@ -14,10 +14,10 @@ export default class ReportsPage extends Component {
           {(reportStore) => (
             <Pane>
               <ReportList reportStore={reportStore} />
-            </Pane >
+            </Pane>
           )}
         </Subscribe>
-      </Provider >
+      </Provider>
     )
   }
 }

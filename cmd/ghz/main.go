@@ -45,6 +45,8 @@ var (
 	z = kingpin.Flag("duration", "Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.").Short('z').Default("0").Duration()
 	x = kingpin.Flag("max-duration", "Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits. Examples: -x 10s -x 3m.").Short('x').Default("0").Duration()
 
+	zstop = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore.").Default("close").String()
+
 	conns = kingpin.Flag("connections", "Number of connections to use. Concurrency is distributed evenly among all the connections. Default is 1.").Default("1").Uint()
 
 	data     = kingpin.Flag("data", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.").Short('d').PlaceHolder(" ").String()
@@ -117,6 +119,7 @@ func main() {
 		runner.WithQPS(cfg.QPS),
 		runner.WithTimeout(time.Duration(cfg.Timeout)),
 		runner.WithRunDuration(time.Duration(cfg.Z)),
+		runner.WithDurationStopAction(cfg.ZStop),
 		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)),
 		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)),
 		runner.WithName(cfg.Name),
@@ -253,6 +256,7 @@ func createConfigFromArgs() (*config, error) {
 		Z:               Duration(*z),
 		X:               Duration(*x),
 		Timeout:         Duration(*t),
+		ZStop:           *zstop,
 		Data:            dataObj,
 		DataPath:        *dataPath,
 		BinData:         binaryData,

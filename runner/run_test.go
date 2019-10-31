@@ -930,3 +930,132 @@ func TestRunUnaryReflection(t *testing.T) {
 		assert.Equal(t, 2, connCount) // 1 extra connection for reflection
 	})
 }
+
+func TestRunUnaryDurationStop(t *testing.T) {
+
+	_, s, err := internal.StartSleepServer(false)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	t.Run("test close", func(t *testing.T) {
+
+		data := make(map[string]interface{})
+		data["Milliseconds"] = "150"
+
+		report, err := Run(
+			"main.SleepService.SleepFor",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/sleep.proto", []string{}),
+			WithConnections(1),
+			WithConcurrency(1),
+			WithData(data),
+			WithRunDuration(time.Duration(1*time.Second)),
+			WithDurationStopAction("close"),
+			WithTimeout(time.Duration(200*time.Millisecond)),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 7, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonTimeout, report.EndReason)
+		assert.Len(t, report.ErrorDist, 1)
+		assert.Len(t, report.StatusCodeDist, 2)
+		assert.Equal(t, 6, report.StatusCodeDist["OK"])
+		assert.Equal(t, 1, report.StatusCodeDist["Unavailable"])
+	})
+
+	t.Run("test wait", func(t *testing.T) {
+
+		data := make(map[string]interface{})
+		data["Milliseconds"] = "150"
+
+		report, err := Run(
+			"main.SleepService.SleepFor",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/sleep.proto", []string{}),
+			WithConnections(1),
+			WithConcurrency(1),
+			WithData(data),
+			WithRunDuration(time.Duration(1*time.Second)),
+			WithDurationStopAction("wait"),
+			WithTimeout(time.Duration(200*time.Millisecond)),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 7, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonTimeout, report.EndReason)
+		assert.Len(t, report.ErrorDist, 0)
+		assert.Len(t, report.StatusCodeDist, 1)
+		assert.Equal(t, 7, report.StatusCodeDist["OK"])
+	})
+
+	t.Run("test ignore", func(t *testing.T) {
+
+		data := make(map[string]interface{})
+		data["Milliseconds"] = "150"
+
+		report, err := Run(
+			"main.SleepService.SleepFor",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/sleep.proto", []string{}),
+			WithConnections(1),
+			WithConcurrency(1),
+			WithData(data),
+			WithRunDuration(time.Duration(1*time.Second)),
+			WithDurationStopAction("ignore"),
+			WithTimeout(time.Duration(200*time.Millisecond)),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 6, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonTimeout, report.EndReason)
+		assert.Len(t, report.ErrorDist, 0)
+		assert.Len(t, report.StatusCodeDist, 1)
+		assert.Equal(t, 6, report.StatusCodeDist["OK"])
+	})
+}
