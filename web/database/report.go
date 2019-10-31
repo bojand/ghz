@@ -44,7 +44,7 @@ func (d *Database) DeleteReport(r *model.Report) error {
 // DeleteReportBulk performans a bulk of deletes
 func (d *Database) DeleteReportBulk(ids []uint) (int, error) {
 	nItems := len(ids)
-	ids2 := make([]string, nItems, nItems)
+	ids2 := make([]string, nItems)
 	for i, id := range ids {
 		idStr := strconv.FormatUint(uint64(id), 10)
 		ids2[i] = idStr
