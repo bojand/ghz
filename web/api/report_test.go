@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -462,7 +463,7 @@ func TestReportAPI(t *testing.T) {
 
 	t.Run("ListReportsAll", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -488,7 +489,7 @@ func TestReportAPI(t *testing.T) {
 
 	t.Run("ListReportsAll page 1", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/?page=1", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/?page=1", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -516,7 +517,7 @@ func TestReportAPI(t *testing.T) {
 
 	t.Run("ListReportsAll page 2 empty", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/?page=2", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/?page=2", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -538,7 +539,7 @@ func TestReportAPI(t *testing.T) {
 
 	t.Run("ListReportsForProject p1", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/"+pid+"/reports", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/"+pid+"/reports", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -567,7 +568,7 @@ func TestReportAPI(t *testing.T) {
 
 	t.Run("ListReportsForProject p2", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/"+pid2+"/reports", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/"+pid2+"/reports", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -596,7 +597,7 @@ func TestReportAPI(t *testing.T) {
 
 	t.Run("ListReportsForProject p1 page 1", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/"+pid+"/reports?page=1", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/"+pid+"/reports?page=1", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -623,7 +624,7 @@ func TestReportAPI(t *testing.T) {
 
 	t.Run("ListReportsForProject p2 page 1 empty", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/"+pid2+"/reports?page=1", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/"+pid2+"/reports?page=1", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -642,6 +643,28 @@ func TestReportAPI(t *testing.T) {
 			assert.Equal(t, uint(11), list.Total)
 			assert.Len(t, list.Data, 0)
 			assert.Empty(t, list.Data)
+		}
+	})
+
+	t.Run("DeleteReportBulk p2", func(t *testing.T) {
+		e := echo.New()
+		idsStr := fmt.Sprintf(`[%+v, 123, %+v]`, p2reportID5, p2reportID6)
+		reqJSON := `{"ids":` + idsStr + `}`
+		req := httptest.NewRequest(http.MethodPost, "/bulk_delete", strings.NewReader(reqJSON))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		rec := httptest.NewRecorder()
+
+		c := e.NewContext(req, rec)
+
+		if assert.NoError(t, api.DeleteReportBulk(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			m := make(map[string]int)
+			err = json.NewDecoder(rec.Body).Decode(&m)
+
+			assert.NoError(t, err)
+			assert.Equal(t, 2, m["deleted"])
 		}
 	})
 }

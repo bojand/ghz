@@ -26,18 +26,20 @@ export default class ProjectDetailPage extends Component {
               <Pane marginBottom={24}>
                 <ReportsOverTimePane
                   reportStore={reportStore}
-                  projectId={this.props.projectId} />
-              </Pane >
+                  projectId={this.props.projectId}
+                />
+              </Pane>
 
               <Pane>
                 <ReportList
                   reportStore={reportStore}
-                  projectId={this.props.projectId} />
-              </Pane >
+                  projectId={this.props.projectId}
+                />
+              </Pane>
             </Pane>
           )}
         </Subscribe>
-      </Provider >
+      </Provider>
     )
   }
 }

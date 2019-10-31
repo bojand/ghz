@@ -88,7 +88,7 @@ const TabLink = ({ to, linkText, icon, ...rest }) => (
   <Route
     path={to}
     children={() => (
-      <RouterLink to={to} {...rest} >
+      <RouterLink to={to} {...rest} style={{ textDecoration: 'none' }}>
         <Tab height={36} paddingX={14}><Icon icon={icon} marginRight={12} /><Text size={400}>{linkText}</Text></Tab>
       </RouterLink>
     )

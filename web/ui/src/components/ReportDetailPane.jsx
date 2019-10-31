@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {
   Pane, Heading, Table, Icon,
-  Tooltip, Text, Badge, Button, Link, toaster
+  Tooltip, Text, Badge, Button, toaster
 } from 'evergreen-ui'
 import _ from 'lodash'
 import { Provider, Subscribe } from 'unstated'
@@ -51,7 +51,7 @@ class ReportDetailPane extends Component {
     const ok = await this.props.reportStore.deleteReport(id)
     if (ok) {
       toaster.success(`Report ${name} deleted.`)
-      this.props.history.push(`/projects`)
+      this.props.history.push('/projects')
     }
   }
 
@@ -95,27 +95,23 @@ class ReportDetailPane extends Component {
                   </Badge>
                 ))}
               </Pane>
-              : <Pane />
-            }
+              : <Pane />}
           </Pane>
 
           <Pane>
             <Pane display='flex'>
-              <RouterLink to={`/compare/${currentReport.id}/previous`}>
-                {prevReport && <Button iconBefore='comparison' appearance='minimal' intent='none' height={32} marginRight={12}>
-                  COMPARE TO PREVIOUS
-                </Button>}
+              <RouterLink to={`/compare/${currentReport.id}/previous`} style={{ textDecoration: 'none' }}>
+                {prevReport &&
+                  <Button iconBefore='comparison' appearance='minimal' intent='none' height={32} marginRight={12}>
+                    COMPARE TO PREVIOUS
+                  </Button>}
               </RouterLink>
-              <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=json`} target='_blank'>
-                <Button iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
-                  JSON
-                </Button>
-              </Link>
-              <Link href={`${appRoot}/api/reports/${currentReport.id}/export?format=csv`} target='_blank'>
-                <Button iconBefore='label' appearance='minimal' intent='none' height={32} marginRight={12}>
-                  CSV
-                </Button>
-              </Link>
+              <Button is='a' href={`${appRoot}/api/reports/${currentReport.id}/export?format=json`} target='_blank' iconBefore='code' appearance='minimal' intent='none' height={32} marginRight={12}>
+                JSON
+              </Button>
+              <Button is='a' href={`${appRoot}/api/reports/${currentReport.id}/export?format=csv`} target='_blank' iconBefore='label' appearance='minimal' intent='none' height={32} marginRight={12}>
+                CSV
+              </Button>
               {this.state.deleteVisible
                 ? <DeleteDialog
                   dataType='report'
@@ -123,13 +119,14 @@ class ReportDetailPane extends Component {
                   isShown={this.state.deleteVisible}
                   onConfirm={() => this.deleteReport()}
                   onCancel={() => this.setState({ deleteVisible: !this.state.deleteVisible })}
-                /> : null
-              }
+                  /> : null}
               <Button
                 iconBefore='trash'
                 appearance='minimal'
                 intent='danger'
-                onClick={() => this.setState({ deleteVisible: !this.state.deleteVisible })}>DELETE</Button>
+                onClick={() => this.setState({ deleteVisible: !this.state.deleteVisible })}
+              >DELETE
+              </Button>
             </Pane>
           </Pane>
         </Pane>
@@ -248,12 +245,11 @@ class ReportDetailPane extends Component {
                 ))}
               </Pane>
             </Pane>
-          </Pane>
-          : <Pane />
-        }
+            </Pane>
+          : <Pane />}
 
         <Pane display='flex' alignItems='left' marginTop={32} marginBottom={24}>
-          <Pane flex={3} >
+          <Pane flex={3}>
             <Provider>
               <Subscribe to={[OptionsContainer]}>
                 {optionsStore => (
@@ -318,9 +314,8 @@ const SummaryPropComponent = ({ currentReport, previousReport, propName }) => {
             <Text fontFamily='mono'>
               {propName === 'rps' ? formatFloat(changeAbs) : formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
             </Text>
-          </Pane>
-          : <Pane />
-        }
+            </Pane>
+          : <Pane />}
       </Pane>
     </Pane>
   )
@@ -337,11 +332,11 @@ const LatencyPropComponent = ({ currentReportLD, previousReportLD }) => {
   const changeIcon = change > 0
     ? 'arrow-up'
     : 'arrow-down'
-  let changeColor = change > 0
+  const changeColor = change > 0
     ? 'danger'
     : 'success'
 
-  let label = currentReportLD.percentage
+  const label = currentReportLD.percentage
 
   return (
     <Pane borderBottom paddingY={16} display='flex'>
@@ -361,9 +356,8 @@ const LatencyPropComponent = ({ currentReportLD, previousReportLD }) => {
           <Text fontFamily='mono'>
             {formatNanoUnit(changeAbs)} ({formatFloat(changeP)} %)
           </Text>
-        </Pane>
-        : <Pane />
-      }
+          </Pane>
+        : <Pane />}
     </Pane>
   )
 }

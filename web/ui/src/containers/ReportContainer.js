@@ -88,4 +88,22 @@ export default class ReportContainer extends Container {
       console.log('error: ', err)
     }
   }
+
+  async deleteReports (ids) {
+    this.setState({
+      isFetching: true
+    })
+
+    try {
+      const res = await api.post('reports/bulk_delete', { json: { ids } }).json()
+      this.setState({
+        isFetching: false
+      })
+
+      return res
+    } catch (err) {
+      toaster.danger(err.message)
+      console.log('error: ', err)
+    }
+  }
 }

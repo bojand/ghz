@@ -242,7 +242,7 @@ func TestProjectAPI(t *testing.T) {
 
 	t.Run("ListProjects", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()
@@ -273,7 +273,7 @@ func TestProjectAPI(t *testing.T) {
 
 	t.Run("ListProjects sorted", func(t *testing.T) {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, "/?sort=id&order=asc", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodGet, "/?sort=id&order=asc", strings.NewReader(`{}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 		rec := httptest.NewRecorder()

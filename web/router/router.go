@@ -76,6 +76,7 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	reportGroup.GET("/:rid/", reportAPI.GetReport).Name = "ghz api: get report"
 	reportGroup.DELETE("/:rid/", reportAPI.DeleteReport).Name = "ghz api: delete report"
 	reportGroup.GET("/:rid/previous/", reportAPI.GetPreviousReport).Name = "ghz api: get previous report"
+	reportGroup.POST("/bulk_delete/", reportAPI.DeleteReportBulk).Name = "ghz api: delete bulk report"
 
 	optionsAPI := api.OptionsAPI{DB: db}
 	reportGroup.GET("/:rid/options/", optionsAPI.GetOptions).Name = "ghz api: get options"
