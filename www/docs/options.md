@@ -24,7 +24,7 @@ If no `-proto` or `-protoset` options are used, we attempt to perform server ref
 
 ### `--call`
 
-A fully-qualified method name in 'package.Service/Method' or 'package.Service.Method' format. For example: `helloworld.Greeter.SayHello`.
+A fully-qualified method name in 'package.Service/Method' or 'package.Service.Method' format. For example: `helloworld.Greeter.SayHello`. With regard to measurement, we use [WithStatsHandler](https://godoc.org/google.golang.org/grpc#WithStatsHandler) option to capture call metrics. Specifically we only capture the [End](https://godoc.org/google.golang.org/grpc/stats#End) event which contains stats when an RPC ends. This should include the download of the payload and deserializing of the data.
 
 ### `--cacert`
 

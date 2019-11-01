@@ -58,6 +58,8 @@ Explanation of the summary:
 - `average` - The mathematical average computed by taking the _sum_ of the _individual_ response times of _all_ requests and dividing it by the total number of requests.
 - `requests/sec` - Theoretical computed RPS computed by taking the total number of requests (successful and failed) and dividing it by the total duration of the test. That is: `count` / `total`.
 
+With regard to measurement, we use [WithStatsHandler](https://godoc.org/google.golang.org/grpc#WithStatsHandler) option to capture call metrics. Specifically we only capture the [End](https://godoc.org/google.golang.org/grpc/stats#End) event which contains stats when an RPC ends. This should include the download of the payload and deserializing of the data.
+
 ### CSV
 
 Alternatively with `-O csv` flag we can get detailed listing in csv format:
