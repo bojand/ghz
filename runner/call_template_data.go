@@ -2,7 +2,9 @@ package runner
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"strconv"
 	"text/template"
 	"time"
 
@@ -11,35 +13,40 @@ import (
 
 // call template data
 type callTemplateData struct {
-	WorkerID           string // unique worker ID
-	RequestNumber      int64  // unique incremented request number for each request
-	FullyQualifiedName string // fully-qualified name of the method call
-	MethodName         string // shorter call method name
-	ServiceName        string // the service name
-	InputName          string // name of the input message type
-	OutputName         string // name of the output message type
-	IsClientStreaming  bool   // whether this call is client streaming
-	IsServerStreaming  bool   // whether this call is server streaming
-	Timestamp          string // timestamp of the call in RFC3339 format
-	TimestampUnix      int64  // timestamp of the call as unix time
+	WorkerID               string // unique worker ID
+	RequestNumber          int64  // unique incremented request number for each request
+	Base64EncodedReqNumber string // Base64 encoded unique incremented request number for each request
+	FullyQualifiedName     string // fully-qualified name of the method call
+	MethodName             string // shorter call method name
+	ServiceName            string // the service name
+	InputName              string // name of the input message type
+	OutputName             string // name of the output message type
+	IsClientStreaming      bool   // whether this call is client streaming
+	IsServerStreaming      bool   // whether this call is server streaming
+	Timestamp              string // timestamp of the call in RFC3339 format
+	TimestampUnix          int64  // timestamp of the call as unix time
 }
 
 // newCallTemplateData returns new call template data
 func newCallTemplateData(mtd *desc.MethodDescriptor, workerID string, reqNum int64) *callTemplateData {
 	now := time.Now()
 
+	rawReqNum := []byte(strconv.FormatInt(reqNum, 10))
+	b64ReqNum := base64.StdEncoding.EncodeToString(rawReqNum)
+
 	return &callTemplateData{
-		WorkerID:           workerID,
-		RequestNumber:      reqNum,
-		FullyQualifiedName: mtd.GetFullyQualifiedName(),
-		MethodName:         mtd.GetName(),
-		ServiceName:        mtd.GetService().GetName(),
-		InputName:          mtd.GetInputType().GetName(),
-		OutputName:         mtd.GetOutputType().GetName(),
-		IsClientStreaming:  mtd.IsClientStreaming(),
-		IsServerStreaming:  mtd.IsServerStreaming(),
-		Timestamp:          now.Format(time.RFC3339),
-		TimestampUnix:      now.Unix(),
+		WorkerID:               workerID,
+		RequestNumber:          reqNum,
+		Base64EncodedReqNumber: string(b64ReqNum),
+		FullyQualifiedName:     mtd.GetFullyQualifiedName(),
+		MethodName:             mtd.GetName(),
+		ServiceName:            mtd.GetService().GetName(),
+		InputName:              mtd.GetInputType().GetName(),
+		OutputName:             mtd.GetOutputType().GetName(),
+		IsClientStreaming:      mtd.IsClientStreaming(),
+		IsServerStreaming:      mtd.IsServerStreaming(),
+		Timestamp:              now.Format(time.RFC3339),
+		TimestampUnix:          now.Unix(),
 	}
 }
 
