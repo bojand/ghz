@@ -26,6 +26,7 @@ func TestCallTemplateData_New(t *testing.T) {
 	assert.Equal(t, false, ctd.IsServerStreaming)
 	assert.NotEmpty(t, ctd.Timestamp)
 	assert.NotZero(t, ctd.TimestampUnix)
+	assert.NotZero(t, ctd.TimestampUnixNano)
 }
 
 func TestCallTemplateData_ExecuteData(t *testing.T) {
