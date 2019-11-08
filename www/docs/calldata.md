@@ -39,8 +39,11 @@ type callTemplateData struct {
 	// timestamp of the call in RFC3339 format
 	Timestamp          string
 
-	// timestamp of the call as unix time
+	// timestamp of the call as unix time in seconds
 	TimestampUnix      int64
+
+	// timestamp of the call as unix time in nanoseconds
+	TimestampUnixNano      int64
 }
 ```
 
