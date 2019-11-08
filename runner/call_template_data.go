@@ -22,6 +22,7 @@ type callTemplateData struct {
 	IsServerStreaming  bool   // whether this call is server streaming
 	Timestamp          string // timestamp of the call in RFC3339 format
 	TimestampUnix      int64  // timestamp of the call as unix time in seconds
+	TimestampUnixMilli int64  // timestamp of the call as unix time in milliseconds
 	TimestampUnixNano  int64  // timestamp of the call as unix time in nanoseconds
 }
 
@@ -41,6 +42,7 @@ func newCallTemplateData(mtd *desc.MethodDescriptor, workerID string, reqNum int
 		IsServerStreaming:  mtd.IsServerStreaming(),
 		Timestamp:          now.Format(time.RFC3339),
 		TimestampUnix:      now.Unix(),
+		TimestampUnixMilli: now.UnixNano() / 1000000,
 		TimestampUnixNano:  now.UnixNano(),
 	}
 }
