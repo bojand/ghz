@@ -42,6 +42,9 @@ type callTemplateData struct {
 	// timestamp of the call as unix time in seconds
 	TimestampUnix      int64
 
+	// timestamp of the call as unix time in milliseconds
+	TimestampUnixMilli      int64
+
 	// timestamp of the call as unix time in nanoseconds
 	TimestampUnixNano      int64
 }
