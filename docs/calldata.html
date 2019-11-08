@@ -88,8 +88,14 @@
     <span class="hljs-comment">// timestamp of the call in RFC3339 format</span>
     Timestamp          <span class="hljs-keyword">string</span>
 
-    <span class="hljs-comment">// timestamp of the call as unix time</span>
+    <span class="hljs-comment">// timestamp of the call as unix time in seconds</span>
     TimestampUnix      <span class="hljs-keyword">int64</span>
+
+    <span class="hljs-comment">// timestamp of the call as unix time in milliseconds</span>
+    TimestampUnixMilli      <span class="hljs-keyword">int64</span>
+
+    <span class="hljs-comment">// timestamp of the call as unix time in nanoseconds</span>
+    TimestampUnixNano      <span class="hljs-keyword">int64</span>
 }
 </code></pre>
 <p>This can be useful to inject variable information into the message data JSON or metadata JSON payloads for each request, such as timestamp or unique request number. For example:</p>
