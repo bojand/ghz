@@ -27,3 +27,4 @@ node_modules
 coverage.html
 
 .idea
+.orig
