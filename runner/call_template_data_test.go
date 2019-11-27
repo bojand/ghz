@@ -29,6 +29,8 @@ func TestCallTemplateData_New(t *testing.T) {
 	assert.NotZero(t, ctd.TimestampUnixMilli)
 	assert.NotZero(t, ctd.TimestampUnixNano)
 	assert.Equal(t, ctd.TimestampUnix, ctd.TimestampUnixMilli/1000)
+	assert.NotEmpty(t, ctd.UUID)
+	assert.Equal(t, 36, len(ctd.UUID))
 }
 
 func TestCallTemplateData_ExecuteData(t *testing.T) {
