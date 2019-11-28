@@ -11,6 +11,7 @@ require (
 	github.com/go-playground/validator v9.30.0+incompatible
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
+	github.com/google/uuid v1.1.1
 	github.com/jhump/protoreflect v1.5.0
 	github.com/jinzhu/configor v1.1.1
 	github.com/jinzhu/gorm v1.9.11
