@@ -54,7 +54,7 @@
                 };
               }
             });
-        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Call Template Data</h1></header><article><div><span><p>Data and metadata can specify <a href="https://golang.org/pkg/text/template/">template actions</a> that will be parsed and evaluated at every request. Each request gets a new instance of the data. The available variables / actions are:</p>
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Call Template Data</h1></header><article><div><span><p>Data and metadata can specify <a href="https://golang.org/pkg/text/template/">template actions</a> that will be parsed and evaluated at every request. Each request gets a new instance of the data. The available variables / actions are:</p>
 <pre><code class="hljs css language-go"><span class="hljs-comment">// call template data</span>
 <span class="hljs-keyword">type</span> callTemplateData <span class="hljs-keyword">struct</span> {
 
@@ -96,6 +96,9 @@
 
     <span class="hljs-comment">// timestamp of the call as unix time in nanoseconds</span>
     TimestampUnixNano      <span class="hljs-keyword">int64</span>
+
+    <span class="hljs-comment">// generated UUIDv4 for each call</span>
+    UUID    <span class="hljs-keyword">string</span>
 }
 </code></pre>
 <p>This can be useful to inject variable information into the message data JSON or metadata JSON payloads for each request, such as timestamp or unique request number. For example:</p>

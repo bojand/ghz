@@ -54,7 +54,7 @@
                 };
               }
             });
-        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Data</h1></header><article><div><span><p>The main data components of the application are <strong>Projects</strong> and <strong>Reports</strong>.</p>
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Data</h1></header><article><div><span><p>The main data components of the application are <strong>Projects</strong> and <strong>Reports</strong>.</p>
 <p>A Report represent a result of a single <strong>ghz</strong> test run. Reports can be grouped together into <strong>Projects</strong> to be tracked, analyzed and compared over time. Thus it is important to group reports together that make sense, normally tests against a single same gRPC call.</p>
 <p>For example if we are testing <code>helloworld.Greeter.SayHello</code> call, we may have a separate project for development, staging and production deployment environments for <code>helloworld.Greeter.SayHello</code> test only. For example our staging environment project may be called <code>&quot;helloworld.Greeter.SayHello - staging&quot;</code>.</p>
 <p>We would keep test results against this gRPC call for each deployment environment grouped together respectively and therefore be able to track change in performance over time and compare different environments as our service changes.</p>
