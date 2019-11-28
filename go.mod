@@ -3,6 +3,7 @@ module github.com/bojand/ghz
 go 1.13
 
 require (
+	github.com/alecthomas/kingpin v1.3.8-0.20191105203113-8c96d1c22481
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bojand/hri v1.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
@@ -26,6 +27,5 @@ require (
 	go.uber.org/multierr v1.2.0
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094
 	google.golang.org/grpc v1.24.0
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
