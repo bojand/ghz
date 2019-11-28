@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"text/template"
 	"time"
-    "github.com/google/uuid"
+
+	"github.com/google/uuid"
 	"github.com/jhump/protoreflect/desc"
 )
 
@@ -24,7 +25,7 @@ type callTemplateData struct {
 	TimestampUnix      int64  // timestamp of the call as unix time in seconds
 	TimestampUnixMilli int64  // timestamp of the call as unix time in milliseconds
 	TimestampUnixNano  int64  // timestamp of the call as unix time in nanoseconds
-	UUID string // generated UUIDv4 for each call
+	UUID               string // generated UUIDv4 for each call
 }
 
 // newCallTemplateData returns new call template data
@@ -46,7 +47,7 @@ func newCallTemplateData(mtd *desc.MethodDescriptor, workerID string, reqNum int
 		TimestampUnix:      now.Unix(),
 		TimestampUnixMilli: now.UnixNano() / 1000000,
 		TimestampUnixNano:  now.UnixNano(),
-		UUID: newUUID.String(),
+		UUID:               newUUID.String(),
 	}
 }
 

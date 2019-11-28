@@ -74,9 +74,9 @@ type config struct {
 func (c *config) UnmarshalJSON(data []byte) error {
 	type Alias config
 	aux := &struct {
-		Z       string `json:"z"`
-		X       string `json:"x"`
-		SI      string `json:"si"`
+		Z       string `json:"duration"`
+		X       string `json:"max-duration"`
+		SI      string `json:"stream-interval"`
 		Timeout string `json:"timeout"`
 		*Alias
 	}{
@@ -142,9 +142,9 @@ func (c config) MarshalJSON() ([]byte, error) {
 	type Alias config
 	return json.Marshal(&struct {
 		*Alias
-		Z       string `json:"z"`
-		X       string `json:"x"`
-		SI      string `json:"si"`
+		Z       string `json:"duration"`
+		X       string `json:"max-duration"`
+		SI      string `json:"stream-interval"`
 		Timeout string `json:"timeout"`
 	}{
 		Alias:   (*Alias)(&c),
