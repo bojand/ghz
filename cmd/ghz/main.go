@@ -192,7 +192,8 @@ func main() {
 			err = createConfigFromArgs(&cmdCfg)
 			kingpin.FatalIfError(err, "")
 
-			mergeConfig(&cfg, &cmdCfg)
+			err = mergeConfig(&cfg, &cmdCfg)
+			kingpin.FatalIfError(err, "")
 		}
 	} else {
 		err := createConfigFromArgs(&cfg)
