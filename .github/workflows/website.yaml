@@ -20,8 +20,8 @@ jobs:
           mkdir ./web
       - name: Check out code
         uses: actions/checkout@v1
-          with:
-            path: ./code
+        with:
+          path: ./code
       - name: Use Node.js 12
         uses: actions/setup-node@v1
         with:
