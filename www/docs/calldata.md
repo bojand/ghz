@@ -12,7 +12,7 @@ type callTemplateData struct {
 	// unique worker ID
 	WorkerID		   string
 
-	// unique incremented request number for each request
+	// unique incremented request number for each call
 	RequestNumber      int64
 
 	// fully-qualified name of the method call
