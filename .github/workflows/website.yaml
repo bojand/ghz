@@ -14,14 +14,8 @@ jobs:
       WWW_TARGET_BRANCH: gh-pages
     runs-on: ubuntu-latest
     steps:
-      - name: Create directories
-        run: |
-          mkdir ${{env.GITHUB_WORKSPACE}}/code
-          mkdir ${{env.GITHUB_WORKSPACE}}/web
       - name: Check out code
         uses: actions/checkout@v1
-        with:
-          path: ${{env.GITHUB_WORKSPACE}}/code
       - name: Use Node.js 12
         uses: actions/setup-node@v1
         with:
@@ -30,21 +24,19 @@ jobs:
         run: |
           npm ci
           npm run build
-        working-directory: ${{env.GITHUB_WORKSPACE}}/code/www/website
+        working-directory: ./www/website
       - name: Copy data
         run: |
           mkdir -p ${{env.HOME}}/tmp/www/build
-          cp -r ${{env.GITHUB_WORKSPACE}}/code/www/website/build/ghz/. ${{env.HOME}}/tmp/www/build
+          cp -r ./www/website/build/ghz/. ${{env.HOME}}/tmp/www/build
       - name: Check out target branch
         uses: actions/checkout@v1
         with:
           ref: ${{ env.WWW_TARGET_BRANCH }}
-          path: ${{env.GITHUB_WORKSPACE}}/web
       - name: Copy new data
         run: |
-          cp -r ${{env.HOME}}/tmp/www/build/. ${{env.GITHUB_WORKSPACE}}/web
+          cp -r ${{env.HOME}}/tmp/www/build/. .
       - name: Commit to repository
-        working-directory: ${{env.GITHUB_WORKSPACE}}/web
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_MSG: Update website
