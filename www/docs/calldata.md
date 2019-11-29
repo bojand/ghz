@@ -55,7 +55,7 @@ type callTemplateData struct {
 
 This can be useful to inject variable information into the message data JSON or metadata JSON payloads for each request, such as timestamp or unique request number. For example:
 
-```
+```sh
 -m '{"request-id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}'
 ```
 
