@@ -38,7 +38,7 @@ jobs:
           cp -r ${{env.HOME}}/tmp/www/build/. .
       - name: Commit to repository
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
           COMMIT_MSG: Update website
         run: |
           git config user.email "dbojan@gmail.com"
