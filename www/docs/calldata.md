@@ -48,7 +48,7 @@ type callTemplateData struct {
 	// timestamp of the call as unix time in nanoseconds
 	TimestampUnixNano      int64
 
-	// generated UUIDv4 for each call
+	// UUIDv4 for each call
 	UUID	string
 }
 ```
