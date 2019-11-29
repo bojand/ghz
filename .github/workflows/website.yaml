@@ -1,0 +1,53 @@
+name: build
+
+on:
+  push:
+    branches:
+    - master
+    paths:
+    - 'www/docs/*.md'
+    - 'www/docs/web/*.md'
+
+jobs:
+  build:
+    env:
+      WWW_TARGET_BRANCH: gh-pages
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v1
+    - name: Use Node.js 12
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - name: Build webpage
+      run: |
+        npm ci
+        npm run build
+      working-directory: ./www/website
+    - name: Copy data
+      run: |
+        mkdir -p ./tmp/www/build
+        cp -r www/website/build/ghz/. ./tmp/www/build
+    - name: Check out target branch
+      uses: actions/checkout@v1
+      with:
+        ref: ${{ env.WWW_TARGET_BRANCH }}
+    - name: Copy new data
+      run: |
+        cp -r ./tmp/www/build/. .
+    - name: Commit to repository
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COMMIT_MSG: Update webpage
+      run: |
+        git config user.email "dbojan@gmail.com"
+        git config user.name "Bojan"
+        # Update origin with token
+        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+        # Add changed files
+        # git add .
+        # Only commit and push if we have changes
+        # git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin ${WWW_TARGET_BRANCH})
+        git status

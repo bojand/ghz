@@ -29,28 +29,22 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env: 
+      GO111MODULE: on
 
     steps:
-    - name: Set up Go 1.12
+    - name: Set up Go
       uses: actions/setup-go@v1
       with:
-        go-version: 1.12
+        go-version: 1.13
       id: go
     - name: Check out code
       uses: actions/checkout@v1
     - name: Install tparse
       run: go get github.com/mfridman/tparse
-      env: 
-        GO111MODULE: on
     - name: Install golangci-lint
-      run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/go/bin v1.18.0
-      env: 
-        GO111MODULE: on
+      run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/go/bin v1.21.0
     - name: Lint
       run: $HOME/go/bin/golangci-lint run ./...
-      env: 
-        GOPRIVATE: "*.internal.digitalocean.com,github.com/digitalocean,github.com/digitalocean-mako"
     - name: Test
       run: go test -failfast -race -covermode=atomic -coverprofile=coverage.txt -cover -json ./... | $HOME/go/bin/tparse
-      env:
-        GO111MODULE: on
