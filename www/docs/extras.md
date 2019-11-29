@@ -5,7 +5,7 @@ title: Extras
 
 ## Grafana dashboards
 
-For conveniance we include prebuilt [Grafana](http://grafana.com/) dashboards for [summary](/extras/influx-summary-grafana-dashboard.json) and [details](/extras/influx-details-grafana-dashboard.json).
+For convenience we include prebuilt [Grafana](http://grafana.com/) dashboards for [summary](/extras/influx-summary-grafana-dashboard.json) and [details](/extras/influx-details-grafana-dashboard.json).
 
 #### Summary Grafana Dashboard
 
