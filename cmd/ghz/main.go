@@ -187,7 +187,7 @@ func main() {
 		kingpin.FatalIfError(err, "")
 
 		args := os.Args[1:]
-		if len(args) > 0 {
+		if len(args) > 1 {
 			var cmdCfg config
 			err = createConfigFromArgs(&cmdCfg)
 			kingpin.FatalIfError(err, "")
