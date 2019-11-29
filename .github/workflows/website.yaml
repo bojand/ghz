@@ -41,7 +41,7 @@ jobs:
     - name: Commit to repository
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COMMIT_MSG: Update webpage
+        COMMIT_MSG: Update website
       run: |
         git config user.email "dbojan@gmail.com"
         git config user.name "Bojan"
