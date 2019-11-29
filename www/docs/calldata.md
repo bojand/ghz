@@ -65,7 +65,7 @@ Would result in server getting the following metadata map represented here in JS
 {
   "user-agent": "grpc-go/1.11.1",
   "request-id": "1",
-  "timestamp": "1544890252"
+  "timestamp": "1544890251"
 }
 ```
 
