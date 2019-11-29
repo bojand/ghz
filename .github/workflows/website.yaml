@@ -1,4 +1,4 @@
-name: build
+name: website
 
 on:
   push:
@@ -48,7 +48,6 @@ jobs:
         # Update origin with token
         git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
         # Add changed files
-        # git add .
+        git add .
         # Only commit and push if we have changes
-        # git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin ${WWW_TARGET_BRANCH})
-        git status
+        git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin ${WWW_TARGET_BRANCH})
