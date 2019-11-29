@@ -58,6 +58,12 @@ Value to be used as the `:authority` pseudo-header. Only works if `-insecure` is
 
 Path to the JSON or TOML [config file](example_config.md) that specifies all the test settings.
 
+Config file settings can be combined with command line arguments. CLI options overwrite config file options.
+
+```sh
+ghz --config=./config.json -c 20 -n 1000
+```
+
 ### `-c`, `--concurrency`
 
 Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is `50`. For example to do requests in series without any concurrency set to `1`. `ghz` takes the `concurrency` argument and spawns that many worker goroutines. By default all goroutine workers share a single connection.

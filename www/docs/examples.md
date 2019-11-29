@@ -119,11 +119,17 @@ Note that only one of `-proto` or `-protoset` options will be used. `-proto` tak
 Alternatively `ghz` can be used with [Prototool](https://github.com/uber/prototool) using the [`descriptor-set`](https://github.com/uber/prototool/tree/dev/docs#prototool-descriptor-set) command:
 
 ```
-ghz -protoset $(prototool descriptor-set --include-imports --tmp) ...
+ghz --protoset $(prototool descriptor-set --include-imports --tmp) ...
 ```
 
 Finally we can specify all settings, including the target host, conveniently in a JSON or TOML config file.
 
 ```sh
-ghz -config ./config.json
+ghz --config ./config.json
+```
+
+Config file settings can be combined with command line arguments. CLI options overwrite config file options.
+
+```sh
+ghz --config ./config.json -c 20 -n 1000
 ```
