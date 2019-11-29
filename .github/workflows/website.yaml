@@ -29,11 +29,12 @@ jobs:
     - name: Copy data
       run: |
         mkdir -p ./tmp/www/build
-        cp -r www/website/build/ghz/. ./tmp/www/build
+        cp -r ./www/website/build/ghz/. ./tmp/www/build
     - name: Check out target branch
       uses: actions/checkout@v1
       with:
         ref: ${{ env.WWW_TARGET_BRANCH }}
+        clean: false
     - name: Copy new data
       run: |
         cp -r ./tmp/www/build/. .
