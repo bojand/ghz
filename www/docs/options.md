@@ -70,7 +70,7 @@ Number of requests to run concurrently. Total number of requests cannot be small
 
 ### `-n`, `--total`
 
-The total number of requests to run. Default is `200`. The combination of `-c` and `-n` are critical in how the benchmarking is done. `ghz` takes the `-c` argument and spawns that many worker goroutines. In parallel these goroutines each do their share (`c / n`) requests. So for example with the default `-c 50 -n 200` options we would spawn `50` goroutines which in parallel each do `40` requests.
+The total number of requests to run. Default is `200`. The combination of `-c` and `-n` are critical in how the benchmarking is done. `ghz` takes the `-c` argument and spawns that many worker goroutines. In parallel these goroutines each do their share (`n / c`) requests. So for example with the default `-c 50 -n 200` options we would spawn `50` goroutines which in parallel each do `4` requests.
 
 ### `-q`, `--qps`
 
