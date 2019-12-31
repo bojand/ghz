@@ -193,6 +193,19 @@ JSON string representation of user-defined string tags. This is mainly for repor
 
 Number of used cpu cores to be used for the test. The default is the total number of logical CPUs on the local machine.
 
+### `--debug`
+
+Enables debug logging to a file specified by the path. The debug logger outputs JSON line format. Use this only for debugging purpoces.
+
+```sh
+ghz --insecure \
+  --proto ./protos/greeter.proto \
+  --call helloworld.Greeter.SayHello \
+  -d '{"name":"Joe"}' -c 5 -n 50 -m '{"request-id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}' \
+  --debug ./logs/debug.json \
+  0.0.0.0:50051
+```
+
 ### `-v`, `--version`
 
 Print the version.

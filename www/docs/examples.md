@@ -133,3 +133,14 @@ Config file settings can be combined with command line arguments. CLI options ov
 ```sh
 ghz --config ./config.json -c 20 -n 1000
 ```
+
+With debug logging enabled.
+
+```sh
+ghz --insecure \
+  --proto ./protos/greeter.proto \
+  --call helloworld.Greeter.SayHello \
+  -d '{"name":"Joe"}' -c 5 -n 50 -m '{"request-id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}' \
+  --debug ./logs/debug.json \
+  0.0.0.0:50051
+```

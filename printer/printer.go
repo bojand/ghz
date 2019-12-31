@@ -389,7 +389,7 @@ Summary:
 Response time histogram:
 {{ histogram .Histogram }}
 Latency distribution:{{ range .LatencyDistribution }}
-  {{ .Percentage }}%% in {{ formatNanoUnit .Latency }} {{ end }}
+  {{ .Percentage }} % in {{ formatNanoUnit .Latency }} {{ end }}
 
 {{ if gt (len .StatusCodeDist) 0 }}Status code distribution:
 {{ formatStatusCode .StatusCodeDist }}{{ end }}
@@ -585,7 +585,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 					<thead>
 						<tr>
 							{{ range .LatencyDistribution }}
-								<th>{{ .Percentage }} %%</th>
+								<th>{{ .Percentage }} %</th>
 							{{ end }}
 						</tr>
 					</thead>
@@ -613,7 +613,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 								<tr>
 									<th>Status</th>
 									<th>Count</th>
-									<th>%% of Total</th>
+									<th>% of Total</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -621,7 +621,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 									<tr>
 									  <td>{{ $code }}</td>
 										<td>{{ $num }}</td>
-										<td>{{ formatPercent $num $.Count }} %%</td>
+										<td>{{ formatPercent $num $.Count }} %</td>
 									</tr>
 									{{ end }}
 								</tbody>
@@ -646,7 +646,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 										<tr>
 											<th>Error</th>
 											<th>Count</th>
-											<th>%% of Total</th>
+											<th>% of Total</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -654,7 +654,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 											<tr>
 												<td>{{ $err }}</td>
 												<td>{{ $num }}</td>
-												<td>{{ formatPercent $num $.Count }} %%</td>
+												<td>{{ formatPercent $num $.Count }} %</td>
 											</tr>
 											{{ end }}
 										</tbody>
@@ -719,7 +719,7 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 		tooltip.numberFormat('')
 		tooltip.valueFormatter(function(v) {
 			var percent = v / count * 100;
-			return v + ' ' + '(' + Number.parseFloat(percent).toFixed(1) + ' %%)';
+			return v + ' ' + '(' + Number.parseFloat(percent).toFixed(1) + ' %)';
 		})
 
 		if (containerWidth) {

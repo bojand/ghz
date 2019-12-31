@@ -16,6 +16,8 @@ import (
 	"github.com/bojand/ghz/printer"
 	"github.com/bojand/ghz/runner"
 	"github.com/jinzhu/configor"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -169,6 +171,11 @@ var (
 	cpus     = kingpin.Flag("cpus", "Number of cpu cores to use.").
 			Default(strconv.FormatUint(uint64(nCPUs), 10)).IsSetByUser(&isCPUSet).Uint()
 
+	// Debug
+	isDebugSet = false
+	debug      = kingpin.Flag("debug", "The path to debug log file.").
+			PlaceHolder(" ").IsSetByUser(&isDebugSet).String()
+
 	host = kingpin.Arg("host", "Host and port to test.").String()
 )
 
@@ -258,8 +265,26 @@ func main() {
 		options = append(options, runner.WithBinaryDataFromFile(cfg.BinDataPath))
 	}
 
+	var logger *zap.SugaredLogger
+
+	if len(cfg.Debug) > 0 {
+		var err error
+		logger, err = createLogger(cfg.Debug)
+		kingpin.FatalIfError(err, "")
+		defer logger.Sync()
+		options = append(options, runner.WithLogger(logger))
+	}
+
+	if logger != nil {
+		logger.Debugw("Start Run.", "config", cfg)
+	}
+
 	report, err := runner.Run(cfg.Call, cfg.Host, options...)
 	if err != nil {
+		if logger != nil {
+			logger.Errorf("Error from run: %+v", err.Error())
+		}
+
 		handleError(err)
 	}
 
@@ -382,6 +407,7 @@ func createConfigFromArgs(cfg *config) error {
 	cfg.Name = *name
 	cfg.Tags = &tagsMap
 	cfg.ReflectMetadata = &rmdMap
+	cfg.Debug = *debug
 
 	return nil
 }
@@ -527,5 +553,38 @@ func mergeConfig(dest *config, src *config) error {
 		dest.ReflectMetadata = src.ReflectMetadata
 	}
 
+	if isDebugSet {
+		dest.Debug = src.Debug
+	}
+
 	return nil
+}
+
+// createLogger creates a new zap logger
+func createLogger(path string) (*zap.SugaredLogger, error) {
+
+	var encoderCfg zapcore.EncoderConfig
+	var cfg zap.Config
+
+	encoderCfg = zap.NewProductionEncoderConfig()
+	cfg = zap.NewProductionConfig()
+
+	encoderCfg.LevelKey = "level"
+	encoderCfg.MessageKey = "message"
+	encoderCfg.CallerKey = ""
+	encoderCfg.TimeKey = "time"
+	encoderCfg.EncodeTime = zapcore.RFC3339NanoTimeEncoder
+	encoderCfg.EncodeCaller = nil
+
+	cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	cfg.EncoderConfig = encoderCfg
+	cfg.OutputPaths = []string{path}
+	cfg.ErrorOutputPaths = []string{path}
+
+	dl, err := cfg.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	return dl.Sugar(), nil
 }

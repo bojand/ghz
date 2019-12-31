@@ -59,6 +59,10 @@ type RunConfig struct {
 	metadata []byte
 	rmd      *map[string]string
 
+	// debug
+	hasLog bool
+	log    Logger
+
 	// misc
 	name string
 	cpus int
@@ -462,6 +466,16 @@ func WithConnections(c uint) Option {
 		if c > 0 {
 			o.nConns = int(c)
 		}
+
+		return nil
+	}
+}
+
+// WithLogger specifies the logging option
+func WithLogger(log Logger) Option {
+	return func(o *RunConfig) error {
+		o.log = log
+		o.hasLog = true
 
 		return nil
 	}
