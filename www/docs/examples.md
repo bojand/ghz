@@ -134,7 +134,7 @@ Config file settings can be combined with command line arguments. CLI options ov
 ghz --config ./config.json -c 20 -n 1000
 ```
 
-With debug logging enabled.
+With debug logging enabled:
 
 ```sh
 ghz --insecure \
@@ -142,5 +142,27 @@ ghz --insecure \
   --call helloworld.Greeter.SayHello \
   -d '{"name":"Joe"}' -c 5 -n 50 -m '{"request-id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}' \
   --debug ./logs/debug.json \
+  0.0.0.0:50051
+```
+
+Client streaming with :
+
+```sh
+ghz --insecure \
+  --proto ./protos/route_guide.proto \
+  --call routeguide.RouteGuide.RecordRoute \
+  -d '[{ "latitude": 407838351, "longitude": -746143763 }, { "latitude": 419999544, "longitude": -740371136 }, { "latitude": 419611318, "longitude": -746524769 }, { "latitude": 412144655, "longitude": -743949739 }]' \
+  -m '{"trace_id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnixNano}}"}' \
+  0.0.0.0:50051
+```
+
+Server streaming:
+
+```sh
+ghz --insecure \
+  --proto ./protos/route_guide.proto \
+  --call routeguide.RouteGuide.ListFeatures \
+  -d '{"lo":{"latitude":400000000,"longitude":-750000000},"hi":{"latitude":420000000,"longitude":-730000000}}' \
+  -m '{"trace_id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnixNano}}"}' \
   0.0.0.0:50051
 ```

@@ -52,7 +52,7 @@ func (c *statsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 			c.results <- &callResult{rs.Error, st, duration, rs.EndTime}
 
 			if c.hasLog {
-				c.log.Debugw("Received RPC Stats.",
+				c.log.Debugw("Received RPC Stats",
 					"statsID", c.id, "code", st, "error", rs.Error,
 					"duration", duration, "stats", rs)
 			}

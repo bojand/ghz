@@ -215,8 +215,16 @@ func (b *Requester) Finish() *Report {
 	close(b.results)
 	total := time.Since(b.start)
 
+	if b.config.hasLog {
+		b.config.log.Debug("Waiting for report")
+	}
+
 	// Wait until the reporter is done.
 	<-b.reporter.done
+
+	if b.config.hasLog {
+		b.config.log.Debug("Finilizing report")
+	}
 
 	return b.reporter.Finalize(b.stopReason, total)
 }
@@ -302,7 +310,7 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	}
 
 	if b.config.hasLog {
-		b.config.log.Debugw("Creating client connection.", "options", opts)
+		b.config.log.Debugw("Creating client connection", "options", opts)
 	}
 
 	// create client connection

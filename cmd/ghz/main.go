@@ -271,12 +271,14 @@ func main() {
 		var err error
 		logger, err = createLogger(cfg.Debug)
 		kingpin.FatalIfError(err, "")
+
 		defer logger.Sync()
+
 		options = append(options, runner.WithLogger(logger))
 	}
 
 	if logger != nil {
-		logger.Debugw("Start Run.", "config", cfg)
+		logger.Debugw("Start Run", "config", cfg)
 	}
 
 	report, err := runner.Run(cfg.Call, cfg.Host, options...)
@@ -290,9 +292,19 @@ func main() {
 
 	output := os.Stdout
 	outputPath := strings.TrimSpace(cfg.Output)
+
+	if logger != nil {
+		logger.Debug("Run finished")
+	}
+
 	if outputPath != "" {
 		f, err := os.Create(outputPath)
 		if err != nil {
+			if logger != nil {
+				logger.Errorw("Error opening file "+outputPath+": "+err.Error(),
+					"error", err)
+			}
+
 			handleError(err)
 		}
 
@@ -301,6 +313,15 @@ func main() {
 		}()
 
 		output = f
+	}
+
+	if logger != nil {
+		logPath := "stdout"
+		if outputPath != "" {
+			logPath = outputPath
+		}
+
+		logger.Debugw("Printing report to "+logPath, "path", logPath)
 	}
 
 	p := printer.ReportPrinter{

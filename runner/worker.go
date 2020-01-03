@@ -116,7 +116,7 @@ func (w *Worker) makeRequest() error {
 			callType = "client-streaming"
 		}
 
-		w.config.log.Debugw("Making request.", "workerID", w.workerID,
+		w.config.log.Debugw("Making request", "workerID", w.workerID,
 			"call type", callType, "call", w.mtd.GetFullyQualifiedName(),
 			"input", inputs, "metadata", reqMD)
 	}
@@ -141,7 +141,7 @@ func (w *Worker) makeRequest() error {
 			res, resErr := w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx])
 
 			if w.config.hasLog {
-				w.config.log.Debugw("Received response.", "workerID", w.workerID, "call type", callType,
+				w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", callType,
 					"call", w.mtd.GetFullyQualifiedName(),
 					"input", inputs, "metadata", reqMD,
 					"response", res, "error", resErr)
@@ -186,7 +186,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 	str, err := w.stub.InvokeRpcClientStream(*ctx, w.mtd)
 
 	if err != nil && w.config.hasLog {
-		w.config.log.Errorw("Invoke Client Streaming RPC call error.", "workerID", w.workerID,
+		w.config.log.Errorw("Invoke Client Streaming RPC call error: "+err.Error(), "workerID", w.workerID,
 			"call type", "client-streaming",
 			"call", w.mtd.GetFullyQualifiedName(), "error", err)
 	}
@@ -199,7 +199,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 			res, closeErr := str.CloseAndReceive()
 
 			if w.config.hasLog {
-				w.config.log.Debugw("Close and receive.", "workerID", w.workerID, "call type", "client-streaming",
+				w.config.log.Debugw("Close and receive", "workerID", w.workerID, "call type", "client-streaming",
 					"call", w.mtd.GetFullyQualifiedName(),
 					"response", res, "error", closeErr)
 			}
@@ -211,7 +211,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 			res, closeErr := str.CloseAndReceive()
 
 			if w.config.hasLog {
-				w.config.log.Debugw("Close and receive.", "workerID", w.workerID, "call type", "client-streaming",
+				w.config.log.Debugw("Close and receive", "workerID", w.workerID, "call type", "client-streaming",
 					"call", w.mtd.GetFullyQualifiedName(),
 					"response", res, "error", closeErr)
 			}
@@ -230,7 +230,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 		err = str.SendMsg(payload)
 
 		if w.config.hasLog {
-			w.config.log.Debugw("Send message.", "workerID", w.workerID, "call type", "client-streaming",
+			w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "client-streaming",
 				"call", w.mtd.GetFullyQualifiedName(),
 				"payload", payload, "error", err)
 		}
@@ -241,7 +241,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 			res, closeErr := str.CloseAndReceive()
 
 			if w.config.hasLog {
-				w.config.log.Debugw("Close and receive.", "workerID", w.workerID, "call type", "client-streaming",
+				w.config.log.Debugw("Close and receive", "workerID", w.workerID, "call type", "client-streaming",
 					"call", w.mtd.GetFullyQualifiedName(),
 					"response", res, "error", closeErr)
 			}
@@ -257,7 +257,7 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 	str, err := w.stub.InvokeRpcServerStream(*ctx, w.mtd, input)
 
 	if err != nil && w.config.hasLog {
-		w.config.log.Errorw("Invoke Server Streaming RPC call error.", "workerID", w.workerID,
+		w.config.log.Errorw("Invoke Server Streaming RPC call error: "+err.Error(), "workerID", w.workerID,
 			"call type", "server-streaming",
 			"call", w.mtd.GetFullyQualifiedName(),
 			"input", input, "error", err)
@@ -267,7 +267,7 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 		res, err := str.RecvMsg()
 
 		if w.config.hasLog {
-			w.config.log.Debugw("Receive message.", "workerID", w.workerID, "call type", "server-streaming",
+			w.config.log.Debugw("Receive message", "workerID", w.workerID, "call type", "server-streaming",
 				"call", w.mtd.GetFullyQualifiedName(),
 				"response", res, "error", err)
 		}
@@ -287,7 +287,8 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 	str, err := w.stub.InvokeRpcBidiStream(*ctx, w.mtd)
 	if err != nil {
 		if w.config.hasLog {
-			w.config.log.Errorw("Invoke BIDI RPC call error.", "workerID", w.workerID, "call type", "bidi",
+			w.config.log.Errorw("Invoke Bidi RPC call error: "+err.Error(),
+				"workerID", w.workerID, "call type", "bidi",
 				"call", w.mtd.GetFullyQualifiedName(), "error", err)
 		}
 
@@ -304,7 +305,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 		closeErr := str.CloseSend()
 
 		if w.config.hasLog {
-			w.config.log.Debugw("Close send.", "workerID", w.workerID, "call type", "bidi",
+			w.config.log.Debugw("Close send", "workerID", w.workerID, "call type", "bidi",
 				"call", w.mtd.GetFullyQualifiedName(), "error", closeErr)
 		}
 
@@ -316,7 +317,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 			res, err := str.RecvMsg()
 
 			if w.config.hasLog {
-				w.config.log.Debugw("Receive message.", "workerID", w.workerID, "call type", "bidi",
+				w.config.log.Debugw("Receive message", "workerID", w.workerID, "call type", "bidi",
 					"call", w.mtd.GetFullyQualifiedName(),
 					"response", res, "error", err)
 			}
@@ -333,7 +334,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 			closeErr := str.CloseSend()
 
 			if w.config.hasLog {
-				w.config.log.Debugw("Close send.", "workerID", w.workerID, "call type", "bidi",
+				w.config.log.Debugw("Close send", "workerID", w.workerID, "call type", "bidi",
 					"call", w.mtd.GetFullyQualifiedName(), "error", closeErr)
 			}
 
@@ -352,7 +353,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 		counter++
 
 		if w.config.hasLog {
-			w.config.log.Debugw("Send message.", "workerID", w.workerID, "call type", "bidi",
+			w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "bidi",
 				"call", w.mtd.GetFullyQualifiedName(),
 				"payload", payload, "error", err)
 		}
