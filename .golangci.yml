@@ -8,7 +8,7 @@
 issues:
   exclude-rules:
     # Exclude lostcancel govet rule specifically for requester.go
-    # Since we purpocefully do that. See comments in code.
+    # Since we purposefully do that. See comments in code.
     - path: runner/requester.go
       text: "lostcancel"
     
