@@ -8,9 +8,18 @@
 issues:
   exclude-rules:
     # Exclude lostcancel govet rule specifically for requester.go
-    # Since we purpocefully do that. See comments in code.
+    # Since we purposefully do that. See comments in code.
     - path: runner/requester.go
       text: "lostcancel"
+    
     # TODO Look into fixing time.Tick() usage SA1015 in worker.go
     - path: runner/worker.go
       text: "SA1015"
+    
+    # We intentionally assign nil to err
+    - path: runner/worker.go
+      text: "ineffectual assignment to `err`"
+
+    # Debug log Sync() error check in defer in main
+    - path: cmd/ghz/main.go
+      text: "Error return value of `logger.Sync` is not checked"

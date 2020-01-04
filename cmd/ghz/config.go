@@ -30,7 +30,7 @@ func (d Duration) String() string {
 	return time.Duration(d).String()
 }
 
-// Config for the run.
+// config for the run.
 type config struct {
 	Proto           string             `json:"proto" toml:"proto" yaml:"proto"`
 	Protoset        string             `json:"protoset" toml:"protoset" yaml:"protoset"`
@@ -66,6 +66,7 @@ type config struct {
 	Name            string             `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
 	Tags            *map[string]string `json:"tags,omitempty" toml:"tags,omitempty" yaml:"tags,omitempty"`
 	ReflectMetadata *map[string]string `json:"reflect-metadata,omitempty" toml:"reflect-metadata,omitempty" yaml:"reflect-metadata,omitempty"`
+	Debug           string             `json:"debug,omitempty" toml:"debug,omitempty" yaml:"debug,omitempty"`
 	Host            string             `json:"host" toml:"host" yaml:"host"`
 }
 

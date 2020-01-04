@@ -60,6 +60,7 @@ type Requester struct {
 }
 
 func newRequester(c *RunConfig) (*Requester, error) {
+
 	var err error
 	var mtd *desc.MethodDescriptor
 
@@ -190,6 +191,10 @@ func (b *Requester) Stop(reason StopReason) {
 	b.stopReason = reason
 	b.lock.Unlock()
 
+	if b.config.hasLog {
+		b.config.log.Debugf("Stopping with reason: %+v", reason)
+	}
+
 	// Send stop signal so that workers can stop gracefully.
 	for i := 0; i < b.config.c; i++ {
 		b.stopCh <- true
@@ -210,8 +215,16 @@ func (b *Requester) Finish() *Report {
 	close(b.results)
 	total := time.Since(b.start)
 
+	if b.config.hasLog {
+		b.config.log.Debug("Waiting for report")
+	}
+
 	// Wait until the reporter is done.
 	<-b.reporter.done
+
+	if b.config.hasLog {
+		b.config.log.Debug("Finilizing report")
+	}
 
 	return b.reporter.Finalize(b.stopReason, total)
 }
@@ -227,6 +240,10 @@ func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
 	for n := 0; n < b.config.nConns; n++ {
 		c, err := b.newClientConn(true)
 		if err != nil {
+			if b.config.hasLog {
+				b.config.log.Errorf("Error creating client connection: %+v", err.Error())
+			}
+
 			return nil, err
 		}
 
@@ -237,6 +254,10 @@ func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
 }
 
 func (b *Requester) closeClientConns() {
+	if b.config.hasLog {
+		b.config.log.Debug("Closing client connections")
+	}
+
 	b.lock.Lock()
 	defer b.lock.Unlock()
 	if b.conns == nil {
@@ -276,9 +297,20 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	}
 
 	if withStatsHandler {
-		sh := &statsHandler{results: b.results}
+		sh := &statsHandler{
+			id:      len(b.handlers),
+			results: b.results,
+			hasLog:  b.config.hasLog,
+			log:     b.config.log,
+		}
+
 		b.handlers = append(b.handlers, sh)
+
 		opts = append(opts, grpc.WithStatsHandler(sh))
+	}
+
+	if b.config.hasLog {
+		b.config.log.Debugw("Creating client connection", "options", opts)
 	}
 
 	// create client connection
@@ -303,6 +335,11 @@ func (b *Requester) runWorkers() error {
 
 		if len(b.config.name) > 0 {
 			wID = b.config.name + ":" + wID
+		}
+
+		if b.config.hasLog {
+			b.config.log.Debugw("Creating worker with ID: "+wID,
+				"workerID", wID, "requests per worker", nReqPerWorker)
 		}
 
 		w := Worker{

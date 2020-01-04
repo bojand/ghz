@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"sync"
-	"time"
 
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
@@ -12,6 +11,10 @@ import (
 // StatsHandler is for gRPC stats
 type statsHandler struct {
 	results chan *callResult
+
+	id     int
+	hasLog bool
+	log    Logger
 
 	lock   sync.RWMutex
 	ignore bool
@@ -38,17 +41,21 @@ func (c *statsHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 		c.lock.RUnlock()
 
 		if !ign {
-			rpcStats := rs
-			end := time.Now()
-			duration := end.Sub(rpcStats.BeginTime)
+			duration := rs.EndTime.Sub(rs.BeginTime)
 
 			var st string
-			s, ok := status.FromError(rpcStats.Error)
+			s, ok := status.FromError(rs.Error)
 			if ok {
 				st = s.Code().String()
 			}
 
-			c.results <- &callResult{rpcStats.Error, st, duration, end}
+			c.results <- &callResult{rs.Error, st, duration, rs.EndTime}
+
+			if c.hasLog {
+				c.log.Debugw("Received RPC Stats",
+					"statsID", c.id, "code", st, "error", rs.Error,
+					"duration", duration, "stats", rs)
+			}
 		}
 	}
 }
