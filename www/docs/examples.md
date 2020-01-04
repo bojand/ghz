@@ -145,7 +145,7 @@ ghz --insecure \
   0.0.0.0:50051
 ```
 
-Client streaming with :
+Client streaming with metadata:
 
 ```sh
 ghz --insecure \
@@ -156,7 +156,7 @@ ghz --insecure \
   0.0.0.0:50051
 ```
 
-Server streaming:
+Server streaming with metadata:
 
 ```sh
 ghz --insecure \
