@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       GO111MODULE: on
+      GOLANGCI_LINT_VERSION: v1.22.0
 
     steps:
     - name: Set up Go
@@ -40,11 +41,27 @@ jobs:
       id: go
     - name: Check out code
       uses: actions/checkout@v1
+    - name: Cache Go modules
+      uses: actions/cache@v1
+      id: cache-go-mod
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Cache bin directory
+      id: cache-go-bin
+      uses: actions/cache@v1
+      with:
+        path: ~/go/bin
+        key: ${{ runner.os }}-go-bin-${{ env.GOLANGCI_LINT_VERSION }}
     - name: Install tparse
+      if: steps.cache-go-bin.outputs.cache-hit != 'true'
       run: go get github.com/mfridman/tparse
     - name: Install golangci-lint
-      run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/go/bin v1.21.0
+      if: steps.cache-go-bin.outputs.cache-hit != 'true'
+      run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/go/bin $GOLANGCI_LINT_VERSION
     - name: Lint
-      run: $HOME/go/bin/golangci-lint run ./...
+      run: $HOME/go/bin/golangci-lint run --timeout=2m ./...
     - name: Test
       run: go test -failfast -race -covermode=atomic -coverprofile=coverage.txt -cover -json ./... | $HOME/go/bin/tparse
