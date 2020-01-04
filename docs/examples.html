@@ -139,4 +139,28 @@
 <p>Config file settings can be combined with command line arguments. CLI options overwrite config file options.</p>
 <pre><code class="hljs css language-sh">ghz --config ./config.json -c 20 -n 1000
 </code></pre>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/calldata"><span class="arrow-prev">← </span><span>Call Template Data</span></a><a class="docs-next button" href="/docs/example_config"><span>Configuration Files</span><span class="arrow-next"> →</span></a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Bojan D.</section></footer></div></body></html>
+<p>With debug logging enabled:</p>
+<pre><code class="hljs css language-sh">ghz --insecure \
+  --proto ./protos/greeter.proto \
+  --call helloworld.Greeter.SayHello \
+  -d <span class="hljs-string">'{"name":"Joe"}'</span> -c 5 -n 50 -m <span class="hljs-string">'{"request-id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}'</span> \
+  --debug ./logs/debug.json \
+  0.0.0.0:50051
+</code></pre>
+<p>Client streaming with metadata:</p>
+<pre><code class="hljs css language-sh">ghz --insecure \
+  --proto ./protos/route_guide.proto \
+  --call routeguide.RouteGuide.RecordRoute \
+  -d <span class="hljs-string">'[{ "latitude": 407838351, "longitude": -746143763 }, { "latitude": 419999544, "longitude": -740371136 }, { "latitude": 419611318, "longitude": -746524769 }, { "latitude": 412144655, "longitude": -743949739 }]'</span> \
+  -m <span class="hljs-string">'{"trace_id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnixNano}}"}'</span> \
+  0.0.0.0:50051
+</code></pre>
+<p>Server streaming with metadata:</p>
+<pre><code class="hljs css language-sh">ghz --insecure \
+  --proto ./protos/route_guide.proto \
+  --call routeguide.RouteGuide.ListFeatures \
+  -d <span class="hljs-string">'{"lo":{"latitude":400000000,"longitude":-750000000},"hi":{"latitude":420000000,"longitude":-730000000}}'</span> \
+  -m <span class="hljs-string">'{"trace_id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnixNano}}"}'</span> \
+  0.0.0.0:50051
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/calldata"><span class="arrow-prev">← </span><span>Call Template Data</span></a><a class="docs-next button" href="/docs/example_config"><span>Configuration Files</span><span class="arrow-next"> →</span></a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2020 Bojan D.</section></footer></div></body></html>
