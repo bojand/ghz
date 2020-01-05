@@ -20,7 +20,7 @@ func Run(call, host string, options ...Option) (*Report, error) {
 	c, err := newConfig(call, host, options...)
 
 	if err != nil {
-		if c.hasLog {
+		if c != nil && c.hasLog {
 			c.log.Errorf("Error creating run config: %+v", err.Error())
 		}
 
