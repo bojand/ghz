@@ -1,6 +1,6 @@
 [database]
 type = "postgres"
-connection = "host=dbhost user=dbuser dbname=ghz sslmode=disabled password=dbpwd"
+connection = "host=dbhost user=dbuser dbname=ghz sslmode=disable password=dbpwd"
 
 [server]
 port = 4321

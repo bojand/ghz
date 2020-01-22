@@ -22,7 +22,7 @@ func TestConfig_Read(t *testing.T) {
 			"../test/config2.toml",
 			&Config{
 				Server:   Server{Port: 4321},
-				Database: Database{Type: "postgres", Connection: "host=dbhost user=dbuser dbname=ghz sslmode=disabled password=dbpwd"},
+				Database: Database{Type: "postgres", Connection: "host=dbhost user=dbuser dbname=ghz sslmode=disable password=dbpwd"},
 				Log:      Log{Level: "warn", Path: "/tmp/ghz.log"}}},
 		{"config3.toml",
 			"../test/config3.toml",
@@ -34,13 +34,13 @@ func TestConfig_Read(t *testing.T) {
 			"../test/config2.json",
 			&Config{
 				Server:   Server{Port: 4321},
-				Database: Database{Type: "postgres", Connection: "host=dbhost user=dbuser dbname=ghz sslmode=disabled password=dbpwd"},
+				Database: Database{Type: "postgres", Connection: "host=dbhost user=dbuser dbname=ghz sslmode=disable password=dbpwd"},
 				Log:      Log{Level: "warn", Path: "/tmp/ghz.log"}}},
 		{"config2.yml",
 			"../test/config2.yml",
 			&Config{
 				Server:   Server{Port: 4321},
-				Database: Database{Type: "postgres", Connection: "host=dbhost user=dbuser dbname=ghz sslmode=disabled password=dbpwd"},
+				Database: Database{Type: "postgres", Connection: "host=dbhost user=dbuser dbname=ghz sslmode=disable password=dbpwd"},
 				Log:      Log{Level: "warn", Path: "/tmp/ghz.log"}}},
 	}
 
