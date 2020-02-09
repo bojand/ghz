@@ -71,6 +71,7 @@ path = "/tmp/ghz.log"   # the path to log file, otherwize stdout is used
 | :------: | :------------------------------------------------------------------: |
 | sqlite3  | `path/to/database.db`                                                |
 |  mysql   | `dbuser:dbpassword@/ghz`                                               |
-| postgres | `host=dbhost user=dbuser dbname=ghz sslmode=disabled password=dbpassword` |
+| postgres | `host=dbhost user=dbuser dbname=ghz sslmode=disable password=dbpassword` |
 
 When using postgres without SSL then `sslmode=disable` must be added to the connection string.
+When using mysql with host then `tcp(host)` must be added to the connection string like that `dbuser:dbpassword@tcp(dbhost)/ghz`.

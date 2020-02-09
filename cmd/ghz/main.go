@@ -176,7 +176,8 @@ var (
 	debug      = kingpin.Flag("debug", "The path to debug log file.").
 			PlaceHolder(" ").IsSetByUser(&isDebugSet).String()
 
-	host = kingpin.Arg("host", "Host and port to test.").String()
+	isHostSet = false
+	host      = kingpin.Arg("host", "Host and port to test.").String()
 )
 
 func main() {
@@ -184,6 +185,8 @@ func main() {
 	kingpin.CommandLine.HelpFlag.Short('h')
 	kingpin.CommandLine.VersionFlag.Short('v')
 	kingpin.Parse()
+
+	isHostSet = *host != ""
 
 	cfgPath := strings.TrimSpace(*cPath)
 
@@ -576,6 +579,10 @@ func mergeConfig(dest *config, src *config) error {
 
 	if isDebugSet {
 		dest.Debug = src.Debug
+	}
+
+	if isHostSet {
+		dest.Host = src.Host
 	}
 
 	return nil

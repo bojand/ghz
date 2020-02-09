@@ -23,7 +23,6 @@ func Run(call, host string, options ...Option) (*Report, error) {
 		if c != nil && c.hasLog {
 			c.log.Errorf("Error creating run config: %+v", err.Error())
 		}
-
 		return nil, err
 	}
 
@@ -35,10 +34,6 @@ func Run(call, host string, options ...Option) (*Report, error) {
 	reqr, err := newRequester(c)
 
 	if err != nil {
-		if c.hasLog {
-			c.log.Errorf("Error creating new requestor: %+v", err.Error())
-		}
-
 		return nil, err
 	}
 
