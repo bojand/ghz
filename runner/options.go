@@ -19,11 +19,12 @@ import (
 // RunConfig represents the request Configs
 type RunConfig struct {
 	// call settings
-	call        string
-	host        string
-	proto       string
-	importPaths []string
-	protoset    string
+	call              string
+	host              string
+	proto             string
+	importPaths       []string
+	protoset          string
+	enableCompression bool
 
 	// security settings
 	creds      credentials.TransportCredentials
@@ -535,6 +536,16 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 	c.creds = creds
 
 	return c, nil
+}
+
+// WithEnableCompression specifies that requests should be done using gzip Compressor
+// WithEnableCompression(true)
+func WithEnableCompression(enableCompression bool) Option {
+	return func(o *RunConfig) error {
+		o.enableCompression = enableCompression
+
+		return nil
+	}
 }
 
 func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFile, clientKeyFile, cname string) (credentials.TransportCredentials, error) {

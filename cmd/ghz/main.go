@@ -178,6 +178,10 @@ var (
 
 	isHostSet = false
 	host      = kingpin.Arg("host", "Host and port to test.").String()
+
+	isEnableCompressionSet = false
+	enableCompression      = kingpin.Flag("enable-compression", "Enable Gzip compression on requests.").
+				Short('e').Default("false").IsSetByUser(&isEnableCompressionSet).Bool()
 )
 
 func main() {
@@ -245,6 +249,7 @@ func main() {
 		runner.WithStreamInterval(time.Duration(cfg.SI)),
 		runner.WithReflectionMetadata(cfg.ReflectMetadata),
 		runner.WithConnections(cfg.Connections),
+		runner.WithEnableCompression(cfg.EnableCompression),
 	)
 
 	if strings.TrimSpace(cfg.MetadataPath) != "" {
@@ -432,6 +437,7 @@ func createConfigFromArgs(cfg *config) error {
 	cfg.Tags = &tagsMap
 	cfg.ReflectMetadata = &rmdMap
 	cfg.Debug = *debug
+	cfg.EnableCompression = *enableCompression
 
 	return nil
 }

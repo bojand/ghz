@@ -59,6 +59,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+		assert.Equal(t, c.enableCompression, false)
 	})
 
 	t.Run("with options", func(t *testing.T) {
@@ -100,6 +101,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", ".", "/home/protos"}, c.importPaths)
+		assert.Equal(t, c.enableCompression, false)
 	})
 
 	t.Run("with binary data, protoset and metadata file", func(t *testing.T) {
@@ -146,6 +148,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "", string(c.proto))
 		assert.Equal(t, "testdata/bundle.protoset", string(c.protoset))
 		assert.NotNil(t, c.creds)
+		assert.Equal(t, c.enableCompression, false)
 	})
 
 	t.Run("with data interface and metadata map", func(t *testing.T) {
@@ -216,6 +219,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
 		assert.NotNil(t, c.creds)
 		assert.Equal(t, map[string]string{"auth": "bizbaz"}, *c.rmd)
+		assert.Equal(t, c.enableCompression, false)
 	})
 
 	t.Run("with binary data from file", func(t *testing.T) {
@@ -244,6 +248,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+		assert.Equal(t, c.enableCompression, false)
 	})
 
 	t.Run("with data from file", func(t *testing.T) {
@@ -273,6 +278,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+		assert.Equal(t, c.enableCompression, false)
 	})
 
 	t.Run("with data from reader", func(t *testing.T) {
@@ -307,6 +313,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+		assert.Equal(t, c.enableCompression, false)
 	})
 
 	t.Run("with connections", func(t *testing.T) {
@@ -342,6 +349,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
+		assert.Equal(t, c.enableCompression, false)
 	})
 
 	t.Run("with invalid connections > concurrency", func(t *testing.T) {

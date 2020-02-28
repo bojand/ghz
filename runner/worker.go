@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
@@ -90,6 +91,12 @@ func (w *Worker) makeRequest() error {
 	if mdMap != nil && len(*mdMap) > 0 {
 		md := metadata.New(*mdMap)
 		reqMD = &md
+	} else {
+		reqMD = &metadata.MD{}
+	}
+
+	if w.config.enableCompression {
+		reqMD.Append("grpc-accept-encoding", gzip.Name)
 	}
 
 	ctx := context.Background()
@@ -139,7 +146,14 @@ func (w *Worker) makeRequest() error {
 		if w.mtd.IsServerStreaming() {
 			_ = w.makeServerStreamingRequest(&ctx, inputs[inputIdx])
 		} else {
-			res, resErr := w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx], grpc.UseCompressor(gzip.Name))
+			var res proto.Message
+			var resErr error
+			if w.config.enableCompression {
+				res, resErr = w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx], grpc.UseCompressor(gzip.Name))
+			} else {
+				res, resErr = w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx])
+			}
+
 			if w.config.hasLog {
 				w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", callType,
 					"call", w.mtd.GetFullyQualifiedName(),
@@ -183,7 +197,13 @@ func (w *Worker) getMessages(ctd *callTemplateData, inputData []byte) ([]*dynami
 }
 
 func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynamic.Message) error {
-	str, err := w.stub.InvokeRpcClientStream(*ctx, w.mtd, grpc.UseCompressor(gzip.Name))
+	var str *grpcdynamic.ClientStream
+	var err error
+	if w.config.enableCompression {
+		str, err = w.stub.InvokeRpcClientStream(*ctx, w.mtd, grpc.UseCompressor(gzip.Name))
+	} else {
+		str, err = w.stub.InvokeRpcClientStream(*ctx, w.mtd)
+	}
 
 	if err != nil && w.config.hasLog {
 		w.config.log.Errorw("Invoke Client Streaming RPC call error: "+err.Error(), "workerID", w.workerID,
@@ -284,7 +304,14 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 }
 
 func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message) error {
-	str, err := w.stub.InvokeRpcBidiStream(*ctx, w.mtd, grpc.UseCompressor(gzip.Name))
+	var str *grpcdynamic.BidiStream
+	var err error
+	if w.config.enableCompression {
+		str, err = w.stub.InvokeRpcBidiStream(*ctx, w.mtd, grpc.UseCompressor(gzip.Name))
+	} else {
+		str, err = w.stub.InvokeRpcBidiStream(*ctx, w.mtd)
+	}
+
 	if err != nil {
 		if w.config.hasLog {
 			w.config.log.Errorw("Invoke Bidi RPC call error: "+err.Error(),
