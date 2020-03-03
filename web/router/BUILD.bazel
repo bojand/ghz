@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["router.go"],
+    importpath = "github.com/bojand/ghz/web/router",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//web/api:go_default_library",
+        "//web/config:go_default_library",
+        "//web/database:go_default_library",
+        "//web/router/statik:go_default_library",
+        "@com_github_go_playground_validator//:go_default_library",
+        "@com_github_labstack_echo//:go_default_library",
+        "@com_github_labstack_echo//middleware:go_default_library",
+        "@com_github_labstack_gommon//log:go_default_library",
+        "@com_github_rakyll_statik//fs:go_default_library",
+    ],
+)

@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
+
+# gazelle:prefix github.com/bojand/ghz
+gazelle(name = "gazelle")
+
+buildifier(
+    name = "buildifier-lint-fix",
+    lint_mode = "fix",
+)
+
+buildifier(
+    name = "buildifier-lint-warn",
+    lint_mode = "warn",
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = ["doc.go"],
+    importpath = "github.com/bojand/ghz",
+    visibility = ["//visibility:public"],
+)

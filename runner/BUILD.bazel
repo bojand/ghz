@@ -1,0 +1,62 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "call_template_data.go",
+        "data.go",
+        "logger.go",
+        "options.go",
+        "reason.go",
+        "reporter.go",
+        "requester.go",
+        "run.go",
+        "stats_handler.go",
+        "worker.go",
+    ],
+    importpath = "github.com/bojand/ghz/runner",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//protodesc:go_default_library",
+        "@com_github_golang_protobuf//jsonpb:go_default_library_gen",
+        "@com_github_golang_protobuf//proto:go_default_library",
+        "@com_github_google_uuid//:go_default_library",
+        "@com_github_jhump_protoreflect//desc:go_default_library",
+        "@com_github_jhump_protoreflect//dynamic:go_default_library",
+        "@com_github_jhump_protoreflect//dynamic/grpcdynamic:go_default_library",
+        "@com_github_jhump_protoreflect//grpcreflect:go_default_library",
+        "@com_github_pkg_errors//:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//credentials:go_default_library",
+        "@org_golang_google_grpc//keepalive:go_default_library",
+        "@org_golang_google_grpc//metadata:go_default_library",
+        "@org_golang_google_grpc//reflection/grpc_reflection_v1alpha:go_default_library",
+        "@org_golang_google_grpc//stats:go_default_library",
+        "@org_golang_google_grpc//status:go_default_library",
+        "@org_uber_go_multierr//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "call_template_data_test.go",
+        "data_test.go",
+        "example_test.go",
+        "options_test.go",
+        "reason_test.go",
+        "reporter_test.go",
+        "run_test.go",
+        "stats_handler_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//internal:go_default_library",
+        "//internal/helloworld:go_default_library",
+        "//printer:go_default_library",
+        "//protodesc:go_default_library",
+        "@com_github_golang_protobuf//proto:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+    ],
+)
