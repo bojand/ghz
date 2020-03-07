@@ -23,6 +23,12 @@ GO_PKGS ?= $(shell go list ./...)
 # GO_TEST_FLAGS are the flags passed to go test
 GO_TEST_FLAGS ?= -race
 
+# directory to output build
+DIST_DIR=./dist
+
+# export GOPATH
+export GOPATH := $(shell go env GOPATH)
+
 # Set OPEN_COVERAGE=1 to open the coverage.html file after running make cover.
 ifeq ($(OPEN_COVERAGE),1)
 	OPEN_COVERAGE_HTML := 1
@@ -58,13 +64,13 @@ TMP_COVERAGE := $(TMP_BASE)/coverage
 setup:
 	if [ ! -f $(GOPATH)/bin/tparse ]; then go get github.com/mfridman/tparse; fi;
 	if [ ! -f $(GOPATH)/bin/goimports ]; then go get golang.org/x/tools/cmd/goimports; fi;
-	if [ ! -f $(GOPATH)/bin/golangci-lint ]; curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/go/bin v1.21.0
+	if [ ! -f $(GOPATH)/bin/golangci-lint ]; then curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.23.8; fi;
 	go mod download
 .PHONY: setup
 
 # All runs the default lint, test, and code coverage targets.
 .PHONY: all
-all: lint cover
+all: lint cover build
 
 # Clean removes all temporary files.
 .PHONY: clean
@@ -83,9 +89,14 @@ test:
 	go test $(GO_TEST_FLAGS) $(GO_PKGS)
 
 # gofmt and goimports all go files
+.PHONY: fmt
 fmt:
 	find . -name '*.go' | while read -r file; do gofmt -w -s "$$file"; goimports -w "$$file"; done
-.PHONY: fmt
+
+.PHONY: build
+build:
+	go build --ldflags="-s -w" -o $(DIST_DIR)/ghz ./cmd/ghz/...
+	go build --ldflags="-s -w" -o $(DIST_DIR)/ghz-web ./cmd/ghz-web/...
 
 # Cover runs go_test on GO_PKGS and produces code coverage in multiple formats.
 # A coverage.html file for human viewing will be at $(TMP_COVERAGE)/coverage.html
