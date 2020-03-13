@@ -213,3 +213,7 @@ Print the version.
 ### `-h`, `--help`                
 
 Show context-sensitive help (also try --help-long and --help-man).
+
+### `-e`, `--enable-compression`               
+
+Enable gzip compression on requests.

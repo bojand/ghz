@@ -148,11 +148,12 @@ func (w *Worker) makeRequest() error {
 		} else {
 			var res proto.Message
 			var resErr error
+			var callOptions = []grpc.CallOption{}
 			if w.config.enableCompression {
-				res, resErr = w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx], grpc.UseCompressor(gzip.Name))
-			} else {
-				res, resErr = w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx])
+				callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
 			}
+
+			res, resErr = w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx], callOptions...)
 
 			if w.config.hasLog {
 				w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", callType,
