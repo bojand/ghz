@@ -30,7 +30,6 @@ Flags:
   -d, --data=                  The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.
   -D, --data-file=             File path for call data JSON file. Examples: /home/user/file.json or ./file.json.
   -b, --binary                 The call data comes as serialized binary message or multiple count-prefixed messages read from stdin.
-  -e, --enable-compression     Enable gzip compression on requests.
   -B, --binary-file=           File path for the call data as serialized binary message or multiple count-prefixed messages.
   -m, --metadata=              Request metadata as stringified JSON.
   -M, --metadata-file=         File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
@@ -45,6 +44,7 @@ Flags:
       --tags=                  JSON representation of user-defined string tags.
       --cpus=12                Number of cpu cores to use.
       --debug=                 The path to debug log file.
+  -e, --enable-compression     Enable Gzip compression on requests.
   -v, --version                Show application version.
 
 Args:
