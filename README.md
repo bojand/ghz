@@ -63,6 +63,7 @@ Flags:
       --cpus=12                Number of cpu cores to use.
       --debug=                 The path to debug log file.
   -v, --version                Show application version.
+  -e, --enable-compression     Enable Gzip compression on requests.
 
 Args:
   [<host>]  Host and port to test.
