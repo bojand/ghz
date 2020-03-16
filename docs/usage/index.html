@@ -80,7 +80,6 @@
   -d, --data=                  The <span class="hljs-keyword">call</span> data <span class="hljs-keyword">as</span> stringified JSON. <span class="hljs-keyword">If</span> the value <span class="hljs-keyword">is</span> <span class="hljs-comment">'@' then the request contents are read from stdin.</span>
   -D, --data-file=             File path <span class="hljs-keyword">for</span> <span class="hljs-keyword">call</span> data JSON file. Examples: /home/user/file.json <span class="hljs-keyword">or</span> ./file.json.
   -b, --<span class="hljs-keyword">binary</span>                 The <span class="hljs-keyword">call</span> data comes <span class="hljs-keyword">as</span> serialized <span class="hljs-keyword">binary</span> message <span class="hljs-keyword">or</span> multiple count-prefixed messages read <span class="hljs-keyword">from</span> stdin.
-  -e, --enable-compression     Enable gzip compression <span class="hljs-keyword">on</span> requests.
   -B, --<span class="hljs-keyword">binary</span>-file=           File path <span class="hljs-keyword">for</span> the <span class="hljs-keyword">call</span> data <span class="hljs-keyword">as</span> serialized <span class="hljs-keyword">binary</span> message <span class="hljs-keyword">or</span> multiple count-prefixed messages.
   -m, --metadata=              Request metadata <span class="hljs-keyword">as</span> stringified JSON.
   -M, --metadata-file=         File path <span class="hljs-keyword">for</span> <span class="hljs-keyword">call</span> metadata JSON file. Examples: /home/user/metadata.json <span class="hljs-keyword">or</span> ./metadata.json.
@@ -95,6 +94,7 @@
       --tags=                  JSON representation <span class="hljs-keyword">of</span> user-defined <span class="hljs-built_in">string</span> tags.
       --cpus=<span class="hljs-number">12</span>                Number <span class="hljs-keyword">of</span> cpu cores <span class="hljs-keyword">to</span> use.
       --debug=                 The path <span class="hljs-keyword">to</span> debug log file.
+  -e, --enable-compression     Enable Gzip compression <span class="hljs-keyword">on</span> requests.
   -v, --version                Show application version.
 
 Args:
