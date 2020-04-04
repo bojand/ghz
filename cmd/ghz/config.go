@@ -34,7 +34,7 @@ func (d Duration) String() string {
 type config struct {
 	Proto             string             `json:"proto" toml:"proto" yaml:"proto"`
 	Protoset          string             `json:"protoset" toml:"protoset" yaml:"protoset"`
-	Call              string             `json:"call" toml:"call" yaml:"call" required:"true"`
+	Call              string             `json:"call" toml:"call" yaml:"call"`
 	RootCert          string             `json:"cacert" toml:"cacert" yaml:"cacert"`
 	Cert              string             `json:"cert" toml:"cert" yaml:"cert"`
 	Key               string             `json:"key" toml:"key" yaml:"key"`
