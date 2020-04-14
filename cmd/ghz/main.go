@@ -9,12 +9,12 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
+
+	"github.com/jinzhu/configor"
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/bojand/ghz/printer"
 	"github.com/bojand/ghz/runner"
-	"github.com/jinzhu/configor"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
@@ -78,10 +78,10 @@ func main() {
 
 	cfgPath := strings.TrimSpace(*cPath)
 
-	var cfg *config
+	var cfg *runner.Config
 
 	if cfgPath != "" {
-		var conf config
+		var conf runner.Config
 		err := configor.Load(&conf, cfgPath)
 		kingpin.FatalIfError(err, "")
 
@@ -100,56 +100,7 @@ func main() {
 		cfg.N = math.MaxInt32
 	}
 
-	// set up all the options
-	options := make([]runner.Option, 0, 15)
-
-	options = append(options,
-		runner.WithProtoFile(cfg.Proto, cfg.ImportPaths),
-		runner.WithProtoset(cfg.Protoset),
-		runner.WithRootCertificate(cfg.RootCert),
-		runner.WithCertificate(cfg.Cert, cfg.Key),
-		runner.WithServerNameOverride(cfg.CName),
-		runner.WithSkipTLSVerify(cfg.SkipTLSVerify),
-		runner.WithInsecure(cfg.Insecure),
-		runner.WithAuthority(cfg.Authority),
-		runner.WithConcurrency(cfg.C),
-		runner.WithTotalRequests(cfg.N),
-		runner.WithQPS(cfg.QPS),
-		runner.WithTimeout(time.Duration(cfg.Timeout)),
-		runner.WithRunDuration(time.Duration(cfg.Z)),
-		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)),
-		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)),
-		runner.WithName(cfg.Name),
-		runner.WithCPUs(cfg.CPUs),
-		runner.WithMetadata(cfg.Metadata),
-		runner.WithTags(cfg.Tags),
-		runner.WithStreamInterval(time.Duration(cfg.SI)),
-		runner.WithReflectionMetadata(cfg.ReflectMetadata),
-		runner.WithConnections(cfg.Connections),
-	)
-
-	if strings.TrimSpace(cfg.MetadataPath) != "" {
-		options = append(options, runner.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
-	}
-
-	// data
-	if dataStr, ok := cfg.Data.(string); ok && dataStr == "@" {
-		options = append(options, runner.WithDataFromReader(os.Stdin))
-	} else if strings.TrimSpace(cfg.DataPath) != "" {
-		options = append(options, runner.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
-	} else {
-		options = append(options, runner.WithData(cfg.Data))
-	}
-
-	// or binary data
-	if len(cfg.BinData) > 0 {
-		options = append(options, runner.WithBinaryData(cfg.BinData))
-	}
-	if len(cfg.BinDataPath) > 0 {
-		options = append(options, runner.WithBinaryDataFromFile(cfg.BinDataPath))
-	}
-
-	report, err := runner.Run(cfg.Call, cfg.Host, options...)
+	report, err := runner.Run(cfg.Call, cfg.Host, runner.WithConfig(cfg))
 	if err != nil {
 		handleError(err)
 	}
@@ -186,7 +137,7 @@ func handleError(err error) {
 	}
 }
 
-func createConfigFromArgs() (*config, error) {
+func createConfigFromArgs() (*runner.Config, error) {
 	iPaths := []string{}
 	pathsTrimmed := strings.TrimSpace(*paths)
 	if pathsTrimmed != "" {
@@ -234,7 +185,7 @@ func createConfigFromArgs() (*config, error) {
 		}
 	}
 
-	cfg := &config{
+	cfg := &runner.Config{
 		Host:            *host,
 		Proto:           *proto,
 		Protoset:        *protoset,
@@ -250,21 +201,21 @@ func createConfigFromArgs() (*config, error) {
 		C:               *c,
 		Connections:     *conns,
 		QPS:             *q,
-		Z:               Duration(*z),
-		X:               Duration(*x),
-		Timeout:         Duration(*t),
+		Z:               runner.Duration(*z),
+		X:               runner.Duration(*x),
+		Timeout:         runner.Duration(*t),
 		Data:            dataObj,
 		DataPath:        *dataPath,
 		BinData:         binaryData,
 		BinDataPath:     *binPath,
 		Metadata:        &metadata,
 		MetadataPath:    *mdPath,
-		SI:              Duration(*si),
+		SI:              runner.Duration(*si),
 		Output:          *output,
 		Format:          *format,
 		ImportPaths:     iPaths,
-		DialTimeout:     Duration(*ct),
-		KeepaliveTime:   Duration(*kt),
+		DialTimeout:     runner.Duration(*ct),
+		KeepaliveTime:   runner.Duration(*kt),
 		CPUs:            *cpus,
 		Name:            *name,
 		Tags:            &tagsMap,
