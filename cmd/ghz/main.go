@@ -10,14 +10,14 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/bojand/ghz/printer"
-	"github.com/bojand/ghz/runner"
 	"github.com/jinzhu/configor"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/bojand/ghz/printer"
+	"github.com/bojand/ghz/runner"
 )
 
 var (
@@ -194,7 +194,7 @@ func main() {
 
 	cfgPath := strings.TrimSpace(*cPath)
 
-	var cfg config
+	var cfg runner.Config
 
 	if cfgPath != "" {
 		err := configor.Load(&cfg, cfgPath)
@@ -202,7 +202,7 @@ func main() {
 
 		args := os.Args[1:]
 		if len(args) > 1 {
-			var cmdCfg config
+			var cmdCfg runner.Config
 			err = createConfigFromArgs(&cmdCfg)
 			kingpin.FatalIfError(err, "")
 
@@ -221,60 +221,9 @@ func main() {
 	} else if cfg.Z > 0 {
 		cfg.N = math.MaxInt32
 	}
-
-	// set up all the options
-	options := make([]runner.Option, 0, 15)
-
-	options = append(options,
-		runner.WithProtoFile(cfg.Proto, cfg.ImportPaths),
-		runner.WithProtoset(cfg.Protoset),
-		runner.WithRootCertificate(cfg.RootCert),
-		runner.WithCertificate(cfg.Cert, cfg.Key),
-		runner.WithServerNameOverride(cfg.CName),
-		runner.WithSkipTLSVerify(cfg.SkipTLSVerify),
-		runner.WithInsecure(cfg.Insecure),
-		runner.WithAuthority(cfg.Authority),
-		runner.WithConcurrency(cfg.C),
-		runner.WithTotalRequests(cfg.N),
-		runner.WithQPS(cfg.QPS),
-		runner.WithTimeout(time.Duration(cfg.Timeout)),
-		runner.WithRunDuration(time.Duration(cfg.Z)),
-		runner.WithDurationStopAction(cfg.ZStop),
-		runner.WithDialTimeout(time.Duration(cfg.DialTimeout)),
-		runner.WithKeepalive(time.Duration(cfg.KeepaliveTime)),
-		runner.WithName(cfg.Name),
-		runner.WithCPUs(cfg.CPUs),
-		runner.WithMetadata(cfg.Metadata),
-		runner.WithTags(cfg.Tags),
-		runner.WithStreamInterval(time.Duration(cfg.SI)),
-		runner.WithReflectionMetadata(cfg.ReflectMetadata),
-		runner.WithConnections(cfg.Connections),
-		runner.WithEnableCompression(cfg.EnableCompression),
-	)
-
-	if strings.TrimSpace(cfg.MetadataPath) != "" {
-		options = append(options, runner.WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
-	}
-
-	// data
-	if dataStr, ok := cfg.Data.(string); ok && dataStr == "@" {
-		options = append(options, runner.WithDataFromReader(os.Stdin))
-	} else if strings.TrimSpace(cfg.DataPath) != "" {
-		options = append(options, runner.WithDataFromFile(strings.TrimSpace(cfg.DataPath)))
-	} else {
-		options = append(options, runner.WithData(cfg.Data))
-	}
-
-	// or binary data
-	if len(cfg.BinData) > 0 {
-		options = append(options, runner.WithBinaryData(cfg.BinData))
-	}
-	if len(cfg.BinDataPath) > 0 {
-		options = append(options, runner.WithBinaryDataFromFile(cfg.BinDataPath))
-	}
-
 	var logger *zap.SugaredLogger
 
+	options := []runner.Option{runner.WithConfig(&cfg)}
 	if len(cfg.Debug) > 0 {
 		var err error
 		logger, err = createLogger(cfg.Debug)
@@ -349,7 +298,7 @@ func handleError(err error) {
 	}
 }
 
-func createConfigFromArgs(cfg *config) error {
+func createConfigFromArgs(cfg *runner.Config) error {
 	if cfg == nil {
 		return errors.New("config cannot be nil")
 	}
@@ -415,9 +364,9 @@ func createConfigFromArgs(cfg *config) error {
 	cfg.N = *n
 	cfg.C = *c
 	cfg.QPS = *q
-	cfg.Z = Duration(*z)
-	cfg.X = Duration(*x)
-	cfg.Timeout = Duration(*t)
+	cfg.Z = runner.Duration(*z)
+	cfg.X = runner.Duration(*x)
+	cfg.Timeout = runner.Duration(*t)
 	cfg.ZStop = *zstop
 	cfg.Data = dataObj
 	cfg.DataPath = *dataPath
@@ -425,13 +374,13 @@ func createConfigFromArgs(cfg *config) error {
 	cfg.BinDataPath = *binPath
 	cfg.Metadata = &metadata
 	cfg.MetadataPath = *mdPath
-	cfg.SI = Duration(*si)
+	cfg.SI = runner.Duration(*si)
 	cfg.Output = *output
 	cfg.Format = *format
 	cfg.ImportPaths = iPaths
 	cfg.Connections = *conns
-	cfg.DialTimeout = Duration(*ct)
-	cfg.KeepaliveTime = Duration(*kt)
+	cfg.DialTimeout = runner.Duration(*ct)
+	cfg.KeepaliveTime = runner.Duration(*kt)
 	cfg.CPUs = *cpus
 	cfg.Name = *name
 	cfg.Tags = &tagsMap
@@ -442,7 +391,7 @@ func createConfigFromArgs(cfg *config) error {
 	return nil
 }
 
-func mergeConfig(dest *config, src *config) error {
+func mergeConfig(dest *runner.Config, src *runner.Config) error {
 	if src == nil || dest == nil {
 		return errors.New("config cannot be nil")
 	}
