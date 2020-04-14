@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package wrapped;
+
+option go_package = "internal/wrapped";
+
+import "google/protobuf/wrappers.proto";
+
+service WrappedService {
+  rpc GetMessage (google.protobuf.StringValue) returns (google.protobuf.StringValue);
+}

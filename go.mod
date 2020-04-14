@@ -11,7 +11,7 @@ require (
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-playground/validator v9.30.0+incompatible
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.4.0
 	github.com/google/uuid v1.1.1
 	github.com/jhump/protoreflect v1.5.0
 	github.com/jinzhu/configor v1.1.1
@@ -25,6 +25,7 @@ require (
 	go.uber.org/multierr v1.3.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094
-	google.golang.org/grpc v1.24.0
+	google.golang.org/grpc v1.28.0
+	google.golang.org/protobuf v1.21.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
