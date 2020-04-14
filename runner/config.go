@@ -1,4 +1,4 @@
-package main
+package runner
 
 import (
 	"encoding/json"
@@ -30,7 +30,7 @@ func (d Duration) String() string {
 }
 
 // Config for the run.
-type config struct {
+type Config struct {
 	Proto           string             `json:"proto" toml:"proto" yaml:"proto"`
 	Protoset        string             `json:"protoset" toml:"protoset" yaml:"protoset"`
 	Call            string             `json:"call" toml:"call" yaml:"call" required:"true"`
@@ -69,8 +69,8 @@ type config struct {
 
 // UnmarshalJSON is our custom implementation to handle the Duration fields
 // and validate data
-func (c *config) UnmarshalJSON(data []byte) error {
-	type Alias config
+func (c *Config) UnmarshalJSON(data []byte) error {
+	type Alias Config
 	aux := &struct {
 		Z       string `json:"z"`
 		X       string `json:"x"`
@@ -131,8 +131,8 @@ func (c *config) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON is our custom implementation to handle the Duration fields
-func (c config) MarshalJSON() ([]byte, error) {
-	type Alias config
+func (c Config) MarshalJSON() ([]byte, error) {
+	type Alias Config
 	return json.Marshal(&struct {
 		*Alias
 		Z       string `json:"z"`
