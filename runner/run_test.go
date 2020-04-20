@@ -1103,7 +1103,5 @@ func TestRunWrappedUnary(t *testing.T) {
 
 		assert.Equal(t, report.Average, report.Slowest)
 		assert.Equal(t, report.Average, report.Fastest)
-
-		assert.True(t, false)
 	})
 }
