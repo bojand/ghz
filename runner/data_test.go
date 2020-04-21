@@ -2,6 +2,7 @@ package runner
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -44,6 +45,14 @@ func TestData_createPayloads(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, mtdTestUnaryTwo)
+
+	mtdWrapped, err := protodesc.GetMethodDescFromProto(
+		"wrapped.WrappedService.GetMessage",
+		"../testdata/wrapped.proto",
+		[]string{"../testdata"})
+
+	assert.NoError(t, err)
+	assert.NotNil(t, mtdUnary)
 
 	t.Run("get empty when empty", func(t *testing.T) {
 		inputs, err := createPayloadsFromJSON("", mtdUnary)
@@ -202,6 +211,18 @@ func TestData_createPayloads(t *testing.T) {
 		assert.NotNil(t, inputs)
 		assert.Len(t, inputs, 1)
 		assert.NotNil(t, inputs[0])
+	})
+
+	t.Run("create data with well-known wrapped type", func(t *testing.T) {
+		jsonData := `"foo"`
+
+		inputs, err := createPayloadsFromJSON(jsonData, mtdWrapped)
+		assert.NoError(t, err)
+		fmt.Println(err)
+		fmt.Println(inputs)
+		assert.NotNil(t, inputs)
+		assert.Len(t, inputs, 1)
+		assert.EqualValues(t, "foo", inputs[0].GetFieldByName("value"))
 	})
 
 	t.Run("create slice from single message binary data", func(t *testing.T) {

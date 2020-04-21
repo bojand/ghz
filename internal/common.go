@@ -10,6 +10,7 @@ import (
 
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/bojand/ghz/internal/sleep"
+	"github.com/bojand/ghz/internal/wrapped"
 )
 
 // TestPort is the port.
@@ -94,4 +95,37 @@ func StartSleepServer(secure bool) (*sleep.SleepService, *grpc.Server, error) {
 	}()
 
 	return &ss, s, err
+}
+
+// StartWrappedServer starts the wrapped test server
+func StartWrappedServer(secure bool) (*wrapped.WrappedService, *grpc.Server, error) {
+	lis, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var opts []grpc.ServerOption
+
+	if secure {
+		creds, err := credentials.NewServerTLSFromFile("../testdata/localhost.crt", "../testdata/localhost.key")
+		if err != nil {
+			return nil, nil, err
+		}
+		opts = []grpc.ServerOption{grpc.Creds(creds)}
+	}
+
+	s := grpc.NewServer(opts...)
+
+	ws := wrapped.WrappedService{}
+	wrapped.RegisterWrappedServiceServer(s, &ws)
+	reflection.Register(s)
+
+	TestPort = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
+	TestLocalhost = "localhost:" + TestPort
+
+	go func() {
+		_ = s.Serve(lis)
+	}()
+
+	return &ws, s, err
 }
