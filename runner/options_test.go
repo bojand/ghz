@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"encoding/json"
 	"os"
 	"runtime"
 	"testing"
@@ -366,5 +367,60 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, c)
+	})
+
+	t.Run("with config", func(t *testing.T) {
+		filename := "../testdata/config.json"
+		t.Run("from file", func(t *testing.T) {
+			c, err := newConfig("", "",
+				WithConfigFromFile(filename))
+			assert.Nil(t, err)
+			assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
+			assert.Equal(t, "0.0.0.0:50051", c.host)
+			assert.Equal(t, "../../testdata/greeter.proto", c.proto)
+			assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
+			assert.Equal(t, 5000, c.n)
+			assert.Equal(t, 50, c.c)
+			assert.Equal(t, 12*time.Second, c.z)
+			assert.Equal(t, 500*time.Millisecond, c.streamInterval)
+			assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
+			assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
+			assert.Equal(t, true, c.insecure)
+		})
+		file, _ := os.Open(filename)
+		defer file.Close()
+		t.Run("from reader", func(t *testing.T) {
+			c, err := newConfig("call", "localhost:50050",
+				WithConfigFromReader(file))
+			assert.Nil(t, err)
+			assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
+			assert.Equal(t, "0.0.0.0:50051", c.host)
+			assert.Equal(t, "../../testdata/greeter.proto", c.proto)
+			assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
+			assert.Equal(t, 5000, c.n)
+			assert.Equal(t, 50, c.c)
+			assert.Equal(t, 12*time.Second, c.z)
+			assert.Equal(t, 500*time.Millisecond, c.streamInterval)
+			assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
+			assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
+			assert.Equal(t, true, c.insecure)
+		})
+		file, _ = os.Open(filename)
+		var config Config
+		_ = json.NewDecoder(file).Decode(&config)
+		c, err := newConfig("call", "localhost:50050",
+			WithConfig(&config))
+		assert.Nil(t, err)
+		assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
+		assert.Equal(t, "0.0.0.0:50051", c.host)
+		assert.Equal(t, "../../testdata/greeter.proto", c.proto)
+		assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
+		assert.Equal(t, 5000, c.n)
+		assert.Equal(t, 50, c.c)
+		assert.Equal(t, 12*time.Second, c.z)
+		assert.Equal(t, 500*time.Millisecond, c.streamInterval)
+		assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
+		assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
+		assert.Equal(t, true, c.insecure)
 	})
 }
