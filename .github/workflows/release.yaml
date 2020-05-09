@@ -67,7 +67,6 @@ jobs:
           strip ./dist/${{ matrix.target }}/ghz
           strip ./dist/${{ matrix.target }}/ghz-web
           tar czvf ${{ matrix.name }} ./dist/${{ matrix.target }}/ghz ./dist/${{ matrix.target }}/ghz-web ./LICENSE
-          cd -
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
