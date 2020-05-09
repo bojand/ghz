@@ -46,13 +46,15 @@ jobs:
       
       - name: Build ghz
         run: |
-          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ghz ./cmd/ghz/...
+          mkdir -p ./dist/${{ matrix.target }}/
+          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz/...
       
       - name: Build ghz-web
         env: 
           CGO_ENABLED: 1
         run: |
-          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ghz-web ./cmd/ghz-web/...
+          mkdir -p ./dist/${{ matrix.target }}/
+          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz-web/...
 
       - name: Prepare build artifacts [Windows]
         if: matrix.os == 'windows-latest'
