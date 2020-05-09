@@ -61,7 +61,10 @@ jobs:
       - name: Prepare build artifacts [-nix]
         if: matrix.os != 'windows-latest'
         run: |
-          tar czvf ${{ matrix.name }} -C ./dist/${{ matrix.target }} ./LICENSE
+          cp ./LICENSE ./dist/${{ matrix.target }}/LICENSE
+          cd ./dist/${{ matrix.target }}
+          tar czvf ../../${{ matrix.name }} ghz ghz-web LICENSE
+          cd -
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
