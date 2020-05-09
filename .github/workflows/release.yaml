@@ -36,16 +36,19 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.13.x
+
+      - name: Set version
+        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF/refs\/tags\//}
       
       - name: Build ghz
         run: |
-          go build -ldflags='-s -w -X main.version=${{GITHUB_REF/refs\/tags\//}} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.push.created_at }}' -o ./dist/${{ matrix.target }}/ghz ./cmd/ghz/...
+          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.push.created_at }}' -o ./dist/${{ matrix.target }}/ghz ./cmd/ghz/...
       
       - name: Build ghz-web
         env: 
           CGO_ENABLED: 1
         run: |
-          go build -ldflags='-s -w -X main.version=${{GITHUB_REF/refs\/tags\//}} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.push.created_at }}' -o ./dist/${{ matrix.target }}/ghz-web ./cmd/ghz-web/...
+          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.push.created_at }}' -o ./dist/${{ matrix.target }}/ghz-web ./cmd/ghz-web/...
 
       - name: Prepare build artifacts [Windows]
         if: matrix.os == 'windows-latest'
