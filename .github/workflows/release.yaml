@@ -29,9 +29,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       
-      - name: Unshallow
-        run: git fetch --prune --unshallow
-      
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
@@ -64,7 +61,10 @@ jobs:
       - name: Prepare build artifacts [-nix]
         if: matrix.os != 'windows-latest'
         run: |
-          tar czvf ${{ matrix.name }} ./dist/${{ matrix.target }}/ghz ./dist/${{ matrix.target }}/ghz-web ./LICENSE
+          cd ./dist/${{ matrix.target }}/
+          tar czvf ${{ env.GITHUB_WORKSPACE }}/${{ matrix.name }} ghz ghz-web 
+          cd -
+          tar czvf ${{ matrix.name }} ./LICENSE
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
