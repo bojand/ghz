@@ -57,26 +57,23 @@ jobs:
       - name: Prepare build artifacts [Windows]
         if: matrix.os == 'windows-latest'
         run: |
-          cd ./dist/${{ matrix.target }}/
-          strip ghz.exe
-          strip ghz-web.exe
-          7z a ${{ env.GITHUB_WORKSPACE }}/${{ matrix.name }} ghz.exe ghz-web.exe
-          cd -
+          strip ./dist/${{ matrix.target }}/ghz.exe
+          strip ./dist/${{ matrix.target }}/ghz-web.exe
+          7z a ${{ matrix.name }} ./dist/${{ matrix.target }}/ghz.exe ./dist/${{ matrix.target }}/ghz-web.exe ./LICENSE
             
       - name: Prepare build artifacts [-nix]
         if: matrix.os != 'windows-latest'
         run: |
-          cd dist/${{ matrix.target }}/
-          strip ghz
-          strip ghz-web
-          tar czvf ${{ env.GITHUB_WORKSPACE }}/{{ matrix.name }} ghz ghz-web
+          strip ./dist/${{ matrix.target }}/ghz
+          strip ./dist/${{ matrix.target }}/ghz-web
+          tar czvf ${{ matrix.name }} ./dist/${{ matrix.target }}/ghz ./dist/${{ matrix.target }}/ghz-web ./LICENSE
           cd -
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
         with:
           name: ${{ matrix.name }}
-          path: ${{ env.GITHUB_WORKSPACE }}/${{ matrix.name }}
+          path: ${{ matrix.name }}
 
   github_release:
     name: Create GitHub Release
