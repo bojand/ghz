@@ -46,14 +46,16 @@ jobs:
       
       - name: Build ghz
         run: |
-          mkdir -p ./dist/${{ matrix.target }}/
+          mkdir ./dist/
+          mkdir ./dist/${{ matrix.target }}/
           go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz/...
       
       - name: Build ghz-web
         env: 
           CGO_ENABLED: 1
         run: |
-          mkdir -p ./dist/${{ matrix.target }}/
+          mkdir ./dist/
+          mkdir ./dist/${{ matrix.target }}/
           go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz-web/...
 
       - name: Prepare build artifacts [Windows]
