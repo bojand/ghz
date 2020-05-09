@@ -6,21 +6,123 @@ on:
       - v*
 
 jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
+  github_build:
+    name: Deploy Release
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-msvc
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: ghz-x86_64-unknown-linux-gnu.tar.gz
+          - target: x86_64-apple-darwin
+            os: macOS-latest
+            name: ghz-x86_64-apple-darwin.tar.gz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            name: ghz-x86_64-pc-windows-msvc.zip
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      
       - name: Unshallow
         run: git fetch --prune --unshallow
+      
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
           go-version: 1.13.x
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v1
+      
+      - name: Build ghz
+        run: |
+          go build -s -w -X main.version=${{ github.ref }} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.created_at }} -o dist/${{ matrix.target }}/ghz cmd/ghz
+      
+      - name: Build ghz-web
+        env: 
+          CGO_ENABLED: 1
+        run: |
+          go build -s -w -X main.version=${{ github.ref }} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.created_at }} -o dist/${{ matrix.target }}/ghz-web cmd/ghz-web
+
+      - name: Prepare build artifacts [Windows]
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd dist/${{ matrix.target }}/ghz
+          strip ghz.exe
+          7z a ../../../${{ matrix.name }} ghz.exe
+          cd -
+           cd dist/${{ matrix.target }}/ghz-web
+          strip ghz-web.exe
+          7z a ../../../${{ matrix.name }} ghz-web.exe
+          cd -
+            
+      - name: Prepare build artifacts [-nix]
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd dist/${{ matrix.target }}/ghz
+          strip ghz
+          tar czvf ../../../${{ matrix.name }} ghz
+          cd -
+          cd dist/${{ matrix.target }}/ghz-web
+          strip ghz-web
+          tar czvf ../../../${{ matrix.name }} ghz-web
+          cd -
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v1
         with:
-          version: latest
-          args: release --rm-dist
+          name: ${{ matrix.name }}
+          path: ${{ matrix.name }}
+
+  github_release:
+    name: Create GitHub Release
+    needs: github_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # These can be squashed when https://github.com/actions/download-artifact/issues/6 is closed
+      - name: Download releases from github_build
+        uses: actions/download-artifact@v1
+        with:
+          name: ghz-x86_64-unknown-linux-gnu.tar.gz
+          path: .
+      - name: Download releases from github_build
+        uses: actions/download-artifact@v1
+        with:
+          name: ghz-x86_64-apple-darwin.tar.gz
+          path: .
+      - name: Download releases from github_build
+        uses: actions/download-artifact@v1
+        with:
+          name: ghz-x86_64-pc-windows-msvc.zip
+          path: .
+
+      - name: Generate checksums
+        run: for file in ghz-*; do openssl dgst -sha256 -r "$file" | awk '{print $1}' > "${file}.sha256"; done
+
+      - name: Generate release notes
+        run: |
+          # Temporary fix for https://github.com/actions/setup-go/issues/14
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get -u github.com/git-chglog/git-chglog/cmd/git-chglog
+          # git-chglog -c .chglog/config.yml $(git describe --tags) > RELEASE.md
+          git-chglog -c .chglog/config.yml $(git describe --tags) > RELEASE.md
+      - name: Create GitHub release ${{ matrix.target }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ghz-x86_64-unknown-linux-gnu.tar.gz
+            ghz-x86_64-unknown-linux-gnu.tar.gz.sha256
+            ghz-x86_64-apple-darwin.tar.gz
+            ghz-x86_64-apple-darwin.tar.gz.sha256
+            ghz-x86_64-pc-windows-msvc.zip
+            ghz-x86_64-pc-windows-msvc.zip.sha256
+          body_path: RELEASE.md
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
