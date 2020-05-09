@@ -11,19 +11,19 @@ jobs:
     strategy:
       matrix:
         target:
-          - x86_64-unknown-linux-gnu
-          - x86_64-apple-darwin
-          - x86_64-pc-windows-msvc
+          - linux-x86_64
+          - darwin-x86_64
+          - windows-x86_64
         include:
-          - target: x86_64-unknown-linux-gnu
+          - target: linux-x86_64
             os: ubuntu-latest
-            name: ghz-x86_64-unknown-linux-gnu.tar.gz
-          - target: x86_64-apple-darwin
+            name: ghz-linux-x86_64.tar.gz
+          - target: darwin-x86_64
             os: macOS-latest
-            name: ghz-x86_64-apple-darwin.tar.gz
-          - target: x86_64-pc-windows-msvc
+            name: ghz-darwin-x86_64.tar.gz
+          - target: windows-x86_64
             os: windows-latest
-            name: ghz-x86_64-pc-windows-msvc.zip
+            name: ghz-windows-x86_64.zip
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -42,36 +42,30 @@ jobs:
       
       - name: Build ghz
         run: |
-          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.push.created_at }}' -o ./dist/${{ matrix.target }}/ghz ./cmd/ghz/...
+          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.push.created_at }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz/...
       
       - name: Build ghz-web
         env: 
           CGO_ENABLED: 1
         run: |
-          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.push.created_at }}' -o ./dist/${{ matrix.target }}/ghz-web ./cmd/ghz-web/...
+          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ github.event.push.created_at }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz-web/...
 
       - name: Prepare build artifacts [Windows]
         if: matrix.os == 'windows-latest'
         run: |
-          cd dist/${{ matrix.target }}/ghz
+          cd ./dist/${{ matrix.target }}/
           strip ghz.exe
-          7z a ../../../${{ matrix.name }} ghz.exe
-          cd -
-           cd dist/${{ matrix.target }}/ghz-web
           strip ghz-web.exe
-          7z a ../../../${{ matrix.name }} ghz-web.exe
+          7z a ../../../${{ matrix.name }} ghz.exe ghz-web.exe
           cd -
             
       - name: Prepare build artifacts [-nix]
         if: matrix.os != 'windows-latest'
         run: |
-          cd dist/${{ matrix.target }}/ghz
+          cd dist/${{ matrix.target }}/
           strip ghz
-          tar czvf ../../../${{ matrix.name }} ghz
-          cd -
-          cd dist/${{ matrix.target }}/ghz-web
           strip ghz-web
-          tar czvf ../../../${{ matrix.name }} ghz-web
+          tar czvf ../../../${{ matrix.name }} ghz ghz-web
           cd -
 
       - name: Upload build artifact
@@ -93,17 +87,17 @@ jobs:
       - name: Download releases from github_build
         uses: actions/download-artifact@v1
         with:
-          name: ghz-x86_64-unknown-linux-gnu.tar.gz
+          name: ghz-linux-x86_64.tar.gz
           path: .
       - name: Download releases from github_build
         uses: actions/download-artifact@v1
         with:
-          name: ghz-x86_64-apple-darwin.tar.gz
+          name: ghz-darwin-x86_64.tar.gz
           path: .
       - name: Download releases from github_build
         uses: actions/download-artifact@v1
         with:
-          name: ghz-x86_64-pc-windows-msvc.zip
+          name: ghz-windows-x86_64.zip
           path: .
 
       - name: Generate checksums
@@ -120,12 +114,12 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ghz-x86_64-unknown-linux-gnu.tar.gz
-            ghz-x86_64-unknown-linux-gnu.tar.gz.sha256
-            ghz-x86_64-apple-darwin.tar.gz
-            ghz-x86_64-apple-darwin.tar.gz.sha256
-            ghz-x86_64-pc-windows-msvc.zip
-            ghz-x86_64-pc-windows-msvc.zip.sha256
+            ghz-linux-x86_64.tar.gz
+            ghz-linux-x86_64.tar.gz.sha256
+            ghz-darwin-x86_64.tar.gz
+            ghz-darwin-x86_64.tar.gz.sha256
+            ghz-windows-x86_64.zip
+            ghz-windows-x86_64.zip.sha256
           body_path: RELEASE.md
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
