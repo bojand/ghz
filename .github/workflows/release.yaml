@@ -59,15 +59,11 @@ jobs:
       - name: Prepare build artifacts [Windows]
         if: matrix.os == 'windows-latest'
         run: |
-          strip ./dist/${{ matrix.target }}/ghz.exe
-          strip ./dist/${{ matrix.target }}/ghz-web.exe
           7z a ${{ matrix.name }} ./dist/${{ matrix.target }}/ghz.exe ./dist/${{ matrix.target }}/ghz-web.exe ./LICENSE
             
       - name: Prepare build artifacts [-nix]
         if: matrix.os != 'windows-latest'
         run: |
-          strip ./dist/${{ matrix.target }}/ghz
-          strip ./dist/${{ matrix.target }}/ghz-web
           tar czvf ${{ matrix.name }} ./dist/${{ matrix.target }}/ghz ./dist/${{ matrix.target }}/ghz-web ./LICENSE
 
       - name: Upload build artifact
