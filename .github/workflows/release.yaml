@@ -43,8 +43,6 @@ jobs:
 
       - name: Set version
         run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF/refs\/tags\//}
-
-      - name: Cleanup
       
       - name: Build ghz
         run: |
