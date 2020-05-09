@@ -60,7 +60,7 @@ jobs:
           cd ./dist/${{ matrix.target }}/
           strip ghz.exe
           strip ghz-web.exe
-          7z a ../../../${{ matrix.name }} ghz.exe ghz-web.exe
+          7z a ${{HOME}}/${{ matrix.name }} ghz.exe ghz-web.exe
           cd -
             
       - name: Prepare build artifacts [-nix]
@@ -69,14 +69,14 @@ jobs:
           cd dist/${{ matrix.target }}/
           strip ghz
           strip ghz-web
-          tar czvf ../../../${{ matrix.name }} ghz ghz-web
+          tar czvf ${{HOME}}/{{ matrix.name }} ghz ghz-web
           cd -
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
         with:
           name: ${{ matrix.name }}
-          path: ${{ matrix.name }}
+          path: ${{HOME}}/${{ matrix.name }}
 
   github_release:
     name: Create GitHub Release
