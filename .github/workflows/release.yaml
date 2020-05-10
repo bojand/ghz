@@ -56,7 +56,9 @@ jobs:
       - name: Prepare build artifacts [Windows]
         if: matrix.os == 'windows-latest'
         run: |
-          7z a ${{ matrix.name }} ./dist/${{ matrix.target }} ./LICENSE
+          cp ./LICENSE ./dist/${{ matrix.target }}/LICENSE
+          cd ./dist/${{ matrix.target }}
+          7z a ../../${{ matrix.name }} ghz.exe ghz-web.exe ./LICENSE
             
       - name: Prepare build artifacts [-nix]
         if: matrix.os != 'windows-latest'
@@ -106,8 +108,7 @@ jobs:
           # Temporary fix for https://github.com/actions/setup-go/issues/14
           export PATH=$PATH:$(go env GOPATH)/bin
           go get -u github.com/git-chglog/git-chglog/cmd/git-chglog
-          # git-chglog -c .chglog/config.yml $(git describe --tags) > RELEASE.md
-          git-chglog -c .chglog/config.yml $(git describe --tags) > RELEASE.md
+          git-chglog -c .chglog/config.yml $(git describe --tags $(git rev-list --tags --max-count=1)) > RELEASE.md
       - name: Create GitHub release ${{ matrix.target }}
         uses: softprops/action-gh-release@v1
         with:
