@@ -39,7 +39,8 @@ jobs:
         id: current-time
 
       - name: Set version
-        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF/refs\/tags\//}
+        # run: echo "::set-env name=RELEASE_VERSION::${GITHUB_REF/refs\/tags\//}"
+        run: echo "::set-env name=RELEASE_VERSION::$(git describe --tags $(git rev-list --tags --max-count=1))"
       
       - name: Build ghz
         run: |
