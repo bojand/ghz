@@ -17,7 +17,7 @@ function createChartData (reports) {
     testValue = testValue / divr
   }
 
-  if (testValue > 1000) {
+  if (testValue > 1000000000) {
     unit = 's'
     divr = 1000000000
   }

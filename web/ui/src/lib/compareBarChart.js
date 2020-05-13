@@ -27,7 +27,7 @@ export function createComparisonChart (report1, report2, color1, color2) {
     testValue = testValue / divr
   }
 
-  if (testValue > 1000) {
+  if (testValue > 1000000000) {
     unit = 's'
     divr = 1000000000
   }
