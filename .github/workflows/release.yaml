@@ -132,7 +132,7 @@ jobs:
 
   update_brew_formula:
     name: Update Brew Formula
-    needs: github_build
+    needs: github_release
     runs-on: macos-latest
     steps:
       - name: Checkout
