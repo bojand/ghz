@@ -29,7 +29,7 @@ All documentation at [ghz.sh](https://ghz.sh).
 ### Homebrew
 
 ```sh
-brew install goreleaser
+brew install ghz
 ```
 
 ### Compile

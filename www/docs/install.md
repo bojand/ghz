@@ -11,7 +11,7 @@ title: Installation
 ## Homebrew
 
 ```sh
-brew install goreleaser
+brew install ghz
 ```
 
 ## Compile
