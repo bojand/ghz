@@ -126,3 +126,27 @@ jobs:
           body_path: RELEASE-${{ env.RELEASE_VERSION }}.md
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
+
+  update_brew_formula:
+    name: Update Brew Formula
+    needs: github_build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set version
+        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Generate release notes  
+      - run: |
+          echo "https://bojand:$GH_PAGES_ACTION_TOKEN@github.com" > ~/.git-credentials
+          git config --global credential.helper store
+          git config --global user.name "bojand"
+          git config --global user.email "dbojan@gmail.com"
+          cd $(brew --repo homebrew/core)	
+          git fetch origin
+          sudo git reset --hard origin/master	
+          cd -
+          brew bump-formula-pr --url=https://github.com/bojand/ghz/archive/$(git describe --tags).tar.gz --message="Automated release pull request using continuous integration." --no-browse -v ghz --force
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
