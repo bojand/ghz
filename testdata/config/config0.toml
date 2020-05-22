@@ -1,0 +1,23 @@
+insecure = true
+import-paths = ["/home/user/pb/grpcbin"]
+proto = "grpcbin.proto"
+call = "grpcbin.GRPCBin.DummyUnary"
+# Number of connections to use. Concurrency is distributed evenly among all the connections. Default is 1.
+connections = 3
+# Keepalive time duration. Only used if present and above 0.
+keepalive = 0
+# Number of requests to run. Default is 200.
+total = 1000
+# Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.
+concurrency = 1
+# Rate limit, in queries per second (QPS). Default is no rate limit.
+qps = 0
+host = "127.0.0.1:9000"
+data="""
+{
+  "f_strings": [
+    "1234567890",
+    "1234567890",
+  ]
+}
+"""

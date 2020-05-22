@@ -157,6 +157,92 @@ func (c Config) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalText is our custom implementation to handle the Duration fields
+// and validate data
+func (c *Config) UnmarshalText(data []byte) error {
+	type Alias Config
+	aux := &struct {
+		Z       string `toml:"duration"`
+		X       string `toml:"max-duration"`
+		SI      string `toml:"stream-interval"`
+		Timeout string `toml:"timeout"`
+		*Alias
+	}{
+		Alias: (*Alias)(c),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.Data != nil {
+		err := checkData(aux.Data)
+		if err != nil {
+			return err
+		}
+	}
+
+	if aux.Z != "" {
+		zd, err := time.ParseDuration(aux.Z)
+		if err != nil {
+			return nil
+		}
+
+		c.Z = Duration(zd)
+	}
+
+	aux.ZStop = strings.ToLower(aux.ZStop)
+	if aux.ZStop != "close" && aux.ZStop != "ignore" && aux.ZStop != "wait" {
+		aux.ZStop = "close"
+	}
+
+	if aux.X != "" {
+		xd, err := time.ParseDuration(aux.X)
+		if err != nil {
+			return nil
+		}
+
+		c.X = Duration(xd)
+	}
+
+	if aux.SI != "" {
+		sid, err := time.ParseDuration(aux.SI)
+		if err != nil {
+			return nil
+		}
+
+		c.SI = Duration(sid)
+	}
+
+	if aux.Timeout != "" {
+		td, err := time.ParseDuration(aux.Timeout)
+		if err != nil {
+			return nil
+		}
+
+		c.Timeout = Duration(td)
+	}
+
+	return nil
+}
+
+// MarshalText is our custom implementation to handle the Duration fields
+func (c Config) MarshalText() ([]byte, error) {
+	type Alias Config
+	return json.Marshal(&struct {
+		*Alias
+		Z       string `toml:"duration"`
+		X       string `toml:"max-duration"`
+		SI      string `toml:"stream-interval"`
+		Timeout string `toml:"timeout"`
+	}{
+		Alias:   (*Alias)(&c),
+		Z:       c.Z.String(),
+		X:       c.X.String(),
+		SI:      c.SI.String(),
+		Timeout: c.Timeout.String(),
+	})
+}
+
 func checkData(data interface{}) error {
 	_, isObjData := data.(map[string]interface{})
 	if !isObjData {
