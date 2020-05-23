@@ -71,15 +71,13 @@ type Config struct {
 	EnableCompression bool               `json:"enable-compression,omitempty" toml:"enable-compression,omitempty" yaml:"enable-compression,omitempty"`
 }
 
-// UnmarshalJSON is our custom implementation to handle the Duration fields
-// and validate data
-func (c *Config) UnmarshalJSON(data []byte) error {
+func (c *Config) unmarshal(data []byte) error {
 	type Alias Config
 	aux := &struct {
-		Z       string `json:"duration"`
-		X       string `json:"max-duration"`
-		SI      string `json:"stream-interval"`
-		Timeout string `json:"timeout"`
+		Z       string `json:"duration" toml:"duration" yaml:"duration"`
+		X       string `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
+		SI      string `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
+		Timeout string `json:"timeout" toml:"timeout" yaml:"timeout" default:"20s"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -98,7 +96,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.Z != "" {
 		zd, err := time.ParseDuration(aux.Z)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		c.Z = Duration(zd)
@@ -112,7 +110,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.X != "" {
 		xd, err := time.ParseDuration(aux.X)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		c.X = Duration(xd)
@@ -121,7 +119,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.SI != "" {
 		sid, err := time.ParseDuration(aux.SI)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		c.SI = Duration(sid)
@@ -130,7 +128,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.Timeout != "" {
 		td, err := time.ParseDuration(aux.Timeout)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		c.Timeout = Duration(td)
@@ -139,15 +137,14 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON is our custom implementation to handle the Duration fields
-func (c Config) MarshalJSON() ([]byte, error) {
+func (c Config) marshal() ([]byte, error) {
 	type Alias Config
 	return json.Marshal(&struct {
 		*Alias
-		Z       string `json:"duration"`
-		X       string `json:"max-duration"`
-		SI      string `json:"stream-interval"`
-		Timeout string `json:"timeout"`
+		Z       string `json:"duration" toml:"duration" yaml:"duration"`
+		X       string `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
+		SI      string `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
+		Timeout string `json:"timeout" toml:"timeout" yaml:"timeout" default:"20s"`
 	}{
 		Alias:   (*Alias)(&c),
 		Z:       c.Z.String(),
@@ -155,6 +152,17 @@ func (c Config) MarshalJSON() ([]byte, error) {
 		SI:      c.SI.String(),
 		Timeout: c.Timeout.String(),
 	})
+}
+
+// UnmarshalJSON is our custom implementation to handle the Duration fields
+// and validate data
+func (c *Config) UnmarshalJSON(data []byte) error {
+	return c.unmarshal(data)
+}
+
+// MarshalJSON is our custom implementation to handle the Duration fields
+func (c Config) MarshalJSON() ([]byte, error) {
+	return c.marshal()
 }
 
 // UnmarshalText is our custom implementation to handle the Duration fields
@@ -184,7 +192,7 @@ func (c *Config) UnmarshalText(data []byte) error {
 	if aux.Z != "" {
 		zd, err := time.ParseDuration(aux.Z)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		c.Z = Duration(zd)
@@ -198,7 +206,7 @@ func (c *Config) UnmarshalText(data []byte) error {
 	if aux.X != "" {
 		xd, err := time.ParseDuration(aux.X)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		c.X = Duration(xd)
@@ -207,7 +215,7 @@ func (c *Config) UnmarshalText(data []byte) error {
 	if aux.SI != "" {
 		sid, err := time.ParseDuration(aux.SI)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		c.SI = Duration(sid)
@@ -216,7 +224,7 @@ func (c *Config) UnmarshalText(data []byte) error {
 	if aux.Timeout != "" {
 		td, err := time.ParseDuration(aux.Timeout)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		c.Timeout = Duration(td)

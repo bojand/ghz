@@ -15,14 +15,19 @@ func TestConfig_Load(t *testing.T) {
 		ok       bool
 	}{
 		{
-			"incorrect data",
+			"invalid data",
+			&Config{},
+			false,
+		},
+		{
+			"invalid duration",
 			&Config{},
 			false,
 		},
 	}
 
 	for i, tt := range tests {
-		t.Run("toml: "+tt.name, func(t *testing.T) {
+		t.Run("toml "+tt.name, func(t *testing.T) {
 			var actual Config
 			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".toml"
 			err := configor.Load(&actual, cfgPath)
@@ -34,7 +39,7 @@ func TestConfig_Load(t *testing.T) {
 			}
 		})
 
-		t.Run("json: "+tt.name, func(t *testing.T) {
+		t.Run("json "+tt.name, func(t *testing.T) {
 			var actual Config
 			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".json"
 			err := configor.Load(&actual, cfgPath)

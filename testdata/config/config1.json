@@ -5,11 +5,12 @@
     ],
     "proto": "grpcbin.proto",
     "call": "grpcbin.GRPCBin.DummyUnary",
-    "connections": 3,
-    "keepalive": 0,
-    "total": 1000,
-    "concurrency": 1,
-    "qps": 0,
     "host": "127.0.0.1:9000",
-    "data": "foo"
+    "duration":"asdf",
+    "data": {
+        "f_strings": [
+            "1234567890",
+            "1234567890"
+        ]
+    }
 }
