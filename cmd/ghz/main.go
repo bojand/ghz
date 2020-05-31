@@ -372,7 +372,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.DataPath = *dataPath
 	cfg.BinData = binaryData
 	cfg.BinDataPath = *binPath
-	cfg.Metadata = &metadata
+	cfg.Metadata = metadata
 	cfg.MetadataPath = *mdPath
 	cfg.SI = runner.Duration(*si)
 	cfg.Output = *output
@@ -383,8 +383,8 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.KeepaliveTime = runner.Duration(*kt)
 	cfg.CPUs = *cpus
 	cfg.Name = *name
-	cfg.Tags = &tagsMap
-	cfg.ReflectMetadata = &rmdMap
+	cfg.Tags = tagsMap
+	cfg.ReflectMetadata = rmdMap
 	cfg.Debug = *debug
 	cfg.EnableCompression = *enableCompression
 
