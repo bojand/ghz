@@ -1,9 +1,8 @@
 package runner
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -31,6 +30,28 @@ func (d Duration) MarshalText() ([]byte, error) {
 
 func (d Duration) String() string {
 	return time.Duration(d).String()
+}
+
+// UnmarshalJSON is our custom unmarshaller with JSON support
+func (d *Duration) UnmarshalJSON(text []byte) error {
+	// strValue := string(text)
+	first := text[0]
+	last := text[len(text)-1]
+	if first == '"' && last == '"' {
+		text = text[1 : len(text)-1]
+	}
+	dur, err := time.ParseDuration(string(text))
+	if err != nil {
+		return err
+	}
+
+	*d = Duration(dur)
+	return nil
+}
+
+// MarshalJSON implements encoding JSONMarshaler
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return []byte(time.Duration(d).String()), nil
 }
 
 // Config for the run.
@@ -74,24 +95,6 @@ type Config struct {
 	EnableCompression bool              `json:"enable-compression,omitempty" toml:"enable-compression,omitempty" yaml:"enable-compression,omitempty"`
 }
 
-// MarshalJSON is our custom implementation to handle the Duration fields
-func (c Config) MarshalJSON() ([]byte, error) {
-	type Alias Config
-	return json.Marshal(&struct {
-		*Alias
-		Z       string `json:"duration"`
-		X       string `json:"max-duration"`
-		SI      string `json:"stream-interval"`
-		Timeout string `json:"timeout"`
-	}{
-		Alias:   (*Alias)(&c),
-		Z:       c.Z.String(),
-		X:       c.X.String(),
-		SI:      c.SI.String(),
-		Timeout: c.Timeout.String(),
-	})
-}
-
 func checkData(data interface{}) error {
 	_, isObjData := data.(map[string]interface{})
 	if !isObjData {
@@ -114,70 +117,41 @@ func checkData(data interface{}) error {
 	return nil
 }
 
-func loadConfig(path string, c *Config) error {
-	type Alias Config
-	aux := &struct {
-		Z       string `json:"duration" toml:"duration" yaml:"duration"`
-		X       string `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
-		SI      string `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
-		Timeout string `json:"timeout" toml:"timeout" yaml:"timeout" default:"20s"`
-		*Alias
-	}{
-		Alias: (*Alias)(c),
-	}
-
-	err := configor.Load(aux, path)
+func loadConfig(p string, c *Config) error {
+	err := configor.Load(c, p)
 	if err != nil {
 		return err
 	}
 
-	if aux.Data != nil {
-		err := checkData(aux.Data)
-		fmt.Println("checkData", err)
+	if c.Data != nil {
+		ext := path.Ext(p)
+		if strings.EqualFold(ext, ".yaml") || strings.EqualFold(ext, ".yml") {
+			objData, isObjData2 := c.Data.(map[interface{}]interface{})
+			if isObjData2 {
+				nd := make(map[string]interface{})
+				for k, v := range objData {
+					sk, isString := k.(string)
+					if !isString {
+						return errors.New("Data key must string")
+					}
+					if len(sk) > 0 {
+						nd[sk] = v
+					}
+				}
+
+				c.Data = nd
+			}
+		}
+
+		err := checkData(c.Data)
 		if err != nil {
 			return err
 		}
 	}
 
-	if aux.Z != "" {
-		zd, err := time.ParseDuration(aux.Z)
-		if err != nil {
-			return err
-		}
-
-		c.Z = Duration(zd)
-	}
-
-	aux.ZStop = strings.ToLower(aux.ZStop)
-	if aux.ZStop != "close" && aux.ZStop != "ignore" && aux.ZStop != "wait" {
-		aux.ZStop = "close"
-	}
-
-	if aux.X != "" {
-		xd, err := time.ParseDuration(aux.X)
-		if err != nil {
-			return err
-		}
-
-		c.X = Duration(xd)
-	}
-
-	if aux.SI != "" {
-		sid, err := time.ParseDuration(aux.SI)
-		if err != nil {
-			return err
-		}
-
-		c.SI = Duration(sid)
-	}
-
-	if aux.Timeout != "" {
-		td, err := time.ParseDuration(aux.Timeout)
-		if err != nil {
-			return err
-		}
-
-		c.Timeout = Duration(td)
+	c.ZStop = strings.ToLower(c.ZStop)
+	if c.ZStop != "close" && c.ZStop != "ignore" && c.ZStop != "wait" {
+		c.ZStop = "close"
 	}
 
 	return nil

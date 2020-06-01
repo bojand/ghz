@@ -2,7 +2,6 @@ package runner
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -218,8 +217,6 @@ func TestData_createPayloads(t *testing.T) {
 
 		inputs, err := createPayloadsFromJSON(jsonData, mtdWrapped)
 		assert.NoError(t, err)
-		fmt.Println(err)
-		fmt.Println(inputs)
 		assert.NotNil(t, inputs)
 		assert.Len(t, inputs, 1)
 		assert.EqualValues(t, "foo", inputs[0].GetFieldByName("value"))

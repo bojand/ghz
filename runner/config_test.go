@@ -89,5 +89,17 @@ func TestConfig_Load(t *testing.T) {
 				assert.Error(t, err)
 			}
 		})
+
+		t.Run("yaml "+tt.name, func(t *testing.T) {
+			var actual Config
+			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".yaml"
+			err := loadConfig(cfgPath, &actual)
+			if tt.ok {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, &actual)
+			} else {
+				assert.Error(t, err)
+			}
+		})
 	}
 }
