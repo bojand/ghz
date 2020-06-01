@@ -28,12 +28,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
+
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13.x
-        
+          go-version: 1.14
+
       - name: Get current time
         uses: gerred/actions/current-time@master
         id: current-time
@@ -41,15 +41,15 @@ jobs:
       - name: Set version
         # run: echo "::set-env name=RELEASE_VERSION::${GITHUB_REF/refs\/tags\//}"
         run: echo "::set-env name=RELEASE_VERSION::$(git describe --tags $(git rev-list --tags --max-count=1))"
-      
+
       - name: Build ghz
         run: |
           mkdir ./dist/
           mkdir ./dist/${{ matrix.target }}/
           go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz/...
-      
+
       - name: Build ghz-web
-        env: 
+        env:
           CGO_ENABLED: 1
         run: |
           go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz-web/...
@@ -60,7 +60,7 @@ jobs:
           cp ./LICENSE ./dist/${{ matrix.target }}/LICENSE
           cd ./dist/${{ matrix.target }}
           7z a ../../${{ matrix.name }} ghz.exe ghz-web.exe ./LICENSE
-            
+
       - name: Prepare build artifacts [-nix]
         if: matrix.os != 'windows-latest'
         run: |
@@ -150,9 +150,9 @@ jobs:
           git config --global credential.helper store
           git config --global user.name "bojand"
           git config --global user.email "dbojan@gmail.com"
-          cd $(brew --repo homebrew/core)	
+          cd $(brew --repo homebrew/core)
           git fetch origin
-          sudo git reset --hard origin/master	
+          sudo git reset --hard origin/master
           cd -
           brew bump-formula-pr --url=https://github.com/bojand/ghz/archive/${{ env.RELEASE_VERSION }}.tar.gz --message="Automated release pull request using continuous integration." --no-browse -v ghz --force
           brew bump-formula-pr --url=https://github.com/bojand/ghz/archive/${{ env.RELEASE_VERSION }}.tar.gz --message="Automated release pull request using continuous integration." --no-browse -v ghz-web --force
