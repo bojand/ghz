@@ -2,7 +2,6 @@ package protodesc
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/bojand/ghz/internal"
@@ -145,7 +144,6 @@ func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
 		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(conn))
 
 		mtd, err := GetMethodDescFromReflect("helloworld.Greeter.SayHello", refClient)
-		fmt.Println(mtd)
 		assert.NoError(t, err)
 		assert.NotNil(t, mtd)
 		assert.Equal(t, "SayHello", mtd.GetName())

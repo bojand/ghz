@@ -190,9 +190,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithName("asdf"),
 			WithCPUs(4),
 			WithData(d),
-			WithMetadata(&md),
-			WithTags(&tags),
-			WithReflectionMetadata(&rmd),
+			WithMetadata(md),
+			WithTags(tags),
+			WithReflectionMetadata(rmd),
 		)
 
 		assert.NoError(t, err)
@@ -219,7 +219,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
 		assert.NotNil(t, c.creds)
-		assert.Equal(t, map[string]string{"auth": "bizbaz"}, *c.rmd)
+		assert.Equal(t, map[string]string{"auth": "bizbaz"}, c.rmd)
 		assert.Equal(t, c.enableCompression, false)
 	})
 

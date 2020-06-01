@@ -1,0 +1,19 @@
+{
+    "insecure": true,
+    "import-paths": [
+        "/home/user/pb/grpcbin"
+    ],
+    "proto": "grpcbin.proto",
+    "call": "grpcbin.GRPCBin.DummyUnary",
+    "host": "127.0.0.1:9000",
+    "duration":"20s",
+    "max-duration":"60s",
+    "stream-interval":"25s",
+    "timeout":"30s",
+    "data": {
+        "f_strings": [
+            "123",
+            "456"
+        ]
+    }
+}

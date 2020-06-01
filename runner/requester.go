@@ -104,8 +104,8 @@ func newRequester(c *RunConfig) (*Requester, error) {
 		ctx, _ := context.WithTimeout(context.Background(), c.dialTimeout)
 
 		md := make(metadata.MD)
-		if c.rmd != nil && len(*c.rmd) > 0 {
-			md = metadata.New(*c.rmd)
+		if c.rmd != nil && len(c.rmd) > 0 {
+			md = metadata.New(c.rmd)
 		}
 
 		refCtx := metadata.NewOutgoingContext(ctx, md)

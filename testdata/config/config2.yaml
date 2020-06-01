@@ -1,0 +1,12 @@
+---
+insecure: true
+import-paths:
+- "/home/user/pb/grpcbin"
+proto: grpcbin.proto
+call: grpcbin.GRPCBin.DummyUnary
+host: 127.0.0.1:9000
+max-duration: asdf
+data:
+  f_strings:
+  - '1234567890'
+  - '1234567890'

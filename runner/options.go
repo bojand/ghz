@@ -59,7 +59,7 @@ type RunConfig struct {
 	data     []byte
 	binary   bool
 	metadata []byte
-	rmd      *map[string]string
+	rmd      map[string]string
 
 	// debug
 	hasLog bool
@@ -379,7 +379,7 @@ func WithMetadataFromJSON(md string) Option {
 // 	md["token"] = "foobar"
 // 	md["request-id"] = "123"
 // 	WithMetadata(&md)
-func WithMetadata(md *map[string]string) Option {
+func WithMetadata(md map[string]string) Option {
 	return func(o *RunConfig) error {
 		mdJSON, err := json.Marshal(md)
 		if err != nil {
@@ -425,7 +425,7 @@ func WithName(name string) Option {
 // 	tags["env"] = "staging"
 // 	tags["created by"] = "joe developer"
 // 	WithTags(&tags)
-func WithTags(tags *map[string]string) Option {
+func WithTags(tags map[string]string) Option {
 	return func(o *RunConfig) error {
 		tagsJSON, err := json.Marshal(tags)
 		if err != nil {
@@ -504,7 +504,7 @@ func WithStreamInterval(d time.Duration) Option {
 // 	md["token"] = "foobar"
 // 	md["request-id"] = "123"
 // 	WithReflectionMetadata(&md)
-func WithReflectionMetadata(md *map[string]string) Option {
+func WithReflectionMetadata(md map[string]string) Option {
 	return func(o *RunConfig) error {
 		o.rmd = md
 

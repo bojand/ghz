@@ -1,0 +1,15 @@
+{
+    "insecure": true,
+    "import-paths": [
+        "/home/user/pb/grpcbin"
+    ],
+    "proto": "grpcbin.proto",
+    "call": "grpcbin.GRPCBin.DummyUnary",
+    "connections": 3,
+    "keepalive": 0,
+    "total": 1000,
+    "concurrency": 1,
+    "qps": 0,
+    "host": "127.0.0.1:9000",
+    "data": "foo"
+}
