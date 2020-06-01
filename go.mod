@@ -3,7 +3,7 @@ module github.com/bojand/ghz
 go 1.13
 
 require (
-	github.com/BurntSushi/toml v0.3.1
+	cloud.google.com/go v0.46.3 // indirect
 	github.com/alecthomas/kingpin v1.3.8-0.20191105203113-8c96d1c22481
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bojand/hri v1.1.0
@@ -22,12 +22,13 @@ require (
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.6
-	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.4.0
 	go.uber.org/multierr v1.3.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094
+	golang.org/x/tools v0.0.0-20191112195655-aa38f8e97acc // indirect
+	google.golang.org/genproto v0.0.0-20191108220845-16a3f7862a1a // indirect
 	google.golang.org/grpc v1.24.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/yaml.v2 v2.2.4
+	gopkg.in/yaml.v2 v2.2.4 // indirect
 )
