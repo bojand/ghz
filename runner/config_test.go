@@ -69,7 +69,7 @@ func TestConfig_Load(t *testing.T) {
 		t.Run("toml "+tt.name, func(t *testing.T) {
 			var actual Config
 			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".toml"
-			err := loadConfig(cfgPath, &actual)
+			err := LoadConfig(cfgPath, &actual)
 			if tt.ok {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected, &actual)
@@ -81,7 +81,7 @@ func TestConfig_Load(t *testing.T) {
 		t.Run("json "+tt.name, func(t *testing.T) {
 			var actual Config
 			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".toml"
-			err := loadConfig(cfgPath, &actual)
+			err := LoadConfig(cfgPath, &actual)
 			if tt.ok {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected, &actual)
@@ -93,7 +93,7 @@ func TestConfig_Load(t *testing.T) {
 		t.Run("yaml "+tt.name, func(t *testing.T) {
 			var actual Config
 			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".yaml"
-			err := loadConfig(cfgPath, &actual)
+			err := LoadConfig(cfgPath, &actual)
 			if tt.ok {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected, &actual)

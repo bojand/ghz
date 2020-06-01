@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/jinzhu/configor"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -197,7 +196,7 @@ func main() {
 	var cfg runner.Config
 
 	if cfgPath != "" {
-		err := configor.Load(&cfg, cfgPath)
+		err := runner.LoadConfig(cfgPath, &cfg)
 		kingpin.FatalIfError(err, "")
 
 		args := os.Args[1:]

@@ -117,7 +117,8 @@ func checkData(data interface{}) error {
 	return nil
 }
 
-func loadConfig(p string, c *Config) error {
+// LoadConfig loads the config from a file
+func LoadConfig(p string, c *Config) error {
 	err := configor.Load(c, p)
 	if err != nil {
 		return err
