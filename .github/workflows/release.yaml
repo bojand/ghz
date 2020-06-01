@@ -155,5 +155,6 @@ jobs:
           sudo git reset --hard origin/master	
           cd -
           brew bump-formula-pr --url=https://github.com/bojand/ghz/archive/${{ env.RELEASE_VERSION }}.tar.gz --message="Automated release pull request using continuous integration." --no-browse -v ghz --force
+          brew bump-formula-pr --url=https://github.com/bojand/ghz/archive/${{ env.RELEASE_VERSION }}.tar.gz --message="Automated release pull request using continuous integration." --no-browse -v ghz-web --force
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
