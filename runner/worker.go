@@ -17,16 +17,17 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// ConditionChecker tells worker whether to run
+type ConditionChecker func(string, error, int, time.Duration) bool
+
 // Worker is used for doing a single stream of requests in parallel
 type Worker struct {
 	stub grpcdynamic.Stub
 	mtd  *desc.MethodDescriptor
 
-	config     *RunConfig
-	stopCh     chan bool
-	qpsTick    time.Duration
+	config *RunConfig
+
 	reqCounter *int64
-	nReq       int
 	workerID   string
 
 	// cached messages only for binary
@@ -36,28 +37,29 @@ type Worker struct {
 	arrayJSONData []string
 }
 
-func (w *Worker) runWorker() error {
-	var throttle <-chan time.Time
-	if w.config.qps > 0 {
-		throttle = time.Tick(w.qpsTick)
-	}
+func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool, stopCh <-chan bool) error {
+	var err, rErr error
 
-	var err error
-	for i := 0; i < w.nReq; i++ {
-		// Check if application is stopped. Do not send into a closed channel.
+	start := time.Now()
+	n := 0
+
+	for {
 		select {
-		case <-w.stopCh:
-			return nil
+		case <-stopCh:
+			return err
 		default:
-			if w.config.qps > 0 {
-				<-throttle
+			if cond(w.workerID, rErr, n, time.Since(start)) {
+				n++
+
+				rErr := w.makeRequest()
+
+				err = multierr.Append(err, rErr)
+			} else if stopOnCond {
+				return err
 			}
-
-			rErr := w.makeRequest()
-
-			err = multierr.Append(err, rErr)
 		}
 	}
+
 	return err
 }
 

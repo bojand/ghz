@@ -74,8 +74,32 @@ var (
 			PlaceHolder(" ").IsSetByUser(&isAuthSet).String()
 
 	// Run
+	isStrategySet = false
+	strategy      = kingpin.Flag("load-strategy", "Specifies the load stratefy. Options are concurrency or rps. Default is concurrency.").
+			Default("concurrency").IsSetByUser(&isStrategySet).String()
+
+	isScheduleSet = false
+	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are step, line, or const. Default is const.").
+			Default("const").IsSetByUser(&isScheduleSet).String()
+
+	isLoadStartSet = false
+	loadStart      = kingpin.Flag("load-start", "Specifies the load start value.").
+			Default("0").IsSetByUser(&isLoadStartSet).Uint()
+
+	isLoadStepSet = false
+	loadStep      = kingpin.Flag("load-step", "Specifies the load step value.").
+			Default("0").IsSetByUser(&isLoadStepSet).Uint()
+
+	isLoadEndSet = false
+	loadEnd      = kingpin.Flag("load-end", "Specifies the load end value.").
+			Default("0").IsSetByUser(&isLoadEndSet).Uint()
+
+	isLoadDurSet = false
+	loadDuration = kingpin.Flag("load-duration", "Specifies the load duration value for step or line.").
+			Default("0").IsSetByUser(&isLoadDurSet).Duration()
+
 	isCSet = false
-	c      = kingpin.Flag("concurrency", "Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.").
+	c      = kingpin.Flag("concurrency", "Number of request workers to run concurrently. Default is 50.").
 		Short('c').Default("50").IsSetByUser(&isCSet).Uint()
 
 	isNSet = false
@@ -83,7 +107,7 @@ var (
 		Short('n').Default("200").IsSetByUser(&isNSet).Uint()
 
 	isQSet = false
-	q      = kingpin.Flag("qps", "Rate limit, in queries per second (QPS). Default is no rate limit.").
+	rps    = kingpin.Flag("rps", "Requests per second (RPS) rate limit for constant load. Default is no rate limit.").
 		Default("0").Short('q').IsSetByUser(&isQSet).Uint()
 
 	isTSet = false
@@ -99,7 +123,7 @@ var (
 		Short('x').Default("0").IsSetByUser(&isXSet).Duration()
 
 	isZStopSet = false
-	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore.").
+	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore. Default is close.").
 			Default("close").IsSetByUser(&isZStopSet).String()
 
 	// Data
