@@ -36,19 +36,22 @@ func Run(call, host string, options ...Option) (*Report, error) {
 
 	cancel := make(chan os.Signal, 1)
 	signal.Notify(cancel, os.Interrupt)
+
+	stop := make(chan StopReason, 1)
+
 	go func() {
 		<-cancel
-		reqr.Stop(ReasonCancel)
+		stop <- ReasonCancel
 	}()
 
 	if c.z > 0 {
 		go func() {
 			time.Sleep(c.z)
-			reqr.Stop(ReasonTimeout)
+			stop <- ReasonTimeout
 		}()
 	}
 
-	rep, err := reqr.Run()
+	rep, err := reqr.Run(stop)
 
 	return rep, err
 }

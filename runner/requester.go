@@ -40,7 +40,6 @@ type Requester struct {
 	conns    []*grpc.ClientConn
 	stubs    []grpcdynamic.Stub
 	handlers []*statsHandler
-	workers  map[string]*Worker
 
 	mtd      *desc.MethodDescriptor
 	reporter *Reporter
@@ -48,15 +47,12 @@ type Requester struct {
 	config *RunConfig
 
 	results chan *callResult
-	stopCh  chan bool
-	start   time.Time
 
 	reqCounter int64
 
 	arrayJSONData []string
 
-	stopReason StopReason
-	lock       sync.Mutex
+	lock sync.Mutex
 }
 
 func newRequester(c *RunConfig) (*Requester, error) {
@@ -65,13 +61,10 @@ func newRequester(c *RunConfig) (*Requester, error) {
 	var mtd *desc.MethodDescriptor
 
 	reqr := &Requester{
-		config:     c,
-		stopReason: ReasonNormalEnd,
-		results:    make(chan *callResult, min(c.c*1000, maxResult)),
-		stopCh:     make(chan bool, c.c),
-		conns:      make([]*grpc.ClientConn, 0, c.nConns),
-		stubs:      make([]grpcdynamic.Stub, 0, c.nConns),
-		workers:    make(map[string]*Worker),
+		config:  c,
+		results: make(chan *callResult, min(c.c*1000, maxResult)),
+		conns:   make([]*grpc.ClientConn, 0, c.nConns),
+		stubs:   make([]grpcdynamic.Stub, 0, c.nConns),
 	}
 
 	if c.proto != "" {
@@ -148,17 +141,15 @@ func newRequester(c *RunConfig) (*Requester, error) {
 
 // Run makes all the requests and returns a report of results
 // It blocks until all work is done.
-func (b *Requester) Run() (*Report, error) {
+func (b *Requester) Run(stopCh chan StopReason) (*Report, error) {
 	start := time.Now()
 
-	cc, err := b.openClientConns()
-	if err != nil {
-		return nil, err
+	cc, connErr := b.openClientConns()
+	if connErr != nil {
+		return nil, connErr
 	}
 
 	b.lock.Lock()
-	b.start = start
-
 	// create a client stub for each connection
 	for n := 0; n < b.config.nConns; n++ {
 		stub := grpcdynamic.NewStub(cc[n])
@@ -168,76 +159,62 @@ func (b *Requester) Run() (*Report, error) {
 	b.reporter = newReporter(b.results, b.config)
 	b.lock.Unlock()
 
+	stopReason := ReasonNormalEnd
+
+	stop := make(chan bool, 1)
+	done := make(chan error, 1)
+
+	go func() {
+		err := b.runConstConcurrencyWorkers(stop)
+		done <- err
+	}()
+
 	go func() {
 		b.reporter.Run()
 	}()
 
-	err = b.runConstConcurrencyWorkers()
+	for {
+		select {
+		case reason := <-stopCh:
+			stopReason = reason
 
-	report := b.Finish()
+			stop <- true
 
-	b.closeClientConns()
-
-	return report, err
-}
-
-// Stop stops the test
-func (b *Requester) Stop(reason StopReason) {
-
-	b.lock.Lock()
-	b.stopReason = reason
-	b.lock.Unlock()
-
-	if b.config.hasLog {
-		b.config.log.Debugf("Stopping with reason: %+v", reason)
-	}
-
-	b.lock.Lock()
-	for _, wrk := range b.workers {
-		wrk := wrk
-		if wrk.isActive() {
-			wrk.setActive(false)
-			if wrk.done != nil {
-				wrk.done <- true
+			if b.config.zstop == "close" {
+				b.closeClientConns()
+			} else if b.config.zstop == "ignore" {
+				for _, h := range b.handlers {
+					h.Ignore(true)
+				}
+				b.closeClientConns()
 			}
+		case err := <-done:
+
+			total := time.Since(start)
+
+			close(b.results)
+			close(stop)
+			close(done)
+
+			if b.config.hasLog {
+				b.config.log.Debug("Waiting for report")
+			}
+
+			// Wait until the reporter is done.
+
+			<-b.reporter.done
+
+			if b.config.hasLog {
+				b.config.log.Debug("Finilizing report")
+			}
+
+			report := b.reporter.Finalize(stopReason, total)
+
+			b.closeClientConns()
+
+			return report, err
 		}
 	}
-
-	for _, wrk := range b.workers {
-		wrk := wrk
-		if wrk.done != nil {
-			close(wrk.done)
-		}
-	}
-	b.lock.Unlock()
-
-	if b.config.zstop == "close" {
-		b.closeClientConns()
-	} else if b.config.zstop == "ignore" {
-		for _, h := range b.handlers {
-			h.Ignore(true)
-		}
-		b.closeClientConns()
-	}
-}
-
-// Finish finishes the test run
-func (b *Requester) Finish() *Report {
-	close(b.results)
-	total := time.Since(b.start)
-
-	if b.config.hasLog {
-		b.config.log.Debug("Waiting for report")
-	}
-
-	// Wait until the reporter is done.
-	<-b.reporter.done
-
-	if b.config.hasLog {
-		b.config.log.Debug("Finilizing report")
-	}
-
-	return b.reporter.Finalize(b.stopReason, total)
 }
 
 func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
@@ -335,7 +312,7 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	return grpc.DialContext(ctx, b.config.host, opts...)
 }
 
-func (b *Requester) runConstConcurrencyWorkers() error {
+func (b *Requester) runConstConcurrencyWorkers(stop chan bool) error {
 	nReqPerWorker := b.config.n / b.config.c
 
 	if b.config.c == 0 {
@@ -343,6 +320,8 @@ func (b *Requester) runConstConcurrencyWorkers() error {
 	}
 
 	errC := make(chan error, b.config.c)
+
+	workers := make(map[string]*Worker)
 
 	// Ignore the case where b.N % b.C != 0.
 
@@ -360,7 +339,6 @@ func (b *Requester) runConstConcurrencyWorkers() error {
 				"workerID", wID, "requests per worker", nReqPerWorker)
 		}
 
-		b.lock.Lock()
 		w := &Worker{
 			stub:          b.stubs[n],
 			mtd:           b.mtd,
@@ -368,13 +346,12 @@ func (b *Requester) runConstConcurrencyWorkers() error {
 			reqCounter:    &b.reqCounter,
 			workerID:      wID,
 			arrayJSONData: b.arrayJSONData,
-			done:          b.stopCh,
+			done:          make(chan bool, 1),
 		}
 
 		w.setActive(true)
 
-		b.workers[wID] = w
-		b.lock.Unlock()
+		workers[wID] = w
 
 		n++ // increment connection counter
 
@@ -390,15 +367,46 @@ func (b *Requester) runConstConcurrencyWorkers() error {
 		}()
 	}
 
-	var err error
+	done := make(chan error, 1)
 
-	for i := 0; i < b.config.c; i++ {
-		err = multierr.Append(err, <-errC)
+	go func() {
+		var err error
+		for i := 0; i < len(workers); i++ {
+			err = multierr.Append(err, <-errC)
+		}
+
+		done <- err
+	}()
+
+	finishWorkers := func() {
+		for _, wrk := range workers {
+			wrk := wrk
+			if wrk.isActive() {
+				wrk.setActive(false)
+				if wrk.done != nil {
+					wrk.done <- true
+				}
+			}
+		}
 	}
 
-	close(errC)
+	for {
+		select {
+		case <-stop:
+			finishWorkers()
+		case err := <-done:
 
-	return err
+			for _, wrk := range workers {
+				wrk := wrk
+				if wrk.done != nil {
+					close(wrk.done)
+				}
+			}
+
+			close(errC)
+			return err
+		}
+	}
 }
 
 func min(a, b int) int {

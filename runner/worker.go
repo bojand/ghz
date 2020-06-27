@@ -64,7 +64,7 @@ func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool) error {
 	for {
 		select {
 		case <-w.done:
-			return err
+			return nil
 		default:
 			if cond(w.workerID, rErr, n, time.Since(start)) {
 				n++
@@ -77,8 +77,6 @@ func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool) error {
 			}
 		}
 	}
-
-	return err
 }
 
 func (w *Worker) makeRequest() error {
