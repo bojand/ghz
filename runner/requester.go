@@ -40,6 +40,7 @@ type Requester struct {
 	conns    []*grpc.ClientConn
 	stubs    []grpcdynamic.Stub
 	handlers []*statsHandler
+	workers  map[string]*Worker
 
 	mtd      *desc.MethodDescriptor
 	reporter *Reporter
@@ -49,8 +50,6 @@ type Requester struct {
 	results chan *callResult
 	stopCh  chan bool
 	start   time.Time
-
-	qpsTick time.Duration
 
 	reqCounter int64
 
@@ -65,19 +64,14 @@ func newRequester(c *RunConfig) (*Requester, error) {
 	var err error
 	var mtd *desc.MethodDescriptor
 
-	var qpsTick time.Duration
-	if c.qps > 0 {
-		qpsTick = time.Duration(1e6/(c.qps)) * time.Microsecond
-	}
-
 	reqr := &Requester{
 		config:     c,
-		qpsTick:    qpsTick,
 		stopReason: ReasonNormalEnd,
 		results:    make(chan *callResult, min(c.c*1000, maxResult)),
 		stopCh:     make(chan bool, c.c),
 		conns:      make([]*grpc.ClientConn, 0, c.nConns),
 		stubs:      make([]grpcdynamic.Stub, 0, c.nConns),
+		workers:    make(map[string]*Worker),
 	}
 
 	if c.proto != "" {
@@ -178,9 +172,10 @@ func (b *Requester) Run() (*Report, error) {
 		b.reporter.Run()
 	}()
 
-	err = b.runWorkers()
+	err = b.runConstConcurrencyWorkers()
 
 	report := b.Finish()
+
 	b.closeClientConns()
 
 	return report, err
@@ -188,6 +183,7 @@ func (b *Requester) Run() (*Report, error) {
 
 // Stop stops the test
 func (b *Requester) Stop(reason StopReason) {
+
 	b.lock.Lock()
 	b.stopReason = reason
 	b.lock.Unlock()
@@ -196,10 +192,24 @@ func (b *Requester) Stop(reason StopReason) {
 		b.config.log.Debugf("Stopping with reason: %+v", reason)
 	}
 
-	// Send stop signal so that workers can stop gracefully.
-	for i := 0; i < b.config.c; i++ {
-		b.stopCh <- true
+	b.lock.Lock()
+	for _, wrk := range b.workers {
+		wrk := wrk
+		if wrk.isActive() {
+			wrk.setActive(false)
+			if wrk.done != nil {
+				wrk.done <- true
+			}
+		}
 	}
+
+	for _, wrk := range b.workers {
+		wrk := wrk
+		if wrk.done != nil {
+			close(wrk.done)
+		}
+	}
+	b.lock.Unlock()
 
 	if b.config.zstop == "close" {
 		b.closeClientConns()
@@ -325,7 +335,7 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	return grpc.DialContext(ctx, b.config.host, opts...)
 }
 
-func (b *Requester) runWorkers() error {
+func (b *Requester) runConstConcurrencyWorkers() error {
 	nReqPerWorker := b.config.n / b.config.c
 
 	if b.config.c == 0 {
@@ -350,17 +360,21 @@ func (b *Requester) runWorkers() error {
 				"workerID", wID, "requests per worker", nReqPerWorker)
 		}
 
-		w := Worker{
+		b.lock.Lock()
+		w := &Worker{
 			stub:          b.stubs[n],
 			mtd:           b.mtd,
 			config:        b.config,
-			stopCh:        b.stopCh,
-			qpsTick:       b.qpsTick,
 			reqCounter:    &b.reqCounter,
-			nReq:          nReqPerWorker,
 			workerID:      wID,
 			arrayJSONData: b.arrayJSONData,
+			done:          b.stopCh,
 		}
+
+		w.setActive(true)
+
+		b.workers[wID] = w
+		b.lock.Unlock()
 
 		n++ // increment connection counter
 
@@ -370,14 +384,20 @@ func (b *Requester) runWorkers() error {
 		}
 
 		go func() {
-			errC <- w.runWorker()
+			errC <- w.runWorker(func(id string, err error, reqCount int, duration time.Duration) bool {
+				return reqCount < nReqPerWorker
+			}, true)
 		}()
 	}
 
 	var err error
+
 	for i := 0; i < b.config.c; i++ {
 		err = multierr.Append(err, <-errC)
 	}
+
+	close(errC)
+
 	return err
 }
 

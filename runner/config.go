@@ -93,6 +93,12 @@ type Config struct {
 	Debug             string            `json:"debug,omitempty" toml:"debug,omitempty" yaml:"debug,omitempty"`
 	Host              string            `json:"host" toml:"host" yaml:"host"`
 	EnableCompression bool              `json:"enable-compression,omitempty" toml:"enable-compression,omitempty" yaml:"enable-compression,omitempty"`
+	LoadStrategy      string            `json:"load-strategy" toml:"load-strategy" yaml:"load-strategy" default:"concurrency"`
+	LoadSchedule      string            `json:"load-schedule" toml:"load-schedule" yaml:"load-schedule" default:"const"`
+	LoadStart         uint              `json:"load-start" toml:"load-start" yaml:"load-start"`
+	LoadEnd           uint              `json:"load-end" toml:"load-end" yaml:"load-end"`
+	LoadStep          uint              `json:"load-step" toml:"load-step" yaml:"load-step"`
+	LoadDuration      Duration          `json:"load-duration" toml:"load-duration" yaml:"load-duration"`
 }
 
 func checkData(data interface{}) error {

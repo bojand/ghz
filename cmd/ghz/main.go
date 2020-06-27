@@ -107,7 +107,7 @@ var (
 		Short('n').Default("200").IsSetByUser(&isNSet).Uint()
 
 	isQSet = false
-	rps    = kingpin.Flag("rps", "Requests per second (RPS) rate limit for constant load. Default is no rate limit.").
+	q      = kingpin.Flag("qps", "Queries per second (QPS) rate limit for constant load. Default is no rate limit.").
 		Default("0").Short('q').IsSetByUser(&isQSet).Uint()
 
 	isTSet = false
@@ -410,6 +410,12 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.ReflectMetadata = rmdMap
 	cfg.Debug = *debug
 	cfg.EnableCompression = *enableCompression
+	cfg.LoadStrategy = *strategy
+	cfg.LoadSchedule = *schedule
+	cfg.LoadStart = *loadStart
+	cfg.LoadStep = *loadStep
+	cfg.LoadEnd = *loadEnd
+	cfg.LoadDuration = runner.Duration(*loadDuration)
 
 	return nil
 }

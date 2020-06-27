@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -35,9 +36,26 @@ type Worker struct {
 
 	// non-binary json optimization
 	arrayJSONData []string
+
+	done chan bool
+
+	mu     sync.RWMutex
+	active bool
 }
 
-func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool, stopCh <-chan bool) error {
+func (w *Worker) isActive() bool {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	return w.active
+}
+
+func (w *Worker) setActive(v bool) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.active = v
+}
+
+func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool) error {
 	var err, rErr error
 
 	start := time.Now()
@@ -45,7 +63,7 @@ func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool, stopCh <-chan
 
 	for {
 		select {
-		case <-stopCh:
+		case <-w.done:
 			return err
 		default:
 			if cond(w.workerID, rErr, n, time.Since(start)) {
