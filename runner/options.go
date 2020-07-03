@@ -17,6 +17,21 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// StrategyConcurrency is the concurrency load strategy
+const StrategyConcurrency = "concurrency"
+
+// StrategyQPS is the qps load strategy
+const StrategyQPS = "qps"
+
+// ScheduleConst is a constant load schedule
+const ScheduleConst = "const"
+
+// ScheduleStep is the step load schedule
+const ScheduleStep = "step"
+
+// ScheduleLine is the line load schedule
+const ScheduleLine = "line"
+
 // RunConfig represents the request Configs
 type RunConfig struct {
 	// call settings
@@ -36,6 +51,14 @@ type RunConfig struct {
 	skipVerify bool
 	insecure   bool
 	authority  string
+
+	// load
+	loadStrategy string
+	loadSchedule string
+	loadDuration time.Duration
+	loadStart    uint
+	loadEnd      uint
+	loadStep     uint
 
 	// test
 	n   int
@@ -540,15 +563,17 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 
 	// init with defaults
 	c := &RunConfig{
-		call:        call,
-		host:        host,
-		n:           200,
-		c:           50,
-		nConns:      1,
-		timeout:     time.Duration(20 * time.Second),
-		dialTimeout: time.Duration(10 * time.Second),
-		cpus:        runtime.GOMAXPROCS(-1),
-		zstop:       "close",
+		call:         call,
+		host:         host,
+		n:            200,
+		c:            50,
+		nConns:       1,
+		timeout:      time.Duration(20 * time.Second),
+		dialTimeout:  time.Duration(10 * time.Second),
+		cpus:         runtime.GOMAXPROCS(-1),
+		zstop:        "close",
+		loadStrategy: StrategyConcurrency,
+		loadSchedule: ScheduleConst,
 	}
 
 	// apply options
@@ -562,15 +587,42 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 
 	// checks
 	if c.nConns > c.c {
-		return nil, errors.New("Number of connections cannot be greater than concurrency")
+		return nil, errors.New("number of connections cannot be greater than concurrency")
 	}
 
 	if c.call == "" {
-		return nil, errors.New("Call required")
+		return nil, errors.New("call required")
 	}
 
 	if c.host == "" {
-		return nil, errors.New("Host required")
+		return nil, errors.New("host required")
+	}
+
+	if c.loadSchedule == ScheduleStep || c.loadSchedule == ScheduleLine {
+		if c.loadDuration == 0 {
+			return nil, errors.New("invalid load duration")
+		}
+
+		if c.loadStart == c.loadEnd {
+			return nil, errors.New("load start cannot equal load end")
+		}
+
+		if c.loadSchedule == ScheduleStep {
+			if c.loadStep == 0 {
+				return nil, errors.New("invalid load step")
+			}
+
+			var diff uint
+			if c.loadStart > c.loadEnd {
+				diff = c.loadStart - c.loadEnd
+			} else {
+				diff = c.loadEnd - c.loadStart
+			}
+
+			if diff%c.loadStep != 0 {
+				return nil, errors.New("load step must divide into load difference")
+			}
+		}
 	}
 
 	creds, err := createClientTransportCredentials(
@@ -595,6 +647,76 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 func WithEnableCompression(enableCompression bool) Option {
 	return func(o *RunConfig) error {
 		o.enableCompression = enableCompression
+
+		return nil
+	}
+}
+
+// WithLoadStrategy specifies the load strategy
+// WithLoadStrategy("const")
+func WithLoadStrategy(strategy string) Option {
+	return func(o *RunConfig) error {
+		o.loadStrategy = strings.ToLower(strategy)
+
+		if o.loadStrategy != StrategyConcurrency && o.loadStrategy != StrategyQPS {
+			return fmt.Errorf(`strategy much be "%s" or "%s"`, StrategyConcurrency, StrategyQPS)
+		}
+
+		return nil
+	}
+}
+
+// WithLoadSchedule specifies the load schedule
+// WithLoadSchedule("const")
+func WithLoadSchedule(schedule string) Option {
+	return func(o *RunConfig) error {
+		o.loadSchedule = strings.ToLower(schedule)
+
+		if o.loadSchedule != ScheduleConst &&
+			o.loadSchedule != ScheduleStep &&
+			o.loadSchedule != ScheduleLine {
+			return fmt.Errorf(`schedule much be "%s", "%s", or "%s"`,
+				ScheduleConst, ScheduleStep, ScheduleLine)
+		}
+
+		return nil
+	}
+}
+
+// WithLoadStart specifies the load start
+// WithLoadStart(5)
+func WithLoadStart(start uint) Option {
+	return func(o *RunConfig) error {
+		o.loadStart = start
+
+		return nil
+	}
+}
+
+// WithLoadEnd specifies the load end
+// WithLoadEnd(25)
+func WithLoadEnd(end uint) Option {
+	return func(o *RunConfig) error {
+		o.loadEnd = end
+
+		return nil
+	}
+}
+
+// WithLoadStep specifies the load step
+// WithLoadStep(5)
+func WithLoadStep(step uint) Option {
+	return func(o *RunConfig) error {
+		o.loadStep = step
+
+		return nil
+	}
+}
+
+// WithLoadDuration specifies the load duration
+func WithLoadDuration(duration time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.loadDuration = duration
 
 		return nil
 	}
@@ -666,6 +788,7 @@ func fromConfig(cfg *Config) []Option {
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),
 		WithDurationStopAction(cfg.ZStop),
+
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil

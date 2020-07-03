@@ -165,8 +165,11 @@ func (b *Requester) Run(stopCh chan StopReason) (*Report, error) {
 	done := make(chan error, 1)
 
 	go func() {
-		err := b.runConstConcurrencyWorkers(stop)
-		done <- err
+		if b.config.loadStrategy == StrategyConcurrency &&
+			b.config.loadSchedule == ScheduleConst {
+			err := b.runConstConcurrencyWorkers(stop)
+			done <- err
+		}
 	}()
 
 	go func() {
