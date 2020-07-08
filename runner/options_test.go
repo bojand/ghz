@@ -61,6 +61,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", "."}, c.importPaths)
 		assert.Equal(t, c.enableCompression, false)
+		assert.Equal(t, c.loadStrategy, StrategyConcurrency)
+		assert.Equal(t, c.loadSchedule, ScheduleConst)
 	})
 
 	t.Run("with options", func(t *testing.T) {
@@ -422,5 +424,219 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
 		assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
 		assert.Equal(t, true, c.insecure)
+	})
+
+	t.Run("invalid strategy", func(t *testing.T) {
+		_, err := newConfig("  call  ", "  localhost:50050  ",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithLoadStrategy("foo"),
+		)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("invalid schedule", func(t *testing.T) {
+		_, err := newConfig("  call  ", "  localhost:50050  ",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithLoadSchedule("foo"),
+		)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("with concurrency step", func(t *testing.T) {
+		t.Run("no step", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyConcurrency),
+				WithLoadSchedule(ScheduleStep),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("no duration", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyConcurrency),
+				WithLoadSchedule(ScheduleStep),
+				WithLoadStep(5),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("no end", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyConcurrency),
+				WithLoadSchedule(ScheduleStep),
+				WithLoadStep(5),
+				WithLoadDuration(20*time.Second),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("with all setting", func(t *testing.T) {
+			c, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyConcurrency),
+				WithLoadSchedule(ScheduleLine),
+				WithLoadStep(5),
+				WithLoadStart(10),
+				WithLoadDuration(20*time.Second),
+				WithLoadEnd(20),
+			)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, c.loadStrategy, StrategyConcurrency)
+			assert.Equal(t, c.loadSchedule, ScheduleLine)
+			assert.Equal(t, c.loadStart, uint(10))
+			assert.Equal(t, c.loadEnd, uint(20))
+			assert.Equal(t, c.loadDuration, 20*time.Second)
+			assert.Equal(t, c.loadStep, uint(5))
+		})
+	})
+
+	t.Run("with concurrency line", func(t *testing.T) {
+		t.Run("no duration", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyConcurrency),
+				WithLoadSchedule(ScheduleLine),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("no end", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyConcurrency),
+				WithLoadSchedule(ScheduleLine),
+				WithLoadDuration(20*time.Second),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("with all setting", func(t *testing.T) {
+			c, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyConcurrency),
+				WithLoadSchedule(ScheduleLine),
+				WithLoadDuration(20*time.Second),
+				WithLoadStep(5),
+				WithLoadEnd(20),
+			)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, c.loadStrategy, StrategyConcurrency)
+			assert.Equal(t, c.loadSchedule, ScheduleLine)
+			assert.Equal(t, c.loadStart, uint(0))
+			assert.Equal(t, c.loadEnd, uint(20))
+			assert.Equal(t, c.loadDuration, 20*time.Second)
+			assert.Equal(t, c.loadStep, uint(5))
+		})
+	})
+
+	t.Run("with qps step", func(t *testing.T) {
+		t.Run("no step", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyQPS),
+				WithLoadSchedule(ScheduleStep),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("no duration", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyQPS),
+				WithLoadSchedule(ScheduleStep),
+				WithLoadStep(5),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("no end", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyQPS),
+				WithLoadSchedule(ScheduleStep),
+				WithLoadStep(5),
+				WithLoadDuration(20*time.Second),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("with all setting", func(t *testing.T) {
+			c, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyQPS),
+				WithLoadSchedule(ScheduleLine),
+				WithLoadStep(5),
+				WithLoadStart(10),
+				WithLoadDuration(20*time.Second),
+				WithLoadEnd(20),
+			)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, c.loadStrategy, StrategyQPS)
+			assert.Equal(t, c.loadSchedule, ScheduleLine)
+			assert.Equal(t, c.loadStart, uint(10))
+			assert.Equal(t, c.loadEnd, uint(20))
+			assert.Equal(t, c.loadDuration, 20*time.Second)
+			assert.Equal(t, c.loadStep, uint(5))
+		})
+	})
+
+	t.Run("with qps line", func(t *testing.T) {
+		t.Run("no duration", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyQPS),
+				WithLoadSchedule(ScheduleLine),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("no end", func(t *testing.T) {
+			_, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyQPS),
+				WithLoadSchedule(ScheduleLine),
+				WithLoadDuration(20*time.Second),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("with all setting", func(t *testing.T) {
+			c, err := newConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadStrategy(StrategyQPS),
+				WithLoadSchedule(ScheduleLine),
+				WithLoadDuration(20*time.Second),
+				WithLoadEnd(20),
+			)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, c.loadStrategy, StrategyQPS)
+			assert.Equal(t, c.loadSchedule, ScheduleLine)
+			assert.Equal(t, c.loadStart, uint(0))
+			assert.Equal(t, c.loadEnd, uint(20))
+			assert.Equal(t, c.loadDuration, 20*time.Second)
+		})
 	})
 }
