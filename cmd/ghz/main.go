@@ -103,7 +103,7 @@ var (
 		Short('x').Default("0").IsSetByUser(&isXSet).Duration()
 
 	isZStopSet = false
-	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, warn or ignore.").
+	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore.").
 			Default("close").IsSetByUser(&isZStopSet).String()
 
 	// Data
