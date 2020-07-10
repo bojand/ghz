@@ -585,6 +585,9 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		return nil, errors.New("Host required")
 	}
 
+	if c.skipFirst > 0 && int(c.skipFirst) > c.n {
+		return nil, errors.New("You cannot skip more requests than those run")
+	}
 	creds, err := createClientTransportCredentials(
 		c.skipVerify,
 		c.cacert,
