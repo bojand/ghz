@@ -65,6 +65,10 @@ var (
 	skipVerify = kingpin.Flag("skipTLS", "Skip TLS client verification of the server's certificate chain and host name.").
 			Default("false").IsSetByUser(&isSkipSet).Bool()
 
+	isSkipFirstSet = false
+	skipFirst      = kingpin.Flag("skipFirst", "Skip the first X requests when doing the results tally.").
+			Default("0").IsSetByUser(&isSkipFirstSet).Uint()
+
 	isInsecSet = false
 	insecure   = kingpin.Flag("insecure", "Use plaintext and insecure connection.").
 			Default("false").IsSetByUser(&isInsecSet).Bool()
@@ -99,7 +103,7 @@ var (
 		Short('x').Default("0").IsSetByUser(&isXSet).Duration()
 
 	isZStopSet = false
-	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore.").
+	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, warnit or ignore.").
 			Default("close").IsSetByUser(&isZStopSet).String()
 
 	// Data
@@ -357,6 +361,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.Cert = *cert
 	cfg.Key = *key
 	cfg.SkipTLSVerify = *skipVerify
+	cfg.SkipFirst = *skipFirst
 	cfg.Insecure = *insecure
 	cfg.Authority = *authority
 	cfg.CName = *cname
@@ -421,6 +426,10 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isSkipSet {
 		dest.SkipTLSVerify = src.SkipTLSVerify
+	}
+
+	if isSkipFirstSet {
+		dest.SkipFirst = src.SkipFirst
 	}
 
 	if isInsecSet {

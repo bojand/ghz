@@ -33,6 +33,7 @@ type Options struct {
 	Cert          string        `json:"cert,omitempty"`
 	Key           string        `json:"key,omitempty"`
 	SkipTLS       bool          `json:"skipTLS,omitempty"`
+	SkipFirst     uint          `json:"skipFirst,omitempty"`
 	CName         string        `json:"cname,omitempty"`
 	Authority     string        `json:"authority,omitempty"`
 	Insecure      bool          `json:"insecure"`
@@ -133,9 +134,17 @@ func newReporter(results chan *callResult, c *RunConfig) *Reporter {
 
 // Run runs the reporter
 func (r *Reporter) Run() {
-	for res := range r.results {
-		errStr := ""
+	var skipCount uint
+	if r.config.skipFirst > 0 {
+		println("Skipping the first", r.config.skipFirst, "requests from the results calculations.")
+	}
 
+	for res := range r.results {
+		if skipCount < r.config.skipFirst {
+			skipCount++
+			continue
+		}
+		errStr := ""
 		r.totalCount++
 		r.totalLatenciesSec += res.duration.Seconds()
 		r.statusCodeDist[res.status]++
@@ -179,6 +188,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		Key:           r.config.key,
 		CName:         r.config.cname,
 		SkipTLS:       r.config.skipVerify,
+		SkipFirst:     r.config.skipFirst,
 		Insecure:      r.config.insecure,
 		Authority:     r.config.authority,
 		Total:         uint(r.config.n),
