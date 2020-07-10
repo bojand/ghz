@@ -135,9 +135,6 @@ func newReporter(results chan *callResult, c *RunConfig) *Reporter {
 // Run runs the reporter
 func (r *Reporter) Run() {
 	var skipCount uint
-	if r.config.skipFirst > 0 {
-		println("Skipping the first", r.config.skipFirst, "requests from the results calculations.")
-	}
 
 	for res := range r.results {
 		if skipCount < r.config.skipFirst {

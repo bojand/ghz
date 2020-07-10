@@ -470,7 +470,7 @@ func WithProtoFile(proto string, importPaths []string) Option {
 		proto = strings.TrimSpace(proto)
 		if proto != "" {
 			if filepath.Ext(proto) != ".proto" {
-				return errors.Errorf("proto: must have .proto extension")
+				return errors.New("proto: must have .proto extension")
 			}
 
 			o.proto = proto
