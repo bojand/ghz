@@ -53,12 +53,13 @@ type RunConfig struct {
 	authority  string
 
 	// load
-	loadStrategy string
-	loadSchedule string
-	loadDuration time.Duration
-	loadStart    uint
-	loadEnd      uint
-	loadStep     uint
+	loadStrategy     string
+	loadSchedule     string
+	loadDuration     time.Duration
+	loadStepDuration time.Duration
+	loadStart        uint
+	loadEnd          uint
+	loadStep         uint
 
 	// test
 	n   int
@@ -622,6 +623,19 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 			if diff%c.loadStep != 0 {
 				return nil, errors.New("load step must divide into load difference")
 			}
+
+			c.loadStepDuration = c.loadDuration
+		} else if c.loadSchedule == ScheduleLine {
+			var diff uint
+			if c.loadStart > c.loadEnd {
+				diff = c.loadStart - c.loadEnd
+			} else {
+				diff = c.loadEnd - c.loadStart
+			}
+
+			fmt.Println(c.loadDuration.Milliseconds(), diff, c.loadDuration.Milliseconds()/int64(diff))
+
+			c.loadStepDuration = time.Duration(c.loadDuration.Milliseconds()/int64(diff)) * time.Millisecond
 		}
 	}
 

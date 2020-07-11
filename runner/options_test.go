@@ -482,7 +482,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			c, err := newConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadStrategy(StrategyConcurrency),
-				WithLoadSchedule(ScheduleLine),
+				WithLoadSchedule(ScheduleStep),
 				WithLoadStep(5),
 				WithLoadStart(10),
 				WithLoadDuration(20*time.Second),
@@ -491,12 +491,13 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			assert.Equal(t, c.loadStrategy, StrategyConcurrency)
-			assert.Equal(t, c.loadSchedule, ScheduleLine)
-			assert.Equal(t, c.loadStart, uint(10))
-			assert.Equal(t, c.loadEnd, uint(20))
-			assert.Equal(t, c.loadDuration, 20*time.Second)
-			assert.Equal(t, c.loadStep, uint(5))
+			assert.Equal(t, StrategyConcurrency, c.loadStrategy)
+			assert.Equal(t, ScheduleStep, c.loadSchedule)
+			assert.Equal(t, uint(10), c.loadStart)
+			assert.Equal(t, uint(20), c.loadEnd)
+			assert.Equal(t, 20*time.Second, c.loadDuration)
+			assert.Equal(t, uint(5), c.loadStep)
+			assert.Equal(t, c.loadDuration, c.loadStepDuration)
 		})
 	})
 
@@ -534,12 +535,13 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			assert.Equal(t, c.loadStrategy, StrategyConcurrency)
-			assert.Equal(t, c.loadSchedule, ScheduleLine)
-			assert.Equal(t, c.loadStart, uint(0))
-			assert.Equal(t, c.loadEnd, uint(20))
-			assert.Equal(t, c.loadDuration, 20*time.Second)
-			assert.Equal(t, c.loadStep, uint(5))
+			assert.Equal(t, StrategyConcurrency, c.loadStrategy)
+			assert.Equal(t, ScheduleLine, c.loadSchedule)
+			assert.Equal(t, uint(0), c.loadStart)
+			assert.Equal(t, uint(20), c.loadEnd)
+			assert.Equal(t, 20*time.Second, c.loadDuration)
+			assert.Equal(t, uint(5), c.loadStep)
+			assert.Equal(t, 1*time.Second, c.loadStepDuration)
 		})
 	})
 
@@ -581,7 +583,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			c, err := newConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadStrategy(StrategyQPS),
-				WithLoadSchedule(ScheduleLine),
+				WithLoadSchedule(ScheduleStep),
 				WithLoadStep(5),
 				WithLoadStart(10),
 				WithLoadDuration(20*time.Second),
@@ -590,12 +592,13 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			assert.Equal(t, c.loadStrategy, StrategyQPS)
-			assert.Equal(t, c.loadSchedule, ScheduleLine)
-			assert.Equal(t, c.loadStart, uint(10))
-			assert.Equal(t, c.loadEnd, uint(20))
-			assert.Equal(t, c.loadDuration, 20*time.Second)
-			assert.Equal(t, c.loadStep, uint(5))
+			assert.Equal(t, StrategyQPS, c.loadStrategy)
+			assert.Equal(t, ScheduleStep, c.loadSchedule)
+			assert.Equal(t, uint(10), c.loadStart)
+			assert.Equal(t, uint(20), c.loadEnd)
+			assert.Equal(t, 20*time.Second, c.loadDuration)
+			assert.Equal(t, uint(5), c.loadStep)
+			assert.Equal(t, c.loadDuration, c.loadStepDuration)
 		})
 	})
 
@@ -632,11 +635,12 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			assert.Equal(t, c.loadStrategy, StrategyQPS)
-			assert.Equal(t, c.loadSchedule, ScheduleLine)
-			assert.Equal(t, c.loadStart, uint(0))
-			assert.Equal(t, c.loadEnd, uint(20))
-			assert.Equal(t, c.loadDuration, 20*time.Second)
+			assert.Equal(t, StrategyQPS, c.loadStrategy)
+			assert.Equal(t, ScheduleLine, c.loadSchedule)
+			assert.Equal(t, uint(0), c.loadStart)
+			assert.Equal(t, uint(20), c.loadEnd)
+			assert.Equal(t, 20*time.Second, c.loadDuration)
+			assert.Equal(t, 1*time.Second, c.loadStepDuration)
 		})
 	})
 }

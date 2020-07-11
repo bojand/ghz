@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/bojand/ghz/protodesc"
@@ -165,10 +166,22 @@ func (b *Requester) Run(stopCh chan StopReason) (*Report, error) {
 	done := make(chan error, 1)
 
 	go func() {
-		if b.config.loadStrategy == StrategyConcurrency &&
-			b.config.loadSchedule == ScheduleConst {
-			err := b.runConstConcurrencyWorkers(stop)
-			done <- err
+		if b.config.loadStrategy == StrategyConcurrency {
+			if b.config.loadSchedule == ScheduleConst {
+				err := b.runConstConcurrencyWorkers(stop)
+				done <- err
+			} else if b.config.loadSchedule == ScheduleStep || b.config.loadSchedule == ScheduleLine {
+				err := b.runStepConcurrencyWorkers(stop)
+				done <- err
+			}
+		} else {
+			if b.config.loadSchedule == ScheduleConst {
+				panic("rps const not supported yet")
+			} else if b.config.loadSchedule == ScheduleStep {
+				panic("rps step not supported yet")
+			} else if b.config.loadSchedule == ScheduleLine {
+				panic("tpc line not supported yet")
+			}
 		}
 	}()
 
@@ -408,6 +421,146 @@ func (b *Requester) runConstConcurrencyWorkers(stop chan bool) error {
 
 			close(errC)
 			return err
+		}
+	}
+}
+
+func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
+	errC := make(chan error, b.config.c)
+
+	workers := make(map[string]*Worker)
+
+	ticker := time.NewTicker(b.config.loadStepDuration)
+	defer ticker.Stop()
+
+	stepUp := b.config.loadStart < b.config.loadEnd
+
+	n := 0 // connection counter
+
+	runWorkers := func(count int) {
+		for i := 0; i < count; i++ {
+			wID := "g" + strconv.Itoa(i) + "c" + strconv.Itoa(n)
+
+			if len(b.config.name) > 0 {
+				wID = b.config.name + ":" + wID
+			}
+
+			if b.config.hasLog {
+				b.config.log.Debugw("Creating worker with ID: "+wID,
+					"workerID", wID)
+			}
+
+			w := &Worker{
+				stub:          b.stubs[n],
+				mtd:           b.mtd,
+				config:        b.config,
+				reqCounter:    &b.reqCounter,
+				workerID:      wID,
+				arrayJSONData: b.arrayJSONData,
+				done:          make(chan bool, 1),
+			}
+
+			w.setActive(true)
+
+			workers[wID] = w
+
+			n++ // increment connection counter
+
+			// wrap around connections if needed
+			if n == b.config.nConns {
+				n = 0
+			}
+
+			go func() {
+				errC <- w.runWorker(func(id string, err error, reqCount int, duration time.Duration) bool {
+					nv := atomic.AddInt64(&b.reqCounter, 1)
+					fmt.Println("nv:", nv)
+					return nv <= int64(b.config.n)
+				}, true)
+			}()
+		}
+	}
+
+	stopWorkers := func(count int) {
+		fmt.Println("stopping workers", count)
+
+		stopped := 0
+		for _, wrk := range workers {
+			if stopped == count {
+				break
+			}
+
+			wrk := wrk
+			if wrk.isActive() {
+				wrk.setActive(false)
+				if wrk.done != nil {
+					wrk.done <- true
+				}
+
+				stopped++
+			}
+		}
+	}
+
+	runWorkers(int(b.config.loadStart))
+	wc := b.config.loadStart
+
+	// end condition checker
+	var execDone sync.Once
+
+	var err error
+	done := make(chan bool)
+
+	for {
+		select {
+
+		case <-done:
+		case <-stop:
+			for i := 0; i < len(workers); i++ {
+				err = multierr.Append(err, <-errC)
+			}
+
+			for _, wrk := range workers {
+				wrk := wrk
+				if wrk.done != nil {
+					close(wrk.done)
+				}
+			}
+
+			close(done)
+			close(errC)
+
+			return err
+
+		case <-ticker.C:
+			fmt.Println("wc:", wc, " total req:", atomic.LoadInt64(&b.reqCounter))
+
+			if wc != b.config.loadEnd {
+				if stepUp {
+					runWorkers(int(b.config.loadStep))
+					wc = wc + b.config.loadStep
+				} else {
+					stopWorkers(int(b.config.loadStep))
+					wc = wc - b.config.loadStep
+				}
+			} else {
+				ticker.Stop()
+			}
+
+		default:
+			if (atomic.LoadInt64(&b.reqCounter) >= int64(b.config.n)) ||
+				(b.config.loadEnd == 0 && wc == b.config.loadEnd) {
+				execDone.Do(func() {
+					ticker.Stop()
+
+					stopWorkers(len(workers))
+
+					go func() {
+						fmt.Println("setting done")
+						done <- true
+					}()
+				})
+			}
 		}
 	}
 }
