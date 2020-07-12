@@ -569,6 +569,30 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 		dest.Host = src.Host
 	}
 
+	if isStrategySet {
+		dest.LoadStrategy = src.LoadStrategy
+	}
+
+	if isScheduleSet {
+		dest.LoadSchedule = src.LoadSchedule
+	}
+
+	if isLoadStartSet {
+		dest.LoadStart = src.LoadStart
+	}
+
+	if isLoadStepSet {
+		dest.LoadStep = src.LoadStep
+	}
+
+	if isLoadEndSet {
+		dest.LoadEnd = src.LoadEnd
+	}
+
+	if isLoadDurSet {
+		dest.LoadDuration = src.LoadDuration
+	}
+
 	return nil
 }
 

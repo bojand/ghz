@@ -205,12 +205,11 @@ func (b *Requester) Run(stopCh chan StopReason) (*Report, error) {
 				b.closeClientConns()
 			}
 		case err := <-done:
-
 			total := time.Since(start)
 
-			close(b.results)
 			close(stop)
 			close(done)
+			close(b.results)
 
 			if b.config.hasLog {
 				b.config.log.Debug("Waiting for report")
@@ -438,8 +437,14 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 	n := 0 // connection counter
 
 	runWorkers := func(count int) {
+		if b.config.hasLog {
+			b.config.log.Debugw("Starting workers ", "count", count)
+		}
+
+		wl := len(workers)
+
 		for i := 0; i < count; i++ {
-			wID := "g" + strconv.Itoa(i) + "c" + strconv.Itoa(n)
+			wID := "g" + strconv.Itoa(wl+i) + "c" + strconv.Itoa(n)
 
 			if len(b.config.name) > 0 {
 				wID = b.config.name + ":" + wID
@@ -473,16 +478,16 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 
 			go func() {
 				errC <- w.runWorker(func(id string, err error, reqCount int, duration time.Duration) bool {
-					nv := atomic.AddInt64(&b.reqCounter, 1)
-					fmt.Println("nv:", nv)
-					return nv <= int64(b.config.n)
+					return atomic.LoadInt64(&b.reqCounter) < int64(b.config.n)
 				}, true)
 			}()
 		}
 	}
 
 	stopWorkers := func(count int) {
-		fmt.Println("stopping workers", count)
+		if b.config.hasLog {
+			b.config.log.Debugw("Stopping workers ", "count", count)
+		}
 
 		stopped := 0
 		for _, wrk := range workers {
@@ -515,7 +520,15 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 		select {
 
 		case <-done:
+			if b.config.hasLog {
+				b.config.log.Debugw("received done")
+			}
+			stop <- true
 		case <-stop:
+			if b.config.hasLog {
+				b.config.log.Debugw("received stop", "workers_count", len(workers))
+			}
+
 			for i := 0; i < len(workers); i++ {
 				err = multierr.Append(err, <-errC)
 			}
@@ -533,7 +546,11 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 			return err
 
 		case <-ticker.C:
-			fmt.Println("wc:", wc, " total req:", atomic.LoadInt64(&b.reqCounter))
+			if b.config.hasLog {
+				b.config.log.Debugw("received ticker",
+					"workers_count", len(workers),
+					"total_requests", atomic.LoadInt64(&b.reqCounter))
+			}
 
 			if wc != b.config.loadEnd {
 				if stepUp {
@@ -548,15 +565,20 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 			}
 
 		default:
-			if (atomic.LoadInt64(&b.reqCounter) >= int64(b.config.n)) ||
-				(b.config.loadEnd == 0 && wc == b.config.loadEnd) {
+			if atomic.LoadInt64(&b.reqCounter) >= int64(b.config.n) {
+
 				execDone.Do(func() {
+					if b.config.hasLog {
+						b.config.log.Debugw("end condition",
+							"workers_count", len(workers),
+							"total_requests", atomic.LoadInt64(&b.reqCounter))
+					}
+
 					ticker.Stop()
 
 					stopWorkers(len(workers))
 
 					go func() {
-						fmt.Println("setting done")
 						done <- true
 					}()
 				})

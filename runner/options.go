@@ -599,6 +599,17 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		return nil, errors.New("host required")
 	}
 
+	if c.loadStrategy != StrategyConcurrency && c.loadStrategy != StrategyQPS {
+		return nil, fmt.Errorf(`strategy much be "%s" or "%s"`, StrategyConcurrency, StrategyQPS)
+	}
+
+	if c.loadSchedule != ScheduleConst &&
+		c.loadSchedule != ScheduleStep &&
+		c.loadSchedule != ScheduleLine {
+		return nil, fmt.Errorf(`schedule much be "%s", "%s", or "%s"`,
+			ScheduleConst, ScheduleStep, ScheduleLine)
+	}
+
 	if c.loadSchedule == ScheduleStep || c.loadSchedule == ScheduleLine {
 		if c.loadDuration == 0 {
 			return nil, errors.New("invalid load duration")
@@ -632,8 +643,6 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 			} else {
 				diff = c.loadEnd - c.loadStart
 			}
-
-			fmt.Println(c.loadDuration.Milliseconds(), diff, c.loadDuration.Milliseconds()/int64(diff))
 
 			c.loadStepDuration = time.Duration(c.loadDuration.Milliseconds()/int64(diff)) * time.Millisecond
 		}
@@ -670,10 +679,9 @@ func WithEnableCompression(enableCompression bool) Option {
 // WithLoadStrategy("const")
 func WithLoadStrategy(strategy string) Option {
 	return func(o *RunConfig) error {
-		o.loadStrategy = strings.ToLower(strategy)
-
-		if o.loadStrategy != StrategyConcurrency && o.loadStrategy != StrategyQPS {
-			return fmt.Errorf(`strategy much be "%s" or "%s"`, StrategyConcurrency, StrategyQPS)
+		s := strings.TrimSpace(strategy)
+		if len(s) > 0 {
+			o.loadStrategy = strings.ToLower(s)
 		}
 
 		return nil
@@ -684,13 +692,9 @@ func WithLoadStrategy(strategy string) Option {
 // WithLoadSchedule("const")
 func WithLoadSchedule(schedule string) Option {
 	return func(o *RunConfig) error {
-		o.loadSchedule = strings.ToLower(schedule)
-
-		if o.loadSchedule != ScheduleConst &&
-			o.loadSchedule != ScheduleStep &&
-			o.loadSchedule != ScheduleLine {
-			return fmt.Errorf(`schedule much be "%s", "%s", or "%s"`,
-				ScheduleConst, ScheduleStep, ScheduleLine)
+		s := strings.TrimSpace(schedule)
+		if len(s) > 0 {
+			o.loadSchedule = strings.ToLower(s)
 		}
 
 		return nil
@@ -802,6 +806,12 @@ func fromConfig(cfg *Config) []Option {
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),
 		WithDurationStopAction(cfg.ZStop),
+		WithLoadStrategy(cfg.LoadStrategy),
+		WithLoadSchedule(cfg.LoadSchedule),
+		WithLoadStart(cfg.LoadStart),
+		WithLoadStep(cfg.LoadStep),
+		WithLoadEnd(cfg.LoadEnd),
+		WithLoadDuration(time.Duration(cfg.LoadDuration)),
 
 		func(o *RunConfig) error {
 			o.call = cfg.Call
