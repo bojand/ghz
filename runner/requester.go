@@ -523,11 +523,6 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 			if b.config.hasLog {
 				b.config.log.Debugw("received done")
 			}
-			stop <- true
-		case <-stop:
-			if b.config.hasLog {
-				b.config.log.Debugw("received stop", "workers_count", len(workers))
-			}
 
 			for i := 0; i < len(workers); i++ {
 				err = multierr.Append(err, <-errC)
@@ -544,6 +539,19 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 			close(errC)
 
 			return err
+		case <-stop:
+
+			if b.config.hasLog {
+				b.config.log.Debugw("received stop", "workers_count", len(workers))
+			}
+
+			ticker.Stop()
+
+			stopWorkers(len(workers))
+
+			go func() {
+				done <- true
+			}()
 
 		case <-ticker.C:
 			if b.config.hasLog {

@@ -244,6 +244,7 @@ func main() {
 	} else if cfg.Z > 0 {
 		cfg.N = math.MaxInt32
 	}
+
 	var logger *zap.SugaredLogger
 
 	options := []runner.Option{runner.WithConfig(&cfg)}

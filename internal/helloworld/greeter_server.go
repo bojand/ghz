@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -178,6 +179,37 @@ func (s *Greeter) GetCalls(key CallType) [][]*HelloRequest {
 		return val
 	}
 	return nil
+}
+
+// GetCountByWorker gets count of requests by goroutine
+func (s *Greeter) GetCountByWorker(key CallType) map[string]int {
+	s.mutex.Lock()
+	val, ok := s.calls[key]
+	s.mutex.Unlock()
+
+	if !ok {
+		return nil
+	}
+
+	counts := make(map[string]int)
+
+	for _, reqs := range val {
+		for _, req := range reqs {
+			name := req.GetName()
+			if strings.Contains(name, "worker:") {
+				parts := strings.Split(name, ":")
+				wid := parts[len(parts)-1]
+				wc, ok := counts[wid]
+				if !ok {
+					counts[wid] = 0
+				}
+
+				counts[wid] = wc + 1
+			}
+		}
+	}
+
+	return counts
 }
 
 // GetConnectionCount gets the connection count
