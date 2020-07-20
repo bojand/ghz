@@ -69,7 +69,7 @@ type RunConfig struct {
 	name      string
 	cpus      int
 	tags      []byte
-	skipFirst uint
+	skipFirst int
 }
 
 // Option controls some aspect of run
@@ -455,7 +455,7 @@ func WithCPUs(c uint) Option {
 func WithSkipFirst(c uint) Option {
 	return func(o *RunConfig) error {
 		if c > 0 {
-			o.skipFirst = uint(c)
+			o.skipFirst = int(c)
 		}
 
 		return nil

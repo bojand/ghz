@@ -137,7 +137,7 @@ func (r *Reporter) Run() {
 	var skipCount uint
 
 	for res := range r.results {
-		if skipCount < r.config.skipFirst {
+		if skipCount < uint(r.config.skipFirst) {
 			skipCount++
 			continue
 		}
@@ -185,7 +185,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		Key:           r.config.key,
 		CName:         r.config.cname,
 		SkipTLS:       r.config.skipVerify,
-		SkipFirst:     r.config.skipFirst,
+		SkipFirst:     uint(r.config.skipFirst),
 		Insecure:      r.config.insecure,
 		Authority:     r.config.authority,
 		Total:         uint(r.config.n),
