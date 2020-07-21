@@ -134,7 +134,7 @@ func newReporter(results chan *callResult, c *RunConfig) *Reporter {
 
 // Run runs the reporter
 func (r *Reporter) Run() {
-	var skipCount uint
+	var skipCount int
 
 	for res := range r.results {
 		if skipCount < r.config.skipFirst {
@@ -185,7 +185,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		Key:           r.config.key,
 		CName:         r.config.cname,
 		SkipTLS:       r.config.skipVerify,
-		SkipFirst:     r.config.skipFirst,
+		SkipFirst:     uint(r.config.skipFirst),
 		Insecure:      r.config.insecure,
 		Authority:     r.config.authority,
 		Total:         uint(r.config.n),
