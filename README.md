@@ -70,7 +70,7 @@ Flags:
       --key=                   File containing client private key, to present to the server. Must also provide -cert option.
       --cname=                 Server name override when validating TLS certificate - useful for self signed certs.
       --skipTLS                Skip TLS client verification of the server's certificate chain and host name.
-      --skipFirst              Skip the first X requests from the timing calculations (useful for initial warmup)
+      --skipFirst=0            Skip the first X requests from the timing calculations (useful for initial warmup)
       --insecure               Use plaintext and insecure connection.
       --authority=             Value to be used as the :authority pseudo-header. Only works if -insecure is used.
   -c, --concurrency=50         Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.
