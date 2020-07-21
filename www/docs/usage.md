@@ -43,6 +43,7 @@ Flags:
       --name=                  User specified name for the test.
       --tags=                  JSON representation of user-defined string tags.
       --cpus=12                Number of cpu cores to use.
+      --skipFirst=0            Skip the first n responses from the report. Helps remove initial warm-up requests from skewing the results.
       --debug=                 The path to debug log file.
   -e, --enable-compression     Enable Gzip compression on requests.
   -v, --version                Show application version.
