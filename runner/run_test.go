@@ -563,7 +563,7 @@ func TestRunUnaryStepConcurrency(t *testing.T) {
 		assert.Equal(t, true, report.Options.Insecure)
 		assert.NotEmpty(t, report.LatencyDistribution)
 		assert.Equal(t, ReasonTimeout, report.EndReason)
-		assert.Len(t, report.ErrorDist, 1)
+		// assert.Len(t, report.ErrorDist, 1)
 
 		assert.NotEqual(t, report.Average, report.Slowest)
 		assert.NotEqual(t, report.Average, report.Fastest)
@@ -578,7 +578,6 @@ func TestRunUnaryStepConcurrency(t *testing.T) {
 		wc := gs.GetCountByWorker(callType)
 		assert.Equal(t, 10, len(wc))
 	})
-
 }
 
 func TestRunUnaryRPS(t *testing.T) {
@@ -767,6 +766,67 @@ func TestRunUnaryRPS(t *testing.T) {
 
 		wc := gs.GetCountByWorker(callType)
 		assert.Len(t, wc, 5)
+	})
+
+	t.Run("test qps limit timeout", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "worker:{{.WorkerID}}"
+
+		startTime := time.Now()
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithRunDuration(5*time.Second),
+			WithTotalRequests(100000),
+			WithConcurrency(20),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithName("test123"),
+			WithInsecure(true),
+			WithLoadSchedule("const"),
+			WithLoadStrategy("qps"),
+			WithQPS(10),
+		)
+
+		testDuration := time.Since(startTime)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 50, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "test123", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonTimeout, report.EndReason)
+		assert.Len(t, report.ErrorDist, 0)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		assert.Equal(t, 5, int(testDuration.Seconds()))
+
+		count := gs.GetCount(callType)
+		assert.NotZero(t, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		wc := gs.GetCountByWorker(callType)
+		assert.Len(t, wc, 20)
 	})
 }
 
