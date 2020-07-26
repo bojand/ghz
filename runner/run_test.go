@@ -66,6 +66,51 @@ func TestRunUnary(t *testing.T) {
 		assert.Equal(t, 1, count)
 	})
 
+	t.Run("test skip first N", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "bob"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(10),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithSkipFirst(5),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 5, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 10, count)
+	})
+
 	t.Run("test N and Name", func(t *testing.T) {
 		gs.ResetCounters()
 

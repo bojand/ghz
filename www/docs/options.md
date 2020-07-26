@@ -217,3 +217,7 @@ Show context-sensitive help (also try --help-long and --help-man).
 ### `-e`, `--enable-compression`               
 
 Enable gzip compression on requests.
+
+### '--skipFirst'
+
+Skip the first n responses from the report. Helps remove initial warm-up requests from skewing the results.

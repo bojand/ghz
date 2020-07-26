@@ -1,6 +1,7 @@
 {
   "total": 5000,
   "concurrency": 50,
+  "skipFirst": 5,
   "max-duration": "7s",
   "duration": "12s",
   "stream-interval": "500ms",

@@ -48,6 +48,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 50, c.c)
 		assert.Equal(t, 0, c.qps)
 		assert.Equal(t, false, c.binary)
+		assert.Equal(t, 0, c.skipFirst)
 		assert.Equal(t, time.Duration(0), c.z)
 		assert.Equal(t, time.Duration(0), c.keepaliveTime)
 		assert.Equal(t, time.Duration(20*time.Second), c.timeout)
@@ -70,6 +71,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithTotalRequests(100),
 			WithConcurrency(20),
 			WithQPS(5),
+			WithSkipFirst(5),
 			WithRunDuration(time.Duration(5*time.Minute)),
 			WithKeepalive(time.Duration(60*time.Second)),
 			WithTimeout(time.Duration(10*time.Second)),
@@ -89,6 +91,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
+		assert.Equal(t, 5, c.skipFirst)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(5*time.Minute), c.z)
 		assert.Equal(t, time.Duration(60*time.Second), c.keepaliveTime)
@@ -114,6 +117,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithTotalRequests(100),
 			WithConcurrency(20),
 			WithQPS(5),
+			WithSkipFirst(5),
 			WithRunDuration(time.Duration(5*time.Minute)),
 			WithKeepalive(time.Duration(60*time.Second)),
 			WithTimeout(time.Duration(10*time.Second)),
@@ -137,6 +141,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
+		assert.Equal(t, 5, c.skipFirst)
 		assert.Equal(t, true, c.binary)
 		assert.Equal(t, time.Duration(5*time.Minute), c.z)
 		assert.Equal(t, time.Duration(60*time.Second), c.keepaliveTime)
@@ -183,6 +188,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithTotalRequests(100),
 			WithConcurrency(20),
 			WithQPS(5),
+			WithSkipFirst(5),
 			WithRunDuration(time.Duration(5*time.Minute)),
 			WithKeepalive(time.Duration(60*time.Second)),
 			WithTimeout(time.Duration(10*time.Second)),
@@ -205,6 +211,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 100, c.n)
 		assert.Equal(t, 20, c.c)
 		assert.Equal(t, 5, c.qps)
+		assert.Equal(t, 5, c.skipFirst)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(5*time.Minute), c.z)
 		assert.Equal(t, time.Duration(60*time.Second), c.keepaliveTime)
@@ -237,6 +244,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 200, c.n)
 		assert.Equal(t, 50, c.c)
 		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, 0, c.skipFirst)
 		assert.Equal(t, time.Duration(0), c.z)
 		assert.Equal(t, time.Duration(0), c.keepaliveTime)
 		assert.Equal(t, time.Duration(20*time.Second), c.timeout)
@@ -266,6 +274,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 200, c.n)
 		assert.Equal(t, 50, c.c)
 		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, 0, c.skipFirst)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(0), c.z)
 		assert.Equal(t, time.Duration(0), c.keepaliveTime)
@@ -300,6 +309,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 200, c.n)
 		assert.Equal(t, 50, c.c)
 		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, 0, c.skipFirst)
 		assert.Equal(t, 1, c.nConns)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(0), c.z)
@@ -336,6 +346,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 200, c.n)
 		assert.Equal(t, 50, c.c)
 		assert.Equal(t, 0, c.qps)
+		assert.Equal(t, 0, c.skipFirst)
 		assert.Equal(t, 5, c.nConns)
 		assert.Equal(t, false, c.binary)
 		assert.Equal(t, time.Duration(0), c.z)
@@ -381,6 +392,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
 			assert.Equal(t, 5000, c.n)
 			assert.Equal(t, 50, c.c)
+			assert.Equal(t, 5, c.skipFirst)
 			assert.Equal(t, 12*time.Second, c.z)
 			assert.Equal(t, 500*time.Millisecond, c.streamInterval)
 			assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
@@ -399,6 +411,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
 			assert.Equal(t, 5000, c.n)
 			assert.Equal(t, 50, c.c)
+			assert.Equal(t, 5, c.skipFirst)
 			assert.Equal(t, 12*time.Second, c.z)
 			assert.Equal(t, 500*time.Millisecond, c.streamInterval)
 			assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
@@ -417,6 +430,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
 		assert.Equal(t, 5000, c.n)
 		assert.Equal(t, 50, c.c)
+		assert.Equal(t, 5, c.skipFirst)
 		assert.Equal(t, 12*time.Second, c.z)
 		assert.Equal(t, 500*time.Millisecond, c.streamInterval)
 		assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
