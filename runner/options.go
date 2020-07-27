@@ -645,6 +645,7 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 			}
 
 			c.loadStepDuration = time.Duration(c.loadDuration.Milliseconds()/int64(diff)) * time.Millisecond
+			c.loadStep = 1
 		}
 	}
 

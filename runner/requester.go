@@ -175,10 +175,8 @@ func (b *Requester) Run(stopCh chan StopReason) (*Report, error) {
 		} else {
 			if b.config.loadSchedule == ScheduleConst {
 				done <- b.runConstRPSWorkers(stop)
-			} else if b.config.loadSchedule == ScheduleStep {
-				panic("rps step not supported yet")
-			} else if b.config.loadSchedule == ScheduleLine {
-				panic("tpc line not supported yet")
+			} else if b.config.loadSchedule == ScheduleStep || b.config.loadSchedule == ScheduleLine {
+				done <- b.runStepRPSWorkers(stop)
 			}
 		}
 	}()
@@ -427,9 +425,6 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 
 	workers := make(map[string]*Worker)
 
-	ticker := time.NewTicker(b.config.loadStepDuration)
-	defer ticker.Stop()
-
 	stepUp := b.config.loadStart < b.config.loadEnd
 
 	n := 0 // connection counter
@@ -514,6 +509,10 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 	var err error
 	done := make(chan bool)
 
+	fmt.Println("step dur:", b.config.loadStepDuration.Milliseconds())
+	ticker := time.NewTicker(b.config.loadStepDuration)
+	defer ticker.Stop()
+
 	for {
 		select {
 
@@ -552,6 +551,7 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 			}()
 
 		case <-ticker.C:
+			fmt.Println("got ticker")
 			if b.config.hasLog {
 				b.config.log.Debugw("received ticker",
 					"workers_count", len(workers),

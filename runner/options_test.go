@@ -529,7 +529,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 				WithLoadStrategy(StrategyConcurrency),
 				WithLoadSchedule(ScheduleLine),
 				WithLoadDuration(20*time.Second),
-				WithLoadStep(5),
+				WithLoadStep(5), // overwritten
 				WithLoadEnd(20),
 			)
 
@@ -540,7 +540,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			assert.Equal(t, uint(0), c.loadStart)
 			assert.Equal(t, uint(20), c.loadEnd)
 			assert.Equal(t, 20*time.Second, c.loadDuration)
-			assert.Equal(t, uint(5), c.loadStep)
+			assert.Equal(t, uint(1), c.loadStep)
 			assert.Equal(t, 1*time.Second, c.loadStepDuration)
 		})
 	})
@@ -639,6 +639,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			assert.Equal(t, ScheduleLine, c.loadSchedule)
 			assert.Equal(t, uint(0), c.loadStart)
 			assert.Equal(t, uint(20), c.loadEnd)
+			assert.Equal(t, uint(1), c.loadStep)
 			assert.Equal(t, 20*time.Second, c.loadDuration)
 			assert.Equal(t, 1*time.Second, c.loadStepDuration)
 		})

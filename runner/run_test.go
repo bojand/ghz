@@ -407,6 +407,62 @@ func TestRunUnaryStepConcurrency(t *testing.T) {
 
 	defer s.Stop()
 
+	t.Run("test step concurrency n limit", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "worker:{{.WorkerID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1000),
+			WithConcurrency(20),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithName("test123"),
+			WithInsecure(true),
+			WithLoadSchedule("step"),
+			WithLoadStart(2),
+			WithLoadEnd(10),
+			WithLoadStep(2),
+			WithLoadDuration(1*time.Second),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, uint64(1000), report.Count)
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "test123", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Len(t, report.ErrorDist, 0)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.NotZero(t, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		wc := gs.GetCountByWorker(callType)
+		assert.Equal(t, 4, len(wc))
+	})
+
 	t.Run("test step concurrency load time limit", func(t *testing.T) {
 		gs.ResetCounters()
 
@@ -417,7 +473,7 @@ func TestRunUnaryStepConcurrency(t *testing.T) {
 			"helloworld.Greeter.SayHello",
 			internal.TestLocalhost,
 			WithProtoFile("../testdata/greeter.proto", []string{}),
-			WithRunDuration(3*time.Second),
+			WithRunDuration(3100*time.Millisecond),
 			WithTotalRequests(100000),
 			WithConcurrency(20),
 			WithTimeout(time.Duration(20*time.Second)),
@@ -461,7 +517,7 @@ func TestRunUnaryStepConcurrency(t *testing.T) {
 		assert.Equal(t, 1, connCount)
 
 		wc := gs.GetCountByWorker(callType)
-		assert.Equal(t, 6, len(wc))
+		assert.Equal(t, 8, len(wc))
 	})
 
 	t.Run("test step down concurrency load time limit", func(t *testing.T) {
@@ -580,7 +636,186 @@ func TestRunUnaryStepConcurrency(t *testing.T) {
 	})
 }
 
-func TestRunUnaryRPS(t *testing.T) {
+func TestRunUnaryLineConcurrency(t *testing.T) {
+
+	callType := helloworld.Unary
+
+	gs, s, err := internal.StartServer(false)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	t.Run("test line concurrency n limit", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "worker:{{.WorkerID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(2000),
+			WithConcurrency(20),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithName("test123"),
+			WithInsecure(true),
+			WithLoadSchedule("line"),
+			WithLoadStart(2),
+			WithLoadEnd(10),
+			WithLoadDuration(2*time.Second),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, uint64(2000), report.Count)
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "test123", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Len(t, report.ErrorDist, 0)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.NotZero(t, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		wc := gs.GetCountByWorker(callType)
+		assert.True(t, len(wc) < 10) // hit n before load end
+	})
+
+	t.Run("test line concurrency n limit over", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "worker:{{.WorkerID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(5000),
+			WithConcurrency(20),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithName("test123"),
+			WithInsecure(true),
+			WithLoadSchedule("line"),
+			WithLoadStart(2),
+			WithLoadEnd(10),
+			WithLoadDuration(2*time.Second),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, uint64(5000), report.Count)
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "test123", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Len(t, report.ErrorDist, 0)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.NotZero(t, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		wc := gs.GetCountByWorker(callType)
+		assert.Equal(t, 10, len(wc))
+	})
+
+	t.Run("test line concurrency time limit", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "worker:{{.WorkerID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithRunDuration(1100*time.Millisecond),
+			WithTotalRequests(10000),
+			WithConcurrency(20),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithName("test123"),
+			WithInsecure(true),
+			WithLoadSchedule("line"),
+			WithLoadStart(2),
+			WithLoadEnd(10),
+			WithLoadDuration(2*time.Second),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.NotZero(t, report.Count)
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "test123", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonTimeout, report.EndReason)
+		assert.NotEmpty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.NotZero(t, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		wc := gs.GetCountByWorker(callType)
+		assert.Equal(t, 6, len(wc))
+	})
+}
+
+func TestRunRPS(t *testing.T) {
 	callType := helloworld.Unary
 
 	gs, s, err := internal.StartServer(false)
@@ -780,8 +1015,8 @@ func TestRunUnaryRPS(t *testing.T) {
 			"helloworld.Greeter.SayHello",
 			internal.TestLocalhost,
 			WithProtoFile("../testdata/greeter.proto", []string{}),
-			WithRunDuration(5*time.Second),
-			WithTotalRequests(100000),
+			WithRunDuration(4900*time.Millisecond),
+			WithTotalRequests(200000),
 			WithConcurrency(20),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
@@ -817,7 +1052,7 @@ func TestRunUnaryRPS(t *testing.T) {
 		assert.NotEqual(t, report.Average, report.Fastest)
 		assert.NotEqual(t, report.Slowest, report.Fastest)
 
-		assert.Equal(t, 5, int(testDuration.Seconds()))
+		assert.Equal(t, 4, int(testDuration.Seconds()))
 
 		count := gs.GetCount(callType)
 		assert.NotZero(t, count)
@@ -825,8 +1060,8 @@ func TestRunUnaryRPS(t *testing.T) {
 		connCount := gs.GetConnectionCount()
 		assert.Equal(t, 1, connCount)
 
-		wc := gs.GetCountByWorker(callType)
-		assert.Len(t, wc, 20)
+		// wc := gs.GetCountByWorker(callType)
+		// assert.Len(t, wc, 20)
 	})
 }
 
