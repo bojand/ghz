@@ -471,7 +471,7 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 
 			go func() {
 				errC <- w.runWorker(func(id string, err error, reqCount int, duration time.Duration) bool {
-					return atomic.LoadInt64(&b.reqCounter) < int64(b.config.n)
+					return w.isActive() && atomic.LoadInt64(&b.reqCounter) < int64(b.config.n)
 				}, true)
 			}()
 		}
@@ -788,6 +788,10 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 
 		go func() {
 			errC <- w.runWorker(func(id string, err error, reqCount int, duration time.Duration) bool {
+				if !w.isActive() {
+					return false
+				}
+
 				mu.Lock()
 				defer mu.Unlock()
 
@@ -834,6 +838,8 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 
 			ticker.Stop()
 
+			stepTicker.Stop()
+
 			finishWorkers()
 
 			go func() {
@@ -847,7 +853,7 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 
 		case <-stepTicker.C:
 
-			fmt.Println("step timer!")
+			fmt.Println("step timer!", atomic.LoadInt64(&intervalReqRPS))
 
 			if atomic.LoadInt64(&intervalReqRPS) != int64(b.config.loadEnd) {
 				if stepUp {
@@ -867,7 +873,6 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 				err = multierr.Append(err, <-errC)
 			}
 
-			fmt.Println("closing workers")
 			for _, wrk := range workers {
 				wrk := wrk
 				if wrk.done != nil {
@@ -875,10 +880,7 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 				}
 			}
 
-			fmt.Println("closing err")
 			close(errC)
-
-			fmt.Println("err closed returning")
 
 			return err
 
@@ -888,6 +890,8 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 					fmt.Println("setting stop to true")
 
 					ticker.Stop()
+
+					stepTicker.Stop()
 
 					finishWorkers()
 
