@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -1267,7 +1268,8 @@ func TestRunUnaryStepRPS(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.Equal(t, 12, int(report.Count))
+		rc := int(report.Count)
+		assert.True(t, rc >= 12 && rc <= 14, fmt.Sprintf("%d not in range", rc))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
 		assert.NotZero(t, report.Slowest)
@@ -1326,7 +1328,8 @@ func TestRunUnaryStepRPS(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.Equal(t, 40, int(report.Count))
+		rc := int(report.Count)
+		assert.True(t, rc >= 40 && rc <= 42, fmt.Sprintf("%d not in range", rc))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
 		assert.NotZero(t, report.Slowest)
@@ -1450,7 +1453,7 @@ func TestRunUnaryLineRPS(t *testing.T) {
 		assert.NotNil(t, report)
 
 		rc := int(report.Count)
-		assert.True(t, rc >= 35 && rc <= 37)
+		assert.True(t, rc >= 35 && rc <= 37, fmt.Sprintf("%d not in range", rc))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
 		assert.NotZero(t, report.Slowest)
@@ -1505,7 +1508,7 @@ func TestRunUnaryLineRPS(t *testing.T) {
 		assert.NotNil(t, report)
 
 		rc := int(report.Count)
-		assert.True(t, rc >= 40 && rc <= 43)
+		assert.True(t, rc >= 40 && rc <= 43, fmt.Sprintf("%d not in range", rc))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
 		assert.NotZero(t, report.Slowest)

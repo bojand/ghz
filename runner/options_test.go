@@ -66,6 +66,15 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, c.loadSchedule, ScheduleConst)
 	})
 
+	t.Run("skipFirst > n", func(t *testing.T) {
+		_, err := newConfig("  call  ", "  localhost:50050  ",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithSkipFirst(1000),
+		)
+
+		assert.Error(t, err)
+	})
+
 	t.Run("with options", func(t *testing.T) {
 		c, err := newConfig(
 			"call", "localhost:50050",
@@ -464,6 +473,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadStrategy(StrategyConcurrency),
 				WithLoadSchedule(ScheduleStep),
+				WithLoadStart(10),
+				WithLoadDuration(20*time.Second),
+				WithLoadEnd(20),
 			)
 
 			assert.Error(t, err)
@@ -565,6 +577,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadStrategy(StrategyQPS),
 				WithLoadSchedule(ScheduleStep),
+				WithLoadStart(10),
+				WithLoadDuration(20*time.Second),
+				WithLoadEnd(20),
 			)
 
 			assert.Error(t, err)

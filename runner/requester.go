@@ -509,7 +509,6 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 	var err error
 	done := make(chan bool)
 
-	fmt.Println("step dur:", b.config.loadStepDuration.Milliseconds())
 	ticker := time.NewTicker(b.config.loadStepDuration)
 	defer ticker.Stop()
 
@@ -551,7 +550,6 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 			}()
 
 		case <-ticker.C:
-			fmt.Println("got ticker")
 			if b.config.hasLog {
 				b.config.log.Debugw("received ticker",
 					"workers_count", len(workers),
@@ -680,30 +678,31 @@ func (b *Requester) runConstRPSWorkers(stop chan bool) error {
 		select {
 		case <-stop:
 
-			fmt.Println("got stop")
+			if b.config.hasLog {
+				b.config.log.Debugw("received stop")
+			}
 
 			ticker.Stop()
 
 			finishWorkers()
 
 			go func() {
-				fmt.Println("setting done")
 				done <- true
 			}()
 
 		case <-ticker.C:
-			fmt.Println("resetting interval counter")
 			atomic.StoreInt64(&intervalCounter, 0)
 
 		case <-done:
-			fmt.Println("got done")
+			if b.config.hasLog {
+				b.config.log.Debugw("received done")
+			}
 
 			var err error
 			for i := 0; i < len(workers); i++ {
 				err = multierr.Append(err, <-errC)
 			}
 
-			fmt.Println("closing workers")
 			for _, wrk := range workers {
 				wrk := wrk
 				if wrk.done != nil {
@@ -711,18 +710,13 @@ func (b *Requester) runConstRPSWorkers(stop chan bool) error {
 				}
 			}
 
-			fmt.Println("closing err")
 			close(errC)
-
-			fmt.Println("err closed returning")
 
 			return err
 
 		default:
 			if atomic.LoadInt64(&b.reqCounter) >= int64(b.config.n) {
 				execDone.Do(func() {
-					fmt.Println("setting stop to true")
-
 					ticker.Stop()
 
 					finishWorkers()
@@ -834,7 +828,9 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 		select {
 		case <-stop:
 
-			fmt.Println("got stop")
+			if b.config.hasLog {
+				b.config.log.Debugw("received stop")
+			}
 
 			ticker.Stop()
 
@@ -843,17 +839,13 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 			finishWorkers()
 
 			go func() {
-				fmt.Println("setting done")
 				done <- true
 			}()
 
 		case <-ticker.C:
-			fmt.Println("resetting interval counter")
 			atomic.StoreInt64(&intervalCounter, 0)
 
 		case <-stepTicker.C:
-
-			fmt.Println("step timer!", atomic.LoadInt64(&intervalReqRPS))
 
 			if atomic.LoadInt64(&intervalReqRPS) != int64(b.config.loadEnd) {
 				if stepUp {
@@ -866,7 +858,9 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 			}
 
 		case <-done:
-			fmt.Println("got done")
+			if b.config.hasLog {
+				b.config.log.Debugw("received done")
+			}
 
 			var err error
 			for i := 0; i < len(workers); i++ {
@@ -887,7 +881,6 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 		default:
 			if atomic.LoadInt64(&b.reqCounter) >= int64(b.config.n) {
 				execDone.Do(func() {
-					fmt.Println("setting stop to true")
 
 					ticker.Stop()
 
