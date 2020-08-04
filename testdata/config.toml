@@ -1,6 +1,7 @@
 "max-duration" = "7s"
 total = 5000
 concurrency = 50
+skipFirst = 5
 proto = "../../testdata/greeter.proto"
 call = "helloworld.Greeter.SayHello"
 host = "0.0.0.0:50051"

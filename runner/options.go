@@ -90,9 +90,10 @@ type RunConfig struct {
 	log    Logger
 
 	// misc
-	name string
-	cpus int
-	tags []byte
+	name      string
+	cpus      int
+	tags      []byte
+	skipFirst int
 }
 
 // Option controls some aspect of run
@@ -474,6 +475,17 @@ func WithCPUs(c uint) Option {
 	}
 }
 
+// WithSkipFirst is the skipFirst option
+func WithSkipFirst(c uint) Option {
+	return func(o *RunConfig) error {
+		if c > 0 {
+			o.skipFirst = int(c)
+		}
+
+		return nil
+	}
+}
+
 // WithProtoFile specified proto file path and optionally import paths
 // We will automatically add the proto file path's directory and the current directory
 //	WithProtoFile("greeter.proto", []string{"/home/protos"})
@@ -482,7 +494,7 @@ func WithProtoFile(proto string, importPaths []string) Option {
 		proto = strings.TrimSpace(proto)
 		if proto != "" {
 			if filepath.Ext(proto) != ".proto" {
-				return errors.Errorf(fmt.Sprintf("proto: must have .proto extension"))
+				return errors.New("proto: must have .proto extension")
 			}
 
 			o.proto = proto
@@ -649,6 +661,9 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		}
 	}
 
+	if c.skipFirst > 0 && int(c.skipFirst) > c.n {
+		return nil, errors.New("You cannot skip more requests than those run")
+	}
 	creds, err := createClientTransportCredentials(
 		c.skipVerify,
 		c.cacert,
@@ -789,6 +804,7 @@ func fromConfig(cfg *Config) []Option {
 		WithCertificate(cfg.Cert, cfg.Key),
 		WithServerNameOverride(cfg.CName),
 		WithSkipTLSVerify(cfg.SkipTLSVerify),
+		WithSkipFirst(cfg.SkipFirst),
 		WithInsecure(cfg.Insecure),
 		WithAuthority(cfg.Authority),
 		WithConcurrency(cfg.C),

@@ -63,6 +63,7 @@ type Config struct {
 	Cert              string            `json:"cert" toml:"cert" yaml:"cert"`
 	Key               string            `json:"key" toml:"key" yaml:"key"`
 	SkipTLSVerify     bool              `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
+	SkipFirst         uint              `json:"skipFirst" toml:"skipFirst" yaml:"skipFirst"`
 	CName             string            `json:"cname" toml:"cname" yaml:"cname"`
 	Authority         string            `json:"authority" toml:"authority" yaml:"authority"`
 	Insecure          bool              `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
