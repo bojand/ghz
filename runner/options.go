@@ -79,6 +79,8 @@ type RunConfig struct {
 
 	streamInterval time.Duration
 
+	async bool
+
 	// data
 	data     []byte
 	binary   bool
@@ -751,6 +753,15 @@ func WithLoadStep(step uint) Option {
 func WithLoadDuration(duration time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.loadDuration = duration
+
+		return nil
+	}
+}
+
+// WithAsync specifies the async option
+func WithAsync(async bool) Option {
+	return func(o *RunConfig) error {
+		o.async = async
 
 		return nil
 	}

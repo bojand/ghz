@@ -430,6 +430,7 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 	n := 0 // connection counter
 
 	runWorkers := func(count int) {
+		fmt.Println("run workers:", count)
 		if b.config.hasLog {
 			b.config.log.Debugw("Starting workers ", "count", count)
 		}
@@ -550,6 +551,7 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 			}()
 
 		case <-ticker.C:
+			fmt.Println("step ticker")
 			if b.config.hasLog {
 				b.config.log.Debugw("received ticker",
 					"workers_count", len(workers),
