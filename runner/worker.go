@@ -88,8 +88,8 @@ func (w *Worker) makeRequest() error {
 	}
 
 	var reqMD *metadata.MD
-	if mdMap != nil && len(*mdMap) > 0 {
-		md := metadata.New(*mdMap)
+	if mdMap != nil && len(mdMap) > 0 {
+		md := metadata.New(mdMap)
 		reqMD = &md
 	} else {
 		reqMD = &metadata.MD{}

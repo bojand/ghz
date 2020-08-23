@@ -1,9 +1,13 @@
 package runner
 
 import (
+	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/bojand/ghz/protodesc"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -101,17 +105,17 @@ func TestCallTemplateData_ExecuteMetadata(t *testing.T) {
 	}{
 		{"no template",
 			`{"trace_id":"asdf"}`,
-			&map[string]string{"trace_id": "asdf"},
+			map[string]string{"trace_id": "asdf"},
 			false,
 		},
 		{"with template",
 			`{"trace_id":"{{.RequestNumber}} asdf {{.FullyQualifiedName}} {{.MethodName}} {{.ServiceName}} {{.InputName}} {{.OutputName}} {{.IsClientStreaming}} {{.IsServerStreaming}}"}`,
-			&map[string]string{"trace_id": "200 asdf helloworld.Greeter.SayHello SayHello Greeter HelloRequest HelloReply false false"},
+			map[string]string{"trace_id": "200 asdf helloworld.Greeter.SayHello SayHello Greeter HelloRequest HelloReply false false"},
 			false,
 		},
 		{"with unknown action",
 			`{"trace_id":"asdf {{.Something}} {{.MethodName}} bob"}`,
-			&map[string]string{"trace_id": "asdf {{.Something}} {{.MethodName}} bob"},
+			map[string]string{"trace_id": "asdf {{.Something}} {{.MethodName}} bob"},
 			false,
 		},
 	}
@@ -128,4 +132,132 @@ func TestCallTemplateData_ExecuteMetadata(t *testing.T) {
 			assert.Equal(t, tt.expected, r)
 		})
 	}
+}
+
+func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
+	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "../testdata/greeter.proto", []string{})
+	assert.NoError(t, err)
+	assert.NotNil(t, md)
+
+	ctd := newCallTemplateData(md, "worker_id_123", 200)
+
+	assert.NotNil(t, ctd)
+
+	t.Run("newUUID", func(t *testing.T) {
+
+		// no template
+		r, err := ctd.executeData(`{"trace_id":"asdf"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"asdf"}`, string(r))
+
+		rm, err := ctd.executeMetadata(`{"trace_id":"asdf"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, map[string]string{"trace_id": "asdf"}, rm)
+
+		// new uuid
+		r, err = ctd.executeData(`{"trace_id":"{{newUUID}}"}`)
+		assert.NoError(t, err)
+		rs := strings.Replace(string(r), `{"trace_id":"`, "", -1)
+		rs = strings.Replace(rs, `"}`, "", -1)
+		assert.NotEmpty(t, rs)
+		parsed, err := uuid.Parse(rs)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, parsed)
+
+		rm2, err := ctd.executeMetadata(`{"trace_id":"{{newUUID}}"}`)
+		assert.NoError(t, err)
+		rs2 := rm2["trace_id"]
+		assert.NotEmpty(t, rs)
+		assert.NotEqual(t, rs, rs2)
+		parsed, err = uuid.Parse(rs2)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, parsed)
+
+		rm3, err := ctd.executeMetadata(`{"span_id":"{{newUUID}}","trace_id":"{{newUUID}}"}`)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, rs)
+		assert.NotEqual(t, rm3["span_id"], rs2)
+		assert.NotEqual(t, rm3["span_id"], rs)
+		assert.NotEqual(t, rm3["trace_id"], rs2)
+		assert.NotEqual(t, rm3["trace_id"], rs)
+		assert.NotEqual(t, rm3["trace_id"], rm3["span_id"])
+		parsed, err = uuid.Parse(rm3["span_id"])
+		assert.NoError(t, err)
+		assert.NotEmpty(t, parsed)
+		parsed, err = uuid.Parse(rm3["trace_id"])
+		assert.NoError(t, err)
+		assert.NotEmpty(t, parsed)
+
+		b, _ := json.Marshal(rm3)
+		fmt.Println(string(b))
+
+		r, err = ctd.executeData(`{"order_id":"{{newUUID}}", "item_id":"{{newUUID}}", "sku":"{{randomString 8 }}", "product_name":"{{randomString 0}}"}`)
+		fmt.Println(string(r))
+	})
+
+	t.Run("randomString", func(t *testing.T) {
+
+		// no template
+		r, err := ctd.executeData(`{"trace_id":"asdf"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"asdf"}`, string(r))
+
+		rm, err := ctd.executeMetadata(`{"trace_id":"asdf"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, map[string]string{"trace_id": "asdf"}, rm)
+
+		// default length when 0
+		r, err = ctd.executeData(`{"trace_id":"{{randomString 0}}"}`)
+		assert.NoError(t, err)
+		rs := strings.Replace(string(r), `{"trace_id":"`, "", -1)
+		rs = strings.Replace(rs, `"}`, "", -1)
+		assert.NotEmpty(t, rs)
+		assert.True(t, len(rs) >= 2)
+		assert.True(t, len(rs) <= 16)
+
+		// default length when -1
+		r, err = ctd.executeData(`{"trace_id":"{{randomString -1}}"}`)
+		assert.NoError(t, err)
+		rs2 := strings.Replace(string(r), `{"trace_id":"`, "", -1)
+		rs2 = strings.Replace(rs2, `"}`, "", -1)
+		assert.NotEmpty(t, rs2)
+		assert.NotEqual(t, rs, rs2)
+		assert.True(t, len(rs2) >= 2)
+		assert.True(t, len(rs2) <= 16)
+
+		// specific length
+		r, err = ctd.executeData(`{"trace_id":"{{randomString 10}}"}`)
+		assert.NoError(t, err)
+		rs = strings.Replace(string(r), `{"trace_id":"`, "", -1)
+		rs = strings.Replace(rs, `"}`, "", -1)
+		assert.NotEmpty(t, rs)
+		assert.Len(t, rs, 10)
+
+		rm, err = ctd.executeMetadata(`{"trace_id":"{{randomString 0}}"}`)
+		assert.NoError(t, err)
+		assert.True(t, len(rm["trace_id"]) >= 2)
+		assert.True(t, len(rm["trace_id"]) <= 16)
+
+		rm, err = ctd.executeMetadata(`{"span_id":"{{randomString -1}}","trace_id":"{{randomString 0}}"}`)
+		assert.NoError(t, err)
+		assert.True(t, len(rm["trace_id"]) >= 2)
+		assert.True(t, len(rm["trace_id"]) <= 16)
+		assert.True(t, len(rm["span_id"]) >= 2)
+		assert.True(t, len(rm["span_id"]) <= 16)
+		assert.NotEqual(t, rm["trace_id"], rm["span_id"])
+
+		b, _ := json.Marshal(rm)
+		fmt.Println(string(b))
+
+		rm, err = ctd.executeMetadata(`{"span_id":"{{randomString 12}}","trace_id":"{{randomString 12}}"}`)
+		assert.NoError(t, err)
+		assert.Len(t, rm["trace_id"], 12)
+		assert.Len(t, rm["span_id"], 12)
+		assert.NotEqual(t, rm["trace_id"], rs)
+		assert.NotEqual(t, rm["trace_id"], rs2)
+		assert.NotEqual(t, rm["trace_id"], rm["span_id"])
+
+		b, _ = json.Marshal(rm)
+		fmt.Println(string(b))
+	})
 }
