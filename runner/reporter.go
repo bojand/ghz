@@ -244,6 +244,14 @@ func latencies(latencies []float64) []LatencyDistribution {
 	for i, p := range pctls {
 		ip := (float64(p) / 100.0) * lt
 		di := int(ip)
+
+		// since we're dealing with 0th based ranks we need to
+		// check if ordinal is a whole number that lands on the percentile
+		// if so adjust accordingly
+		if ip == float64(di) {
+			di = di - 1
+		}
+
 		if di < 0 {
 			di = 0
 		}
