@@ -240,14 +240,17 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 func latencies(latencies []float64) []LatencyDistribution {
 	pctls := []int{10, 25, 50, 75, 90, 95, 99}
 	data := make([]float64, len(pctls))
-	j := 0
-	for i := 0; i < len(latencies) && j < len(pctls); i++ {
-		current := i * 100 / len(latencies)
-		if current >= pctls[j] {
-			data[j] = latencies[i]
-			j++
+	lt := float64(len(latencies))
+	for i, p := range pctls {
+		ip := (float64(p) / 100.0) * lt
+		di := int(ip)
+		if di < 0 {
+			di = 0
 		}
+
+		data[i] = latencies[di]
 	}
+
 	res := make([]LatencyDistribution, len(pctls))
 	for i := 0; i < len(pctls); i++ {
 		if data[i] > 0 {
