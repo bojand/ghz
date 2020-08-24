@@ -101,6 +101,11 @@
     UUID    <span class="hljs-keyword">string</span>
 }
 </code></pre>
+<p><strong>Functions</strong></p>
+<p>There are also two template functions available:</p>
+<p><code>newUUID</code> - Generates a new UUID for each invocation.</p>
+<p><code>randomString</code> - Generates a new random string for each incovation. Accepts a length parameter. If the argument is <code>&lt;= 0</code> then a ranom string is generated with a random length between length of <code>2</code> and <code>16</code>.</p>
+<p><strong>Examples</strong></p>
 <p>This can be useful to inject variable information into the message data JSON or metadata JSON payloads for each request, such as timestamp or unique request number. For example:</p>
 <pre><code class="hljs css language-sh">-m <span class="hljs-string">'{"request-id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}'</span>
 </code></pre>
@@ -109,6 +114,16 @@
   <span class="hljs-attr">"user-agent"</span>: <span class="hljs-string">"grpc-go/1.11.1"</span>,
   <span class="hljs-attr">"request-id"</span>: <span class="hljs-string">"1"</span>,
   <span class="hljs-attr">"timestamp"</span>: <span class="hljs-string">"1544890252"</span>
+}
+</code></pre>
+<pre><code class="hljs css language-sh">-d <span class="hljs-string">'{"order_id":"{{newUUID}}", "item_id":"{{newUUID}}", "sku":"{{randomString 8 }}", "product_name":"{{ranomdString 0}}"}'</span>
+</code></pre>
+<p>Would result in data with JSON representation:</p>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"order_id"</span>: <span class="hljs-string">"3974e7b3-5946-4df5-bed3-8c3dc9a0be19"</span>,
+  <span class="hljs-attr">"item_id"</span>: <span class="hljs-string">"cd9c2604-cd9b-43a8-9cbb-d1ad26ca93a4"</span>,
+  <span class="hljs-attr">"sku"</span>: <span class="hljs-string">"HlFTAxcm"</span>,
+  <span class="hljs-attr">"product_name"</span>: <span class="hljs-string">"xg3NEC"</span>
 }
 </code></pre>
 <p>See <a href="/docs/examples">example calls</a> for some more usage examples.</p>
