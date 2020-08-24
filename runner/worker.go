@@ -65,7 +65,7 @@ func (w *Worker) makeRequest() error {
 
 	reqNum := atomic.AddInt64(w.reqCounter, 1)
 
-	ctd := newCallTemplateData(w.mtd, w.workerID, reqNum)
+	ctd := newCallTemplateData(w.mtd, w.config.funcs, w.workerID, reqNum)
 
 	var inputs []*dynamic.Message
 	var err error
@@ -88,7 +88,7 @@ func (w *Worker) makeRequest() error {
 	}
 
 	var reqMD *metadata.MD
-	if mdMap != nil && len(mdMap) > 0 {
+	if len(mdMap) > 0 {
 		md := metadata.New(mdMap)
 		reqMD = &md
 	} else {

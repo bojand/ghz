@@ -1,10 +1,9 @@
 package runner
 
 import (
-	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/bojand/ghz/protodesc"
 	"github.com/google/uuid"
@@ -16,7 +15,7 @@ func TestCallTemplateData_New(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, "worker_id_123", 100)
+	ctd := newCallTemplateData(md, nil, "worker_id_123", 100)
 
 	assert.NotNil(t, ctd)
 	assert.Equal(t, "worker_id_123", ctd.WorkerID)
@@ -42,7 +41,7 @@ func TestCallTemplateData_ExecuteData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, "worker_id_123", 200)
+	ctd := newCallTemplateData(md, nil, "worker_id_123", 200)
 
 	assert.NotNil(t, ctd)
 
@@ -93,7 +92,7 @@ func TestCallTemplateData_ExecuteMetadata(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, "worker_id_123", 200)
+	ctd := newCallTemplateData(md, nil, "worker_id_123", 200)
 
 	assert.NotNil(t, ctd)
 
@@ -139,7 +138,7 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, "worker_id_123", 200)
+	ctd := newCallTemplateData(md, nil, "worker_id_123", 200)
 
 	assert.NotNil(t, ctd)
 
@@ -187,12 +186,6 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 		parsed, err = uuid.Parse(rm3["trace_id"])
 		assert.NoError(t, err)
 		assert.NotEmpty(t, parsed)
-
-		b, _ := json.Marshal(rm3)
-		fmt.Println(string(b))
-
-		r, err = ctd.executeData(`{"order_id":"{{newUUID}}", "item_id":"{{newUUID}}", "sku":"{{randomString 8 }}", "product_name":"{{randomString 0}}"}`)
-		fmt.Println(string(r))
 	})
 
 	t.Run("randomString", func(t *testing.T) {
@@ -246,9 +239,6 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 		assert.True(t, len(rm["span_id"]) <= 16)
 		assert.NotEqual(t, rm["trace_id"], rm["span_id"])
 
-		b, _ := json.Marshal(rm)
-		fmt.Println(string(b))
-
 		rm, err = ctd.executeMetadata(`{"span_id":"{{randomString 12}}","trace_id":"{{randomString 12}}"}`)
 		assert.NoError(t, err)
 		assert.Len(t, rm["trace_id"], 12)
@@ -256,8 +246,26 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 		assert.NotEqual(t, rm["trace_id"], rs)
 		assert.NotEqual(t, rm["trace_id"], rs2)
 		assert.NotEqual(t, rm["trace_id"], rm["span_id"])
+	})
 
-		b, _ = json.Marshal(rm)
-		fmt.Println(string(b))
+	t.Run("custom functions", func(t *testing.T) {
+		ctd = newCallTemplateData(md, template.FuncMap{
+			"getSKU": func() string {
+				return "custom-sku"
+			},
+			"newUUID": func() string {
+				return "custom-uuid"
+			},
+		}, "worker_id_123", 200)
+
+		r, err := ctd.executeData(`{"trace_id":"{{newUUID}}", "span_id":"{{getSKU}}"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"custom-uuid", "span_id":"custom-sku"}`, string(r))
+
+		rm, err := ctd.executeMetadata(`{"span_id":"{{randomString 12}}","trace_id":"{{newUUID}}", "sku":"{{getSKU}}"}`)
+		assert.NoError(t, err)
+		assert.Len(t, rm["span_id"], 12)
+		assert.Equal(t, "custom-uuid", rm["trace_id"])
+		assert.Equal(t, "custom-sku", rm["sku"])
 	})
 }

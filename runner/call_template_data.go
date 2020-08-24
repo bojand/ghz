@@ -33,6 +33,8 @@ type callTemplateData struct {
 	TimestampUnixMilli int64  // timestamp of the call as unix time in milliseconds
 	TimestampUnixNano  int64  // timestamp of the call as unix time in nanoseconds
 	UUID               string // generated UUIDv4 for each call
+
+	templateFuncs template.FuncMap
 }
 
 var tmplFuncMap = template.FuncMap{
@@ -41,9 +43,23 @@ var tmplFuncMap = template.FuncMap{
 }
 
 // newCallTemplateData returns new call template data
-func newCallTemplateData(mtd *desc.MethodDescriptor, workerID string, reqNum int64) *callTemplateData {
+func newCallTemplateData(
+	mtd *desc.MethodDescriptor,
+	funcs template.FuncMap,
+	workerID string, reqNum int64) *callTemplateData {
 	now := time.Now()
 	newUUID, _ := uuid.NewRandom()
+
+	fns := make(template.FuncMap, len(funcs)+2)
+	for k, v := range tmplFuncMap {
+		fns[k] = v
+	}
+
+	if len(funcs) > 0 {
+		for k, v := range funcs {
+			fns[k] = v
+		}
+	}
 
 	return &callTemplateData{
 		WorkerID:           workerID,
@@ -60,11 +76,12 @@ func newCallTemplateData(mtd *desc.MethodDescriptor, workerID string, reqNum int
 		TimestampUnixMilli: now.UnixNano() / 1000000,
 		TimestampUnixNano:  now.UnixNano(),
 		UUID:               newUUID.String(),
+		templateFuncs:      fns,
 	}
 }
 
 func (td *callTemplateData) execute(data string) (*bytes.Buffer, error) {
-	t := template.Must(template.New("call_template_data").Funcs(tmplFuncMap).Parse(data))
+	t := template.Must(template.New("call_template_data").Funcs(td.templateFuncs).Parse(data))
 	var tpl bytes.Buffer
 	err := t.Execute(&tpl, td)
 	return &tpl, err

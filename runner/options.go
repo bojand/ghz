@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/pkg/errors"
@@ -70,6 +71,8 @@ type RunConfig struct {
 	cpus      int
 	tags      []byte
 	skipFirst int
+
+	funcs template.FuncMap
 }
 
 // Option controls some aspect of run
@@ -541,6 +544,15 @@ func WithLogger(log Logger) Option {
 	return func(o *RunConfig) error {
 		o.log = log
 		o.hasLog = true
+
+		return nil
+	}
+}
+
+// WithTemplateFuncs adds additional tempalte functions
+func WithTemplateFuncs(funcMap template.FuncMap) Option {
+	return func(o *RunConfig) error {
+		o.funcs = funcMap
 
 		return nil
 	}
