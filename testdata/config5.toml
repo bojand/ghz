@@ -1,0 +1,13 @@
+total = 5000
+concurrency = 40
+skipFirst = 100
+proto = "../../testdata/greeter.proto"
+call = "helloworld.Greeter.SayHello"
+host = "0.0.0.0:50051"
+insecure = true
+
+[data]
+name = "Bob {{.TimestampUnix}}"
+
+[metadata]
+rn = "{{.RequestNumber}}"

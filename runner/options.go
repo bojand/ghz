@@ -86,13 +86,6 @@ func WithConfigFromFile(file string) Option {
 			return err
 		}
 
-		// init / fix up durations
-		if cfg.X > 0 {
-			cfg.Z = cfg.X
-		} else if cfg.Z > 0 {
-			cfg.N = math.MaxInt32
-		}
-
 		for _, option := range fromConfig(&cfg) {
 			if err := option(o); err != nil {
 				return err
@@ -109,13 +102,6 @@ func WithConfigFromReader(reader io.Reader) Option {
 		var cfg Config
 		if err := json.NewDecoder(reader).Decode(&cfg); err != nil {
 			return fmt.Errorf("unmarshal config: %w", err)
-		}
-
-		// init / fix up durations
-		if cfg.X > 0 {
-			cfg.Z = cfg.X
-		} else if cfg.Z > 0 {
-			cfg.N = math.MaxInt32
 		}
 
 		for _, option := range fromConfig(&cfg) {
@@ -139,7 +125,7 @@ func WithConfig(cfg *Config) Option {
 			cfg.N = math.MaxInt32
 		}
 
-		for _, option := range fromConfig(c) {
+		for _, option := range fromConfig(cfg) {
 			if err := option(o); err != nil {
 				return err
 			}
@@ -594,6 +580,11 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		}
 	}
 
+	// fix up durations
+	if c.z > 0 {
+		c.n = math.MaxInt32
+	}
+
 	// checks
 	if c.nConns > c.c {
 		return nil, errors.New("Number of connections cannot be greater than concurrency")
@@ -677,6 +668,13 @@ func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFil
 func fromConfig(cfg *Config) []Option {
 	// set up all the options
 	options := make([]Option, 0, 17)
+
+	// init / fix up durations
+	if cfg.X > 0 {
+		cfg.Z = cfg.X
+	} else if cfg.Z > 0 {
+		cfg.N = math.MaxInt32
+	}
 
 	options = append(options,
 		WithProtoFile(cfg.Proto, cfg.ImportPaths),
