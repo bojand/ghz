@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"runtime"
 	"strconv"
@@ -218,12 +217,6 @@ func main() {
 		kingpin.FatalIfError(err, "")
 	}
 
-	// init / fix up durations
-	if cfg.X > 0 {
-		cfg.Z = cfg.X
-	} else if cfg.Z > 0 {
-		cfg.N = math.MaxInt32
-	}
 	var logger *zap.SugaredLogger
 
 	options := []runner.Option{runner.WithConfig(&cfg)}
