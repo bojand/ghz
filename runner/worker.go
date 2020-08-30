@@ -57,10 +57,6 @@ func (w *Worker) setActive(v bool) {
 }
 
 func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool) error {
-	if w.config.async {
-		return w.runWorkerAsync(cond, stopOnCond)
-	}
-
 	var err, rErr error
 
 	start := time.Now()
@@ -95,10 +91,10 @@ func (w *Worker) runWorkerAsync(cond ConditionChecker, stopOnCond bool) error {
 	for {
 		select {
 		case <-w.done:
-			fmt.Println("done:", wc)
 			return g.Wait()
 		default:
 			if cond(w.workerID, nil, n, time.Since(start)) {
+				fmt.Println("making request", w.workerID)
 				reqNum := atomic.AddInt64(w.reqCounter, 1)
 				n++
 				wc++
