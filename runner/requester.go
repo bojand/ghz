@@ -434,7 +434,6 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 	n := 0 // connection counter
 
 	runWorkers := func(count int) {
-		fmt.Println("run workers:", count)
 		if b.config.hasLog {
 			b.config.log.Debugw("Starting workers ", "count", count)
 		}
@@ -555,7 +554,6 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 			}()
 
 		case <-ticker.C:
-			fmt.Println("step ticker")
 			if b.config.hasLog {
 				b.config.log.Debugw("received ticker",
 					"workers_count", len(workers),
@@ -741,15 +739,23 @@ func (b *Requester) runConstRPSWorkersAsync(stop chan bool) error {
 		return nil
 	}
 
-	errC := make(chan error, b.config.c)
+	nw := b.config.c
+	if nw > b.config.qps {
+		nw = b.config.qps
+	}
+
+	errC := make(chan error, nw)
 
 	var intervalCounter int64
 	var mu sync.Mutex
+	wc := make(map[string]int)
 
 	workers := make(map[string]*Worker)
 
-	cn := 0                           // connection counter
-	for i := 0; i < b.config.c; i++ { // concurrency counter
+	nReqPerWorker := b.config.qps / nw
+
+	cn := 0                   // connection counter
+	for i := 0; i < nw; i++ { // concurrency counter
 
 		wID := "g" + strconv.Itoa(i) + "c" + strconv.Itoa(cn)
 
@@ -783,16 +789,17 @@ func (b *Requester) runConstRPSWorkersAsync(stop chan bool) error {
 		}
 
 		go func() {
-			fmt.Println("starting worker")
 			errC <- w.runWorkerAsync(func(id string, err error, reqCount int, duration time.Duration) bool {
 				mu.Lock()
 				defer mu.Unlock()
 
 				allow := atomic.LoadInt64(&b.reqCounter) < int64(b.config.n) &&
-					atomic.LoadInt64(&intervalCounter) < int64(b.config.qps)
+					atomic.LoadInt64(&intervalCounter) < int64(b.config.qps) &&
+					wc[w.workerID] < nReqPerWorker
 
 				if allow {
 					atomic.AddInt64(&intervalCounter, 1)
+					wc[w.workerID] = wc[w.workerID] + 1
 				}
 
 				return allow
@@ -837,9 +844,15 @@ func (b *Requester) runConstRPSWorkersAsync(stop chan bool) error {
 			}()
 
 		case <-ticker.C:
-			fmt.Println("resetting. req count:", atomic.LoadInt64(&b.reqCounter), "interval:", atomic.LoadInt64(&intervalCounter))
+			mu.Lock()
+
+			for k := range wc {
+				wc[k] = 0
+			}
+
 			atomic.StoreInt64(&intervalCounter, 0)
 
+			mu.Unlock()
 		case <-done:
 			if b.config.hasLog {
 				b.config.log.Debugw("received done")
