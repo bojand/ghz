@@ -60,7 +60,8 @@ type Requester struct {
 	lock       sync.Mutex
 }
 
-func newRequester(c *RunConfig) (*Requester, error) {
+// NewRequester creates a new requestor from the passed RunConfig
+func NewRequester(c *RunConfig) (*Requester, error) {
 
 	var err error
 	var mtd *desc.MethodDescriptor
