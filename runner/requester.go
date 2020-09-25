@@ -375,7 +375,11 @@ func (b *Requester) runConstConcurrencyWorkers(stop chan bool) error {
 		if n == b.config.nConns {
 			n = 0
 		}
+	}
 
+	// start workers
+	for _, w := range workers {
+		w := w
 		go func() {
 			errC <- w.runWorker(func(id string, err error, reqCount int, duration time.Duration) bool {
 				return reqCount < nReqPerWorker
@@ -643,6 +647,11 @@ func (b *Requester) runConstRPSWorkers(stop chan bool) error {
 		if cn == b.config.nConns {
 			cn = 0
 		}
+	}
+
+	// start workers
+	for _, w := range workers {
+		w := w
 
 		go func() {
 			errC <- w.runWorker(func(id string, err error, reqCount int, duration time.Duration) bool {
@@ -790,7 +799,11 @@ func (b *Requester) runConstRPSWorkersAsync(stop chan bool) error {
 		if cn == b.config.nConns {
 			cn = 0
 		}
+	}
 
+	// start workers
+	for _, w := range workers {
+		w := w
 		go func() {
 			errC <- w.runWorkerAsync(func(id string, err error, reqCount int, duration time.Duration) bool {
 				mu.Lock()
