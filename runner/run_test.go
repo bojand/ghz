@@ -592,7 +592,16 @@ func TestRunUnaryStepConcurrency(t *testing.T) {
 		assert.Equal(t, 1, connCount)
 
 		wc := gs.GetCountByWorker(callType)
-		assert.Equal(t, 4, len(wc))
+		totDur := report.Total * time.Millisecond
+		expectedWC := 2
+		if totDur > 1000 {
+			expectedWC = 4
+		} else if totDur > 2000 {
+			expectedWC = 6
+		} else {
+			expectedWC = 8
+		}
+		assert.Equal(t, expectedWC, len(wc))
 	})
 
 	t.Run("test step concurrency load time limit", func(t *testing.T) {
