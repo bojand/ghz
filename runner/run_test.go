@@ -842,6 +842,8 @@ func TestRunUnaryLineConcurrency(t *testing.T) {
 		connCount := gs.GetConnectionCount()
 		assert.Equal(t, 1, connCount)
 
+		t.Log("total duration", report.Total.Milliseconds())
+
 		wc := gs.GetCountByWorker(callType)
 		assert.True(t, len(wc) < 10, fmt.Sprintf("len(wc) %d not in range", len(wc))) // hit n before load end
 	})
