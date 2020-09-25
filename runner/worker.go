@@ -13,6 +13,7 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"go.uber.org/multierr"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/metadata"
@@ -67,9 +68,10 @@ func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool) error {
 			return nil
 		default:
 			if cond(w.workerID, rErr, n, time.Since(start)) {
+				reqNum := atomic.AddInt64(w.reqCounter, 1)
 				n++
 
-				rErr := w.makeRequest()
+				rErr := w.makeRequest(reqNum)
 
 				err = multierr.Append(err, rErr)
 			} else if stopOnCond {
@@ -79,9 +81,33 @@ func (w *Worker) runWorker(cond ConditionChecker, stopOnCond bool) error {
 	}
 }
 
-func (w *Worker) makeRequest() error {
+func (w *Worker) runWorkerAsync(cond ConditionChecker, stopOnCond bool) error {
 
-	reqNum := atomic.AddInt64(w.reqCounter, 1)
+	start := time.Now()
+	n := 0
+	wc := 0
+	g := new(errgroup.Group)
+
+	for {
+		select {
+		case <-w.done:
+			return g.Wait()
+		default:
+			if cond(w.workerID, nil, n, time.Since(start)) {
+				reqNum := atomic.AddInt64(w.reqCounter, 1)
+				n++
+				wc++
+				g.Go(func() error {
+					return w.makeRequest(reqNum)
+				})
+			} else if stopOnCond {
+				return g.Wait()
+			}
+		}
+	}
+}
+
+func (w *Worker) makeRequest(reqNum int64) error {
 
 	ctd := newCallTemplateData(w.mtd, w.workerID, reqNum)
 
@@ -148,38 +174,22 @@ func (w *Worker) makeRequest() error {
 			"input", inputs, "metadata", reqMD)
 	}
 
+	inputsLen := len(inputs)
+	if inputsLen == 0 {
+		return fmt.Errorf("no data provided for request")
+	}
+	inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
+	unaryInput := inputs[inputIdx]
+
 	// RPC errors are handled via stats handler
 	if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
 		_ = w.makeBidiRequest(&ctx, inputs)
 	} else if w.mtd.IsClientStreaming() {
 		_ = w.makeClientStreamingRequest(&ctx, inputs)
+	} else if w.mtd.IsServerStreaming() {
+		_ = w.makeServerStreamingRequest(&ctx, unaryInput)
 	} else {
-
-		inputsLen := len(inputs)
-		if inputsLen == 0 {
-			return fmt.Errorf("no data provided for request")
-		}
-		inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
-
-		if w.mtd.IsServerStreaming() {
-			_ = w.makeServerStreamingRequest(&ctx, inputs[inputIdx])
-		} else {
-			var res proto.Message
-			var resErr error
-			var callOptions = []grpc.CallOption{}
-			if w.config.enableCompression {
-				callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
-			}
-
-			res, resErr = w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx], callOptions...)
-
-			if w.config.hasLog {
-				w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", callType,
-					"call", w.mtd.GetFullyQualifiedName(),
-					"input", inputs, "metadata", reqMD,
-					"response", res, "error", resErr)
-			}
-		}
+		_ = w.makeUnaryRequest(&ctx, reqMD, unaryInput)
 	}
 
 	return err
@@ -324,6 +334,26 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 	}
 
 	return err
+}
+
+func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, input *dynamic.Message) error {
+	var res proto.Message
+	var resErr error
+	var callOptions = []grpc.CallOption{}
+	if w.config.enableCompression {
+		callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
+	}
+
+	res, resErr = w.stub.InvokeRpc(*ctx, w.mtd, input, callOptions...)
+
+	if w.config.hasLog {
+		w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", "unary",
+			"call", w.mtd.GetFullyQualifiedName(),
+			"input", input, "metadata", reqMD,
+			"response", res, "error", resErr)
+	}
+
+	return resErr
 }
 
 func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message) error {

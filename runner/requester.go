@@ -174,7 +174,11 @@ func (b *Requester) Run(stopCh chan StopReason) (*Report, error) {
 			}
 		} else {
 			if b.config.loadSchedule == ScheduleConst {
-				done <- b.runConstRPSWorkers(stop)
+				if b.config.async {
+					done <- b.runConstRPSWorkersAsync(stop)
+				} else {
+					done <- b.runConstRPSWorkers(stop)
+				}
 			} else if b.config.loadSchedule == ScheduleStep || b.config.loadSchedule == ScheduleLine {
 				done <- b.runStepRPSWorkers(stop)
 			}
@@ -693,6 +697,162 @@ func (b *Requester) runConstRPSWorkers(stop chan bool) error {
 		case <-ticker.C:
 			atomic.StoreInt64(&intervalCounter, 0)
 
+		case <-done:
+			if b.config.hasLog {
+				b.config.log.Debugw("received done")
+			}
+
+			var err error
+			for i := 0; i < len(workers); i++ {
+				err = multierr.Append(err, <-errC)
+			}
+
+			for _, wrk := range workers {
+				wrk := wrk
+				if wrk.done != nil {
+					close(wrk.done)
+				}
+			}
+
+			close(errC)
+
+			return err
+
+		default:
+			if atomic.LoadInt64(&b.reqCounter) >= int64(b.config.n) {
+				execDone.Do(func() {
+					ticker.Stop()
+
+					finishWorkers()
+
+					go func() {
+						stop <- true
+					}()
+				})
+			}
+		}
+	}
+}
+
+func (b *Requester) runConstRPSWorkersAsync(stop chan bool) error {
+	if b.config.c == 0 {
+		return nil
+	}
+
+	nw := b.config.c
+	if nw > b.config.qps {
+		nw = b.config.qps
+	}
+
+	errC := make(chan error, nw)
+
+	var intervalCounter int64
+	var mu sync.Mutex
+	wc := make(map[string]int)
+
+	workers := make(map[string]*Worker)
+
+	nReqPerWorker := b.config.qps / nw
+
+	cn := 0                   // connection counter
+	for i := 0; i < nw; i++ { // concurrency counter
+
+		wID := "g" + strconv.Itoa(i) + "c" + strconv.Itoa(cn)
+
+		if len(b.config.name) > 0 {
+			wID = b.config.name + ":" + wID
+		}
+
+		if b.config.hasLog {
+			b.config.log.Debugw("Creating worker with ID: "+wID, "workerID", wID)
+		}
+
+		w := &Worker{
+			stub:          b.stubs[cn],
+			mtd:           b.mtd,
+			config:        b.config,
+			reqCounter:    &b.reqCounter,
+			workerID:      wID,
+			arrayJSONData: b.arrayJSONData,
+			done:          make(chan bool, 1),
+		}
+
+		w.setActive(true)
+
+		workers[wID] = w
+
+		cn++ // increment connection counter
+
+		// wrap around connections if needed
+		if cn == b.config.nConns {
+			cn = 0
+		}
+
+		go func() {
+			errC <- w.runWorkerAsync(func(id string, err error, reqCount int, duration time.Duration) bool {
+				mu.Lock()
+				defer mu.Unlock()
+
+				allow := atomic.LoadInt64(&b.reqCounter) < int64(b.config.n) &&
+					atomic.LoadInt64(&intervalCounter) < int64(b.config.qps) &&
+					wc[w.workerID] < nReqPerWorker
+
+				if allow {
+					atomic.AddInt64(&intervalCounter, 1)
+					wc[w.workerID] = wc[w.workerID] + 1
+				}
+
+				return allow
+			}, false)
+		}()
+	}
+
+	done := make(chan bool, 1)
+
+	finishWorkers := func() {
+		for _, wrk := range workers {
+			wrk := wrk
+			if wrk.isActive() {
+				wrk.setActive(false)
+				if wrk.done != nil {
+					wrk.done <- true
+				}
+			}
+		}
+	}
+
+	// end condition checker
+	var execDone sync.Once
+
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-stop:
+
+			if b.config.hasLog {
+				b.config.log.Debugw("received stop")
+			}
+
+			ticker.Stop()
+
+			finishWorkers()
+
+			go func() {
+				done <- true
+			}()
+
+		case <-ticker.C:
+			mu.Lock()
+
+			for k := range wc {
+				wc[k] = 0
+			}
+
+			atomic.StoreInt64(&intervalCounter, 0)
+
+			mu.Unlock()
 		case <-done:
 			if b.config.hasLog {
 				b.config.log.Debugw("received done")
