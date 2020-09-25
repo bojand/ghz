@@ -832,7 +832,7 @@ func TestRunUnaryLineConcurrency(t *testing.T) {
 		assert.Equal(t, 1, connCount)
 
 		wc := gs.GetCountByWorker(callType)
-		assert.True(t, len(wc) < 10) // hit n before load end
+		assert.True(t, len(wc) < 10, fmt.Sprintf("len(wc) %d not in range", len(wc))) // hit n before load end
 	})
 
 	t.Run("test line concurrency n limit over", func(t *testing.T) {
