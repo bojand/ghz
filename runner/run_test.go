@@ -811,7 +811,7 @@ func TestRunUnaryLineConcurrency(t *testing.T) {
 			WithLoadSchedule("line"),
 			WithLoadStart(2),
 			WithLoadEnd(10),
-			WithLoadDuration(2*time.Second),
+			WithLoadDuration(4*time.Second),
 		)
 
 		assert.NoError(t, err)
