@@ -109,7 +109,7 @@ func (w *Worker) runWorkerAsync(cond ConditionChecker, stopOnCond bool) error {
 
 func (w *Worker) makeRequest(reqNum int64) error {
 
-	ctd := newCallTemplateData(w.mtd, w.workerID, reqNum)
+	ctd := newCallTemplateData(w.mtd, w.config.funcs, w.workerID, reqNum)
 
 	var inputs []*dynamic.Message
 	var err error
@@ -132,8 +132,8 @@ func (w *Worker) makeRequest(reqNum int64) error {
 	}
 
 	var reqMD *metadata.MD
-	if mdMap != nil && len(*mdMap) > 0 {
-		md := metadata.New(*mdMap)
+	if len(mdMap) > 0 {
+		md := metadata.New(mdMap)
 		reqMD = &md
 	} else {
 		reqMD = &metadata.MD{}

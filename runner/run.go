@@ -28,7 +28,7 @@ func Run(call, host string, options ...Option) (*Report, error) {
 	runtime.GOMAXPROCS(c.cpus)
 	defer runtime.GOMAXPROCS(oldCPUs)
 
-	reqr, err := newRequester(c)
+	reqr, err := NewRequester(c)
 
 	if err != nil {
 		return nil, err

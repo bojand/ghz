@@ -53,6 +53,16 @@ type callTemplateData struct {
 }
 ```
 
+**Functions**
+
+There are also two template functions available:
+
+`newUUID` - Generates a new UUID for each invocation.
+
+`randomString` - Generates a new random string for each incovation. Accepts a length parameter. If the argument is `<= 0` then a ranom string is generated with a random length between length of `2` and `16`.
+
+**Examples**
+
 This can be useful to inject variable information into the message data JSON or metadata JSON payloads for each request, such as timestamp or unique request number. For example:
 
 ```sh
@@ -66,6 +76,21 @@ Would result in server getting the following metadata map represented here in JS
   "user-agent": "grpc-go/1.11.1",
   "request-id": "1",
   "timestamp": "1544890252"
+}
+```
+
+```sh
+-d '{"order_id":"{{newUUID}}", "item_id":"{{newUUID}}", "sku":"{{randomString 8 }}", "product_name":"{{ranomdString 0}}"}'
+```
+
+Would result in data with JSON representation:
+
+```json
+{
+  "order_id": "3974e7b3-5946-4df5-bed3-8c3dc9a0be19",
+  "item_id": "cd9c2604-cd9b-43a8-9cbb-d1ad26ca93a4",
+  "sku": "HlFTAxcm",
+  "product_name": "xg3NEC"
 }
 ```
 

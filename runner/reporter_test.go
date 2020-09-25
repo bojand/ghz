@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"testing"
 	"time"
 
@@ -57,4 +58,67 @@ func TestReport_CorrectDetails(t *testing.T) {
 	assert.Equal(t, 2, len(report.Details))
 	assert.Equal(t, ResultDetail{Error: "", Latency: cr1.duration, Status: cr1.status, Timestamp: cr1.timestamp}, report.Details[0])
 	assert.Equal(t, ResultDetail{Error: cr2.err.Error(), Latency: cr2.duration, Status: cr2.status, Timestamp: cr2.timestamp}, report.Details[1])
+}
+
+func TestReport_latencies(t *testing.T) {
+	var tests = []struct {
+		input    []float64
+		expected []LatencyDistribution
+	}{
+		{
+			input: []float64{15, 20, 35, 40, 50},
+			expected: []LatencyDistribution{
+				{Percentage: 10, Latency: 15 * time.Second},
+				{Percentage: 25, Latency: 20 * time.Second},
+				{Percentage: 50, Latency: 35 * time.Second},
+				{Percentage: 75, Latency: 40 * time.Second},
+				{Percentage: 90, Latency: 50 * time.Second},
+				{Percentage: 95, Latency: 50 * time.Second},
+				{Percentage: 99, Latency: 50 * time.Second},
+			},
+		},
+		{
+			input: []float64{3, 6, 7, 8, 8, 10, 13, 15, 16, 20},
+			expected: []LatencyDistribution{
+				{Percentage: 10, Latency: 3 * time.Second},
+				{Percentage: 25, Latency: 7 * time.Second},
+				{Percentage: 50, Latency: 8 * time.Second},
+				{Percentage: 75, Latency: 15 * time.Second},
+				{Percentage: 90, Latency: 16 * time.Second},
+				{Percentage: 95, Latency: 20 * time.Second},
+				{Percentage: 99, Latency: 20 * time.Second},
+			},
+		},
+		{
+			input: []float64{3, 6, 7, 8, 8, 9, 10, 13, 15, 16, 20},
+			expected: []LatencyDistribution{
+				{Percentage: 10, Latency: 6 * time.Second},
+				{Percentage: 25, Latency: 7 * time.Second},
+				{Percentage: 50, Latency: 9 * time.Second},
+				{Percentage: 75, Latency: 15 * time.Second},
+				{Percentage: 90, Latency: 16 * time.Second},
+				{Percentage: 95, Latency: 20 * time.Second},
+				{Percentage: 99, Latency: 20 * time.Second},
+			},
+		},
+		{
+			input: []float64{2.1, 3.2, 4.5, 6.3, 7.4, 8.5, 9.6, 10.7, 13.8, 15.9, 16.11, 18.17, 20.11, 22.34},
+			expected: []LatencyDistribution{
+				{Percentage: 10, Latency: time.Duration(3.2 * float64(time.Second))},
+				{Percentage: 25, Latency: time.Duration(6.3 * float64(time.Second))},
+				{Percentage: 50, Latency: time.Duration(9.6 * float64(time.Second))},
+				{Percentage: 75, Latency: time.Duration(16.11 * float64(time.Second))},
+				{Percentage: 90, Latency: time.Duration(20.11 * float64(time.Second))},
+				{Percentage: 95, Latency: time.Duration(22.34 * float64(time.Second))},
+				{Percentage: 99, Latency: time.Duration(22.34 * float64(time.Second))},
+			},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run("latencies "+strconv.FormatInt(int64(i), 10), func(t *testing.T) {
+			lats := latencies(tt.input)
+			assert.Equal(t, tt.expected, lats)
+		})
+	}
 }

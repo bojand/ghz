@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/pkg/errors"
@@ -96,24 +98,24 @@ type RunConfig struct {
 	cpus      int
 	tags      []byte
 	skipFirst int
+
+	funcs template.FuncMap
 }
 
 // Option controls some aspect of run
 type Option func(*RunConfig) error
 
 // WithConfigFromFile uses a configuration JSON file to populate the RunConfig
-//  WithConfig("config.json")
+//  WithConfigFromFile("config.json")
 func WithConfigFromFile(file string) Option {
 	return func(o *RunConfig) error {
-		data, err := ioutil.ReadFile(file)
+		var cfg Config
+		err := LoadConfig(file, &cfg)
 		if err != nil {
-			return fmt.Errorf("read config from file: %w", err)
+			return err
 		}
-		var config Config
-		if err := json.Unmarshal(data, &config); err != nil {
-			return fmt.Errorf("unmarshal config: %w", err)
-		}
-		for _, option := range fromConfig(&config) {
+
+		for _, option := range fromConfig(&cfg) {
 			if err := option(o); err != nil {
 				return err
 			}
@@ -126,11 +128,12 @@ func WithConfigFromFile(file string) Option {
 // See also: WithConfigFromFile
 func WithConfigFromReader(reader io.Reader) Option {
 	return func(o *RunConfig) error {
-		var config Config
-		if err := json.NewDecoder(reader).Decode(&config); err != nil {
+		var cfg Config
+		if err := json.NewDecoder(reader).Decode(&cfg); err != nil {
 			return fmt.Errorf("unmarshal config: %w", err)
 		}
-		for _, option := range fromConfig(&config) {
+
+		for _, option := range fromConfig(&cfg) {
 			if err := option(o); err != nil {
 				return err
 			}
@@ -141,9 +144,17 @@ func WithConfigFromReader(reader io.Reader) Option {
 
 // WithConfig uses the configuration to populate the RunConfig
 // See also: WithConfigFromFile, WithConfigFromReader
-func WithConfig(c *Config) Option {
+func WithConfig(cfg *Config) Option {
 	return func(o *RunConfig) error {
-		for _, option := range fromConfig(c) {
+
+		// init / fix up durations
+		if cfg.X > 0 {
+			cfg.Z = cfg.X
+		} else if cfg.Z > 0 {
+			cfg.N = math.MaxInt32
+		}
+
+		for _, option := range fromConfig(cfg) {
 			if err := option(o); err != nil {
 				return err
 			}
@@ -572,6 +583,15 @@ func WithLogger(log Logger) Option {
 	}
 }
 
+// WithTemplateFuncs adds additional tempalte functions
+func WithTemplateFuncs(funcMap template.FuncMap) Option {
+	return func(o *RunConfig) error {
+		o.funcs = funcMap
+
+		return nil
+	}
+}
+
 func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 	call = strings.TrimSpace(call)
 	host = strings.TrimSpace(host)
@@ -598,6 +618,11 @@ func newConfig(call, host string, options ...Option) (*RunConfig, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// fix up durations
+	if c.z > 0 {
+		c.n = math.MaxInt32
 	}
 
 	// checks
@@ -807,6 +832,13 @@ func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFil
 func fromConfig(cfg *Config) []Option {
 	// set up all the options
 	options := make([]Option, 0, 17)
+
+	// init / fix up durations
+	if cfg.X > 0 {
+		cfg.Z = cfg.X
+	} else if cfg.Z > 0 {
+		cfg.N = math.MaxInt32
+	}
 
 	options = append(options,
 		WithProtoFile(cfg.Proto, cfg.ImportPaths),

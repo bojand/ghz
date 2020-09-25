@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"runtime"
 	"strconv"
@@ -79,11 +78,11 @@ var (
 
 	// Run
 	isStrategySet = false
-	strategy      = kingpin.Flag("load-strategy", "Specifies the load stratefy. Options are concurrency or rps. Default is concurrency.").
+	strategy      = kingpin.Flag("load-strategy", "Specifies the load strategy. Options are concurrency or qps. Default is concurrency.").
 			Default("concurrency").IsSetByUser(&isStrategySet).String()
 
 	isScheduleSet = false
-	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are step, line, or const. Default is const.").
+	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are const, step, or line. Default is const.").
 			Default("const").IsSetByUser(&isScheduleSet).String()
 
 	isLoadStartSet = false
@@ -240,13 +239,6 @@ func main() {
 		err := createConfigFromArgs(&cfg)
 
 		kingpin.FatalIfError(err, "")
-	}
-
-	// init / fix up durations
-	if cfg.X > 0 {
-		cfg.Z = cfg.X
-	} else if cfg.Z > 0 {
-		cfg.N = math.MaxInt32
 	}
 
 	var logger *zap.SugaredLogger
