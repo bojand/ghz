@@ -592,7 +592,10 @@ func TestRunUnaryStepConcurrency(t *testing.T) {
 		assert.Equal(t, 1, connCount)
 
 		wc := gs.GetCountByWorker(callType)
-		totalDur := report.Total * time.Millisecond
+		totalDur := report.Total.Milliseconds()
+
+		t.Log(totalDur)
+		t.Log(len(wc))
 		expectedWC := 2
 		if totalDur > 1000 {
 			expectedWC = 4

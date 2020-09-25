@@ -517,6 +517,8 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 	ticker := time.NewTicker(b.config.loadStepDuration)
 	defer ticker.Stop()
 
+	loadStep := int(b.config.loadStep)
+
 	for {
 		select {
 
@@ -563,10 +565,10 @@ func (b *Requester) runStepConcurrencyWorkers(stop chan bool) error {
 
 			if wc != b.config.loadEnd {
 				if stepUp {
-					runWorkers(int(b.config.loadStep))
+					runWorkers(loadStep)
 					wc = wc + b.config.loadStep
 				} else {
-					stopWorkers(int(b.config.loadStep))
+					stopWorkers(loadStep)
 					wc = wc - b.config.loadStep
 				}
 			} else {
