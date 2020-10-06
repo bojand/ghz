@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, SelectMenu, Tooltip, Button, Text, Checkbox, toaster, Pill } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, SelectMenu, Tooltip, Button, Text, Checkbox, toaster } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
 import { format as formatAgo } from 'timeago.js'
 
