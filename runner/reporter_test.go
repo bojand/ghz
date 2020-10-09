@@ -31,7 +31,7 @@ func TestReport_MarshalJSON(t *testing.T) {
 
 func TestReport_CorrectDetails(t *testing.T) {
 	callResultsChan := make(chan *callResult)
-	config, _ := newConfig("call", "host")
+	config, _ := NewConfig("call", "host")
 	reporter := newReporter(callResultsChan, config)
 
 	go reporter.Run()

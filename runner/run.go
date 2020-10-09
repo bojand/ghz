@@ -17,7 +17,7 @@ import (
 //		WithInsecure(true),
 //	)
 func Run(call, host string, options ...Option) (*Report, error) {
-	c, err := newConfig(call, host, options...)
+	c, err := NewConfig(call, host, options...)
 
 	if err != nil {
 		return nil, err
