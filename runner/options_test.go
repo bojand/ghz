@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math"
 	"os"
+	"reflect"
 	"runtime"
 	"testing"
 	"time"
@@ -124,6 +125,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithDialTimeout(time.Duration(30*time.Second)),
 			WithName("asdf"),
 			WithCPUs(4),
+			WithBinaryDataFunc(changeFunc),
 			WithBinaryData([]byte("asdf1234foobar")),
 			WithMetadataFromFile("../testdata/metadata.json"),
 			WithProtoset("testdata/bundle.protoset"),
@@ -150,6 +152,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 4, c.cpus)
 		assert.Equal(t, "asdf", c.name)
 		assert.Equal(t, []byte("asdf1234foobar"), c.data)
+		funcName1 := runtime.FuncForPC(reflect.ValueOf(changeFunc).Pointer()).Name()
+		funcName2 := runtime.FuncForPC(reflect.ValueOf(c.dataFunc).Pointer()).Name()
+		assert.Equal(t, funcName1, funcName2)
 		assert.Equal(t, `{"request-id": "{{.RequestNumber}}"}`, string(c.metadata))
 		assert.Equal(t, "", string(c.proto))
 		assert.Equal(t, "testdata/bundle.protoset", string(c.protoset))

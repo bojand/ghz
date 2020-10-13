@@ -186,12 +186,17 @@ func (w *Worker) getMessages(ctd *callTemplateData, inputData []byte) ([]*dynami
 		// Json messages are not cached due to templating
 	} else {
 		var err error
+		if w.config.dataFunc != nil {
+			inputData = w.config.dataFunc(w.mtd)
+		}
 		inputs, err = createPayloadsFromBin(inputData, w.mtd)
 		if err != nil {
 			return nil, err
 		}
-
-		w.cachedMessages = inputs
+		// We only cache in case we don't dynamically change the binary message
+		if w.config.dataFunc == nil {
+			w.cachedMessages = inputs
+		}
 	}
 
 	return inputs, nil
