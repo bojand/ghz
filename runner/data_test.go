@@ -229,7 +229,7 @@ func TestData_createPayloads(t *testing.T) {
 		binData, err := proto.Marshal(msg1)
 		assert.NoError(t, err)
 
-		inputs, err := createPayloadsFromBin(binData, mtdUnary)
+		inputs, err := createPayloadsFromBin(binData, mtdUnary, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
@@ -247,7 +247,7 @@ func TestData_createPayloads(t *testing.T) {
 		_ = buf.EncodeMessage(msg1)
 		_ = buf.EncodeMessage(msg2)
 
-		inputs, err := createPayloadsFromBin(buf.Bytes(), mtdUnary)
+		inputs, err := createPayloadsFromBin(buf.Bytes(), mtdUnary, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
@@ -258,7 +258,7 @@ func TestData_createPayloads(t *testing.T) {
 
 	t.Run("on empty binary data returns empty slice", func(t *testing.T) {
 		buf := make([]byte, 0)
-		inputs, err := createPayloadsFromBin(buf, mtdUnary)
+		inputs, err := createPayloadsFromBin(buf, mtdUnary, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, inputs)
