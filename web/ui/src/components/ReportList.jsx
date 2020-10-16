@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Table, Heading, IconButton, Pane, Tooltip, Button, Text, Checkbox, toaster } from 'evergreen-ui'
+import { Table, Heading, IconButton, Pane, SelectMenu, Tooltip, Button, Text, Checkbox, toaster } from 'evergreen-ui'
 import { Link as RouterLink, withRouter } from 'react-router-dom'
 import { format as formatAgo } from 'timeago.js'
 
@@ -23,7 +23,16 @@ class ReportList extends Component {
       sort: 'date',
       page: 0,
       selected: {},
-      selectAllChecked: false
+      selectAllChecked: false,
+      selectedColumnsKeys: ["name", "total", "average", "slowest", "fastest", "rps"],
+      columns: [
+        {key: "name", title: "Name"},
+        {key: "total", title: "Total", formatter: formatNanoUnit, props: {isNumber: true}},
+        {key: "average", title: "Average", formatter: formatNanoUnit, props: {isNumber: true}},
+        {key: "slowest", title: "Slowest", formatter: formatNanoUnit, props: {isNumber: true}},
+        {key: "fastest", title: "Fastest", formatter: formatNanoUnit, props: {isNumber: true}},
+        {key: "rps", title: "RPS", formatter: formatFloat, props: {isNumber: true}}        
+      ]
     }
   }
 
@@ -113,6 +122,10 @@ class ReportList extends Component {
 
     const nSelected = Object.keys(this.state.selected).length
 
+    let selectedColumns = this.state.selectedColumnsKeys.map(
+      key => this.state.columns.find(col => col.key == key)
+    )
+
     return (
       <Pane>
         <Pane display='flex' alignItems='center' marginTop={0}>
@@ -120,6 +133,34 @@ class ReportList extends Component {
             <Heading size={600}>REPORTS</Heading>
           </Pane>
           <Pane>
+          <SelectMenu
+              isMultiSelect
+              hasFilter={false}
+              hasTitle={false}
+              onSelect={item => {
+                const selected = [...this.state.selectedColumnsKeys, item.value];
+                const keys = this.state.columns.map(col => col.key);
+                selected.sort((a, b) => keys.indexOf(a) - keys.indexOf(b));
+                this.setState({ selectedColumnsKeys: selected  })
+              }}
+              onDeselect={item => {
+                const selected = this.state.selectedColumnsKeys.filter(value => value != item.value)
+                const keys = this.state.columns.map(col => col.key);
+                selected.sort((a, b) => keys.indexOf(a) - keys.indexOf(b));
+                this.setState({ selectedColumnsKeys: selected })
+              }}
+              options={this.state.columns.map(col => ({label: col.title, value: col.key}))}
+              selected={this.state.selectedColumnsKeys}
+            >
+              <Button
+                iconBefore='panel-table'
+                appearance='minimal'
+                marginRight={12}
+              >
+                COLUMNS
+              </Button>
+            </SelectMenu>
+
             <Button
               iconBefore='comparison'
               appearance='minimal'
@@ -170,21 +211,11 @@ class ReportList extends Component {
                 />
               </Pane>
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell textProps={{ size: 400 }}>
-              Total
-            </Table.TextHeaderCell>
-            <Table.TextHeaderCell textProps={{ size: 400 }}>
-              Average
-            </Table.TextHeaderCell>
-            <Table.TextHeaderCell textProps={{ size: 400 }}>
-              Slowest
-            </Table.TextHeaderCell>
-            <Table.TextHeaderCell textProps={{ size: 400 }}>
-              Fastest
-            </Table.TextHeaderCell>
-            <Table.TextHeaderCell textProps={{ size: 400 }}>
-              RPS
-            </Table.TextHeaderCell>
+            {
+              selectedColumns.map(col =>
+                <Table.TextHeaderCell textProps={{ size: 400 }}>{col.title}</Table.TextHeaderCell>
+              )
+            }
             <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               Status
             </Table.TextHeaderCell>
@@ -213,21 +244,11 @@ class ReportList extends Component {
                     {toLocaleString(p.date)} ({formatAgo(p.date)})
                   </RouterLink>
                 </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(p.total)}
+                {selectedColumns.map(col => 
+                <Table.TextCell key={col.key} {...col.props}>
+                  {col.formatter ? col.formatter(p[col.key]) : p[col.key]}
                 </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(p.average)}
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(p.slowest)}
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatNanoUnit(p.fastest)}
-                </Table.TextCell>
-                <Table.TextCell isNumber>
-                  {formatFloat(p.rps)}
-                </Table.TextCell>
+                )}
                 <Table.TextCell
                   display='flex' textAlign='center' alignItems='center' maxWidth={80}
                 >
