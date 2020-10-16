@@ -566,7 +566,8 @@ func WithTemplateFuncs(funcMap template.FuncMap) Option {
 	}
 }
 
-func newConfig(call, host string, options ...Option) (*RunConfig, error) {
+// NewConfig creates a new RunConfig from the options passed
+func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 	call = strings.TrimSpace(call)
 	host = strings.TrimSpace(host)
 

@@ -13,21 +13,21 @@ import (
 
 func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("fail with empty call", func(t *testing.T) {
-		c, err := newConfig("  ", "localhost:50050")
+		c, err := NewConfig("  ", "localhost:50050")
 
 		assert.Error(t, err)
 		assert.Nil(t, c)
 	})
 
 	t.Run("fail with empty host ", func(t *testing.T) {
-		c, err := newConfig("  call ", "   ")
+		c, err := NewConfig("  call ", "   ")
 
 		assert.Error(t, err)
 		assert.Nil(t, c)
 	})
 
 	t.Run("fail with invalid extension", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
+		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.bin", []string{}),
 		)
 
@@ -36,7 +36,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("without any options should have defaults", func(t *testing.T) {
-		c, err := newConfig("  call  ", "  localhost:50050  ",
+		c, err := NewConfig("  call  ", "  localhost:50050  ",
 			WithProtoFile("testdata/data.proto", []string{}),
 		)
 
@@ -66,7 +66,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with options", func(t *testing.T) {
-		c, err := newConfig(
+		c, err := NewConfig(
 			"call", "localhost:50050",
 			WithInsecure(true),
 			WithTotalRequests(100),
@@ -110,7 +110,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with binary data, protoset and metadata file", func(t *testing.T) {
-		c, err := newConfig(
+		c, err := NewConfig(
 			"call", "localhost:50050",
 			WithCertificate("../testdata/localhost.crt", "../testdata/localhost.key"),
 			WithServerNameOverride("cname"),
@@ -180,7 +180,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		rmd := make(map[string]string)
 		rmd["auth"] = "bizbaz"
 
-		c, err := newConfig(
+		c, err := NewConfig(
 			"call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithCertificate("../testdata/localhost.crt", "../testdata/localhost.key"),
@@ -230,7 +230,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with binary data from file", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
+		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithBinaryDataFromFile("../testdata/hello_request_data.bin"),
 		)
@@ -260,7 +260,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with data from file", func(t *testing.T) {
-		c, err := newConfig("call", "localhost:50050",
+		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithDataFromFile("../testdata/data.json"),
 		)
@@ -295,7 +295,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
 
-		c, err := newConfig("call", "localhost:50050",
+		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithDataFromReader(file),
 		)
@@ -331,7 +331,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
 
-		c, err := newConfig("call", "localhost:50050",
+		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithDataFromReader(file),
 			WithConnections(5),
@@ -368,7 +368,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
 
-		c, err := newConfig("call", "localhost:50050",
+		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithDataFromReader(file),
 			WithConcurrency(5),
@@ -383,7 +383,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		filename := "../testdata/config.json"
 
 		t.Run("from file", func(t *testing.T) {
-			c, err := newConfig("", "",
+			c, err := NewConfig("", "",
 				WithConfigFromFile(filename))
 			assert.Nil(t, err)
 			assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
@@ -401,7 +401,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("from file 2", func(t *testing.T) {
-			c, err := newConfig("", "",
+			c, err := NewConfig("", "",
 				WithConfigFromFile("../testdata/config5.toml"))
 			assert.Nil(t, err)
 			assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
@@ -422,7 +422,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			file, _ := os.Open(filename)
 			defer file.Close()
 
-			c, err := newConfig("call", "localhost:50050",
+			c, err := NewConfig("call", "localhost:50050",
 				WithConfigFromReader(file))
 			assert.Nil(t, err)
 			assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
@@ -445,7 +445,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 			var config Config
 			_ = json.NewDecoder(file).Decode(&config)
-			c, err := newConfig("call", "localhost:50050",
+			c, err := NewConfig("call", "localhost:50050",
 				WithConfig(&config))
 			assert.Nil(t, err)
 			assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
