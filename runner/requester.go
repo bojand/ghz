@@ -947,7 +947,9 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 
 		w.setActive(true)
 
+		mu.Lock()
 		workers[wID] = w
+		mu.Unlock()
 
 		cn++ // increment connection counter
 
@@ -958,12 +960,12 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 
 		go func() {
 			errC <- w.runWorker(func(id string, err error, reqCount int, duration time.Duration) bool {
+				mu.Lock()
+				defer mu.Unlock()
+
 				if !w.isActive() {
 					return false
 				}
-
-				mu.Lock()
-				defer mu.Unlock()
 
 				allow := atomic.LoadInt64(&b.reqCounter) < int64(b.config.n) &&
 					atomic.LoadInt64(&intervalCounter) < atomic.LoadInt64(&intervalReqRPS)
@@ -980,6 +982,7 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 	done := make(chan bool, 1)
 
 	finishWorkers := func() {
+		mu.Lock()
 		for _, wrk := range workers {
 			wrk := wrk
 			if wrk.isActive() {
@@ -989,6 +992,7 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 				}
 			}
 		}
+		mu.Unlock()
 	}
 
 	// end condition checker
@@ -1039,16 +1043,19 @@ func (b *Requester) runStepRPSWorkers(stop chan bool) error {
 			}
 
 			var err error
+
 			for i := 0; i < len(workers); i++ {
 				err = multierr.Append(err, <-errC)
 			}
 
+			mu.Lock()
 			for _, wrk := range workers {
 				wrk := wrk
 				if wrk.done != nil {
 					close(wrk.done)
 				}
 			}
+			mu.Unlock()
 
 			close(errC)
 

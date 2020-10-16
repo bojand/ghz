@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -40,19 +39,15 @@ type Worker struct {
 
 	done chan bool
 
-	mu     sync.RWMutex
+	// mu     sync.RWMutex
 	active bool
 }
 
 func (w *Worker) isActive() bool {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
 	return w.active
 }
 
 func (w *Worker) setActive(v bool) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
 	w.active = v
 }
 
