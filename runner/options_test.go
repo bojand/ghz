@@ -65,6 +65,15 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, c.enableCompression, false)
 	})
 
+	t.Run("skipFirst > n", func(t *testing.T) {
+		_, err := NewConfig("  call  ", "  localhost:50050  ",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithSkipFirst(1000),
+		)
+
+		assert.Error(t, err)
+	})
+
 	t.Run("with options", func(t *testing.T) {
 		c, err := NewConfig(
 			"call", "localhost:50050",
@@ -460,6 +469,155 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
 			assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
 			assert.Equal(t, true, c.insecure)
+		})
+	})
+
+	t.Run("invalid schedule", func(t *testing.T) {
+		_, err := NewConfig("  call  ", "  localhost:50050  ",
+			WithProtoFile("testdata/data.proto", []string{}),
+			WithLoadSchedule("foo"),
+		)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("with load step", func(t *testing.T) {
+		t.Run("no step", func(t *testing.T) {
+			_, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadSchedule(ScheduleStep),
+				WithLoadStart(10),
+				WithLoadDuration(20*time.Second),
+				WithLoadEnd(20),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("no step duration", func(t *testing.T) {
+			_, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadSchedule(ScheduleStep),
+				WithLoadStep(5),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("with all load settings", func(t *testing.T) {
+			c, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadSchedule(ScheduleStep),
+				WithLoadStep(5),
+				WithLoadStart(10),
+				WithLoadDuration(20*time.Second),
+				WithLoadStepDuration(5*time.Second),
+				WithLoadEnd(20),
+			)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, ScheduleStep, c.loadSchedule)
+			assert.Equal(t, uint(10), c.loadStart)
+			assert.Equal(t, uint(20), c.loadEnd)
+			assert.Equal(t, 20*time.Second, c.loadDuration)
+			assert.Equal(t, uint(5), c.loadStep)
+			assert.Equal(t, 5*time.Second, c.loadStepDuration)
+		})
+	})
+
+	t.Run("with load line", func(t *testing.T) {
+		t.Run("no step", func(t *testing.T) {
+			_, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadSchedule(ScheduleLine),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("with all setting", func(t *testing.T) {
+			c, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithLoadSchedule(ScheduleLine),
+				WithLoadDuration(20*time.Second),
+				WithLoadStepDuration(5*time.Second), // overwritten
+				WithLoadEnd(20),
+				WithLoadStep(2),
+			)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, ScheduleLine, c.loadSchedule)
+			assert.Equal(t, uint(0), c.loadStart)
+			assert.Equal(t, uint(20), c.loadEnd)
+			assert.Equal(t, 20*time.Second, c.loadDuration)
+			assert.Equal(t, uint(2), c.loadStep)
+			assert.Equal(t, 1*time.Second, c.loadStepDuration)
+		})
+	})
+
+	t.Run("with concurrency step", func(t *testing.T) {
+		t.Run("no step", func(t *testing.T) {
+			_, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithConcurrencySchedule(ScheduleStep),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("with all concurrency settings", func(t *testing.T) {
+			c, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithConcurrencySchedule(ScheduleStep),
+				WithConcurrencyStep(5),
+				WithConcurrencyMin(10),
+				WithConcurrencyDuration(20*time.Second),
+				WithConcurrencyStepDuration(5*time.Second),
+				WithConcurrencyMax(20),
+			)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, ScheduleStep, c.cSchedule)
+			assert.Equal(t, uint(10), c.cMin)
+			assert.Equal(t, uint(20), c.cMax)
+			assert.Equal(t, 20*time.Second, c.cMaxDuration)
+			assert.Equal(t, uint(5), c.cStep)
+			assert.Equal(t, 5*time.Second, c.cStepDuration)
+		})
+	})
+
+	t.Run("with concurrency line", func(t *testing.T) {
+		t.Run("no step", func(t *testing.T) {
+			_, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithConcurrencySchedule(ScheduleLine),
+			)
+
+			assert.Error(t, err)
+		})
+
+		t.Run("with all concurrency settings", func(t *testing.T) {
+			c, err := NewConfig("  call  ", "  localhost:50050  ",
+				WithProtoFile("testdata/data.proto", []string{}),
+				WithConcurrencySchedule(ScheduleLine),
+				WithConcurrencyStep(2),
+				WithConcurrencyMin(5),
+				WithConcurrencyDuration(20*time.Second),
+				WithConcurrencyStepDuration(5*time.Second), // overwritten
+				WithConcurrencyMax(20),
+			)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, ScheduleLine, c.cSchedule)
+			assert.Equal(t, uint(5), c.cMin)
+			assert.Equal(t, uint(20), c.cMax)
+			assert.Equal(t, 20*time.Second, c.cMaxDuration)
+			assert.Equal(t, uint(2), c.cStep)
+			assert.Equal(t, 1*time.Second, c.cStepDuration)
 		})
 	})
 }

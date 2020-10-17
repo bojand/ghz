@@ -34,7 +34,6 @@ func (d Duration) String() string {
 
 // UnmarshalJSON is our custom unmarshaller with JSON support
 func (d *Duration) UnmarshalJSON(text []byte) error {
-	// strValue := string(text)
 	first := text[0]
 	last := text[len(text)-1]
 	if first == '"' && last == '"' {
@@ -68,7 +67,14 @@ type Config struct {
 	Authority         string            `json:"authority" toml:"authority" yaml:"authority"`
 	Insecure          bool              `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
 	N                 uint              `json:"total" toml:"total" yaml:"total" default:"200"`
+	Async             bool              `json:"async,omitempty" toml:"async,omitempty" yaml:"async,omitempty"`
 	C                 uint              `json:"concurrency" toml:"concurrency" yaml:"concurrency" default:"50"`
+	CSchedule         string            `json:"concurrency-schedule" toml:"concurrency-schedule" yaml:"concurrency-schedule" default:"const"`
+	CMin              uint              `json:"concurrency-min" toml:"concurrency-min" yaml:"concurrency-min" default:"1"`
+	CMax              uint              `json:"concurrency-max" toml:"concurrency-max" yaml:"concurrency-max" default:"0"`
+	CStep             uint              `json:"concurrency-step" toml:"concurrency-step" yaml:"concurrency-step" default:"0"`
+	CStepDuration     Duration          `json:"concurrency-step-duration" toml:"concurrency-step-duration" yaml:"concurrency-step-duration" default:"0"`
+	CMaxDuration      Duration          `json:"concurrency-max-duration" toml:"concurrency-max-duration" yaml:"concurrency-max-duration" default:"0"`
 	Connections       uint              `json:"connections" toml:"connections" yaml:"connections" default:"1"`
 	QPS               uint              `json:"qps" toml:"qps" yaml:"qps"`
 	Z                 Duration          `json:"duration" toml:"duration" yaml:"duration"`
@@ -94,6 +100,12 @@ type Config struct {
 	Debug             string            `json:"debug,omitempty" toml:"debug,omitempty" yaml:"debug,omitempty"`
 	Host              string            `json:"host" toml:"host" yaml:"host"`
 	EnableCompression bool              `json:"enable-compression,omitempty" toml:"enable-compression,omitempty" yaml:"enable-compression,omitempty"`
+	LoadSchedule      string            `json:"load-schedule" toml:"load-schedule" yaml:"load-schedule" default:"const"`
+	LoadStart         uint              `json:"load-start" toml:"load-start" yaml:"load-start"`
+	LoadEnd           uint              `json:"load-end" toml:"load-end" yaml:"load-end"`
+	LoadStep          uint              `json:"load-step" toml:"load-step" yaml:"load-step"`
+	LoadStepDuration  Duration          `json:"load-step-duration" toml:"load-step-duration" yaml:"load-step-duration"`
+	LoadMaxDuration   Duration          `json:"load-max-duration" toml:"load-max-duration" yaml:"load-max-duration"`
 }
 
 func checkData(data interface{}) error {

@@ -77,17 +77,71 @@ var (
 			PlaceHolder(" ").IsSetByUser(&isAuthSet).String()
 
 	// Run
+	isAsyncSet = false
+	async      = kingpin.Flag("async", "Make async requests.").
+			Default("false").IsSetByUser(&isAsyncSet).Bool()
+
+	isScheduleSet = false
+	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are const, step, or line. Default is const.").
+			Default("const").IsSetByUser(&isScheduleSet).String()
+
+	isQSet = false
+	q      = kingpin.Flag("qps", "Queries per second (QPS) rate limit for constant load. Default is no rate limit.").
+		Default("0").Short('q').IsSetByUser(&isQSet).Uint()
+
+	isLoadStartSet = false
+	loadStart      = kingpin.Flag("load-start", "Specifies the load start value.").
+			Default("0").IsSetByUser(&isLoadStartSet).Uint()
+
+	isLoadStepSet = false
+	loadStep      = kingpin.Flag("load-step", "Specifies the load step value or slope value.").
+			Default("0").IsSetByUser(&isLoadStepSet).Uint()
+
+	isLoadEndSet = false
+	loadEnd      = kingpin.Flag("load-end", "Specifies the load end value.").
+			Default("0").IsSetByUser(&isLoadEndSet).Uint()
+
+	isLoadStepDurSet = false
+	loadStepDuration = kingpin.Flag("load-step-duration", "Specifies the load step duration value for step load schedule.").
+				Default("0").IsSetByUser(&isLoadStepDurSet).Duration()
+
+	isLoadMaxDurSet = false
+	loadMaxDuration = kingpin.Flag("load-max-duration", "Specifies the max load duration value for step or line.").
+			Default("0").IsSetByUser(&isLoadMaxDurSet).Duration()
+
+	// Concurrency
 	isCSet = false
-	c      = kingpin.Flag("concurrency", "Number of requests to run concurrently. Total number of requests cannot be smaller than the concurrency level. Default is 50.").
+	c      = kingpin.Flag("concurrency", "Number of request workers to run concurrently for const concurrency schedule. Default is 50.").
 		Short('c').Default("50").IsSetByUser(&isCSet).Uint()
 
+	isCScheduleSet = false
+	cschdule       = kingpin.Flag("concurrency-schedule", "Concurrency change schedule. Options are const, step, or line. Default is const.").
+			Default("const").IsSetByUser(&isCScheduleSet).String()
+
+	isCMinSet = false
+	cmin      = kingpin.Flag("concurrency-min", "Concurrency minimum / start value for step and line schedules.").
+			Default("0").IsSetByUser(&isCMinSet).Uint()
+
+	isCMaxSet = false
+	cmax      = kingpin.Flag("concurrency-max", "Concurrency maximum / end value for step and line schedules.").
+			Default("0").IsSetByUser(&isCMaxSet).Uint()
+
+	isCStepSet = false
+	cstep      = kingpin.Flag("concurrency-step", "Concurrency step / slope value for step and line schedules.").
+			Default("1").IsSetByUser(&isCStepSet).Uint()
+
+	isCStepDurSet = false
+	cStepDuration = kingpin.Flag("concurrency-step-duration", "Specifies the concurrency step duration value for step concurrency schedule.").
+			Default("0").IsSetByUser(&isCStepDurSet).Duration()
+
+	isCMaxDurSet = false
+	cMaxDuration = kingpin.Flag("concurrency-max-duration", "Specifies the max concurrency adjustment duration value for step or line concurrency schedule.").
+			Default("0").IsSetByUser(&isCMaxDurSet).Duration()
+
+	// Other
 	isNSet = false
 	n      = kingpin.Flag("total", "Number of requests to run. Default is 200.").
 		Short('n').Default("200").IsSetByUser(&isNSet).Uint()
-
-	isQSet = false
-	q      = kingpin.Flag("qps", "Rate limit, in queries per second (QPS). Default is no rate limit.").
-		Default("0").Short('q').IsSetByUser(&isQSet).Uint()
 
 	isTSet = false
 	t      = kingpin.Flag("timeout", "Timeout for each request. Default is 20s, use 0 for infinite.").
@@ -102,7 +156,7 @@ var (
 		Short('x').Default("0").IsSetByUser(&isXSet).Duration()
 
 	isZStopSet = false
-	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore.").
+	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore. Default is close.").
 			Default("close").IsSetByUser(&isZStopSet).String()
 
 	// Data
@@ -384,6 +438,19 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.ReflectMetadata = rmdMap
 	cfg.Debug = *debug
 	cfg.EnableCompression = *enableCompression
+	cfg.LoadSchedule = *schedule
+	cfg.LoadStart = *loadStart
+	cfg.LoadStep = *loadStep
+	cfg.LoadEnd = *loadEnd
+	cfg.LoadStepDuration = runner.Duration(*loadStepDuration)
+	cfg.LoadMaxDuration = runner.Duration(*loadMaxDuration)
+	cfg.Async = *async
+	cfg.CSchedule = *cschdule
+	cfg.CMin = *cmin
+	cfg.CStep = *cstep
+	cfg.CMax = *cmax
+	cfg.CStepDuration = runner.Duration(*cStepDuration)
+	cfg.CMaxDuration = runner.Duration(*cMaxDuration)
 
 	return nil
 }
@@ -392,6 +459,8 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 	if src == nil || dest == nil {
 		return errors.New("config cannot be nil")
 	}
+
+	// proto
 
 	if isProtoSet {
 		dest.Proto = src.Proto
@@ -404,6 +473,8 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 	if isCallSet {
 		dest.Call = src.Call
 	}
+
+	// security
 
 	if isCACertSet {
 		dest.RootCert = src.RootCert
@@ -437,16 +508,10 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 		dest.CName = src.CName
 	}
 
+	// run
+
 	if isNSet {
 		dest.N = src.N
-	}
-
-	if isCSet {
-		dest.C = src.C
-	}
-
-	if isQSet {
-		dest.QPS = src.QPS
 	}
 
 	if isZSet {
@@ -464,6 +529,8 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 	if isZStopSet {
 		dest.ZStop = src.ZStop
 	}
+
+	// data
 
 	if isDataSet {
 		dest.Data = src.Data
@@ -488,6 +555,8 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 	if isMDPathSet {
 		dest.MetadataPath = src.MetadataPath
 	}
+
+	// other
 
 	if isSISet {
 		dest.SI = src.SI
@@ -539,6 +608,70 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isHostSet {
 		dest.Host = src.Host
+	}
+
+	// load
+
+	if isAsyncSet {
+		dest.Async = src.Async
+	}
+
+	if isQSet {
+		dest.QPS = src.QPS
+	}
+
+	if isScheduleSet {
+		dest.LoadSchedule = src.LoadSchedule
+	}
+
+	if isLoadStartSet {
+		dest.LoadStart = src.LoadStart
+	}
+
+	if isLoadStepSet {
+		dest.LoadStep = src.LoadStep
+	}
+
+	if isLoadEndSet {
+		dest.LoadEnd = src.LoadEnd
+	}
+
+	if isLoadStepDurSet {
+		dest.LoadStepDuration = src.LoadStepDuration
+	}
+
+	if isLoadMaxDurSet {
+		dest.LoadMaxDuration = src.LoadMaxDuration
+	}
+
+	// concurrency
+
+	if isCSet {
+		dest.C = src.C
+	}
+
+	if isCScheduleSet {
+		dest.CSchedule = src.CSchedule
+	}
+
+	if isCMinSet {
+		dest.CMin = src.CMin
+	}
+
+	if isCStepSet {
+		dest.CStep = src.CStep
+	}
+
+	if isCMaxSet {
+		dest.CMax = src.CMax
+	}
+
+	if isCStepDurSet {
+		dest.CStepDuration = src.CStepDuration
+	}
+
+	if isCMaxDurSet {
+		dest.CMaxDuration = src.CMaxDuration
 	}
 
 	return nil

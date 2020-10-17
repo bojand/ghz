@@ -36,6 +36,7 @@ func Run(call, host string, options ...Option) (*Report, error) {
 
 	cancel := make(chan os.Signal, 1)
 	signal.Notify(cancel, os.Interrupt)
+
 	go func() {
 		<-cancel
 		reqr.Stop(ReasonCancel)

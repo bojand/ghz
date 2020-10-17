@@ -130,38 +130,22 @@ func (w *Worker) makeRequest() error {
 			"input", inputs, "metadata", reqMD)
 	}
 
+	inputsLen := len(inputs)
+	if inputsLen == 0 {
+		return fmt.Errorf("no data provided for request")
+	}
+	inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
+	unaryInput := inputs[inputIdx]
+
 	// RPC errors are handled via stats handler
 	if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
 		_ = w.makeBidiRequest(&ctx, inputs)
 	} else if w.mtd.IsClientStreaming() {
 		_ = w.makeClientStreamingRequest(&ctx, inputs)
+	} else if w.mtd.IsServerStreaming() {
+		_ = w.makeServerStreamingRequest(&ctx, unaryInput)
 	} else {
-
-		inputsLen := len(inputs)
-		if inputsLen == 0 {
-			return fmt.Errorf("no data provided for request")
-		}
-		inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
-
-		if w.mtd.IsServerStreaming() {
-			_ = w.makeServerStreamingRequest(&ctx, inputs[inputIdx])
-		} else {
-			var res proto.Message
-			var resErr error
-			var callOptions = []grpc.CallOption{}
-			if w.config.enableCompression {
-				callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
-			}
-
-			res, resErr = w.stub.InvokeRpc(ctx, w.mtd, inputs[inputIdx], callOptions...)
-
-			if w.config.hasLog {
-				w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", callType,
-					"call", w.mtd.GetFullyQualifiedName(),
-					"input", inputs, "metadata", reqMD,
-					"response", res, "error", resErr)
-			}
-		}
+		_ = w.makeUnaryRequest(&ctx, reqMD, unaryInput)
 	}
 
 	return err
@@ -195,6 +179,26 @@ func (w *Worker) getMessages(ctd *callTemplateData, inputData []byte) ([]*dynami
 	}
 
 	return inputs, nil
+}
+
+func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, input *dynamic.Message) error {
+	var res proto.Message
+	var resErr error
+	var callOptions = []grpc.CallOption{}
+	if w.config.enableCompression {
+		callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
+	}
+
+	res, resErr = w.stub.InvokeRpc(*ctx, w.mtd, input, callOptions...)
+
+	if w.config.hasLog {
+		w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", "unary",
+			"call", w.mtd.GetFullyQualifiedName(),
+			"input", input, "metadata", reqMD,
+			"response", res, "error", resErr)
+	}
+
+	return resErr
 }
 
 func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynamic.Message) error {
