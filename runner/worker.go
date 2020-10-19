@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"sync/atomic"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -22,12 +21,12 @@ type Worker struct {
 	stub grpcdynamic.Stub
 	mtd  *desc.MethodDescriptor
 
-	config     *RunConfig
-	stopCh     chan bool
-	qpsTick    time.Duration
-	reqCounter *int64
-	nReq       int
-	workerID   string
+	config   *RunConfig
+	workerID string
+	active   bool
+	counter  RequestCounter
+	stopCh   chan bool
+	ticks    <-chan struct{}
 
 	// cached messages only for binary
 	cachedMessages []*dynamic.Message
@@ -37,33 +36,38 @@ type Worker struct {
 }
 
 func (w *Worker) runWorker() error {
-	var throttle <-chan time.Time
-	if w.config.qps > 0 {
-		throttle = time.Tick(w.qpsTick)
-	}
-
 	var err error
-	for i := 0; i < w.nReq; i++ {
-		// Check if application is stopped. Do not send into a closed channel.
+
+	for {
 		select {
 		case <-w.stopCh:
-			return nil
-		default:
-			if w.config.qps > 0 {
-				<-throttle
+			return err
+		case <-w.ticks:
+			if w.config.async {
+				go func() {
+					rErr := w.makeRequest()
+					multierr.Append(err, rErr)
+				}()
+			} else {
+				rErr := w.makeRequest()
+				multierr.Append(err, rErr)
 			}
-
-			rErr := w.makeRequest()
-
-			err = multierr.Append(err, rErr)
 		}
 	}
-	return err
+}
+
+// Stop stops the worker. It has to be started with Run() again.
+func (w *Worker) Stop() {
+	if !w.active {
+		return
+	}
+
+	w.active = false
+	w.stopCh <- true
 }
 
 func (w *Worker) makeRequest() error {
-
-	reqNum := atomic.AddInt64(w.reqCounter, 1)
+	reqNum := int64(w.counter.Get())
 
 	ctd := newCallTemplateData(w.mtd, w.config.funcs, w.workerID, reqNum)
 
