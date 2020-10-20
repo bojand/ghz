@@ -23,3 +23,7 @@ issues:
     # Debug log Sync() error check in defer in main
     - path: cmd/ghz/main.go
       text: "Error return value of `logger.Sync` is not checked"
+
+    # sync.once copy in pacer test
+    - path: load/pacer_test.go
+      text: "copylocks"

@@ -51,8 +51,6 @@ type Requester struct {
 	stopCh  chan bool
 	start   time.Time
 
-	qpsTick time.Duration
-
 	arrayJSONData []string
 
 	lock       sync.Mutex
@@ -190,7 +188,6 @@ func (b *Requester) Run() (*Report, error) {
 
 // Stop stops the test
 func (b *Requester) Stop(reason StopReason) {
-	fmt.Println("stop():", reason)
 
 	b.stopCh <- true
 
@@ -228,7 +225,12 @@ func (b *Requester) Finish() *Report {
 		b.config.log.Debug("Finilizing report")
 	}
 
-	return b.reporter.Finalize(b.stopReason, total)
+	var r StopReason
+	b.lock.Lock()
+	r = b.stopReason
+	b.lock.Unlock()
+
+	return b.reporter.Finalize(r, total)
 }
 
 func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
@@ -345,49 +347,51 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 
 	go func() {
 		n := 0
+		wc := 0
 		for tv := range wct {
 			fmt.Println(tv)
 			if tv.Delta > 0 {
-				wID := "g" + strconv.Itoa(len(b.workers)+1) + "c" + strconv.Itoa(n)
+				for i := 0; i < tv.Delta; i++ {
+					wID := "g" + strconv.Itoa(wc) + "c" + strconv.Itoa(n)
 
-				fmt.Println("wid:", wID)
+					if len(b.config.name) > 0 {
+						wID = b.config.name + ":" + wID
+					}
 
-				if len(b.config.name) > 0 {
-					wID = b.config.name + ":" + wID
+					if b.config.hasLog {
+						b.config.log.Debugw("Creating worker with ID: "+wID,
+							"workerID", wID, "requests per worker")
+					}
+
+					w := Worker{
+						ticks:         ticks,
+						active:        true,
+						counter:       &counter,
+						stub:          b.stubs[n],
+						mtd:           b.mtd,
+						config:        b.config,
+						stopCh:        make(chan bool),
+						workerID:      wID,
+						arrayJSONData: b.arrayJSONData,
+					}
+
+					wc++ // increment worker id
+
+					n++ // increment connection counter
+
+					// wrap around connections if needed
+					if n == b.config.nConns {
+						n = 0
+					}
+
+					wm.Lock()
+					b.workers = append(b.workers, &w)
+					wm.Unlock()
+
+					go func() {
+						errC <- w.runWorker()
+					}()
 				}
-
-				if b.config.hasLog {
-					b.config.log.Debugw("Creating worker with ID: "+wID,
-						"workerID", wID, "requests per worker")
-				}
-
-				w := Worker{
-					ticks:         ticks,
-					active:        true,
-					counter:       &counter,
-					stub:          b.stubs[n],
-					mtd:           b.mtd,
-					config:        b.config,
-					stopCh:        make(chan bool),
-					workerID:      wID,
-					arrayJSONData: b.arrayJSONData,
-				}
-
-				n++ // increment connection counter
-
-				// wrap around connections if needed
-				if n == b.config.nConns {
-					n = 0
-				}
-
-				wm.Lock()
-				b.workers = append(b.workers, &w)
-				wm.Unlock()
-
-				go func() {
-					errC <- w.runWorker()
-				}()
-
 			} else {
 				nd := -1 * tv.Delta
 				wm.Lock()
@@ -409,8 +413,6 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 	}()
 
 	go func() {
-		fmt.Println("ticker goroutine")
-
 		defer close(ticks)
 		defer wt.Finish()
 
@@ -447,18 +449,12 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 		}
 	}()
 
-	fmt.Println("waiting for done.")
-
 	<-done
-
-	fmt.Println("done. waiting for multi err.")
 
 	var err error
 	for i := 0; i < len(b.workers); i++ {
 		err = multierr.Append(err, <-errC)
 	}
-
-	fmt.Println("done run: ", counter.Get())
 
 	return err
 }

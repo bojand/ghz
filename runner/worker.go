@@ -11,6 +11,7 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"go.uber.org/multierr"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/metadata"
@@ -37,20 +38,22 @@ type Worker struct {
 
 func (w *Worker) runWorker() error {
 	var err error
+	g := new(errgroup.Group)
 
 	for {
 		select {
 		case <-w.stopCh:
-			return err
+			if w.config.async {
+				return g.Wait()
+			} else {
+				return err
+			}
 		case <-w.ticks:
 			if w.config.async {
-				go func() {
-					rErr := w.makeRequest()
-					multierr.Append(err, rErr)
-				}()
+				g.Go(w.makeRequest)
 			} else {
 				rErr := w.makeRequest()
-				multierr.Append(err, rErr)
+				err = multierr.Append(err, rErr)
 			}
 		}
 	}
@@ -76,7 +79,7 @@ func (w *Worker) makeRequest() error {
 
 	// try the optimized path for JSON data for non client-streaming
 	if !w.config.binary && !w.mtd.IsClientStreaming() && len(w.arrayJSONData) > 0 {
-		indx := int((reqNum - 1) % int64(len(w.arrayJSONData))) // we want to start from inputs[0] so dec reqNum
+		indx := int(reqNum % int64(len(w.arrayJSONData))) // we want to start from inputs[0] so dec reqNum
 		if inputs, err = w.getMessages(ctd, []byte(w.arrayJSONData[indx])); err != nil {
 			return err
 		}
@@ -138,7 +141,7 @@ func (w *Worker) makeRequest() error {
 	if inputsLen == 0 {
 		return fmt.Errorf("no data provided for request")
 	}
-	inputIdx := int((reqNum - 1) % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
+	inputIdx := int(reqNum % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
 	unaryInput := inputs[inputIdx]
 
 	// RPC errors are handled via stats handler

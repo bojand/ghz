@@ -70,28 +70,25 @@ func (c *StepWorkerTicker) Run() {
 
 	go func() {
 		fmt.Println("step ticker start")
-		for {
-			select {
-			case <-ticker.C:
-				fmt.Println("worker ticker", time.Since(begin))
-				if c.LoadDuration > 0 && time.Since(begin) > c.LoadDuration {
-					fmt.Println("duration stop reached", wc, time.Since(begin))
+		for range ticker.C {
+			fmt.Println("worker ticker", time.Since(begin))
+			if c.LoadDuration > 0 && time.Since(begin) > c.LoadDuration {
+				fmt.Println("duration stop reached", wc, time.Since(begin))
 
-					if c.Stop > 0 {
-						c.C <- TickValue{Delta: int(c.Stop - uint(wc))}
-					}
-
-					done <- true
-					return
-				} else if (c.Stop > 0 && stepUp && wc >= int(c.Stop)) ||
-					(!stepUp && wc <= int(c.Stop)) || wc <= 0 {
-					fmt.Println("stop reached", wc, time.Since(begin))
-					done <- true
-					return
-				} else {
-					c.C <- TickValue{Delta: c.Step}
-					wc = wc + c.Step
+				if c.Stop > 0 {
+					c.C <- TickValue{Delta: int(c.Stop - uint(wc))}
 				}
+
+				done <- true
+				return
+			} else if (c.Stop > 0 && stepUp && wc >= int(c.Stop)) ||
+				(!stepUp && wc <= int(c.Stop)) || wc <= 0 {
+				fmt.Println("stop reached", wc, time.Since(begin))
+				done <- true
+				return
+			} else {
+				c.C <- TickValue{Delta: c.Step}
+				wc = wc + c.Step
 			}
 		}
 	}()

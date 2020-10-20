@@ -42,7 +42,7 @@ func (cp *ConstantPacer) String() string {
 // Pace determines the length of time to sleep until the next hit is sent.
 func (cp *ConstantPacer) Pace(elapsed time.Duration, hits uint64) (time.Duration, bool) {
 
-	if hits >= cp.Max {
+	if cp.Max > 0 && hits >= cp.Max {
 		return 0, true
 	}
 
@@ -156,7 +156,7 @@ func (p *StepPacer) initialize() {
 // Pace determines the length of time to sleep until the next hit is sent.
 func (p *StepPacer) Pace(elapsed time.Duration, hits uint64) (time.Duration, bool) {
 
-	if hits >= p.Max {
+	if p.Max > 0 && hits >= p.Max {
 		return 0, true
 	}
 
@@ -294,7 +294,7 @@ func (p *LinearPacer) initialize() {
 
 // Pace determines the length of time to sleep until the next hit is sent.
 func (p *LinearPacer) Pace(elapsed time.Duration, hits uint64) (time.Duration, bool) {
-	if hits >= p.Max {
+	if p.Max > 0 && hits >= p.Max {
 		return 0, true
 	}
 
