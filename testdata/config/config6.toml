@@ -10,8 +10,11 @@ max-duration = "60s"
 stream-interval = "25s"
 timeout = "30s"
 
-[metadata]
+[[metadata]]
 key_one = "value 1"
+
+[[metadata]]
+key_two = "value 2"
 
 [data]
 f_strings = [

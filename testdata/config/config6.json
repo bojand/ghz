@@ -10,10 +10,15 @@
     "max-duration":"60s",
     "stream-interval":"25s",
     "timeout":"30s",
-    "metadata": {
-        "key_one": "value 1"
-    },
-    "data": {
+    "metadata": [
+        {
+            "key_one": "value 1"
+        },
+        {
+            "key_two": "value 2"
+        }
+    ],
+    "data": {,
         "f_strings": [
             "123",
             "456"

@@ -3,6 +3,7 @@ package runner
 import (
 	"errors"
 	"path"
+	"reflect"
 	"strings"
 	"time"
 
@@ -56,46 +57,47 @@ func (d Duration) MarshalJSON() ([]byte, error) {
 
 // Config for the run.
 type Config struct {
-	Proto             string              `json:"proto" toml:"proto" yaml:"proto"`
-	Protoset          string              `json:"protoset" toml:"protoset" yaml:"protoset"`
-	Call              string              `json:"call" toml:"call" yaml:"call"`
-	RootCert          string              `json:"cacert" toml:"cacert" yaml:"cacert"`
-	Cert              string              `json:"cert" toml:"cert" yaml:"cert"`
-	Key               string              `json:"key" toml:"key" yaml:"key"`
-	SkipTLSVerify     bool                `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
-	SkipFirst         uint                `json:"skipFirst" toml:"skipFirst" yaml:"skipFirst"`
-	CName             string              `json:"cname" toml:"cname" yaml:"cname"`
-	Authority         string              `json:"authority" toml:"authority" yaml:"authority"`
-	Insecure          bool                `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
-	N                 uint                `json:"total" toml:"total" yaml:"total" default:"200"`
-	C                 uint                `json:"concurrency" toml:"concurrency" yaml:"concurrency" default:"50"`
-	Connections       uint                `json:"connections" toml:"connections" yaml:"connections" default:"1"`
-	QPS               uint                `json:"qps" toml:"qps" yaml:"qps"`
-	Z                 Duration            `json:"duration" toml:"duration" yaml:"duration"`
-	ZStop             string              `json:"duration-stop" toml:"duration-stop" yaml:"duration-stop" default:"close"`
-	X                 Duration            `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
-	Timeout           Duration            `json:"timeout" toml:"timeout" yaml:"timeout" default:"20s"`
-	Data              interface{}         `json:"data,omitempty" toml:"data,omitempty" yaml:"data,omitempty"`
-	DataPath          string              `json:"data-file" toml:"data-file" yaml:"data-file"`
-	BinData           []byte              `json:"-" toml:"-" yaml:"-"`
-	BinDataPath       string              `json:"binary-file" toml:"binary-file" yaml:"binary-file"`
-	Metadata          []map[string]string `json:"metadata,omitempty" toml:"metadata,omitempty" yaml:"metadata,omitempty"`
-	MetadataPath      string              `json:"metadata-file" toml:"metadata-file" yaml:"metadata-file"`
-	SI                Duration            `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
-	Output            string              `json:"output" toml:"output" yaml:"output"`
-	Format            string              `json:"format" toml:"format" yaml:"format" default:"summary"`
-	DialTimeout       Duration            `json:"connect-timeout" toml:"connect-timeout" yaml:"connect-timeout" default:"10s"`
-	KeepaliveTime     Duration            `json:"keepalive" toml:"keepalive" yaml:"keepalive"`
-	CPUs              uint                `json:"cpus" toml:"cpus" yaml:"cpus"`
-	ImportPaths       []string            `json:"import-paths,omitempty" toml:"import-paths,omitempty" yaml:"import-paths,omitempty"`
-	Name              string              `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
-	Tags              map[string]string   `json:"tags,omitempty" toml:"tags,omitempty" yaml:"tags,omitempty"`
-	ReflectMetadata   map[string]string   `json:"reflect-metadata,omitempty" toml:"reflect-metadata,omitempty" yaml:"reflect-metadata,omitempty"`
-	Debug             string              `json:"debug,omitempty" toml:"debug,omitempty" yaml:"debug,omitempty"`
-	Host              string              `json:"host" toml:"host" yaml:"host"`
-	EnableCompression bool                `json:"enable-compression,omitempty" toml:"enable-compression,omitempty" yaml:"enable-compression,omitempty"`
+	Proto             string            `json:"proto" toml:"proto" yaml:"proto"`
+	Protoset          string            `json:"protoset" toml:"protoset" yaml:"protoset"`
+	Call              string            `json:"call" toml:"call" yaml:"call"`
+	RootCert          string            `json:"cacert" toml:"cacert" yaml:"cacert"`
+	Cert              string            `json:"cert" toml:"cert" yaml:"cert"`
+	Key               string            `json:"key" toml:"key" yaml:"key"`
+	SkipTLSVerify     bool              `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
+	SkipFirst         uint              `json:"skipFirst" toml:"skipFirst" yaml:"skipFirst"`
+	CName             string            `json:"cname" toml:"cname" yaml:"cname"`
+	Authority         string            `json:"authority" toml:"authority" yaml:"authority"`
+	Insecure          bool              `json:"insecure,omitempty" toml:"insecure,omitempty" yaml:"insecure,omitempty"`
+	N                 uint              `json:"total" toml:"total" yaml:"total" default:"200"`
+	C                 uint              `json:"concurrency" toml:"concurrency" yaml:"concurrency" default:"50"`
+	Connections       uint              `json:"connections" toml:"connections" yaml:"connections" default:"1"`
+	QPS               uint              `json:"qps" toml:"qps" yaml:"qps"`
+	Z                 Duration          `json:"duration" toml:"duration" yaml:"duration"`
+	ZStop             string            `json:"duration-stop" toml:"duration-stop" yaml:"duration-stop" default:"close"`
+	X                 Duration          `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
+	Timeout           Duration          `json:"timeout" toml:"timeout" yaml:"timeout" default:"20s"`
+	Data              interface{}       `json:"data,omitempty" toml:"data,omitempty" yaml:"data,omitempty"`
+	DataPath          string            `json:"data-file" toml:"data-file" yaml:"data-file"`
+	BinData           []byte            `json:"-" toml:"-" yaml:"-"`
+	BinDataPath       string            `json:"binary-file" toml:"binary-file" yaml:"binary-file"`
+	Metadata          interface{}       `json:"metadata,omitempty" toml:"metadata,omitempty" yaml:"metadata,omitempty"`
+	MetadataPath      string            `json:"metadata-file" toml:"metadata-file" yaml:"metadata-file"`
+	SI                Duration          `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
+	Output            string            `json:"output" toml:"output" yaml:"output"`
+	Format            string            `json:"format" toml:"format" yaml:"format" default:"summary"`
+	DialTimeout       Duration          `json:"connect-timeout" toml:"connect-timeout" yaml:"connect-timeout" default:"10s"`
+	KeepaliveTime     Duration          `json:"keepalive" toml:"keepalive" yaml:"keepalive"`
+	CPUs              uint              `json:"cpus" toml:"cpus" yaml:"cpus"`
+	ImportPaths       []string          `json:"import-paths,omitempty" toml:"import-paths,omitempty" yaml:"import-paths,omitempty"`
+	Name              string            `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
+	Tags              map[string]string `json:"tags,omitempty" toml:"tags,omitempty" yaml:"tags,omitempty"`
+	ReflectMetadata   map[string]string `json:"reflect-metadata,omitempty" toml:"reflect-metadata,omitempty" yaml:"reflect-metadata,omitempty"`
+	Debug             string            `json:"debug,omitempty" toml:"debug,omitempty" yaml:"debug,omitempty"`
+	Host              string            `json:"host" toml:"host" yaml:"host"`
+	EnableCompression bool              `json:"enable-compression,omitempty" toml:"enable-compression,omitempty" yaml:"enable-compression,omitempty"`
 }
 
+// Ensure that the data field value is either a map or an array of map items
 func checkData(data interface{}) error {
 	_, isObjData := data.(map[string]interface{})
 	if !isObjData {
@@ -118,6 +120,28 @@ func checkData(data interface{}) error {
 	return nil
 }
 
+// Ensure that the metadata field value is either a map or an array of map items
+func checkMetadata(metadata interface{}) error {
+	_, isObjData := metadata.(map[string]interface{})
+	if !isObjData {
+		arrData, isArrData := metadata.([]map[string]interface{})
+		if !isArrData {
+			return errors.New("Unsupported type for Metadata")
+		}
+		if len(arrData) == 0 {
+			return errors.New("Metadata array must not be empty")
+		}
+		for _, elem := range arrData {
+			elemType := reflect.ValueOf(elem).Kind()
+			if elemType != reflect.Map {
+				return errors.New("Metadata array contains unsupported type")
+			}
+		}
+	}
+
+	return nil
+}
+
 // LoadConfig loads the config from a file
 func LoadConfig(p string, c *Config) error {
 	err := configor.Load(c, p)
@@ -125,6 +149,8 @@ func LoadConfig(p string, c *Config) error {
 		return err
 	}
 
+	// Process data field - we support two notations for this field - either an object or
+	// an array of objects so we do the conversion here
 	if c.Data != nil {
 		ext := path.Ext(p)
 		if strings.EqualFold(ext, ".yaml") || strings.EqualFold(ext, ".yml") {
@@ -146,6 +172,62 @@ func LoadConfig(p string, c *Config) error {
 		}
 
 		err := checkData(c.Data)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Process metadata field - we support two notations for this field - either an object or
+	// an array of objects so we do the conversion here
+	if c.Metadata != nil {
+		ext := path.Ext(p)
+		if strings.EqualFold(ext, ".yaml") || strings.EqualFold(ext, ".yml") {
+			// Ensure that keys are of a string type and cast them
+			objData, isObjData2 := c.Metadata.(map[interface{}]interface{})
+			if isObjData2 {
+				nd := make(map[string]interface{})
+				for k, v := range objData {
+					sk, isString := k.(string)
+					if !isString {
+						return errors.New("Data key must string")
+					}
+					if len(sk) > 0 {
+						nd[sk] = v
+					}
+				}
+
+				c.Metadata = nd
+			} else {
+				// TODO: Refactor this into utility function
+				arrData, isArray := c.Metadata.([]interface{})
+
+				if isArray {
+					var array []map[string]interface{}
+					for _, item := range arrData {
+						objData3, isObjData3 := item.(map[interface{}]interface{})
+						newItem := make(map[string]interface{})
+
+						if isObjData3 {
+							for k, v := range objData3 {
+								sk, isString := k.(string)
+								if !isString {
+									return errors.New("Data key must string")
+								}
+								if len(sk) > 0 {
+									newItem[sk] = v
+								}
+							}
+
+							array = append(array, newItem)
+						}
+					}
+
+					c.Metadata = array
+				}
+			}
+		}
+
+		err := checkMetadata(c.Metadata)
 		if err != nil {
 			return err
 		}
