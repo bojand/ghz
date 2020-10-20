@@ -267,7 +267,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 4, c.cpus)
 		assert.Equal(t, "asdf", c.name)
 		assert.Equal(t, `{"name":"bob","age":11,"fruits":["apple","peach","pear"]}`, string(c.data))
-		assert.Equal(t, `{"request-id":"123","token":"foobar"}`, string(c.metadata))
+		assert.Equal(t, `[{"request-id":"123","token":"foobar"}]`, string(c.metadata))
 		assert.Equal(t, `{"created by":"joe developer","env":"staging"}`, string(c.tags))
 		assert.Equal(t, "testdata/data.proto", string(c.proto))
 		assert.Equal(t, "", string(c.protoset))
