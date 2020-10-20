@@ -391,7 +391,7 @@ func WithMetadataFromJSON(md string) Option {
 // 	md["token"] = "foobar"
 // 	md["request-id"] = "123"
 // 	WithMetadata(&md)
-func WithMetadata(md map[string]string) Option {
+func WithMetadata(md []map[string]string) Option {
 	return func(o *RunConfig) error {
 		mdJSON, err := json.Marshal(md)
 		if err != nil {

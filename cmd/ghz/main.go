@@ -315,11 +315,27 @@ func createConfigFromArgs(cfg *runner.Config) error {
 		binaryData = b
 	}
 
-	var metadata map[string]string
+	var metadata []map[string]string
+	var metadataMap map[string]string
+
 	*md = strings.TrimSpace(*md)
 	if *md != "" {
-		if err := json.Unmarshal([]byte(*md), &metadata); err != nil {
-			return fmt.Errorf("Error unmarshaling metadata '%v': %v", *md, err.Error())
+		// For backward compatibility reasons we support both approaches - specifying an array
+		// with multiple object items and specifying a single object
+
+		// 1. First try de-serializing it into an object
+		if err := json.Unmarshal([]byte(*md), &metadataMap); err != nil {
+			// 2. If that  fails, try to de-serialize it into an array
+			// NOTE: We could also simply check if string begins with [ or {, but that approach is
+			// not 100% robust
+
+			if err := json.Unmarshal([]byte(*md), &metadata); err != nil {
+				return fmt.Errorf("Error unmarshaling metadata '%v': %v", *md, err.Error())
+			}
+		}
+
+		if metadataMap != nil {
+			metadata = append(metadata, metadataMap)
 		}
 	}
 

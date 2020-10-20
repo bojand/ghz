@@ -82,18 +82,24 @@ func (w *Worker) makeRequest() error {
 		}
 	}
 
-	mdMap, err := ctd.executeMetadata(string(w.config.metadata))
+	mdArray, err := ctd.executeMetadataArray(string(w.config.metadata))
 	if err != nil {
 		return err
 	}
 
-	var reqMD *metadata.MD
-	if len(mdMap) > 0 {
-		md := metadata.New(mdMap)
-		reqMD = &md
+	var reqMDs []metadata.MD
+
+	if len(mdArray) > 0 {
+		for _, mdItem := range mdArray {
+			reqMDs = append(reqMDs, metadata.New(mdItem))
+		}
 	} else {
-		reqMD = &metadata.MD{}
+		reqMDs = append(reqMDs, metadata.MD{})
 	}
+
+	metadatasLen := len(reqMDs)
+	metadataIdx := int((reqNum - 1) % int64(metadatasLen))
+	reqMD := &reqMDs[metadataIdx]
 
 	if w.config.enableCompression {
 		reqMD.Append("grpc-accept-encoding", gzip.Name)
@@ -158,7 +164,7 @@ func (w *Worker) makeRequest() error {
 			if w.config.hasLog {
 				w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", callType,
 					"call", w.mtd.GetFullyQualifiedName(),
-					"input", inputs, "metadata", reqMD,
+					"input", inputs[inputIdx], "metadata", reqMD,
 					"response", res, "error", resErr)
 			}
 		}
