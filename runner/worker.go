@@ -78,7 +78,6 @@ func (w *Worker) Stop() {
 }
 
 func (w *Worker) makeRequest(tv TickValue) error {
-	// fmt.Println("wid:", w.workerID, tv.instant.String(), tv.reqNumber)
 	reqNum := int64(tv.reqNumber)
 
 	ctd := newCallTemplateData(w.mtd, w.config.funcs, w.workerID, reqNum)

@@ -1,7 +1,6 @@
 package load
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -69,12 +68,8 @@ func (c *StepWorkerTicker) Run() {
 	c.C <- TickValue{Delta: int(c.Start)}
 
 	go func() {
-		fmt.Println("step ticker start")
 		for range ticker.C {
-			fmt.Println("worker ticker", time.Since(begin))
 			if c.LoadDuration > 0 && time.Since(begin) > c.LoadDuration {
-				fmt.Println("duration stop reached", wc, time.Since(begin))
-
 				if c.Stop > 0 {
 					c.C <- TickValue{Delta: int(c.Stop - uint(wc))}
 				}
@@ -83,7 +78,6 @@ func (c *StepWorkerTicker) Run() {
 				return
 			} else if (c.Stop > 0 && stepUp && wc >= int(c.Stop)) ||
 				(!stepUp && wc <= int(c.Stop)) || wc <= 0 {
-				fmt.Println("stop reached", wc, time.Since(begin))
 				done <- true
 				return
 			} else {

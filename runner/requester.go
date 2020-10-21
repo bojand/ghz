@@ -337,7 +337,6 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 
 	// worker control ticker goroutine
 	go func() {
-		fmt.Println("worker ticker goroutine")
 		wt.Run()
 	}()
 
@@ -350,7 +349,10 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 		n := 0
 		wc := 0
 		for tv := range wct {
-			fmt.Println(tv)
+			if b.config.hasLog {
+				b.config.log.Debugw("Worker ticker.", "delta", tv.Delta)
+			}
+
 			if tv.Delta > 0 {
 				for i := 0; i < tv.Delta; i++ {
 					wID := "g" + strconv.Itoa(wc) + "c" + strconv.Itoa(n)
@@ -431,7 +433,9 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 			wait, stop := p.Pace(time.Since(began), counter.Get())
 
 			if stop {
-				fmt.Println("stop")
+				if b.config.hasLog {
+					b.config.log.Debugw("Received stop from pacer.")
+				}
 				done <- struct{}{}
 				return
 			}
@@ -444,7 +448,9 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 			case ticks <- TickValue{instant: time.Now(), reqNumber: counter.Inc() - 1}:
 				continue
 			case <-b.stopCh:
-				fmt.Println("stop. count:", counter.Get())
+				if b.config.hasLog {
+					b.config.log.Debugw("Signal received from stop channel.", "count", counter.Get())
+				}
 				done <- struct{}{}
 				return
 			}
