@@ -78,11 +78,11 @@ var (
 
 	// Run
 	isAsyncSet = false
-	async      = kingpin.Flag("async", "Make async requests.").
+	async      = kingpin.Flag("async", "Make requests asynchronous as soon as possible. Does not wait for request to finish before sending next one.").
 			Default("false").IsSetByUser(&isAsyncSet).Bool()
 
 	isQSet = false
-	q      = kingpin.Flag("qps", "Queries per second (QPS) rate limit for constant load. Default is no rate limit.").
+	q      = kingpin.Flag("qps", "Queries per second (QPS) rate limit for constant load schedule. Default is no rate limit.").
 		Default("0").Short('q').IsSetByUser(&isQSet).Uint()
 
 	isScheduleSet = false
@@ -90,7 +90,7 @@ var (
 			Default("const").IsSetByUser(&isScheduleSet).String()
 
 	isLoadStartSet = false
-	loadStart      = kingpin.Flag("load-start", "Specifies the load start value.").
+	loadStart      = kingpin.Flag("load-start", "Specifies the qps load start value for step or line schedules.").
 			Default("0").IsSetByUser(&isLoadStartSet).Uint()
 
 	isLoadStepSet = false
@@ -98,7 +98,7 @@ var (
 			Default("0").IsSetByUser(&isLoadStepSet).Int()
 
 	isLoadEndSet = false
-	loadEnd      = kingpin.Flag("load-end", "Specifies the load end value.").
+	loadEnd      = kingpin.Flag("load-end", "Specifies the load end value for step or line load schedules.").
 			Default("0").IsSetByUser(&isLoadEndSet).Uint()
 
 	isLoadStepDurSet = false
@@ -106,7 +106,7 @@ var (
 				Default("0").IsSetByUser(&isLoadStepDurSet).Duration()
 
 	isLoadMaxDurSet = false
-	loadMaxDuration = kingpin.Flag("load-max-duration", "Specifies the max load duration value for step or line.").
+	loadMaxDuration = kingpin.Flag("load-max-duration", "Specifies the max load duration value for step or line load schedule.").
 			Default("0").IsSetByUser(&isLoadMaxDurSet).Duration()
 
 	// Concurrency
@@ -119,15 +119,15 @@ var (
 			Default("const").IsSetByUser(&isCScheduleSet).String()
 
 	isCMinSet = false
-	cmin      = kingpin.Flag("concurrency-min", "Concurrency minimum / start value for step and line schedules.").
+	cmin      = kingpin.Flag("concurrency-min", "Concurrency minimum / start value for step and line concurrency schedules.").
 			Default("0").IsSetByUser(&isCMinSet).Uint()
 
 	isCMaxSet = false
-	cmax      = kingpin.Flag("concurrency-max", "Concurrency maximum / end value for step and line schedules.").
+	cmax      = kingpin.Flag("concurrency-max", "Concurrency maximum / end value for step and line concurrency schedules.").
 			Default("0").IsSetByUser(&isCMaxSet).Uint()
 
 	isCStepSet = false
-	cstep      = kingpin.Flag("concurrency-step", "Concurrency step / slope value for step and line schedules.").
+	cstep      = kingpin.Flag("concurrency-step", "Concurrency step / slope value for step and line concurrency schedules.").
 			Default("1").IsSetByUser(&isCStepSet).Int()
 
 	isCStepDurSet = false

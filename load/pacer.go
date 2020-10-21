@@ -36,7 +36,7 @@ type ConstantPacer struct {
 // String returns a pretty-printed description of the ConstantPacer's behaviour:
 //   ConstantPacer{Freq: 1} => Constant{1 hits/1s}
 func (cp *ConstantPacer) String() string {
-	return fmt.Sprintf("Constant{%d hits/%f}", cp.Freq, nano)
+	return fmt.Sprintf("Constant{%d hits/1s}", cp.Freq)
 }
 
 // Pace determines the length of time to sleep until the next hit is sent.
@@ -257,6 +257,12 @@ func (p *StepPacer) hits(t time.Duration) float64 {
 	return s + c
 }
 
+// String returns a pretty-printed description of the StepPacer's behaviour:
+//   StepPacer{Step: 1, StepDuration: 5s} => Step{1 hits/5s}
+func (p *StepPacer) String() string {
+	return fmt.Sprintf("Step{%d hits/%s}", p.Step, p.StepDuration.String())
+}
+
 // LinearPacer paces an attack by starting at a given request rate
 // and increasing linearly with the given slope.
 type LinearPacer struct {
@@ -319,4 +325,10 @@ func (p *LinearPacer) hits(t time.Duration) float64 {
 	p.initialize()
 
 	return p.sp.hits(t)
+}
+
+// String returns a pretty-printed description of the LinearPacer's behaviour:
+//   LinearPacer{Slope: 1} => Linear{1 hits/1s}
+func (p *LinearPacer) String() string {
+	return fmt.Sprintf("Linear{%d hits/1s}", p.Slope)
 }
