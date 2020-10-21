@@ -8,6 +8,7 @@ import (
 	"time"
 
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/stats"
 )
 
@@ -36,6 +37,7 @@ type Greeter struct {
 	mutex      *sync.RWMutex
 	callCounts map[CallType]int
 	calls      map[CallType][][]*HelloRequest
+	metadata   map[CallType][][]metadata.MD
 }
 
 func randomSleep() {
@@ -49,22 +51,32 @@ func (s *Greeter) recordCall(ct CallType) int {
 
 	s.callCounts[ct]++
 	var messages []*HelloRequest
+	var metadataItems []metadata.MD
 	s.calls[ct] = append(s.calls[ct], messages)
+	s.metadata[ct] = append(s.metadata[ct], metadataItems)
 
 	return len(s.calls[ct]) - 1
 }
 
-func (s *Greeter) recordMessage(ct CallType, callIdx int, msg *HelloRequest) {
+func (s *Greeter) recordMessageAndMetadata(ct CallType, callIdx int, msg *HelloRequest, ctx context.Context) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	s.calls[ct][callIdx] = append(s.calls[ct][callIdx], msg)
+
+	var md metadata.MD
+
+	if ctx != nil {
+		md, _ = metadata.FromIncomingContext(ctx)
+	}
+
+	s.metadata[ct][callIdx] = append(s.metadata[ct][callIdx], md)
 }
 
 // SayHello implements helloworld.GreeterServer
 func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, error) {
 	callIdx := s.recordCall(Unary)
-	s.recordMessage(Unary, callIdx, in)
+	s.recordMessageAndMetadata(Unary, callIdx, in, ctx)
 
 	randomSleep()
 
@@ -74,7 +86,7 @@ func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, 
 // SayHellos lists all hellos
 func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) error {
 	callIdx := s.recordCall(ServerStream)
-	s.recordMessage(ServerStream, callIdx, req)
+	s.recordMessageAndMetadata(ServerStream, callIdx, req, nil)
 
 	randomSleep()
 
@@ -104,7 +116,7 @@ func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 		if err != nil {
 			return err
 		}
-		s.recordMessage(ClientStream, callIdx, in)
+		s.recordMessageAndMetadata(ClientStream, callIdx, in, nil)
 		msgCount++
 	}
 }
@@ -124,7 +136,7 @@ func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 			return err
 		}
 
-		s.recordMessage(Bidi, callIdx, in)
+		s.recordMessageAndMetadata(Bidi, callIdx, in, nil)
 		msg := "Hello " + in.Name
 		if err := stream.Send(&HelloReply{Message: msg}); err != nil {
 			return err
@@ -147,6 +159,12 @@ func (s *Greeter) ResetCounters() {
 	s.calls[ServerStream] = make([][]*HelloRequest, 0)
 	s.calls[ClientStream] = make([][]*HelloRequest, 0)
 	s.calls[Bidi] = make([][]*HelloRequest, 0)
+
+	s.metadata = make(map[CallType][][]metadata.MD)
+	s.metadata[Unary] = make([][]metadata.MD, 0)
+	s.metadata[ServerStream] = make([][]metadata.MD, 0)
+	s.metadata[ClientStream] = make([][]metadata.MD, 0)
+	s.metadata[Bidi] = make([][]metadata.MD, 0)
 
 	s.mutex.Unlock()
 
@@ -172,6 +190,18 @@ func (s *Greeter) GetCount(key CallType) int {
 func (s *Greeter) GetCalls(key CallType) [][]*HelloRequest {
 	s.mutex.Lock()
 	val, ok := s.calls[key]
+	s.mutex.Unlock()
+
+	if ok {
+		return val
+	}
+	return nil
+}
+
+// GetMetadata gets the received metadata for the specific call type
+func (s *Greeter) GetMetadata(key CallType) [][]metadata.MD {
+	s.mutex.Lock()
+	val, ok := s.metadata[key]
 	s.mutex.Unlock()
 
 	if ok {
