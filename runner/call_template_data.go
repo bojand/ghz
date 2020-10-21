@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"math/rand"
+	"strings"
 	"text/template"
 	"time"
 
@@ -102,7 +103,7 @@ func (td *callTemplateData) executeData(data string) ([]byte, error) {
 }
 
 func (td *callTemplateData) executeMetadata(metadata string) (map[string]string, error) {
-	var mdMap map[string]string
+	var md map[string]string
 
 	if len(metadata) > 0 {
 		input := []byte(metadata)
@@ -111,13 +112,40 @@ func (td *callTemplateData) executeMetadata(metadata string) (map[string]string,
 			input = tpl.Bytes()
 		}
 
-		err = json.Unmarshal(input, &mdMap)
+		err = json.Unmarshal(input, &md)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return mdMap, nil
+	return md, nil
+}
+
+// Same as executeMetadata, but this method ensures that the input metadata JSON string is always
+// an array. If the input is an object, but not an array, it's converted to an array.
+func (td *callTemplateData) executeMetadataArray(metadata string) ([]map[string]string, error) {
+	var mdArray []map[string]string
+	var metadataSanitized = strings.TrimSpace(metadata)
+
+	// If the input is an object and not an array, we ensure we always work with an array
+	if !strings.HasPrefix(metadataSanitized, "[") && !strings.HasSuffix(metadataSanitized, "]") {
+		metadata = "[" + metadataSanitized + "]"
+	}
+
+	if len(metadata) > 0 {
+		input := []byte(metadata)
+		tpl, err := td.execute(metadata)
+		if err == nil {
+			input = tpl.Bytes()
+		}
+
+		err = json.Unmarshal(input, &mdArray)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return mdArray, nil
 }
 
 func newUUID() string {

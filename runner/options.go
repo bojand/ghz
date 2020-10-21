@@ -386,14 +386,30 @@ func WithMetadataFromJSON(md string) Option {
 	}
 }
 
-// WithMetadata specifies the metadata to be used as a map
+// WithMetadata specifies metadata as generic data which can either be an object
+// or an array of objects
+//
+// For example:
+//
 // 	md := make(map[string]string)
 // 	md["token"] = "foobar"
 // 	md["request-id"] = "123"
 // 	WithMetadata(&md)
-func WithMetadata(md map[string]string) Option {
+//
+// Or:
+//
+// var mdArray []map[string]string
+//
+// 	md := make(map[string]string)
+// 	md["token"] = "foobar"
+// 	md["request-id"] = "123"
+//
+// mdArray = append(mdArray, md)
+//
+func WithMetadata(md interface{}) Option {
 	return func(o *RunConfig) error {
 		mdJSON, err := json.Marshal(md)
+
 		if err != nil {
 			return err
 		}

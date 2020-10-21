@@ -402,7 +402,7 @@ func TestRunUnary(t *testing.T) {
 		assert.Equal(t, 5, connCount)
 	})
 
-	t.Run("test round-robin c = 2", func(t *testing.T) {
+	t.Run("test data and metadata round-robin c = 2", func(t *testing.T) {
 		gs.ResetCounters()
 
 		data := make([]map[string]interface{}, 3)
@@ -421,6 +421,7 @@ func TestRunUnary(t *testing.T) {
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithInsecure(true),
 			WithData(data),
+			WithMetadataFromJSON(`[{"index": "1 one"}, {"index": "2 two"}, {"index": "3 three"}]`),
 		)
 
 		assert.NoError(t, err)
@@ -429,6 +430,24 @@ func TestRunUnary(t *testing.T) {
 		count := gs.GetCount(callType)
 		assert.Equal(t, 6, count)
 
+		// Verify metadata
+
+		// We specify 3 unique metadata items over which the requester should round-robin
+		// for all of the 6 requests. This means we should see each unique item twice.
+		metadata := gs.GetMetadata(callType)
+		assert.Equal(t, len(metadata), 6)
+
+		seenMetadataIndexValues := make([]string, 0)
+
+		for _, metadataItem := range metadata {
+			seenMetadataIndexValues = append(seenMetadataIndexValues, metadataItem[0]["index"][0])
+		}
+
+		// we don't expect to have the same order of elements since requests are concurrent
+		assert.ElementsMatch(t, []string{"1 one", "2 two", "3 three", "1 one", "2 two", "3 three"},
+			seenMetadataIndexValues)
+
+		// Verify actual payload / messages
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
 		assert.Len(t, calls, 6)
@@ -462,6 +481,7 @@ func TestRunUnary(t *testing.T) {
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithInsecure(true),
 			WithData(data),
+			WithMetadataFromJSON(`{"index": "1 one"}`),
 		)
 
 		assert.NoError(t, err)
@@ -470,6 +490,21 @@ func TestRunUnary(t *testing.T) {
 		count := gs.GetCount(callType)
 		assert.Equal(t, 6, count)
 
+		// Verify metadata
+		// We specify a single item for metadata which should be used for all the requests
+		metadata := gs.GetMetadata(callType)
+		assert.Equal(t, len(metadata), 6)
+
+		seenMetadataIndexValues := make([]string, 0)
+
+		for _, metadataItem := range metadata {
+			seenMetadataIndexValues = append(seenMetadataIndexValues, metadataItem[0]["index"][0])
+		}
+
+		assert.ElementsMatch(t, []string{"1 one", "1 one", "1 one", "1 one", "1 one", "1 one"},
+			seenMetadataIndexValues)
+
+		// Verify actual payload / messages
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
 		assert.Len(t, calls, 6)

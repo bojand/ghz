@@ -84,7 +84,7 @@ Flags:
   -D, --data-file=             File path for call data JSON file. Examples: /home/user/file.json or ./file.json.
   -b, --binary                 The call data comes as serialized binary message or multiple count-prefixed messages read from stdin.
   -B, --binary-file=           File path for the call data as serialized binary message or multiple count-prefixed messages.
-  -m, --metadata=              Request metadata as stringified JSON.
+  -m, --metadata=              Request metadata as stringified JSON. Either as an object or an array of objects.
   -M, --metadata-file=         File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
       --stream-interval=0      Interval for stream requests between message sends.
       --reflect-metadata=      Reflect metadata as stringified JSON used only for reflection request.
