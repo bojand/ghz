@@ -123,7 +123,7 @@ var (
 				Short('B').PlaceHolder(" ").IsSetByUser(&isBinDataPathSet).String()
 
 	isMDSet = false
-	md      = kingpin.Flag("metadata", "Request metadata as stringified JSON.").
+	md      = kingpin.Flag("metadata", "Request metadata as stringified JSON.  Either as an object or an array of objects.").
 		Short('m').PlaceHolder(" ").IsSetByUser(&isMDSet).String()
 
 	isMDPathSet = false

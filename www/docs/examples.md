@@ -87,6 +87,17 @@ ghz --insecure \
   0.0.0.0:50051
 ```
 
+Round-robin of messages and metadata for unary call:
+
+```sh
+ghz --insecure \
+  --proto ./greeter.proto \
+  --call helloworld.Greeter.SayHello \
+  -d '[{"name":"Joe"},{"name":"Bob"}]' \
+  -m '[{"item one":"value 1"},{"item two":"value 2"}]' \
+  0.0.0.0:50051
+```
+
 <a name="custom-parameters">
 ### Custom parameters
 
