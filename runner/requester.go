@@ -175,10 +175,11 @@ func (b *Requester) Run() (*Report, error) {
 		b.reporter.Run()
 	}()
 
-	wt := load.ConstWorkerTicker{N: uint(b.config.c), C: make(chan load.TickValue)}
-	pacer := load.ConstantPacer{Freq: uint64(b.config.qps), Max: uint64(b.config.n)}
+	wt := createWorkerTicker(b.config)
 
-	err = b.runWorkers(&wt, &pacer)
+	p := createPacer(b.config)
+
+	err = b.runWorkers(wt, p)
 
 	report := b.Finish()
 	b.closeClientConns()
@@ -342,7 +343,7 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 
 	errC := make(chan error, b.config.c)
 	done := make(chan struct{})
-	ticks := make(chan struct{})
+	ticks := make(chan TickValue)
 	counter := Counter{}
 
 	go func() {
@@ -366,7 +367,6 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 					w := Worker{
 						ticks:         ticks,
 						active:        true,
-						counter:       &counter,
 						stub:          b.stubs[n],
 						mtd:           b.mtd,
 						config:        b.config,
@@ -436,11 +436,13 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 				return
 			}
 
-			time.Sleep(wait)
+			if wait > 0 {
+				time.Sleep(wait)
+			}
 
 			select {
-			case ticks <- struct{}{}:
-				counter.Inc()
+			case ticks <- TickValue{instant: time.Now(), reqNumber: counter.Inc() - 1}:
+				continue
 			case <-b.stopCh:
 				fmt.Println("stop. count:", counter.Get())
 				done <- struct{}{}
@@ -464,4 +466,58 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func createWorkerTicker(config *RunConfig) load.WorkerTicker {
+	var wt load.WorkerTicker
+	switch config.cSchedule {
+	case ScheduleLine:
+		wt = &load.LineWorkerTicker{
+			C:            make(chan load.TickValue),
+			Start:        config.cMin,
+			Slope:        config.cStep,
+			Stop:         config.cMax,
+			LoadDuration: config.cMaxDuration,
+		}
+	case ScheduleStep:
+		wt = &load.StepWorkerTicker{
+			C:            make(chan load.TickValue),
+			Start:        config.cMin,
+			Step:         config.cStep,
+			Stop:         config.cMax,
+			StepDuration: config.cStepDuration,
+			LoadDuration: config.cMaxDuration,
+		}
+	default:
+		wt = &load.ConstWorkerTicker{N: uint(config.c), C: make(chan load.TickValue)}
+	}
+
+	return wt
+}
+
+func createPacer(config *RunConfig) load.Pacer {
+	var p load.Pacer
+	switch config.loadSchedule {
+	case ScheduleLine:
+		p = &load.LinearPacer{
+			Start:        load.ConstantPacer{Freq: uint64(config.loadStart), Max: uint64(config.n)},
+			Slope:        int64(config.loadStep),
+			Stop:         load.ConstantPacer{Freq: uint64(config.loadEnd), Max: uint64(config.n)},
+			LoadDuration: config.loadDuration,
+			Max:          uint64(config.n),
+		}
+	case ScheduleStep:
+		p = &load.StepPacer{
+			Start:        load.ConstantPacer{Freq: uint64(config.loadStart), Max: uint64(config.n)},
+			Step:         int64(config.loadStep),
+			Stop:         load.ConstantPacer{Freq: uint64(config.loadEnd), Max: uint64(config.n)},
+			LoadDuration: config.loadDuration,
+			StepDuration: config.loadStepDuration,
+			Max:          uint64(config.n),
+		}
+	default:
+		p = &load.ConstantPacer{Freq: uint64(config.qps), Max: uint64(config.n)}
+	}
+
+	return p
 }

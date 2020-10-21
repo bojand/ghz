@@ -17,6 +17,12 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// TickValue is the tick value
+type TickValue struct {
+	instant   time.Time
+	reqNumber uint64
+}
+
 // Worker is used for doing a single stream of requests in parallel
 type Worker struct {
 	stub grpcdynamic.Stub
@@ -25,9 +31,8 @@ type Worker struct {
 	config   *RunConfig
 	workerID string
 	active   bool
-	counter  RequestCounter
 	stopCh   chan bool
-	ticks    <-chan struct{}
+	ticks    <-chan TickValue
 
 	// cached messages only for binary
 	cachedMessages []*dynamic.Message
@@ -45,14 +50,17 @@ func (w *Worker) runWorker() error {
 		case <-w.stopCh:
 			if w.config.async {
 				return g.Wait()
-			} else {
-				return err
 			}
-		case <-w.ticks:
+
+			return err
+
+		case tv := <-w.ticks:
 			if w.config.async {
-				g.Go(w.makeRequest)
+				g.Go(func() error {
+					return w.makeRequest(tv)
+				})
 			} else {
-				rErr := w.makeRequest()
+				rErr := w.makeRequest(tv)
 				err = multierr.Append(err, rErr)
 			}
 		}
@@ -69,8 +77,9 @@ func (w *Worker) Stop() {
 	w.stopCh <- true
 }
 
-func (w *Worker) makeRequest() error {
-	reqNum := int64(w.counter.Get())
+func (w *Worker) makeRequest(tv TickValue) error {
+	// fmt.Println("wid:", w.workerID, tv.instant.String(), tv.reqNumber)
+	reqNum := int64(tv.reqNumber)
 
 	ctd := newCallTemplateData(w.mtd, w.config.funcs, w.workerID, reqNum)
 

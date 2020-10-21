@@ -52,7 +52,7 @@ type RunConfig struct {
 	qps              int
 	loadStart        uint
 	loadEnd          uint
-	loadStep         uint
+	loadStep         int
 	loadSchedule     string
 	loadDuration     time.Duration
 	loadStepDuration time.Duration
@@ -61,7 +61,7 @@ type RunConfig struct {
 	c             int
 	cMin          uint
 	cMax          uint
-	cStep         uint
+	cStep         int
 	cSchedule     string
 	cMaxDuration  time.Duration
 	cStepDuration time.Duration
@@ -743,7 +743,7 @@ func WithLoadEnd(end uint) Option {
 
 // WithLoadStep specifies the load step
 // WithLoadStep(5)
-func WithLoadStep(step uint) Option {
+func WithLoadStep(step int) Option {
 	return func(o *RunConfig) error {
 		o.loadStep = step
 
@@ -813,7 +813,7 @@ func WithConcurrencyMax(max uint) Option {
 
 // WithConcurrencyStep specifies the concurrency step value or slope
 // WithConcurrencyStep(5)
-func WithConcurrencyStep(step uint) Option {
+func WithConcurrencyStep(step int) Option {
 	return func(o *RunConfig) error {
 		o.cStep = step
 
@@ -920,7 +920,7 @@ func fromConfig(cfg *Config) []Option {
 		WithLoadEnd(cfg.LoadEnd),
 		WithLoadDuration(time.Duration(cfg.LoadMaxDuration)),
 		WithAsync(cfg.Async),
-		WithConcurrencySchedule(cfg.LoadSchedule),
+		WithConcurrencySchedule(cfg.CSchedule),
 		WithConcurrencyMin(cfg.CMin),
 		WithConcurrencyMax(cfg.CMax),
 		WithConcurrencyStep(cfg.CStep),

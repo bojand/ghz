@@ -81,13 +81,13 @@ var (
 	async      = kingpin.Flag("async", "Make async requests.").
 			Default("false").IsSetByUser(&isAsyncSet).Bool()
 
-	isScheduleSet = false
-	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are const, step, or line. Default is const.").
-			Default("const").IsSetByUser(&isScheduleSet).String()
-
 	isQSet = false
 	q      = kingpin.Flag("qps", "Queries per second (QPS) rate limit for constant load. Default is no rate limit.").
 		Default("0").Short('q').IsSetByUser(&isQSet).Uint()
+
+	isScheduleSet = false
+	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are const, step, or line. Default is const.").
+			Default("const").IsSetByUser(&isScheduleSet).String()
 
 	isLoadStartSet = false
 	loadStart      = kingpin.Flag("load-start", "Specifies the load start value.").
@@ -95,7 +95,7 @@ var (
 
 	isLoadStepSet = false
 	loadStep      = kingpin.Flag("load-step", "Specifies the load step value or slope value.").
-			Default("0").IsSetByUser(&isLoadStepSet).Uint()
+			Default("0").IsSetByUser(&isLoadStepSet).Int()
 
 	isLoadEndSet = false
 	loadEnd      = kingpin.Flag("load-end", "Specifies the load end value.").
@@ -128,7 +128,7 @@ var (
 
 	isCStepSet = false
 	cstep      = kingpin.Flag("concurrency-step", "Concurrency step / slope value for step and line schedules.").
-			Default("1").IsSetByUser(&isCStepSet).Uint()
+			Default("1").IsSetByUser(&isCStepSet).Int()
 
 	isCStepDurSet = false
 	cStepDuration = kingpin.Flag("concurrency-step-duration", "Specifies the concurrency step duration value for step concurrency schedule.").
