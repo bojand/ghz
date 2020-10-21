@@ -70,8 +70,8 @@ type Config struct {
 	Async             bool              `json:"async,omitempty" toml:"async,omitempty" yaml:"async,omitempty"`
 	C                 uint              `json:"concurrency" toml:"concurrency" yaml:"concurrency" default:"50"`
 	CSchedule         string            `json:"concurrency-schedule" toml:"concurrency-schedule" yaml:"concurrency-schedule" default:"const"`
-	CMin              uint              `json:"concurrency-min" toml:"concurrency-min" yaml:"concurrency-min" default:"1"`
-	CMax              uint              `json:"concurrency-max" toml:"concurrency-max" yaml:"concurrency-max" default:"0"`
+	CStart            uint              `json:"concurrency-start" toml:"concurrency-start" yaml:"concurrency-start" default:"1"`
+	CEnd              uint              `json:"concurrency-end" toml:"concurrency-end" yaml:"concurrency-end" default:"0"`
 	CStep             int               `json:"concurrency-step" toml:"concurrency-step" yaml:"concurrency-step" default:"0"`
 	CStepDuration     Duration          `json:"concurrency-step-duration" toml:"concurrency-step-duration" yaml:"concurrency-step-duration" default:"0"`
 	CMaxDuration      Duration          `json:"concurrency-max-duration" toml:"concurrency-max-duration" yaml:"concurrency-max-duration" default:"0"`

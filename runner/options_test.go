@@ -521,7 +521,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			assert.Equal(t, uint(10), c.loadStart)
 			assert.Equal(t, uint(20), c.loadEnd)
 			assert.Equal(t, 20*time.Second, c.loadDuration)
-			assert.Equal(t, uint(5), c.loadStep)
+			assert.Equal(t, 5, c.loadStep)
 			assert.Equal(t, 5*time.Second, c.loadStepDuration)
 		})
 	})
@@ -552,7 +552,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			assert.Equal(t, uint(0), c.loadStart)
 			assert.Equal(t, uint(20), c.loadEnd)
 			assert.Equal(t, 20*time.Second, c.loadDuration)
-			assert.Equal(t, uint(2), c.loadStep)
+			assert.Equal(t, 2, c.loadStep)
 			assert.Equal(t, 1*time.Second, c.loadStepDuration)
 		})
 	})
@@ -572,19 +572,19 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithConcurrencySchedule(ScheduleStep),
 				WithConcurrencyStep(5),
-				WithConcurrencyMin(10),
+				WithConcurrencyStart(10),
 				WithConcurrencyDuration(20*time.Second),
 				WithConcurrencyStepDuration(5*time.Second),
-				WithConcurrencyMax(20),
+				WithConcurrencyEnd(20),
 			)
 
 			assert.NoError(t, err)
 
 			assert.Equal(t, ScheduleStep, c.cSchedule)
-			assert.Equal(t, uint(10), c.cMin)
-			assert.Equal(t, uint(20), c.cMax)
+			assert.Equal(t, uint(10), c.cStart)
+			assert.Equal(t, uint(20), c.cEnd)
 			assert.Equal(t, 20*time.Second, c.cMaxDuration)
-			assert.Equal(t, uint(5), c.cStep)
+			assert.Equal(t, 5, c.cStep)
 			assert.Equal(t, 5*time.Second, c.cStepDuration)
 		})
 	})
@@ -604,19 +604,19 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithConcurrencySchedule(ScheduleLine),
 				WithConcurrencyStep(2),
-				WithConcurrencyMin(5),
+				WithConcurrencyStart(5),
 				WithConcurrencyDuration(20*time.Second),
 				WithConcurrencyStepDuration(5*time.Second), // overwritten
-				WithConcurrencyMax(20),
+				WithConcurrencyEnd(20),
 			)
 
 			assert.NoError(t, err)
 
 			assert.Equal(t, ScheduleLine, c.cSchedule)
-			assert.Equal(t, uint(5), c.cMin)
-			assert.Equal(t, uint(20), c.cMax)
+			assert.Equal(t, uint(5), c.cStart)
+			assert.Equal(t, uint(20), c.cEnd)
 			assert.Equal(t, 20*time.Second, c.cMaxDuration)
-			assert.Equal(t, uint(2), c.cStep)
+			assert.Equal(t, 2, c.cStep)
 			assert.Equal(t, 1*time.Second, c.cStepDuration)
 		})
 	})

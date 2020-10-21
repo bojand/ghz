@@ -62,7 +62,7 @@ func TestConfig_Load(t *testing.T) {
 				DialTimeout:  Duration(10 * time.Second),
 				LoadSchedule: "const",
 				CSchedule:    "const",
-				CMin:         1,
+				CStart:       1,
 			},
 			true,
 		},

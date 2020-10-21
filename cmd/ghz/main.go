@@ -64,10 +64,6 @@ var (
 	skipVerify = kingpin.Flag("skipTLS", "Skip TLS client verification of the server's certificate chain and host name.").
 			Default("false").IsSetByUser(&isSkipSet).Bool()
 
-	isSkipFirstSet = false
-	skipFirst      = kingpin.Flag("skipFirst", "Skip the first X requests when doing the results tally.").
-			Default("0").IsSetByUser(&isSkipFirstSet).Uint()
-
 	isInsecSet = false
 	insecure   = kingpin.Flag("insecure", "Use plaintext and insecure connection.").
 			Default("false").IsSetByUser(&isInsecSet).Bool()
@@ -118,13 +114,13 @@ var (
 	cschdule       = kingpin.Flag("concurrency-schedule", "Concurrency change schedule. Options are const, step, or line. Default is const.").
 			Default("const").IsSetByUser(&isCScheduleSet).String()
 
-	isCMinSet = false
-	cmin      = kingpin.Flag("concurrency-min", "Concurrency minimum / start value for step and line concurrency schedules.").
-			Default("0").IsSetByUser(&isCMinSet).Uint()
+	isCStartSet = false
+	cStart      = kingpin.Flag("concurrency-start", "Concurrency start value for step and line concurrency schedules.").
+			Default("0").IsSetByUser(&isCStartSet).Uint()
 
-	isCMaxSet = false
-	cmax      = kingpin.Flag("concurrency-max", "Concurrency maximum / end value for step and line concurrency schedules.").
-			Default("0").IsSetByUser(&isCMaxSet).Uint()
+	isCEndSet = false
+	cEnd      = kingpin.Flag("concurrency-end", "Concurrency end value for step and line concurrency schedules.").
+			Default("0").IsSetByUser(&isCEndSet).Uint()
 
 	isCStepSet = false
 	cstep      = kingpin.Flag("concurrency-step", "Concurrency step / slope value for step and line concurrency schedules.").
@@ -200,6 +196,10 @@ var (
 	isFormatSet = false
 	format      = kingpin.Flag("format", "Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.").
 			Short('O').Default("summary").PlaceHolder(" ").IsSetByUser(&isFormatSet).Enum("summary", "csv", "json", "pretty", "html", "influx-summary", "influx-details")
+
+	isSkipFirstSet = false
+	skipFirst      = kingpin.Flag("skipFirst", "Skip the first X requests when doing the results tally.").
+			Default("0").IsSetByUser(&isSkipFirstSet).Uint()
 
 	// Connection
 	isConnSet = false
@@ -446,9 +446,9 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.LoadMaxDuration = runner.Duration(*loadMaxDuration)
 	cfg.Async = *async
 	cfg.CSchedule = *cschdule
-	cfg.CMin = *cmin
+	cfg.CStart = *cStart
 	cfg.CStep = *cstep
-	cfg.CMax = *cmax
+	cfg.CEnd = *cEnd
 	cfg.CStepDuration = runner.Duration(*cStepDuration)
 	cfg.CMaxDuration = runner.Duration(*cMaxDuration)
 
@@ -654,16 +654,16 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 		dest.CSchedule = src.CSchedule
 	}
 
-	if isCMinSet {
-		dest.CMin = src.CMin
+	if isCStartSet {
+		dest.CStart = src.CStart
 	}
 
 	if isCStepSet {
 		dest.CStep = src.CStep
 	}
 
-	if isCMaxSet {
-		dest.CMax = src.CMax
+	if isCEndSet {
+		dest.CEnd = src.CEnd
 	}
 
 	if isCStepDurSet {

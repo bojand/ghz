@@ -59,8 +59,8 @@ type RunConfig struct {
 
 	// concurrency
 	c             int
-	cMin          uint
-	cMax          uint
+	cStart        uint
+	cEnd          uint
 	cStep         int
 	cSchedule     string
 	cMaxDuration  time.Duration
@@ -655,17 +655,25 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 		if c.loadStep == 0 {
 			return nil, errors.New("invalid load step")
 		}
+
+		if c.loadSchedule == ScheduleStep && c.loadStepDuration == 0 {
+			return nil, errors.New("invalid load step duration")
+		}
 	}
 
 	if c.cSchedule == ScheduleStep || c.cSchedule == ScheduleLine {
-		if c.cMin == c.cMax {
-			return nil, errors.New("concurrency min start cannot equal concurrency max")
+		if c.cStart == c.cEnd {
+			return nil, errors.New("concurrency start start cannot equal concurrency end")
 		}
 
 		// step value for step schedule or
 		// slope for line schedule
 		if c.cStep == 0 {
 			return nil, errors.New("invalid concurrency step")
+		}
+
+		if c.cSchedule == ScheduleStep && c.cStepDuration == 0 {
+			return nil, errors.New("invalid concurrency step duration")
 		}
 	}
 
@@ -791,21 +799,21 @@ func WithConcurrencySchedule(schedule string) Option {
 	}
 }
 
-// WithConcurrencyMin specifies the concurrency minimum for line or step schedule
-// WithConcurrencyMin(5)
-func WithConcurrencyMin(min uint) Option {
+// WithConcurrencyStart specifies the concurrency start for line or step schedule
+// WithConcurrencyStart(5)
+func WithConcurrencyStart(v uint) Option {
 	return func(o *RunConfig) error {
-		o.cMin = min
+		o.cStart = v
 
 		return nil
 	}
 }
 
-// WithConcurrencyMax specifies the concurrency maximum value for line or step schedule
-// WithConcurrencyMax(25)
-func WithConcurrencyMax(max uint) Option {
+// WithConcurrencyEnd specifies the concurrency end value for line or step schedule
+// WithConcurrencyEnd(25)
+func WithConcurrencyEnd(v uint) Option {
 	return func(o *RunConfig) error {
-		o.cMax = max
+		o.cEnd = v
 
 		return nil
 	}
@@ -921,8 +929,8 @@ func fromConfig(cfg *Config) []Option {
 		WithLoadDuration(time.Duration(cfg.LoadMaxDuration)),
 		WithAsync(cfg.Async),
 		WithConcurrencySchedule(cfg.CSchedule),
-		WithConcurrencyMin(cfg.CMin),
-		WithConcurrencyMax(cfg.CMax),
+		WithConcurrencyStart(cfg.CStart),
+		WithConcurrencyEnd(cfg.CEnd),
 		WithConcurrencyStep(cfg.CStep),
 		WithConcurrencyStepDuration(time.Duration(cfg.CStepDuration)),
 		WithConcurrencyDuration(time.Duration(cfg.CMaxDuration)),
@@ -956,5 +964,6 @@ func fromConfig(cfg *Config) []Option {
 	if len(cfg.BinDataPath) > 0 {
 		options = append(options, WithBinaryDataFromFile(cfg.BinDataPath))
 	}
+
 	return options
 }
