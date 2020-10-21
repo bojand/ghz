@@ -315,7 +315,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 		binaryData = b
 	}
 
-	var metadata []map[string]string
+	var metadataArray []map[string]string
 	var metadataMap map[string]string
 
 	*md = strings.TrimSpace(*md)
@@ -325,17 +325,24 @@ func createConfigFromArgs(cfg *runner.Config) error {
 
 		// 1. First try de-serializing it into an object
 		if err := json.Unmarshal([]byte(*md), &metadataMap); err != nil {
+			if !strings.Contains(err.Error(), "cannot unmarshal array into Go value of type map") {
+				// Some other fatal error which we should immediately propagate instead of try to
+				// de-serializing input into an array of maps (e.g. unexpected end of JSON input,
+				//etc.)
+				return fmt.Errorf("Error unmarshaling metadata '%v': %v", *md, err.Error())
+			}
+
 			// 2. If that  fails, try to de-serialize it into an array
 			// NOTE: We could also simply check if string begins with [ or {, but that approach is
 			// not 100% robust
 
-			if err := json.Unmarshal([]byte(*md), &metadata); err != nil {
+			if err := json.Unmarshal([]byte(*md), &metadataArray); err != nil {
 				return fmt.Errorf("Error unmarshaling metadata '%v': %v", *md, err.Error())
 			}
 		}
 
 		if metadataMap != nil {
-			metadata = append(metadata, metadataMap)
+			metadataArray = append(metadataArray, metadataMap)
 		}
 	}
 
@@ -385,7 +392,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.DataPath = *dataPath
 	cfg.BinData = binaryData
 	cfg.BinDataPath = *binPath
-	cfg.Metadata = metadata
+	cfg.Metadata = metadataArray
 	cfg.MetadataPath = *mdPath
 	cfg.SI = runner.Duration(*si)
 	cfg.Output = *output
