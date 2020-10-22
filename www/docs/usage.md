@@ -21,9 +21,9 @@ Flags:
       --insecure               Use plaintext and insecure connection.
       --authority=             Value to be used as the :authority pseudo-header. Only works if -insecure is used.
       --async                  Make requests asynchronous as soon as possible. Does not wait for request to finish before sending next one.
-  -q, --qps=0                  Queries per second (QPS) rate limit for constant load schedule. Default is no rate limit.
+  -r, --rps=0                  Requests per second (RPS) rate limit for constant load schedule. Default is no rate limit.
       --load-schedule="const"  Specifies the load schedule. Options are const, step, or line. Default is const.
-      --load-start=0           Specifies the qps load start value for step or line schedules.
+      --load-start=0           Specifies the RPS load start value for step or line schedules.
       --load-step=0            Specifies the load step value or slope value.
       --load-end=0             Specifies the load end value for step or line load schedules.
       --load-step-duration=0   Specifies the load step duration value for step load schedule.

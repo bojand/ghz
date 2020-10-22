@@ -49,7 +49,7 @@ type RunConfig struct {
 	authority  string
 
 	// load
-	qps              int
+	rps              int
 	loadStart        uint
 	loadEnd          uint
 	loadStep         int
@@ -247,11 +247,11 @@ func WithConcurrency(c uint) Option {
 	}
 }
 
-// WithQPS specifies the QPS (queries per second) limit option
-//	WithQPS(10)
-func WithQPS(qps uint) Option {
+// WithRPS specifies the RPS (requests per second) limit option
+//	WithRPS(10)
+func WithRPS(v uint) Option {
 	return func(o *RunConfig) error {
-		o.qps = int(qps)
+		o.rps = int(v)
 
 		return nil
 	}
@@ -907,7 +907,7 @@ func fromConfig(cfg *Config) []Option {
 		WithAuthority(cfg.Authority),
 		WithConcurrency(cfg.C),
 		WithTotalRequests(cfg.N),
-		WithQPS(cfg.QPS),
+		WithRPS(cfg.RPS),
 		WithTimeout(time.Duration(cfg.Timeout)),
 		WithRunDuration(time.Duration(cfg.Z)),
 		WithDialTimeout(time.Duration(cfg.DialTimeout)),

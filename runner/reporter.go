@@ -39,7 +39,7 @@ type Options struct {
 	Insecure      bool          `json:"insecure"`
 	Total         uint          `json:"total,omitempty"`
 	Concurrency   uint          `json:"concurrency,omitempty"`
-	QPS           uint          `json:"qps,omitempty"`
+	RPS           uint          `json:"rps,omitempty"`
 	Connections   uint          `json:"connections,omitempty"`
 	Duration      time.Duration `json:"duration,omitempty"`
 	Timeout       time.Duration `json:"timeout,omitempty"`
@@ -190,7 +190,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		Authority:     r.config.authority,
 		Total:         uint(r.config.n),
 		Concurrency:   uint(r.config.c),
-		QPS:           uint(r.config.qps),
+		RPS:           uint(r.config.rps),
 		Connections:   uint(r.config.nConns),
 		Duration:      r.config.z,
 		Timeout:       r.config.timeout,

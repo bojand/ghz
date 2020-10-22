@@ -72,16 +72,16 @@ Value to be used as the `:authority` pseudo-header. Only works if `-insecure` is
 
 Make requests asynchronous as soon as possible. Does not wait for request to finish before sending next one.
 
-### `-q`, `--qps`
+### `-r`, `--rps`
 
-Rate limit in how many queries per second (QPS) we perform in total. Default is no rate limit. The total QPS will be distributed among all the workers as specified by concurrency options.
+Rate limit in how many requsts per second (RPS) we perform in total. Default is no rate limit. The total RPS will be distributed among all the workers as specified by concurrency options.
 
 ### `--load-schedule`
 
 Specifies the load schedule. Options are `const`, `step`, or `line`. Default is `const`.  
-With `const` load schedule we attempt to perform a constant QPS load as specified with the `q` option.  
-With `step` load schedule we do a step increase or decrease of QPS load as dictated by step load options: `load-start`, `load-step`, `load-end`, `load-step-duration`, and `load-max-duration`.
-With `line` load schedule we do a linear increase or decrease of QPS load as dictated by step load options: `load-start`, `load-step`, `load-end`, and `load-max-duration`. Linear load is essentially step load with slop being specified using `load-step` option and `load-step-duration` is `1s`.
+With `const` load schedule we attempt to perform a constant RPS load as specified with the `q` option.  
+With `step` load schedule we do a step increase or decrease of RPS load as dictated by step load options: `load-start`, `load-step`, `load-end`, `load-step-duration`, and `load-max-duration`.
+With `line` load schedule we do a linear increase or decrease of RPS load as dictated by step load options: `load-start`, `load-step`, `load-end`, and `load-max-duration`. Linear load is essentially step load with slop being specified using `load-step` option and `load-step-duration` is `1s`.
 
 Examples:
 
@@ -111,7 +111,7 @@ Performs linear load starting at `200` RPS and decreasing by `2` RPS every `1s` 
 
 ### `--load-start`
 
-Specifies the starting qps load value for step or line load schedules.
+Specifies the starting RPS load value for step or line load schedules.
 
 ### `--load-step`
 
@@ -136,19 +136,19 @@ Controls the concurrency (number of workers) adjustment, similarly how `load` se
 Examples:
 
 ```sh
--n 100000 -q 200 --concurrency-schedule=step --concurrency-start=5 --concurrency-step=5 --concurrency-end=50 --concurrency-step-duration=5s
+-n 100000 --rps 200 --concurrency-schedule=step --concurrency-start=5 --concurrency-step=5 --concurrency-end=50 --concurrency-step-duration=5s
 ```
 
 Performs RPS load of `200` RPS. The number of concurrent workers starts at `5` and is increased by `5` every `5s` until we reach `50` workers. At that point we keep the sustained `200` RPS load spread over the `50` workers until total of `10000` requests is reached. That means as we increase the number of total concurrent workers, their share of RPS load decreases.
 
 ```sh
--n 20000 -q 200 --concurrency-schedule=step --concurrency-start=10 --concurrency-step=10 --concurrency-step-duration=5s --concurrency-max-duration=60s
+-n 20000 -rps 200 --concurrency-schedule=step --concurrency-start=10 --concurrency-step=10 --concurrency-step-duration=5s --concurrency-max-duration=60s
 ```
 
 Performs RPS load of `200` RPS. The number of concurrent workers starts at `10` and is increased by `10` every `5s` until `60s` has elapsed. At that point we keep the sustained `200` RPS load spread over the same number of workers until total of `20000` requests is reached.
 
 ```sh
--n 10000 -q 200 --concurrency-schedule=line --concurrency-start=200 --concurrency-step=-2 --concurrency-end=20
+-n 10000 --rps 200 --concurrency-schedule=line --concurrency-start=200 --concurrency-step=-2 --concurrency-end=20
 ```
 
 Performs RPS load of `200` RPS. The number of concurrent workers starts at `200` and is decreased linearly by `2` every `1s` until we are at `20` concurrent workers. At that point we keep the sustained `200` RPS load spread over the same number of workers until total of `10000` requests is reached. As total number of active concurrent workers decreases, their share of RPS load increases.

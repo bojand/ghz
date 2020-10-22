@@ -522,7 +522,7 @@ func createPacer(config *RunConfig) load.Pacer {
 			Max:          uint64(config.n),
 		}
 	default:
-		p = &load.ConstantPacer{Freq: uint64(config.qps), Max: uint64(config.n)}
+		p = &load.ConstantPacer{Freq: uint64(config.rps), Max: uint64(config.n)}
 	}
 
 	return p

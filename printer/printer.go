@@ -145,7 +145,7 @@ func (rp *ReportPrinter) getInfluxTags(addErrors bool) string {
 	s = append(s, fmt.Sprintf(`host="%v"`, options.Host))
 	s = append(s, fmt.Sprintf("n=%v", options.Total))
 	s = append(s, fmt.Sprintf("c=%v", options.Concurrency))
-	s = append(s, fmt.Sprintf("qps=%v", options.QPS))
+	s = append(s, fmt.Sprintf("rps=%v", options.RPS))
 	s = append(s, fmt.Sprintf("z=%v", options.Duration.Nanoseconds()))
 	s = append(s, fmt.Sprintf("timeout=%v", options.Timeout.Seconds()))
 	s = append(s, fmt.Sprintf("dial_timeout=%v", options.DialTimeout.Seconds()))

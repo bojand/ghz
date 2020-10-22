@@ -245,7 +245,7 @@ func TestRunUnary(t *testing.T) {
 		assert.Equal(t, 1, connCount)
 	})
 
-	t.Run("test QPS", func(t *testing.T) {
+	t.Run("test RPS", func(t *testing.T) {
 
 		gs.ResetCounters()
 
@@ -258,7 +258,7 @@ func TestRunUnary(t *testing.T) {
 			WithProtoFile("../testdata/greeter.proto", []string{}),
 			WithTotalRequests(10),
 			WithConcurrency(2),
-			WithQPS(1),
+			WithRPS(1),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithData(data),

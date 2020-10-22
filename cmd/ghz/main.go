@@ -77,16 +77,16 @@ var (
 	async      = kingpin.Flag("async", "Make requests asynchronous as soon as possible. Does not wait for request to finish before sending next one.").
 			Default("false").IsSetByUser(&isAsyncSet).Bool()
 
-	isQSet = false
-	q      = kingpin.Flag("qps", "Queries per second (QPS) rate limit for constant load schedule. Default is no rate limit.").
-		Default("0").Short('q').IsSetByUser(&isQSet).Uint()
+	isRPSSet = false
+	rps      = kingpin.Flag("rps", "Requests per second (RPS) rate limit for constant load schedule. Default is no rate limit.").
+			Default("0").Short('r').IsSetByUser(&isRPSSet).Uint()
 
 	isScheduleSet = false
 	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are const, step, or line. Default is const.").
 			Default("const").IsSetByUser(&isScheduleSet).String()
 
 	isLoadStartSet = false
-	loadStart      = kingpin.Flag("load-start", "Specifies the qps load start value for step or line schedules.").
+	loadStart      = kingpin.Flag("load-start", "Specifies the RPS load start value for step or line schedules.").
 			Default("0").IsSetByUser(&isLoadStartSet).Uint()
 
 	isLoadStepSet = false
@@ -414,7 +414,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.CName = *cname
 	cfg.N = *n
 	cfg.C = *c
-	cfg.QPS = *q
+	cfg.RPS = *rps
 	cfg.Z = runner.Duration(*z)
 	cfg.X = runner.Duration(*x)
 	cfg.Timeout = runner.Duration(*t)
@@ -616,8 +616,8 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 		dest.Async = src.Async
 	}
 
-	if isQSet {
-		dest.QPS = src.QPS
+	if isRPSSet {
+		dest.RPS = src.RPS
 	}
 
 	if isScheduleSet {

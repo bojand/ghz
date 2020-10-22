@@ -76,7 +76,7 @@ type Config struct {
 	CStepDuration     Duration          `json:"concurrency-step-duration" toml:"concurrency-step-duration" yaml:"concurrency-step-duration" default:"0"`
 	CMaxDuration      Duration          `json:"concurrency-max-duration" toml:"concurrency-max-duration" yaml:"concurrency-max-duration" default:"0"`
 	Connections       uint              `json:"connections" toml:"connections" yaml:"connections" default:"1"`
-	QPS               uint              `json:"qps" toml:"qps" yaml:"qps"`
+	RPS               uint              `json:"rps" toml:"rps" yaml:"rps"`
 	Z                 Duration          `json:"duration" toml:"duration" yaml:"duration"`
 	ZStop             string            `json:"duration-stop" toml:"duration-stop" yaml:"duration-stop" default:"close"`
 	X                 Duration          `json:"max-duration" toml:"max-duration" yaml:"max-duration"`
