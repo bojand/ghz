@@ -146,3 +146,96 @@ Performs step load starting at `200` RPS and decreasing by `10` RPS every `10s` 
 
 ![Step Down Load](images/const_c_step_down_rps.svg)
 
+## Linear load
+
+```
+ghz --insecure --async --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c 10 -n 10000 \
+  --load-schedule=line --load-start=5 --load-step=5 \
+  -d '{"name":"{{.WorkerID}}"}' 0.0.0.0:50051
+
+Summary:
+  Count:	10000
+  Total:	62.80 s
+  Slowest:	56.61 ms
+  Fastest:	50.19 ms
+  Average:	50.72 ms
+  Requests/sec:	159.24
+
+Response time histogram:
+  50.189 [1]	|
+  50.832 [7552]	|∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  51.474 [1781]	|∎∎∎∎∎∎∎∎∎
+  52.117 [405]	|∎∎
+  52.759 [139]	|∎
+  53.402 [42]	|
+  54.044 [28]	|
+  54.687 [28]	|
+  55.329 [10]	|
+  55.972 [13]	|
+  56.614 [1]	|
+
+Latency distribution:
+  10 % in 50.34 ms
+  25 % in 50.42 ms
+  50 % in 50.57 ms
+  75 % in 50.82 ms
+  90 % in 51.22 ms
+  95 % in 51.68 ms
+  99 % in 53.16 ms
+
+Status code distribution:
+  [OK]   10000 responses
+```
+
+Performs linear load starting at `5` RPS and increasing by `5` RPS every `1s` until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
+
+![Linear Up Load](images/const_c_line_up_rps.svg)
+
+## Linear load decrease
+
+```
+ghz --insecure --async --proto /protos/helloworld.proto 
+  --call helloworld.Greeter/SayHello \
+  -c 10 -n 10000 \
+  --load-schedule=line --load-start=200 --load-step=-2 --load-end=100 \
+  -d '{"name":"{{.WorkerID}}"}' 0.0.0.0:50051 
+
+Summary:
+  Count:	10000
+  Total:	74.55 s
+  Slowest:	83.20 ms
+  Fastest:	50.18 ms
+  Average:	50.89 ms
+  Requests/sec:	134.13
+
+Response time histogram:
+  50.183 [1]	|
+  53.486 [9989]	|∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  56.788 [5]	|
+  60.090 [1]	|
+  63.392 [3]	|
+  66.694 [0]	|
+  69.996 [0]	|
+  73.298 [0]	|
+  76.600 [0]	|
+  79.902 [0]	|
+  83.205 [1]	|
+
+Latency distribution:
+  10 % in 50.42 ms
+  25 % in 50.57 ms
+  50 % in 50.77 ms
+  75 % in 51.11 ms
+  90 % in 51.49 ms
+  95 % in 51.73 ms
+  99 % in 52.15 ms
+
+Status code distribution:
+  [OK]   10000 responses
+```
+
+Performs linear load starting at `200` RPS and decreasing by `2` RPS every `1s` until we reach `100` RPS at which point a constant rate is sustained until we accumulate `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
+
+![Linear Down Load](images/const_c_line_down_rps.svg)
