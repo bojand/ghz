@@ -8,7 +8,11 @@ This is a walkthrough of different load options available to control the rate in
 ## Constant RPS
 
 ```
-ghz --insecure --async --proto /protos/helloworld.proto --call helloworld.Greeter/SayHello -d '{"name":"{{.WorkerID}}"}' 0.0.0.0:50051 -c 10 -n 10000 --rps 200
+ghz --insecure --async \
+  --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c 10 -n 10000 --rps 200 \
+  -d '{"name":"{{.WorkerID}}"}' 0.0.0.0:50051 
 
 Summary:
   Count:	10000
@@ -51,7 +55,11 @@ This will perform a constant load RPS against the server. Graphed, it may look l
 ## Step Up RPS
 
 ```
-ghz --insecure --async --proto /protos/helloworld.proto --call helloworld.Greeter/SayHello -d '{"name":"{{.WorkerID}}"}' 0.0.0.0:50051 -c 10 -n 10000 --load-schedule=step --load-start=50 --load-end=150 --load-step=10 --load-step-duration=5s
+ghz --insecure --async --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c 10 -n 10000 \
+  --load-schedule=step --load-start=50 --load-end=150 --load-step=10 --load-step-duration=5s \
+  -d '{"name":"{{.WorkerID}}"}' 0.0.0.0:50051 
 
 Summary:
   Count:	10000
@@ -94,7 +102,11 @@ Performs step load starting at `50` RPS and inscreasing by `10` RPS every `5s` u
 ## Step Down RPS
 
 ```
-ghz --insecure --async --proto /protos/helloworld.proto --call helloworld.Greeter/SayHello -d '{"name":"{{.WorkerID}}"}' 0.0.0.0:50051 -c 10 -n 10000 --load-schedule=step --load-start=200 --load-step=-10 --load-step-duration=5s --load-max-duration=40s
+ghz --insecure --async --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c 10 -n 10000 \
+  --load-schedule=step --load-start=200 --load-step=-10 --load-step-duration=5s --load-max-duration=40s \
+  -d '{"name":"{{.WorkerID}}"}' 0.0.0.0:50051 
 
 Summary:
   Count:	10000
