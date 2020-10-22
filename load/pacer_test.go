@@ -415,36 +415,6 @@ func TestLinearPacer(t *testing.T) {
 	}
 }
 
-func TestLinearPacer_hits(t *testing.T) {
-	t.Skip()
-
-	// TODO improve this to have different pacer params
-	p := LinearPacer{
-		Start: ConstantPacer{Freq: 100},
-		Slope: 10,
-	}
-
-	for _, tc := range []struct {
-		elapsed time.Duration
-		hits    float64
-	}{
-		{0, 0},
-		{1 * time.Second, 105},
-		{2 * time.Second, 220},
-		{4 * time.Second, 480},
-		{8 * time.Second, 1120},
-		{16 * time.Second, 2880},
-		{32 * time.Second, 8320},
-		{64 * time.Second, 26880},
-		{128 * time.Second, 94720},
-	} {
-		actual := p.hits(tc.elapsed)
-		expected := tc.hits
-
-		assert.True(t, floatEqual(actual, expected), "%+v.hits(%v) = %v, expected: %v", p, tc.elapsed, actual, expected)
-	}
-}
-
 func TestStepPacer_hits(t *testing.T) {
 	t.Parallel()
 

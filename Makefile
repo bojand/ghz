@@ -68,6 +68,10 @@ setup:
 	go mod download
 .PHONY: setup
 
+tools:
+	go generate -tags tools tools/tools.go
+.PHONY: tools
+
 # All runs the default lint, test, and code coverage targets.
 .PHONY: all
 all: lint cover build

@@ -27,3 +27,11 @@ issues:
     # sync.once copy in pacer test
     - path: load/pacer_test.go
       text: "copylocks"
+
+    # TODO fix protobuf deprecated
+    - path: runner/
+      text: "SA1019: package github.com/golang/protobuf"
+  
+    # TODO fix protobuf deprecated
+    - path: protodesc/
+      text: "SA1019: package github.com/golang/protobuf"

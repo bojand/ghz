@@ -318,15 +318,6 @@ func (p *LinearPacer) Rate(elapsed time.Duration) float64 {
 	return p.sp.Rate(elapsed)
 }
 
-// hits returns the number of hits that have been sent during an attack
-// lasting t nanoseconds. It returns a float so we can tell exactly how
-// much we've missed our target by when solving numerically in Pace.
-func (p *LinearPacer) hits(t time.Duration) float64 {
-	p.initialize()
-
-	return p.sp.hits(t)
-}
-
 // String returns a pretty-printed description of the LinearPacer's behaviour:
 //   LinearPacer{Slope: 1} => Linear{1 hits/1s}
 func (p *LinearPacer) String() string {
