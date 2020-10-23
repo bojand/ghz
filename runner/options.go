@@ -568,13 +568,9 @@ func WithTemplateFuncs(funcMap template.FuncMap) Option {
 
 // NewConfig creates a new RunConfig from the options passed
 func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
-	call = strings.TrimSpace(call)
-	host = strings.TrimSpace(host)
 
 	// init with defaults
 	c := &RunConfig{
-		call:        call,
-		host:        host,
 		n:           200,
 		c:           50,
 		nConns:      1,
@@ -591,6 +587,16 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// host and call may have been applied via options
+	// only override if not present
+	if c.host == "" {
+		c.host = strings.TrimSpace(host)
+	}
+
+	if c.call == "" {
+		c.call = strings.TrimSpace(call)
 	}
 
 	// fix up durations
