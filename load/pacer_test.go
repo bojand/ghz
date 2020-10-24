@@ -14,6 +14,7 @@ func TestConstantPacer(t *testing.T) {
 
 	for _, tc := range []struct {
 		freq    uint64
+		max     uint64
 		elapsed time.Duration
 		hits    uint64
 		wait    time.Duration
@@ -108,8 +109,25 @@ func TestConstantPacer(t *testing.T) {
 			wait:    0,
 			stop:    false,
 		},
+		// Max
+		{
+			freq:    1,
+			elapsed: 1 * time.Second,
+			hits:    10,
+			wait:    10 * time.Second,
+			stop:    false,
+			max:     0,
+		},
+		{
+			freq:    1,
+			elapsed: 1 * time.Second,
+			hits:    10,
+			wait:    0,
+			stop:    true,
+			max:     7,
+		},
 	} {
-		cp := ConstantPacer{Freq: tc.freq}
+		cp := ConstantPacer{Freq: tc.freq, Max: tc.max}
 		wait, stop := cp.Pace(tc.elapsed, tc.hits)
 		assert.Equal(t, tc.wait, wait)
 		assert.Equal(t, tc.stop, stop)
@@ -141,22 +159,10 @@ func TestConstantPacer_Rate(t *testing.T) {
 	}
 }
 
-// Stolen from https://github.com/google/go-cmp/cmp/cmpopts/equate.go
-// to avoid an unwieldy dependency. Both fraction and margin set at 1e-6.
-func floatEqual(x, y float64) bool {
-	relMarg := 1e-6 * math.Min(math.Abs(x), math.Abs(y))
-	return math.Abs(x-y) <= math.Max(1e-6, relMarg)
-}
-
-// A similar function to the above because SinePacer.Pace has discrete
-// inputs and outputs but uses floats internally, and sometimes the
-// floating point imprecision leaks out :-(
-func durationEqual(x, y time.Duration) bool {
-	diff := x - y
-	if diff < 0 {
-		diff = -diff
-	}
-	return diff <= time.Microsecond
+func TestConstantPacer_String(t *testing.T) {
+	cp := ConstantPacer{Freq: 5}
+	actual := cp.String()
+	assert.Equal(t, "Constant{5 hits / 1s}", actual)
 }
 
 func TestLinearPacer(t *testing.T) {
@@ -772,6 +778,7 @@ func TestStepPacer(t *testing.T) {
 		stepDuration time.Duration
 		stop         uint64
 		stopDuration time.Duration
+		max          uint64
 		// params
 		elapsed time.Duration
 		hits    uint64
@@ -1003,10 +1010,36 @@ func TestStepPacer(t *testing.T) {
 			wait:         100 * time.Millisecond,
 			stopResult:   false,
 		},
+		// Max
+		{
+			start:        5,
+			step:         5,
+			stepDuration: 5 * time.Second,
+			stop:         25,
+			stopDuration: 0 * time.Second,
+			max:          100,
+			elapsed:      5000 * time.Millisecond,
+			hits:         25,
+			wait:         100 * time.Millisecond,
+			stopResult:   false,
+		},
+		{
+			start:        5,
+			step:         5,
+			stepDuration: 5 * time.Second,
+			stop:         25,
+			max:          10,
+			stopDuration: 0 * time.Second,
+			elapsed:      5000 * time.Millisecond,
+			hits:         25,
+			wait:         0,
+			stopResult:   true,
+		},
 	} {
 		t.Run(strconv.Itoa(ti), func(t *testing.T) {
 			p := StepPacer{
-				Start: ConstantPacer{Freq: tc.start},
+				Start: ConstantPacer{Freq: tc.start, Max: tc.max},
+				Max:   tc.max,
 				Step:  tc.step, StepDuration: tc.stepDuration,
 				LoadDuration: tc.stopDuration, Stop: ConstantPacer{Freq: tc.stop}}
 
@@ -1016,4 +1049,33 @@ func TestStepPacer(t *testing.T) {
 			assert.Equal(t, tc.stopResult, stop, "%+v.Pace(%v, %v) = %v, expected: %v", p, tc.elapsed, tc.hits, stop, tc.stopResult)
 		})
 	}
+}
+
+func TestStepPacer_String(t *testing.T) {
+	p := StepPacer{
+		Start: ConstantPacer{Freq: 5, Max: 100},
+		Max:   100,
+		Step:  2, StepDuration: 5 * time.Second,
+		LoadDuration: 25 * time.Second, Stop: ConstantPacer{Freq: 25}}
+
+	actual := p.String()
+	assert.Equal(t, "Step{Step: 2 hits / 5s}", actual)
+}
+
+// Stolen from https://github.com/google/go-cmp/cmp/cmpopts/equate.go
+// to avoid an unwieldy dependency. Both fraction and margin set at 1e-6.
+func floatEqual(x, y float64) bool {
+	relMarg := 1e-6 * math.Min(math.Abs(x), math.Abs(y))
+	return math.Abs(x-y) <= math.Max(1e-6, relMarg)
+}
+
+// A similar function to the above because SinePacer.Pace has discrete
+// inputs and outputs but uses floats internally, and sometimes the
+// floating point imprecision leaks out :-(
+func durationEqual(x, y time.Duration) bool {
+	diff := x - y
+	if diff < 0 {
+		diff = -diff
+	}
+	return diff <= time.Microsecond
 }

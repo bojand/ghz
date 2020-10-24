@@ -14,6 +14,7 @@ type WorkerTicker interface {
 // TickValue is the delta value
 type TickValue struct {
 	Delta int
+	Done  bool
 }
 
 // ConstWorkerTicker is the const worker
@@ -69,15 +70,31 @@ func (c *StepWorkerTicker) Run() {
 
 	go func() {
 		for range ticker.C {
+			// we have load duration and we eclipsed it
 			if c.LoadDuration > 0 && time.Since(begin) > c.LoadDuration {
-				if c.Stop > 0 {
-					c.C <- TickValue{Delta: int(c.Stop - uint(wc))}
+				if stepUp && c.Stop > 0 && c.Stop > uint(wc) {
+					// if we have step up and stop value is > current count
+					// send the final diff
+					c.C <- TickValue{Delta: int(c.Stop - uint(wc)), Done: true}
+				} else if !stepUp && c.Stop > 0 && c.Stop < uint(wc) {
+					// if we have step down and stop value is < current count
+					// send the final diff
+					c.C <- TickValue{Delta: int(c.Stop - uint(wc)), Done: true}
+				} else {
+					// send done signal
+					c.C <- TickValue{Delta: 0, Done: true}
 				}
 
 				done <- true
 				return
-			} else if (c.Stop > 0 && stepUp && wc >= int(c.Stop)) ||
-				(!stepUp && wc <= int(c.Stop)) || wc <= 0 {
+			} else if (c.LoadDuration == 0) && ((c.Stop > 0 && stepUp && wc >= int(c.Stop)) ||
+				(!stepUp && wc <= int(c.Stop))) {
+				// we do not have load duration
+				// if we have stop and are step up and current count >= stop
+				// or if we have stop and are step down and current count <= stop
+				// send done signal
+
+				c.C <- TickValue{Delta: 0, Done: true}
 				done <- true
 				return
 			} else {

@@ -394,7 +394,7 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 						errC <- w.runWorker()
 					}()
 				}
-			} else {
+			} else if tv.Delta < 0 {
 				nd := -1 * tv.Delta
 				wm.Lock()
 				wdc := 0
