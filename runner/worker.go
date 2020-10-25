@@ -167,7 +167,7 @@ func (w *Worker) makeRequest() error {
 	return err
 }
 
-func (w *Worker) getMessages(ctd *callData, inputData []byte) ([]*dynamic.Message, error) {
+func (w *Worker) getMessages(ctd *CallData, inputData []byte) ([]*dynamic.Message, error) {
 	var inputs []*dynamic.Message
 
 	if w.cachedMessages != nil {

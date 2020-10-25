@@ -18,7 +18,7 @@ var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
 // call template data
-type callData struct {
+type CallData struct {
 	WorkerID           string // unique worker ID
 	RequestNumber      int64  // unique incremented request number for each request
 	FullyQualifiedName string // fully-qualified name of the method call
@@ -46,7 +46,7 @@ var tmplFuncMap = template.FuncMap{
 func newCallData(
 	mtd *desc.MethodDescriptor,
 	funcs template.FuncMap,
-	workerID string, reqNum int64) *callData {
+	workerID string, reqNum int64) *CallData {
 	now := time.Now()
 	newUUID, _ := uuid.NewRandom()
 
@@ -61,7 +61,7 @@ func newCallData(
 		}
 	}
 
-	return &callData{
+	return &CallData{
 		WorkerID:           workerID,
 		RequestNumber:      reqNum,
 		FullyQualifiedName: mtd.GetFullyQualifiedName(),
@@ -80,14 +80,14 @@ func newCallData(
 	}
 }
 
-func (td *callData) execute(data string) (*bytes.Buffer, error) {
+func (td *CallData) execute(data string) (*bytes.Buffer, error) {
 	t := template.Must(template.New("call_template_data").Funcs(td.templateFuncs).Parse(data))
 	var tpl bytes.Buffer
 	err := t.Execute(&tpl, td)
 	return &tpl, err
 }
 
-func (td *callData) executeData(data string) ([]byte, error) {
+func (td *CallData) executeData(data string) ([]byte, error) {
 	if len(data) > 0 {
 		input := []byte(data)
 		tpl, err := td.execute(data)
@@ -101,7 +101,7 @@ func (td *callData) executeData(data string) ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (td *callData) executeMetadata(metadata string) (map[string]string, error) {
+func (td *CallData) executeMetadata(metadata string) (map[string]string, error) {
 	var mdMap map[string]string
 
 	if len(metadata) > 0 {

@@ -62,7 +62,7 @@ type RunConfig struct {
 	data []byte
 
 	// data func
-	dataFunc func(mtd *desc.MethodDescriptor, callData *callData) []byte
+	dataFunc func(mtd *desc.MethodDescriptor, callData *CallData) []byte
 
 	binary   bool
 	metadata []byte
@@ -307,7 +307,7 @@ func WithBinaryData(data []byte) Option {
 
 // WithBinaryDataFunc specifies the binary data func which will be called on each request
 //  WithBinaryDataFunc(changeFunc)
-func WithBinaryDataFunc(data func(mtd *desc.MethodDescriptor, callData *callData) []byte) Option {
+func WithBinaryDataFunc(data func(mtd *desc.MethodDescriptor, callData *CallData) []byte) Option {
 	return func(o *RunConfig) error {
 		o.dataFunc = data
 		o.binary = true
