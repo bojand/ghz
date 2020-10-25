@@ -10,8 +10,16 @@ import (
 	"github.com/bojand/ghz/internal"
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/golang/protobuf/proto"
+	"github.com/jhump/protoreflect/desc"
 	"github.com/stretchr/testify/assert"
 )
+
+func changeFunc(mtd *desc.MethodDescriptor, cd *CallData) []byte {
+	msg := &helloworld.HelloRequest{}
+	msg.Name = "bob"
+	binData, _ := proto.Marshal(msg)
+	return binData
+}
 
 func TestRunUnary(t *testing.T) {
 	callType := helloworld.Unary
@@ -321,6 +329,50 @@ func TestRunUnary(t *testing.T) {
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithBinaryData(binData),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 5, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 5, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+	})
+
+	t.Run("test binary with func", func(t *testing.T) {
+
+		gs.ResetCounters()
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(5),
+			WithBinaryDataFunc(changeFunc),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
 			WithInsecure(true),
 		)
 

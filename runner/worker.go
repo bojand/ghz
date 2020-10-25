@@ -65,7 +65,7 @@ func (w *Worker) makeRequest() error {
 
 	reqNum := atomic.AddInt64(w.reqCounter, 1)
 
-	ctd := newCallTemplateData(w.mtd, w.config.funcs, w.workerID, reqNum)
+	ctd := newCallData(w.mtd, w.config.funcs, w.workerID, reqNum)
 
 	var inputs []*dynamic.Message
 	var err error
@@ -167,7 +167,7 @@ func (w *Worker) makeRequest() error {
 	return err
 }
 
-func (w *Worker) getMessages(ctd *callTemplateData, inputData []byte) ([]*dynamic.Message, error) {
+func (w *Worker) getMessages(ctd *CallData, inputData []byte) ([]*dynamic.Message, error) {
 	var inputs []*dynamic.Message
 
 	if w.cachedMessages != nil {
@@ -186,12 +186,17 @@ func (w *Worker) getMessages(ctd *callTemplateData, inputData []byte) ([]*dynami
 		// Json messages are not cached due to templating
 	} else {
 		var err error
+		if w.config.dataFunc != nil {
+			inputData = w.config.dataFunc(w.mtd, ctd)
+		}
 		inputs, err = createPayloadsFromBin(inputData, w.mtd)
 		if err != nil {
 			return nil, err
 		}
-
-		w.cachedMessages = inputs
+		// We only cache in case we don't dynamically change the binary message
+		if w.config.dataFunc == nil {
+			w.cachedMessages = inputs
+		}
 	}
 
 	return inputs, nil
