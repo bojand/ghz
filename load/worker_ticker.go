@@ -71,12 +71,12 @@ func (c *StepWorkerTicker) Run() {
 	go func() {
 		for range ticker.C {
 			// we have load duration and we eclipsed it
-			if c.LoadDuration > 0 && time.Since(begin) > c.LoadDuration {
-				if stepUp && c.Stop > 0 && c.Stop > uint(wc) {
+			if c.LoadDuration > 0 && time.Since(begin) >= c.LoadDuration {
+				if stepUp && c.Stop > 0 && c.Stop >= uint(wc) {
 					// if we have step up and stop value is > current count
 					// send the final diff
 					c.C <- TickValue{Delta: int(c.Stop - uint(wc)), Done: true}
-				} else if !stepUp && c.Stop > 0 && c.Stop < uint(wc) {
+				} else if !stepUp && c.Stop > 0 && c.Stop <= uint(wc) {
 					// if we have step down and stop value is < current count
 					// send the final diff
 					c.C <- TickValue{Delta: int(c.Stop - uint(wc)), Done: true}
