@@ -35,7 +35,7 @@ func TestStepWorkerTicker(t *testing.T) {
 			Step:         2,
 			Stop:         0,
 			StepDuration: 2 * time.Second,
-			LoadDuration: 5 * time.Second,
+			MaxDuration:  5 * time.Second,
 		}
 
 		defer wt.Finish()
@@ -81,7 +81,7 @@ func TestStepWorkerTicker(t *testing.T) {
 			Step:         2,
 			Stop:         15,
 			StepDuration: 2 * time.Second,
-			LoadDuration: 5 * time.Second,
+			MaxDuration:  5 * time.Second,
 		}
 
 		defer wt.Finish()
@@ -129,7 +129,7 @@ func TestStepWorkerTicker(t *testing.T) {
 			Step:         -2,
 			Stop:         0,
 			StepDuration: 2 * time.Second,
-			LoadDuration: 5 * time.Second,
+			MaxDuration:  5 * time.Second,
 		}
 
 		defer wt.Finish()
@@ -175,7 +175,7 @@ func TestStepWorkerTicker(t *testing.T) {
 			Step:         -2,
 			Stop:         4,
 			StepDuration: 2 * time.Second,
-			LoadDuration: 0,
+			MaxDuration:  0,
 		}
 
 		defer wt.Finish()
@@ -230,7 +230,7 @@ func TestStepWorkerTicker(t *testing.T) {
 			Step:         -2,
 			Stop:         3,
 			StepDuration: 2 * time.Second,
-			LoadDuration: 5 * time.Second,
+			MaxDuration:  5 * time.Second,
 		}
 
 		defer wt.Finish()

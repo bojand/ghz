@@ -479,11 +479,11 @@ func createWorkerTicker(config *RunConfig) load.WorkerTicker {
 	switch config.cSchedule {
 	case ScheduleLine:
 		wt = &load.LineWorkerTicker{
-			C:            make(chan load.TickValue),
-			Start:        config.cStart,
-			Slope:        config.cStep,
-			Stop:         config.cEnd,
-			LoadDuration: config.cMaxDuration,
+			C:           make(chan load.TickValue),
+			Start:       config.cStart,
+			Slope:       config.cStep,
+			Stop:        config.cEnd,
+			MaxDuration: config.cMaxDuration,
 		}
 	case ScheduleStep:
 		wt = &load.StepWorkerTicker{
@@ -492,7 +492,7 @@ func createWorkerTicker(config *RunConfig) load.WorkerTicker {
 			Step:         config.cStep,
 			Stop:         config.cEnd,
 			StepDuration: config.cStepDuration,
-			LoadDuration: config.cMaxDuration,
+			MaxDuration:  config.cMaxDuration,
 		}
 	default:
 		wt = &load.ConstWorkerTicker{N: uint(config.c), C: make(chan load.TickValue)}

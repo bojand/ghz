@@ -10,7 +10,7 @@ import (
 // nano is the const for number of nanoseconds in a second
 const nano = 1e9
 
-// A Pacer defines the control interface to control the rate of hit.
+// Pacer defines the interface to control the rate of hit.
 type Pacer interface {
 	// Pace returns the duration the attacker should wait until
 	// making next hit, given an already elapsed duration and
@@ -23,11 +23,7 @@ type Pacer interface {
 	Rate(elapsed time.Duration) float64
 }
 
-// A PacerFunc is a function adapter type that implements
-// the Pacer interface.
-// type PacerFunc func(time.Duration, uint64) (time.Duration, bool)
-
-// A ConstantPacer defines a constant rate of hits for the target.
+// A ConstantPacer defines a constant rate of hits.
 type ConstantPacer struct {
 	Freq uint64 // Frequency of hits per second
 	Max  uint64 // Optional maximum allowed hits
@@ -74,21 +70,20 @@ func (cp *ConstantPacer) Rate(elapsed time.Duration) float64 {
 	return cp.hitsPerNs() * 1e9
 }
 
-// hitsPerNs returns the attack rate this ConstantPacer represents, in
-// fractional hits per nanosecond.
+// hitsPerNs returns the rate in fractional hits per nanosecond.
 func (cp *ConstantPacer) hitsPerNs() float64 {
 	return float64(cp.Freq) / nano
 }
 
 // StepPacer paces an attack by starting at a given request rate
-// and increasing with steps at a given time interval and duration.
+// and increasing or decreasing with steps at a given step interval and duration.
 type StepPacer struct {
-	Start        ConstantPacer
-	Step         int64
-	StepDuration time.Duration
-	Stop         ConstantPacer
-	LoadDuration time.Duration
-	Max          uint64
+	Start        ConstantPacer // Constant start rate
+	Step         int64         // Step value
+	StepDuration time.Duration // Step duration
+	Stop         ConstantPacer // Optional constant stop value
+	LoadDuration time.Duration // Optional maximum load duration
+	Max          uint64        // Optional maximum allowed hits
 
 	once     sync.Once
 	init     bool // TOOO improve this
@@ -198,7 +193,7 @@ func (p *StepPacer) Pace(elapsed time.Duration, hits uint64) (time.Duration, boo
 }
 
 // Rate returns a StepPacer's instantaneous hit rate (i.e. requests per second)
-// at the given elapsed duration of an attack.
+// at the given elapsed duration.
 func (p *StepPacer) Rate(elapsed time.Duration) float64 {
 	p.initialize()
 
@@ -219,9 +214,7 @@ func (p *StepPacer) Rate(elapsed time.Duration) float64 {
 	return rate
 }
 
-// hits returns the number of hits that have been sent during an attack
-// lasting t nanoseconds. It returns a float so we can tell exactly how
-// much we've missed our target by when solving numerically in Pace.
+// hits returns the number of hits that have been sent at elapsed duration t.
 func (p *StepPacer) hits(t time.Duration) float64 {
 	if t < 0 {
 		return 0
@@ -258,24 +251,25 @@ func (p *StepPacer) hits(t time.Duration) float64 {
 }
 
 // String returns a pretty-printed description of the StepPacer's behaviour:
-//   StepPacer{Step: 1, StepDuration: 5s} => Step{Step:1 hits/5s}
+//   StepPacer{Step: 1, StepDuration: 5s} => Step{Step:1 hits / 5s}
 func (p *StepPacer) String() string {
 	return fmt.Sprintf("Step{Step: %d hits / %s}", p.Step, p.StepDuration.String())
 }
 
-// LinearPacer paces an attack by starting at a given request rate
-// and increasing linearly with the given slope.
+// LinearPacer paces the hit rate by starting at a given request rate
+// and increasing linearly with the given slope at 1s interval.
 type LinearPacer struct {
-	Start        ConstantPacer
-	Slope        int64
-	Stop         ConstantPacer
-	LoadDuration time.Duration
-	Max          uint64
+	Start        ConstantPacer // Constant start rate
+	Slope        int64         // Slope value to change the rate
+	Stop         ConstantPacer // Constant stop rate
+	LoadDuration time.Duration // Total maximum load duration
+	Max          uint64        // Maximum number of hits
 
 	once sync.Once
 	sp   StepPacer
 }
 
+// initializes the wrapped step pacer
 func (p *LinearPacer) initialize() {
 	if p.Start.Freq == 0 {
 		panic("LinearPacer.Start cannot be 0")
@@ -310,7 +304,7 @@ func (p *LinearPacer) Pace(elapsed time.Duration, hits uint64) (time.Duration, b
 }
 
 // Rate returns a LinearPacer's instantaneous hit rate (i.e. requests per second)
-// at the given elapsed duration of an attack.
+// at the given elapsed duration.
 func (p *LinearPacer) Rate(elapsed time.Duration) float64 {
 
 	p.initialize()
@@ -319,7 +313,7 @@ func (p *LinearPacer) Rate(elapsed time.Duration) float64 {
 }
 
 // String returns a pretty-printed description of the LinearPacer's behaviour:
-//   LinearPacer{Slope: 1} => Linear{1 hits/1s}
+//   LinearPacer{Slope: 1} => Linear{1 hits / 1s}
 func (p *LinearPacer) String() string {
-	return fmt.Sprintf("Linear{%d hits/1s}", p.Slope)
+	return fmt.Sprintf("Linear{%d hits / 1s}", p.Slope)
 }
