@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func changeFunc(mtd *desc.MethodDescriptor) []byte {
+func changeFunc(mtd *desc.MethodDescriptor, cd *callData) []byte {
 	msg := &helloworld.HelloRequest{}
 	msg.Name = "bob"
 	binData, _ := proto.Marshal(msg)
