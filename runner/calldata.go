@@ -17,7 +17,7 @@ const charset = "abcdefghijklmnopqrstuvwxyz" +
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
-// call template data
+// CallData represents contextualized data available for templating
 type CallData struct {
 	WorkerID           string // unique worker ID
 	RequestNumber      int64  // unique incremented request number for each request
@@ -42,7 +42,7 @@ var tmplFuncMap = template.FuncMap{
 	"randomString": randomString,
 }
 
-// newCallData returns new callData
+// newCallData returns new CallData
 func newCallData(
 	mtd *desc.MethodDescriptor,
 	funcs template.FuncMap,

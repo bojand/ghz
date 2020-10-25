@@ -20,6 +20,11 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// BinaryDataFunc is a function that can be used for provide binary data for request programatically.
+// MethodDescriptor of the call is passed to the data function.
+// CallData for the request is passed and can be used to access worker id, request number, etc...
+type BinaryDataFunc func(mtd *desc.MethodDescriptor, callData *CallData) []byte
+
 // RunConfig represents the request Configs
 type RunConfig struct {
 	// call settings
@@ -62,7 +67,7 @@ type RunConfig struct {
 	data []byte
 
 	// data func
-	dataFunc func(mtd *desc.MethodDescriptor, callData *CallData) []byte
+	dataFunc BinaryDataFunc
 
 	binary   bool
 	metadata []byte
