@@ -196,7 +196,7 @@ Performs linear load starting at `5` RPS and increasing by `5` RPS every `1s` un
 ## Linear load decrease
 
 ```
-ghz --insecure --async --proto /protos/helloworld.proto 
+ghz --insecure --async --proto /protos/helloworld.proto \
   --call helloworld.Greeter/SayHello \
   -c 10 -n 10000 \
   --load-schedule=line --load-start=200 --load-step=-2 --load-end=100 \
