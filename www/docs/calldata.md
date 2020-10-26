@@ -1,13 +1,13 @@
 ---
 id: calldata
-title: Call Template Data
+title: Call Data
 ---
 
 Data and metadata can specify [template actions](https://golang.org/pkg/text/template/) that will be parsed and evaluated at every request. Each request gets a new instance of the data. The available variables / actions are:
 
 ```go
-// call template data
-type callTemplateData struct {
+// CallData represents contextualized data available for templating
+type CallData struct {
 
 	// unique worker ID
 	WorkerID		   string
@@ -53,7 +53,7 @@ type callTemplateData struct {
 }
 ```
 
-**Functions**
+**Template Functions**
 
 There are also two template functions available:
 
@@ -95,3 +95,24 @@ Would result in data with JSON representation:
 ```
 
 See [example calls](examples.md) for some more usage examples.
+
+### Data Function API
+
+When using the `ghz/runner` package programmatically, we can dynamically create data for each request using `WithBinaryDataFunc()` API:
+
+```go
+func dataFunc(mtd *desc.MethodDescriptor, cd *runner.CallData) []byte {
+	msg := &helloworld.HelloRequest{}
+	msg.Name = cd.WorkerID
+	binData, err := proto.Marshal(msg)
+	return binData
+}
+
+report, err := runner.Run(
+	"helloworld.Greeter.SayHello",
+	"0.0.0.0:50051",
+	runner.WithProtoFile("./testdata/greeter.proto", []string{}),
+	runner.WithInsecure(true),
+	runner.WithBinaryDataFunc(dataFunc),
+)
+```

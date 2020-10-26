@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCallTemplateData_New(t *testing.T) {
+func TestCallData_New(t *testing.T) {
 	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "../testdata/greeter.proto", []string{})
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, nil, "worker_id_123", 100)
+	ctd := newCallData(md, nil, "worker_id_123", 100)
 
 	assert.NotNil(t, ctd)
 	assert.Equal(t, "worker_id_123", ctd.WorkerID)
@@ -36,12 +36,12 @@ func TestCallTemplateData_New(t *testing.T) {
 	assert.Equal(t, 36, len(ctd.UUID))
 }
 
-func TestCallTemplateData_ExecuteData(t *testing.T) {
+func TestCallData_ExecuteData(t *testing.T) {
 	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "../testdata/greeter.proto", []string{})
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, nil, "worker_id_123", 200)
+	ctd := newCallData(md, nil, "worker_id_123", 200)
 
 	assert.NotNil(t, ctd)
 
@@ -87,12 +87,12 @@ func TestCallTemplateData_ExecuteData(t *testing.T) {
 	}
 }
 
-func TestCallTemplateData_ExecuteMetadata(t *testing.T) {
+func TestCallData_ExecuteMetadata(t *testing.T) {
 	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "../testdata/greeter.proto", []string{})
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, nil, "worker_id_123", 200)
+	ctd := newCallData(md, nil, "worker_id_123", 200)
 
 	assert.NotNil(t, ctd)
 
@@ -138,7 +138,7 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallTemplateData(md, nil, "worker_id_123", 200)
+	ctd := newCallData(md, nil, "worker_id_123", 200)
 
 	assert.NotNil(t, ctd)
 
@@ -249,7 +249,7 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 	})
 
 	t.Run("custom functions", func(t *testing.T) {
-		ctd = newCallTemplateData(md, template.FuncMap{
+		ctd = newCallData(md, template.FuncMap{
 			"getSKU": func() string {
 				return "custom-sku"
 			},

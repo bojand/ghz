@@ -15,9 +15,15 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/jhump/protoreflect/desc"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/credentials"
 )
+
+// BinaryDataFunc is a function that can be used for provide binary data for request programatically.
+// MethodDescriptor of the call is passed to the data function.
+// CallData for the request is passed and can be used to access worker id, request number, etc...
+type BinaryDataFunc func(mtd *desc.MethodDescriptor, callData *CallData) []byte
 
 // ScheduleConst is a constant load schedule
 const ScheduleConst = "const"
@@ -84,7 +90,11 @@ type RunConfig struct {
 	streamInterval time.Duration
 
 	// data
-	data     []byte
+	data []byte
+
+	// data func
+	dataFunc BinaryDataFunc
+
 	binary   bool
 	metadata []byte
 	rmd      map[string]string
@@ -320,6 +330,17 @@ func WithKeepalive(k time.Duration) Option {
 func WithBinaryData(data []byte) Option {
 	return func(o *RunConfig) error {
 		o.data = data
+		o.binary = true
+
+		return nil
+	}
+}
+
+// WithBinaryDataFunc specifies the binary data func which will be called on each request
+//  WithBinaryDataFunc(changeFunc)
+func WithBinaryDataFunc(data func(mtd *desc.MethodDescriptor, callData *CallData) []byte) Option {
+	return func(o *RunConfig) error {
+		o.dataFunc = data
 		o.binary = true
 
 		return nil
@@ -583,7 +604,7 @@ func WithLogger(log Logger) Option {
 	}
 }
 
-// WithTemplateFuncs adds additional tempalte functions
+// WithTemplateFuncs adds additional template functions
 func WithTemplateFuncs(funcMap template.FuncMap) Option {
 	return func(o *RunConfig) error {
 		o.funcs = funcMap
