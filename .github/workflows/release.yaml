@@ -87,7 +87,7 @@ jobs:
         run: git fetch --prune --unshallow
 
       - name: Set version
-        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "RELEASE_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
       # These can be squashed when https://github.com/actions/download-artifact/issues/6 is closed
       - name: Download releases from github_build
