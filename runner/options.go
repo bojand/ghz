@@ -115,6 +115,126 @@ type RunConfig struct {
 // Option controls some aspect of run
 type Option func(*RunConfig) error
 
+// NewConfig creates a new RunConfig from the options passed
+func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
+
+	// init with defaults
+	c := &RunConfig{
+		n:            200,
+		c:            50,
+		nConns:       1,
+		timeout:      time.Duration(20 * time.Second),
+		dialTimeout:  time.Duration(10 * time.Second),
+		cpus:         runtime.GOMAXPROCS(-1),
+		zstop:        "close",
+		loadSchedule: ScheduleConst,
+	}
+
+	// apply options
+	for _, option := range options {
+		err := option(c)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// host and call may have been applied via options
+	// only override if not present
+	if c.host == "" {
+		c.host = strings.TrimSpace(host)
+	}
+
+	if c.call == "" {
+		c.call = strings.TrimSpace(call)
+	}
+
+	// fix up durations
+	if c.z > 0 {
+		c.n = math.MaxInt32
+	}
+
+	// checks
+	if c.nConns > c.c {
+		return nil, errors.New("number of connections cannot be greater than concurrency")
+	}
+
+	if c.call == "" {
+		return nil, errors.New("call required")
+	}
+
+	if c.host == "" {
+		return nil, errors.New("host required")
+	}
+
+	if c.loadSchedule != ScheduleConst &&
+		c.loadSchedule != ScheduleStep &&
+		c.loadSchedule != ScheduleLine {
+		return nil, fmt.Errorf(`schedule much be "%s", "%s", or "%s"`,
+			ScheduleConst, ScheduleStep, ScheduleLine)
+	}
+
+	if c.loadSchedule == ScheduleStep || c.loadSchedule == ScheduleLine {
+		if c.loadStart == c.loadEnd {
+			return nil, errors.New("load start cannot equal load end")
+		}
+
+		// step value for step schedule or
+		// slope for line schedule
+		if c.loadStep == 0 {
+			return nil, errors.New("invalid load step")
+		}
+
+		if c.loadSchedule == ScheduleStep && c.loadStepDuration == 0 {
+			return nil, errors.New("invalid load step duration")
+		}
+	}
+
+	if c.cSchedule == ScheduleStep || c.cSchedule == ScheduleLine {
+		if c.cStart == c.cEnd {
+			return nil, errors.New("concurrency start start cannot equal concurrency end")
+		}
+
+		// step value for step schedule or
+		// slope for line schedule
+		if c.cStep == 0 {
+			return nil, errors.New("invalid concurrency step")
+		}
+
+		if c.cSchedule == ScheduleStep && c.cStepDuration == 0 {
+			return nil, errors.New("invalid concurrency step duration")
+		}
+	}
+
+	if c.loadSchedule == ScheduleLine {
+		c.loadStepDuration = time.Second
+	}
+
+	if c.cSchedule == ScheduleLine {
+		c.cStepDuration = time.Second
+	}
+
+	if c.skipFirst > 0 && int(c.skipFirst) > c.n {
+		return nil, errors.New("you cannot skip more requests than those run")
+	}
+
+	creds, err := createClientTransportCredentials(
+		c.skipVerify,
+		c.cacert,
+		c.cert,
+		c.key,
+		c.cname,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c.creds = creds
+
+	return c, nil
+}
+
 // WithConfigFromFile uses a configuration JSON file to populate the RunConfig
 //  WithConfigFromFile("config.json")
 func WithConfigFromFile(file string) Option {
@@ -613,128 +733,8 @@ func WithTemplateFuncs(funcMap template.FuncMap) Option {
 	}
 }
 
-// NewConfig creates a new RunConfig from the options passed
-func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
-
-	// init with defaults
-	c := &RunConfig{
-		n:            200,
-		c:            50,
-		nConns:       1,
-		timeout:      time.Duration(20 * time.Second),
-		dialTimeout:  time.Duration(10 * time.Second),
-		cpus:         runtime.GOMAXPROCS(-1),
-		zstop:        "close",
-		loadSchedule: ScheduleConst,
-	}
-
-	// apply options
-	for _, option := range options {
-		err := option(c)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// host and call may have been applied via options
-	// only override if not present
-	if c.host == "" {
-		c.host = strings.TrimSpace(host)
-	}
-
-	if c.call == "" {
-		c.call = strings.TrimSpace(call)
-	}
-
-	// fix up durations
-	if c.z > 0 {
-		c.n = math.MaxInt32
-	}
-
-	// checks
-	if c.nConns > c.c {
-		return nil, errors.New("number of connections cannot be greater than concurrency")
-	}
-
-	if c.call == "" {
-		return nil, errors.New("call required")
-	}
-
-	if c.host == "" {
-		return nil, errors.New("host required")
-	}
-
-	if c.loadSchedule != ScheduleConst &&
-		c.loadSchedule != ScheduleStep &&
-		c.loadSchedule != ScheduleLine {
-		return nil, fmt.Errorf(`schedule much be "%s", "%s", or "%s"`,
-			ScheduleConst, ScheduleStep, ScheduleLine)
-	}
-
-	if c.loadSchedule == ScheduleStep || c.loadSchedule == ScheduleLine {
-		if c.loadStart == c.loadEnd {
-			return nil, errors.New("load start cannot equal load end")
-		}
-
-		// step value for step schedule or
-		// slope for line schedule
-		if c.loadStep == 0 {
-			return nil, errors.New("invalid load step")
-		}
-
-		if c.loadSchedule == ScheduleStep && c.loadStepDuration == 0 {
-			return nil, errors.New("invalid load step duration")
-		}
-	}
-
-	if c.cSchedule == ScheduleStep || c.cSchedule == ScheduleLine {
-		if c.cStart == c.cEnd {
-			return nil, errors.New("concurrency start start cannot equal concurrency end")
-		}
-
-		// step value for step schedule or
-		// slope for line schedule
-		if c.cStep == 0 {
-			return nil, errors.New("invalid concurrency step")
-		}
-
-		if c.cSchedule == ScheduleStep && c.cStepDuration == 0 {
-			return nil, errors.New("invalid concurrency step duration")
-		}
-	}
-
-	if c.loadSchedule == ScheduleLine {
-		c.loadStepDuration = time.Second
-	}
-
-	if c.cSchedule == ScheduleLine {
-		c.cStepDuration = time.Second
-	}
-
-	if c.skipFirst > 0 && int(c.skipFirst) > c.n {
-		return nil, errors.New("you cannot skip more requests than those run")
-	}
-
-	creds, err := createClientTransportCredentials(
-		c.skipVerify,
-		c.cacert,
-		c.cert,
-		c.key,
-		c.cname,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	c.creds = creds
-
-	return c, nil
-}
-
 // WithEnableCompression specifies that requests should be done using gzip Compressor
-// WithEnableCompression(true)
+//	WithEnableCompression(true)
 func WithEnableCompression(enableCompression bool) Option {
 	return func(o *RunConfig) error {
 		o.enableCompression = enableCompression
@@ -744,7 +744,7 @@ func WithEnableCompression(enableCompression bool) Option {
 }
 
 // WithLoadSchedule specifies the load schedule
-// WithLoadSchedule("const")
+//	WithLoadSchedule("const")
 func WithLoadSchedule(schedule string) Option {
 	return func(o *RunConfig) error {
 		s := strings.TrimSpace(schedule)
@@ -757,7 +757,7 @@ func WithLoadSchedule(schedule string) Option {
 }
 
 // WithLoadStart specifies the load start
-// WithLoadStart(5)
+//	WithLoadStart(5)
 func WithLoadStart(start uint) Option {
 	return func(o *RunConfig) error {
 		o.loadStart = start
@@ -767,7 +767,7 @@ func WithLoadStart(start uint) Option {
 }
 
 // WithLoadEnd specifies the load end
-// WithLoadEnd(25)
+//	WithLoadEnd(25)
 func WithLoadEnd(end uint) Option {
 	return func(o *RunConfig) error {
 		o.loadEnd = end
@@ -777,7 +777,7 @@ func WithLoadEnd(end uint) Option {
 }
 
 // WithLoadStep specifies the load step
-// WithLoadStep(5)
+//	WithLoadStep(5)
 func WithLoadStep(step int) Option {
 	return func(o *RunConfig) error {
 		o.loadStep = step
@@ -814,7 +814,7 @@ func WithAsync(async bool) Option {
 }
 
 // WithConcurrencySchedule specifies the concurrency adjustment schedule
-// WithConcurrencySchedule("const")
+//	WithConcurrencySchedule("const")
 func WithConcurrencySchedule(schedule string) Option {
 	return func(o *RunConfig) error {
 		s := strings.TrimSpace(schedule)
@@ -827,7 +827,7 @@ func WithConcurrencySchedule(schedule string) Option {
 }
 
 // WithConcurrencyStart specifies the concurrency start for line or step schedule
-// WithConcurrencyStart(5)
+//	WithConcurrencyStart(5)
 func WithConcurrencyStart(v uint) Option {
 	return func(o *RunConfig) error {
 		o.cStart = v
@@ -837,7 +837,7 @@ func WithConcurrencyStart(v uint) Option {
 }
 
 // WithConcurrencyEnd specifies the concurrency end value for line or step schedule
-// WithConcurrencyEnd(25)
+//	WithConcurrencyEnd(25)
 func WithConcurrencyEnd(v uint) Option {
 	return func(o *RunConfig) error {
 		o.cEnd = v
@@ -847,7 +847,7 @@ func WithConcurrencyEnd(v uint) Option {
 }
 
 // WithConcurrencyStep specifies the concurrency step value or slope
-// WithConcurrencyStep(5)
+//	WithConcurrencyStep(5)
 func WithConcurrencyStep(step int) Option {
 	return func(o *RunConfig) error {
 		o.cStep = step
