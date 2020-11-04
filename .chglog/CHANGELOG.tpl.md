@@ -9,12 +9,13 @@
 {{ range .Commits -}}
 - {{.Hash.Short}} {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ if .Subject }}{{ .Subject }}{{ else }}{{ .Header }}{{ end }}
 {{ end }}
+{{ end }}
 {{ end -}}
+
 ### Commits
 {{ range .Commits -}}
 - {{.Hash.Short}} {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ if .Subject }}{{ .Subject }}{{ else }}{{ .Header }}{{ end }}
 {{ end }}
-{{ end -}}
 
 {{- if .NoteGroups -}}
 {{ range .NoteGroups -}}
@@ -24,4 +25,5 @@
 {{ end }}
 {{ end -}}
 {{ end -}}
+
 {{ end -}}
