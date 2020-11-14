@@ -109,6 +109,14 @@ duration (ms),status,error{{ range $i, $v := .Details }}
               </span>
               <span>Data</span>
             </a>
+		  </li>
+		  <li>
+            <a href="#options">
+              <span class="icon is-small">
+                <i class="fas fa-cog" aria-hidden="true"></i>
+              </span>
+              <span>Options</span>
+            </a>
           </li>
         </ul>
       </nav>
@@ -175,14 +183,6 @@ duration (ms),status,error{{ range $i, $v := .Details }}
 				</div>
 				<div class="column">
 					<div class="content">
-						<span class="title is-5">
-							<strong>Options</strong>
-						</span>
-						<article class="message">
-  						<div class="message-body">
-								<pre style="background-color: transparent;">{{ jsonify .Options true }}</pre>
-							</div>
-						</article>
 					</div>
 				</div>
 			</div>
@@ -305,6 +305,21 @@ duration (ms),status,error{{ range $i, $v := .Details }}
             </div>
           </div>
         </div>
+			</div>
+
+			<br />
+
+			<div class="container">
+				<div class="content">
+					<a name="options">
+						<h3>Options</h3>
+					</a>
+					<article class="message">
+						<div class="message-body">
+							<pre style="background-color: transparent;">{{ jsonify .Options true }}</pre>
+						</div>
+					</article>
+				</div>
 			</div>
 
 			<div class="container">
