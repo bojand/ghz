@@ -20,11 +20,6 @@ func TestPrinter_getInfluxLine(t *testing.T) {
 		expected string
 	}{
 		{
-			"empty",
-			runner.Report{},
-			`ghz_run,call="",host="",n=0,c=0,rps=0,z=0,timeout=0,dial_timeout=0,keepalive=0,data="null",metadata="",tags="",errors=0,has_errors=false count=0,total=0,average=0,fastest=0,slowest=0,rps=0.00,errors=0 0`,
-		},
-		{
 			"basic",
 			runner.Report{
 				Name:      "run name",
@@ -44,11 +39,13 @@ func TestPrinter_getInfluxLine(t *testing.T) {
 					"Internal":         3,
 					"DeadlineExceeded": 2},
 				Options: runner.Options{
-					Call:        "helloworld.Greeter.SayHello",
-					Proto:       "/apis/greeter.proto",
-					Host:        "0.0.0.0:50051",
-					Total:       200,
-					Concurrency: 50,
+					Call:         "helloworld.Greeter.SayHello",
+					Proto:        "/apis/greeter.proto",
+					Host:         "0.0.0.0:50051",
+					LoadSchedule: "const",
+					CSchedule:    "const",
+					Total:        200,
+					Concurrency:  50,
 					Data: map[string]interface{}{
 						"name": "Bob Smith",
 					},
@@ -139,11 +136,6 @@ func TestPrinter_printInfluxDetails(t *testing.T) {
 		expected string
 	}{
 		{
-			"empty",
-			runner.Report{},
-			``,
-		},
-		{
 			"basic",
 			runner.Report{
 				Name:      "run name",
@@ -163,11 +155,13 @@ func TestPrinter_printInfluxDetails(t *testing.T) {
 					"Internal":         3,
 					"DeadlineExceeded": 2},
 				Options: runner.Options{
-					Call:        "helloworld.Greeter.SayHello",
-					Proto:       "/apis/greeter.proto",
-					Host:        "0.0.0.0:50051",
-					Total:       200,
-					Concurrency: 50,
+					Call:         "helloworld.Greeter.SayHello",
+					Proto:        "/apis/greeter.proto",
+					Host:         "0.0.0.0:50051",
+					Total:        200,
+					Concurrency:  50,
+					LoadSchedule: "const",
+					CSchedule:    "const",
 					Data: map[string]interface{}{
 						"name": "Bob Smith",
 					},
