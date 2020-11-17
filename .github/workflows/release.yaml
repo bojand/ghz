@@ -39,10 +39,9 @@ jobs:
         id: current-time
 
       - name: Set version
-        # run: echo "::set-env name=RELEASE_VERSION::${GITHUB_REF/refs\/tags\//}"
         run: |
           echo 'RELEASE_VERSION<<EOF' >> $GITHUB_ENV
-          git describe --tags $(git rev-list --tags --max-count=1)) >> $GITHUB_ENV
+          git describe --tags $(git rev-list --tags --max-count=1) >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Build ghz
@@ -92,7 +91,7 @@ jobs:
       - name: Set version
         run: |
           echo 'RELEASE_VERSION<<EOF' >> $GITHUB_ENV
-          ${GITHUB_REF/refs\/tags\//} >> $GITHUB_ENV
+          echo ${GITHUB_REF/refs\/tags\//} >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       # These can be squashed when https://github.com/actions/download-artifact/issues/6 is closed
