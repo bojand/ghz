@@ -322,6 +322,10 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 			grpc.MaxCallSendMsgSize(math.MaxInt32),
 		))
 
+	if b.config.lbStrategy != "" {
+		opts = append(opts, grpc.WithBalancerName(b.config.lbStrategy))
+	}
+
 	// create client connection
 	return grpc.DialContext(ctx, b.config.host, opts...)
 }
