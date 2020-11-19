@@ -23,3 +23,6 @@ issues:
     # Debug log Sync() error check in defer in main
     - path: cmd/ghz/main.go
       text: "Error return value of `logger.Sync` is not checked"
+
+    - path: runner/requester.go
+      text: "SA1019: grpc.WithBalancerName"
