@@ -134,8 +134,9 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 			WithDialTimeout(time.Duration(30*time.Second)),
 			WithName("asdf"),
 			WithCPUs(4),
-			WithBinaryDataFunc(changeFunc),
 			WithBinaryData([]byte("asdf1234foobar")),
+			WithBinaryDataFunc(changeFunc),
+			WithClientLoadBalancing("round_robin"),
 			WithMetadataFromFile("../testdata/metadata.json"),
 			WithProtoset("testdata/bundle.protoset"),
 		)
@@ -161,6 +162,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, 4, c.cpus)
 		assert.Equal(t, "asdf", c.name)
 		assert.Equal(t, []byte("asdf1234foobar"), c.data)
+		assert.Equal(t, "round_robin", c.lbStrategy)
 		funcName1 := runtime.FuncForPC(reflect.ValueOf(changeFunc).Pointer()).Name()
 		funcName2 := runtime.FuncForPC(reflect.ValueOf(c.dataFunc).Pointer()).Name()
 		assert.Equal(t, funcName1, funcName2)

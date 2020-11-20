@@ -35,3 +35,6 @@ issues:
     # TODO fix protobuf deprecated
     - path: protodesc/
       text: "SA1019: package github.com/golang/protobuf"
+
+    - path: runner/requester.go
+      text: "SA1019: grpc.WithBalancerName"
