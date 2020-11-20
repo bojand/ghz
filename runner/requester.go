@@ -479,6 +479,10 @@ func min(a, b int) int {
 }
 
 func createWorkerTicker(config *RunConfig) load.WorkerTicker {
+	if config.workerTicker != nil {
+		return config.workerTicker
+	}
+
 	var wt load.WorkerTicker
 	switch config.cSchedule {
 	case ScheduleLine:
@@ -506,6 +510,10 @@ func createWorkerTicker(config *RunConfig) load.WorkerTicker {
 }
 
 func createPacer(config *RunConfig) load.Pacer {
+	if config.pacer != nil {
+		return config.pacer
+	}
+
 	var p load.Pacer
 	switch config.loadSchedule {
 	case ScheduleLine:

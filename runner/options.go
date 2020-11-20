@@ -15,6 +15,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/bojand/ghz/load"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/credentials"
@@ -63,6 +64,8 @@ type RunConfig struct {
 	loadDuration     time.Duration
 	loadStepDuration time.Duration
 
+	pacer load.Pacer
+
 	// concurrency
 	c             int
 	cStart        uint
@@ -71,6 +74,8 @@ type RunConfig struct {
 	cSchedule     string
 	cMaxDuration  time.Duration
 	cStepDuration time.Duration
+
+	workerTicker load.WorkerTicker
 
 	// test
 	n     int
@@ -881,6 +886,24 @@ func WithConcurrencyStepDuration(duration time.Duration) Option {
 func WithConcurrencyDuration(duration time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.cMaxDuration = duration
+
+		return nil
+	}
+}
+
+// WithPacer specified the custom pacer to use
+func WithPacer(p load.Pacer) Option {
+	return func(o *RunConfig) error {
+		o.pacer = p
+
+		return nil
+	}
+}
+
+// WithWorkerTicker specified the custom worker ticker to use
+func WithWorkerTicker(ticker load.WorkerTicker) Option {
+	return func(o *RunConfig) error {
+		o.workerTicker = ticker
 
 		return nil
 	}
