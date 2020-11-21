@@ -10,7 +10,7 @@ Many of these options are similar to the load control options, but independently
 ## Step Up Concurrency
 
 ```
-./dist/ghz --insecure --async --proto /Users/bdjurkovic/go/grpc-helloworld-oc/helloworld/helloworld.proto \
+./dist/ghz --insecure --async --proto /protos/helloworld.proto \
   --call helloworld.Greeter/SayHello \
   -n 10000 --rps 200 \
   --concurrency-schedule=step --concurrency-start=5 --concurrency-step=5 --concurrency-end=50 --concurrency-step-duration=5s \
@@ -56,7 +56,7 @@ This test performs a constant load at `200` RPS, starting with `5` workers, and 
 ## Step Down Concurrency
 
 ```
-./dist/ghz --insecure --async --proto /Users/bdjurkovic/go/grpc-helloworld-oc/helloworld/helloworld.proto \
+./dist/ghz --insecure --async --proto /protos/helloworld.proto \
   --call helloworld.Greeter/SayHello \
   -n 10000 --rps 200 \
   --concurrency-schedule=step --concurrency-start=50 --concurrency-step=-5 \
@@ -104,7 +104,7 @@ This test performs a constant load at `200` RPS, starting with `50` workers, and
 ## Linear increase of concurrency
 
 ```
-./dist/ghz --insecure --async --proto /Users/bdjurkovic/go/grpc-helloworld-oc/helloworld/helloworld.proto \
+./dist/ghz --insecure --async --proto /protos/helloworld.proto \
   --call helloworld.Greeter/SayHello \
   -n 10000 --rps 200 \
   --concurrency-schedule=line --concurrency-start=20 --concurrency-step=2 --concurrency-max-duration=30s \
