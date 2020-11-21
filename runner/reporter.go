@@ -24,22 +24,40 @@ type Reporter struct {
 
 // Options represents the request options
 type Options struct {
-	Host          string        `json:"host,omitempty"`
-	Proto         string        `json:"proto,omitempty"`
-	Protoset      string        `json:"protoset,omitempty"`
-	ImportPaths   []string      `json:"import-paths,omitempty"`
-	Call          string        `json:"call,omitempty"`
-	CACert        string        `json:"cacert,omitempty"`
-	Cert          string        `json:"cert,omitempty"`
-	Key           string        `json:"key,omitempty"`
-	SkipTLS       bool          `json:"skipTLS,omitempty"`
-	SkipFirst     uint          `json:"skipFirst,omitempty"`
-	CName         string        `json:"cname,omitempty"`
-	Authority     string        `json:"authority,omitempty"`
-	Insecure      bool          `json:"insecure"`
-	Total         uint          `json:"total,omitempty"`
+	Call              string   `json:"call,omitempty"`
+	Host              string   `json:"host,omitempty"`
+	Proto             string   `json:"proto,omitempty"`
+	Protoset          string   `json:"protoset,omitempty"`
+	ImportPaths       []string `json:"import-paths,omitempty"`
+	EnableCompression bool     `json:"enable-compression,omitempty"`
+
+	CACert    string `json:"cacert,omitempty"`
+	Cert      string `json:"cert,omitempty"`
+	Key       string `json:"key,omitempty"`
+	CName     string `json:"cname,omitempty"`
+	SkipTLS   bool   `json:"skipTLS,omitempty"`
+	Insecure  bool   `json:"insecure"`
+	Authority string `json:"authority,omitempty"`
+
+	RPS              uint          `json:"rps,omitempty"`
+	LoadSchedule     string        `json:"load-schedule"`
+	LoadStart        uint          `json:"load-start"`
+	LoadEnd          uint          `json:"load-end"`
+	LoadStep         int           `json:"load-step"`
+	LoadStepDuration time.Duration `json:"load-step-duration"`
+	LoadMaxDuration  time.Duration `json:"load-max-duration"`
+
 	Concurrency   uint          `json:"concurrency,omitempty"`
-	QPS           uint          `json:"qps,omitempty"`
+	CSchedule     string        `json:"concurrency-schedule"`
+	CStart        uint          `json:"concurrency-start"`
+	CEnd          uint          `json:"concurrency-end"`
+	CStep         int           `json:"concurrency-step"`
+	CStepDuration time.Duration `json:"concurrency-step-duration"`
+	CMaxDuration  time.Duration `json:"concurrency-max-duration"`
+
+	Total uint `json:"total,omitempty"`
+	Async bool `json:"async,omitempty"`
+
 	Connections   uint          `json:"connections,omitempty"`
 	Duration      time.Duration `json:"duration,omitempty"`
 	Timeout       time.Duration `json:"timeout,omitempty"`
@@ -52,6 +70,8 @@ type Options struct {
 
 	CPUs int    `json:"CPUs"`
 	Name string `json:"name,omitempty"`
+
+	SkipFirst uint `json:"skipFirst,omitempty"`
 }
 
 // Report holds the data for the full test
@@ -175,30 +195,50 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		StatusCodeDist: r.statusCodeDist}
 
 	rep.Options = Options{
-		Host:          r.config.host,
-		Proto:         r.config.proto,
-		Protoset:      r.config.protoset,
-		ImportPaths:   r.config.importPaths,
-		Call:          r.config.call,
-		CACert:        r.config.cacert,
-		Cert:          r.config.cert,
-		Key:           r.config.key,
-		CName:         r.config.cname,
-		SkipTLS:       r.config.skipVerify,
-		SkipFirst:     uint(r.config.skipFirst),
-		Insecure:      r.config.insecure,
-		Authority:     r.config.authority,
-		Total:         uint(r.config.n),
+		Call:              r.config.call,
+		Host:              r.config.host,
+		Proto:             r.config.proto,
+		Protoset:          r.config.protoset,
+		ImportPaths:       r.config.importPaths,
+		EnableCompression: r.config.enableCompression,
+
+		CACert:    r.config.cacert,
+		Cert:      r.config.cert,
+		Key:       r.config.key,
+		CName:     r.config.cname,
+		SkipTLS:   r.config.skipVerify,
+		Insecure:  r.config.insecure,
+		Authority: r.config.authority,
+
+		RPS:              uint(r.config.rps),
+		LoadSchedule:     r.config.loadSchedule,
+		LoadStart:        r.config.loadStart,
+		LoadEnd:          r.config.loadEnd,
+		LoadStep:         r.config.loadStep,
+		LoadStepDuration: r.config.loadStepDuration,
+		LoadMaxDuration:  r.config.loadDuration,
+
 		Concurrency:   uint(r.config.c),
-		QPS:           uint(r.config.qps),
+		CSchedule:     r.config.cSchedule,
+		CStart:        r.config.cStart,
+		CEnd:          r.config.cEnd,
+		CStep:         r.config.cStep,
+		CStepDuration: r.config.cStepDuration,
+		CMaxDuration:  r.config.cMaxDuration,
+
+		Total: uint(r.config.n),
+		Async: r.config.async,
+
 		Connections:   uint(r.config.nConns),
 		Duration:      r.config.z,
 		Timeout:       r.config.timeout,
 		DialTimeout:   r.config.dialTimeout,
 		KeepaliveTime: r.config.keepaliveTime,
-		Binary:        r.config.binary,
-		CPUs:          r.config.cpus,
-		Name:          r.config.name,
+
+		Binary:    r.config.binary,
+		CPUs:      r.config.cpus,
+		Name:      r.config.name,
+		SkipFirst: uint(r.config.skipFirst),
 	}
 
 	_ = json.Unmarshal(r.config.data, &rep.Options.Data)

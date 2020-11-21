@@ -3,7 +3,6 @@ package runner
 import (
 	"fmt"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -254,61 +253,47 @@ func TestRunUnary(t *testing.T) {
 		assert.Equal(t, 1, connCount)
 	})
 
-	t.Run("test QPS", func(t *testing.T) {
+	t.Run("test RPS", func(t *testing.T) {
+
 		gs.ResetCounters()
 
-		var wg sync.WaitGroup
+		data := make(map[string]interface{})
+		data["name"] = "bob"
 
-		wg.Add(1)
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(10),
+			WithConcurrency(2),
+			WithRPS(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+		)
 
-		time.AfterFunc(time.Duration(1500*time.Millisecond), func() {
-			count := gs.GetCount(callType)
-			assert.Equal(t, 2, count)
-		})
+		assert.NoError(t, err)
 
-		go func() {
-			data := make(map[string]interface{})
-			data["name"] = "bob"
+		assert.NotNil(t, report)
 
-			report, err := Run(
-				"helloworld.Greeter.SayHello",
-				internal.TestLocalhost,
-				WithProtoFile("../testdata/greeter.proto", []string{}),
-				WithTotalRequests(10),
-				WithConcurrency(2),
-				WithQPS(1),
-				WithTimeout(time.Duration(20*time.Second)),
-				WithDialTimeout(time.Duration(20*time.Second)),
-				WithData(data),
-				WithInsecure(true),
-			)
+		assert.Equal(t, 10, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
 
-			assert.NoError(t, err)
-
-			assert.NotNil(t, report)
-
-			assert.Equal(t, 10, int(report.Count))
-			assert.NotZero(t, report.Average)
-			assert.NotZero(t, report.Fastest)
-			assert.NotZero(t, report.Slowest)
-			assert.NotZero(t, report.Rps)
-			assert.Empty(t, report.Name)
-			assert.NotEmpty(t, report.Date)
-			assert.NotEmpty(t, report.Options)
-			assert.NotEmpty(t, report.Details)
-			assert.Equal(t, true, report.Options.Insecure)
-			assert.NotEmpty(t, report.LatencyDistribution)
-			assert.Equal(t, ReasonNormalEnd, report.EndReason)
-			assert.Empty(t, report.ErrorDist)
-
-			assert.NotEqual(t, report.Average, report.Slowest)
-			assert.NotEqual(t, report.Average, report.Fastest)
-			assert.NotEqual(t, report.Slowest, report.Fastest)
-
-			wg.Done()
-
-		}()
-		wg.Wait()
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
 	})
 
 	t.Run("test binary", func(t *testing.T) {

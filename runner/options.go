@@ -15,6 +15,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/bojand/ghz/load"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/credentials"
@@ -24,6 +25,15 @@ import (
 // MethodDescriptor of the call is passed to the data function.
 // CallData for the request is passed and can be used to access worker id, request number, etc...
 type BinaryDataFunc func(mtd *desc.MethodDescriptor, callData *CallData) []byte
+
+// ScheduleConst is a constant load schedule
+const ScheduleConst = "const"
+
+// ScheduleStep is the step load schedule
+const ScheduleStep = "step"
+
+// ScheduleLine is the line load schedule
+const ScheduleLine = "line"
 
 // RunConfig represents the request Configs
 type RunConfig struct {
@@ -45,10 +55,31 @@ type RunConfig struct {
 	insecure   bool
 	authority  string
 
+	// load
+	rps              int
+	loadStart        uint
+	loadEnd          uint
+	loadStep         int
+	loadSchedule     string
+	loadDuration     time.Duration
+	loadStepDuration time.Duration
+
+	pacer load.Pacer
+
+	// concurrency
+	c             int
+	cStart        uint
+	cEnd          uint
+	cStep         int
+	cSchedule     string
+	cMaxDuration  time.Duration
+	cStepDuration time.Duration
+
+	workerTicker load.WorkerTicker
+
 	// test
-	n   int
-	c   int
-	qps int
+	n     int
+	async bool
 
 	// number of connections
 	nConns int
@@ -90,6 +121,126 @@ type RunConfig struct {
 
 // Option controls some aspect of run
 type Option func(*RunConfig) error
+
+// NewConfig creates a new RunConfig from the options passed
+func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
+
+	// init with defaults
+	c := &RunConfig{
+		n:            200,
+		c:            50,
+		nConns:       1,
+		timeout:      time.Duration(20 * time.Second),
+		dialTimeout:  time.Duration(10 * time.Second),
+		cpus:         runtime.GOMAXPROCS(-1),
+		zstop:        "close",
+		loadSchedule: ScheduleConst,
+	}
+
+	// apply options
+	for _, option := range options {
+		err := option(c)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// host and call may have been applied via options
+	// only override if not present
+	if c.host == "" {
+		c.host = strings.TrimSpace(host)
+	}
+
+	if c.call == "" {
+		c.call = strings.TrimSpace(call)
+	}
+
+	// fix up durations
+	if c.z > 0 {
+		c.n = math.MaxInt32
+	}
+
+	// checks
+	if c.nConns > c.c {
+		return nil, errors.New("number of connections cannot be greater than concurrency")
+	}
+
+	if c.call == "" {
+		return nil, errors.New("call required")
+	}
+
+	if c.host == "" {
+		return nil, errors.New("host required")
+	}
+
+	if c.loadSchedule != ScheduleConst &&
+		c.loadSchedule != ScheduleStep &&
+		c.loadSchedule != ScheduleLine {
+		return nil, fmt.Errorf(`schedule much be "%s", "%s", or "%s"`,
+			ScheduleConst, ScheduleStep, ScheduleLine)
+	}
+
+	if c.loadSchedule == ScheduleStep || c.loadSchedule == ScheduleLine {
+		if c.loadStart == c.loadEnd {
+			return nil, errors.New("load start cannot equal load end")
+		}
+
+		// step value for step schedule or
+		// slope for line schedule
+		if c.loadStep == 0 {
+			return nil, errors.New("invalid load step")
+		}
+
+		if c.loadSchedule == ScheduleStep && c.loadStepDuration == 0 {
+			return nil, errors.New("invalid load step duration")
+		}
+	}
+
+	if c.cSchedule == ScheduleStep || c.cSchedule == ScheduleLine {
+		if c.cStart == c.cEnd {
+			return nil, errors.New("concurrency start start cannot equal concurrency end")
+		}
+
+		// step value for step schedule or
+		// slope for line schedule
+		if c.cStep == 0 {
+			return nil, errors.New("invalid concurrency step")
+		}
+
+		if c.cSchedule == ScheduleStep && c.cStepDuration == 0 {
+			return nil, errors.New("invalid concurrency step duration")
+		}
+	}
+
+	if c.loadSchedule == ScheduleLine {
+		c.loadStepDuration = time.Second
+	}
+
+	if c.cSchedule == ScheduleLine {
+		c.cStepDuration = time.Second
+	}
+
+	if c.skipFirst > 0 && int(c.skipFirst) > c.n {
+		return nil, errors.New("you cannot skip more requests than those run")
+	}
+
+	creds, err := createClientTransportCredentials(
+		c.skipVerify,
+		c.cacert,
+		c.cert,
+		c.key,
+		c.cname,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c.creds = creds
+
+	return c, nil
+}
 
 // WithConfigFromFile uses a configuration JSON file to populate the RunConfig
 //  WithConfigFromFile("config.json")
@@ -233,11 +384,11 @@ func WithConcurrency(c uint) Option {
 	}
 }
 
-// WithQPS specifies the QPS (queries per second) limit option
-//	WithQPS(10)
-func WithQPS(qps uint) Option {
+// WithRPS specifies the RPS (requests per second) limit option
+//	WithRPS(10)
+func WithRPS(v uint) Option {
 	return func(o *RunConfig) error {
-		o.qps = int(qps)
+		o.rps = int(v)
 
 		return nil
 	}
@@ -599,82 +750,160 @@ func WithTemplateFuncs(funcMap template.FuncMap) Option {
 	}
 }
 
-// NewConfig creates a new RunConfig from the options passed
-func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
-
-	// init with defaults
-	c := &RunConfig{
-		n:           200,
-		c:           50,
-		nConns:      1,
-		timeout:     time.Duration(20 * time.Second),
-		dialTimeout: time.Duration(10 * time.Second),
-		cpus:        runtime.GOMAXPROCS(-1),
-		zstop:       "close",
-	}
-
-	// apply options
-	for _, option := range options {
-		err := option(c)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// host and call may have been applied via options
-	// only override if not present
-	if c.host == "" {
-		c.host = strings.TrimSpace(host)
-	}
-
-	if c.call == "" {
-		c.call = strings.TrimSpace(call)
-	}
-
-	// fix up durations
-	if c.z > 0 {
-		c.n = math.MaxInt32
-	}
-
-	// checks
-	if c.nConns > c.c {
-		return nil, errors.New("Number of connections cannot be greater than concurrency")
-	}
-
-	if c.call == "" {
-		return nil, errors.New("Call required")
-	}
-
-	if c.host == "" {
-		return nil, errors.New("Host required")
-	}
-
-	if c.skipFirst > 0 && int(c.skipFirst) > c.n {
-		return nil, errors.New("You cannot skip more requests than those run")
-	}
-	creds, err := createClientTransportCredentials(
-		c.skipVerify,
-		c.cacert,
-		c.cert,
-		c.key,
-		c.cname,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	c.creds = creds
-
-	return c, nil
-}
-
 // WithEnableCompression specifies that requests should be done using gzip Compressor
-// WithEnableCompression(true)
+//	WithEnableCompression(true)
 func WithEnableCompression(enableCompression bool) Option {
 	return func(o *RunConfig) error {
 		o.enableCompression = enableCompression
+
+		return nil
+	}
+}
+
+// WithLoadSchedule specifies the load schedule
+//	WithLoadSchedule("const")
+func WithLoadSchedule(schedule string) Option {
+	return func(o *RunConfig) error {
+		s := strings.TrimSpace(schedule)
+		if len(s) > 0 {
+			o.loadSchedule = strings.ToLower(s)
+		}
+
+		return nil
+	}
+}
+
+// WithLoadStart specifies the load start
+//	WithLoadStart(5)
+func WithLoadStart(start uint) Option {
+	return func(o *RunConfig) error {
+		o.loadStart = start
+
+		return nil
+	}
+}
+
+// WithLoadEnd specifies the load end
+//	WithLoadEnd(25)
+func WithLoadEnd(end uint) Option {
+	return func(o *RunConfig) error {
+		o.loadEnd = end
+
+		return nil
+	}
+}
+
+// WithLoadStep specifies the load step
+//	WithLoadStep(5)
+func WithLoadStep(step int) Option {
+	return func(o *RunConfig) error {
+		o.loadStep = step
+
+		return nil
+	}
+}
+
+// WithLoadStepDuration specifies the load step duration for step schedule
+func WithLoadStepDuration(duration time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.loadStepDuration = duration
+
+		return nil
+	}
+}
+
+// WithLoadDuration specifies the load duration
+func WithLoadDuration(duration time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.loadDuration = duration
+
+		return nil
+	}
+}
+
+// WithAsync specifies the async option
+func WithAsync(async bool) Option {
+	return func(o *RunConfig) error {
+		o.async = async
+
+		return nil
+	}
+}
+
+// WithConcurrencySchedule specifies the concurrency adjustment schedule
+//	WithConcurrencySchedule("const")
+func WithConcurrencySchedule(schedule string) Option {
+	return func(o *RunConfig) error {
+		s := strings.TrimSpace(schedule)
+		if len(s) > 0 {
+			o.cSchedule = strings.ToLower(s)
+		}
+
+		return nil
+	}
+}
+
+// WithConcurrencyStart specifies the concurrency start for line or step schedule
+//	WithConcurrencyStart(5)
+func WithConcurrencyStart(v uint) Option {
+	return func(o *RunConfig) error {
+		o.cStart = v
+
+		return nil
+	}
+}
+
+// WithConcurrencyEnd specifies the concurrency end value for line or step schedule
+//	WithConcurrencyEnd(25)
+func WithConcurrencyEnd(v uint) Option {
+	return func(o *RunConfig) error {
+		o.cEnd = v
+
+		return nil
+	}
+}
+
+// WithConcurrencyStep specifies the concurrency step value or slope
+//	WithConcurrencyStep(5)
+func WithConcurrencyStep(step int) Option {
+	return func(o *RunConfig) error {
+		o.cStep = step
+
+		return nil
+	}
+}
+
+// WithConcurrencyStepDuration specifies the concurrency step duration for step schedule
+func WithConcurrencyStepDuration(duration time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.cStepDuration = duration
+
+		return nil
+	}
+}
+
+// WithConcurrencyDuration specifies the total concurrency adjustment duration
+func WithConcurrencyDuration(duration time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.cMaxDuration = duration
+
+		return nil
+	}
+}
+
+// WithPacer specified the custom pacer to use
+func WithPacer(p load.Pacer) Option {
+	return func(o *RunConfig) error {
+		o.pacer = p
+
+		return nil
+	}
+}
+
+// WithWorkerTicker specified the custom worker ticker to use
+func WithWorkerTicker(ticker load.WorkerTicker) Option {
+	return func(o *RunConfig) error {
+		o.workerTicker = ticker
 
 		return nil
 	}
@@ -740,7 +969,7 @@ func fromConfig(cfg *Config) []Option {
 		WithAuthority(cfg.Authority),
 		WithConcurrency(cfg.C),
 		WithTotalRequests(cfg.N),
-		WithQPS(cfg.QPS),
+		WithRPS(cfg.RPS),
 		WithTimeout(time.Duration(cfg.Timeout)),
 		WithRunDuration(time.Duration(cfg.Z)),
 		WithDialTimeout(time.Duration(cfg.DialTimeout)),
@@ -754,6 +983,19 @@ func fromConfig(cfg *Config) []Option {
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),
 		WithDurationStopAction(cfg.ZStop),
+		WithLoadSchedule(cfg.LoadSchedule),
+		WithLoadStart(cfg.LoadStart),
+		WithLoadStep(cfg.LoadStep),
+		WithLoadStepDuration(time.Duration(cfg.LoadStepDuration)),
+		WithLoadEnd(cfg.LoadEnd),
+		WithLoadDuration(time.Duration(cfg.LoadMaxDuration)),
+		WithAsync(cfg.Async),
+		WithConcurrencySchedule(cfg.CSchedule),
+		WithConcurrencyStart(cfg.CStart),
+		WithConcurrencyEnd(cfg.CEnd),
+		WithConcurrencyStep(cfg.CStep),
+		WithConcurrencyStepDuration(time.Duration(cfg.CStepDuration)),
+		WithConcurrencyDuration(time.Duration(cfg.CMaxDuration)),
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil
@@ -784,5 +1026,6 @@ func fromConfig(cfg *Config) []Option {
 	if len(cfg.BinDataPath) > 0 {
 		options = append(options, WithBinaryDataFromFile(cfg.BinDataPath))
 	}
+
 	return options
 }

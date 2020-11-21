@@ -20,11 +20,6 @@ func TestPrinter_getInfluxLine(t *testing.T) {
 		expected string
 	}{
 		{
-			"empty",
-			runner.Report{},
-			`ghz_run,call="",host="",n=0,c=0,qps=0,z=0,timeout=0,dial_timeout=0,keepalive=0,data="null",metadata="",tags="",errors=0,has_errors=false count=0,total=0,average=0,fastest=0,slowest=0,rps=0.00,errors=0 0`,
-		},
-		{
 			"basic",
 			runner.Report{
 				Name:      "run name",
@@ -44,11 +39,13 @@ func TestPrinter_getInfluxLine(t *testing.T) {
 					"Internal":         3,
 					"DeadlineExceeded": 2},
 				Options: runner.Options{
-					Call:        "helloworld.Greeter.SayHello",
-					Proto:       "/apis/greeter.proto",
-					Host:        "0.0.0.0:50051",
-					Total:       200,
-					Concurrency: 50,
+					Call:         "helloworld.Greeter.SayHello",
+					Proto:        "/apis/greeter.proto",
+					Host:         "0.0.0.0:50051",
+					LoadSchedule: "const",
+					CSchedule:    "const",
+					Total:        200,
+					Concurrency:  50,
 					Data: map[string]interface{}{
 						"name": "Bob Smith",
 					},
@@ -116,7 +113,7 @@ func TestPrinter_getInfluxLine(t *testing.T) {
 					},
 				},
 			},
-			fmt.Sprintf(`ghz_run,name="run\ name",proto="/apis/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=200,c=50,qps=0,z=0,timeout=0,dial_timeout=0,keepalive=0,data="{\"name\":\"Bob\ Smith\"}",metadata="{\"foo\ bar\":\"biz\ baz\"}",tags="",errors=5,has_errors=true count=200,total=2000000000,average=10000000,fastest=1000000,slowest=100000000,rps=2000.00,median=5000000,p95=20000000,errors=5 %+v`, unixTimeNow),
+			fmt.Sprintf(`ghz_run,name="run\ name",proto="/apis/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=200,c=50,rps=0,z=0,timeout=0,dial_timeout=0,keepalive=0,data="{\"name\":\"Bob\ Smith\"}",metadata="{\"foo\ bar\":\"biz\ baz\"}",tags="",errors=5,has_errors=true count=200,total=2000000000,average=10000000,fastest=1000000,slowest=100000000,rps=2000.00,median=5000000,p95=20000000,errors=5 %+v`, unixTimeNow),
 		},
 	}
 
@@ -139,11 +136,6 @@ func TestPrinter_printInfluxDetails(t *testing.T) {
 		expected string
 	}{
 		{
-			"empty",
-			runner.Report{},
-			``,
-		},
-		{
 			"basic",
 			runner.Report{
 				Name:      "run name",
@@ -163,11 +155,13 @@ func TestPrinter_printInfluxDetails(t *testing.T) {
 					"Internal":         3,
 					"DeadlineExceeded": 2},
 				Options: runner.Options{
-					Call:        "helloworld.Greeter.SayHello",
-					Proto:       "/apis/greeter.proto",
-					Host:        "0.0.0.0:50051",
-					Total:       200,
-					Concurrency: 50,
+					Call:         "helloworld.Greeter.SayHello",
+					Proto:        "/apis/greeter.proto",
+					Host:         "0.0.0.0:50051",
+					Total:        200,
+					Concurrency:  50,
+					LoadSchedule: "const",
+					CSchedule:    "const",
 					Data: map[string]interface{}{
 						"name": "Bob Smith",
 					},
@@ -235,7 +229,7 @@ func TestPrinter_printInfluxDetails(t *testing.T) {
 					},
 				},
 			},
-			fmt.Sprintf(`ghz_detail,name="run\ name",proto="/apis/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=200,c=50,qps=0,z=0,timeout=0,dial_timeout=0,keepalive=0,data="{\"name\":\"Bob\ Smith\"}",metadata="{\"foo\ bar\":\"biz\ baz\"}",tags="",hasError=false latency=1000000,error="",status="OK" %+v
+			fmt.Sprintf(`ghz_detail,name="run\ name",proto="/apis/greeter.proto",call="helloworld.Greeter.SayHello",host="0.0.0.0:50051",n=200,c=50,rps=0,z=0,timeout=0,dial_timeout=0,keepalive=0,data="{\"name\":\"Bob\ Smith\"}",metadata="{\"foo\ bar\":\"biz\ baz\"}",tags="",hasError=false latency=1000000,error="",status="OK" %+v
 `, unixTimeNow),
 		},
 	}

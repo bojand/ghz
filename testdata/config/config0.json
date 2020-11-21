@@ -9,7 +9,7 @@
     "keepalive": 0,
     "total": 1000,
     "concurrency": 1,
-    "qps": 0,
+    "rps": 0,
     "host": "127.0.0.1:9000",
     "data": "foo"
 }

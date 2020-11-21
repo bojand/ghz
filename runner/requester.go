@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bojand/ghz/load"
 	"github.com/bojand/ghz/protodesc"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
@@ -50,14 +51,11 @@ type Requester struct {
 	stopCh  chan bool
 	start   time.Time
 
-	qpsTick time.Duration
-
-	reqCounter int64
-
 	arrayJSONData []string
 
-	stopReason StopReason
 	lock       sync.Mutex
+	stopReason StopReason
+	workers    []*Worker
 }
 
 // NewRequester creates a new requestor from the passed RunConfig
@@ -66,17 +64,12 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 	var err error
 	var mtd *desc.MethodDescriptor
 
-	var qpsTick time.Duration
-	if c.qps > 0 {
-		qpsTick = time.Duration(1e6/(c.qps)) * time.Microsecond
-	}
-
 	reqr := &Requester{
 		config:     c,
-		qpsTick:    qpsTick,
 		stopReason: ReasonNormalEnd,
 		results:    make(chan *callResult, min(c.c*1000, maxResult)),
-		stopCh:     make(chan bool, c.c),
+		stopCh:     make(chan bool, 1),
+		workers:    make([]*Worker, 0, c.c),
 		conns:      make([]*grpc.ClientConn, 0, c.nConns),
 		stubs:      make([]grpcdynamic.Stub, 0, c.nConns),
 	}
@@ -156,12 +149,15 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 // Run makes all the requests and returns a report of results
 // It blocks until all work is done.
 func (b *Requester) Run() (*Report, error) {
-	start := time.Now()
+
+	defer close(b.stopCh)
 
 	cc, err := b.openClientConns()
 	if err != nil {
 		return nil, err
 	}
+
+	start := time.Now()
 
 	b.lock.Lock()
 	b.start = start
@@ -179,7 +175,11 @@ func (b *Requester) Run() (*Report, error) {
 		b.reporter.Run()
 	}()
 
-	err = b.runWorkers()
+	wt := createWorkerTicker(b.config)
+
+	p := createPacer(b.config)
+
+	err = b.runWorkers(wt, p)
 
 	report := b.Finish()
 	b.closeClientConns()
@@ -189,18 +189,16 @@ func (b *Requester) Run() (*Report, error) {
 
 // Stop stops the test
 func (b *Requester) Stop(reason StopReason) {
+
+	b.stopCh <- true
+
 	b.lock.Lock()
 	b.stopReason = reason
-	b.lock.Unlock()
 
 	if b.config.hasLog {
 		b.config.log.Debugf("Stopping with reason: %+v", reason)
 	}
-
-	// Send stop signal so that workers can stop gracefully.
-	for i := 0; i < b.config.c; i++ {
-		b.stopCh <- true
-	}
+	b.lock.Unlock()
 
 	if b.config.zstop == "close" {
 		b.closeClientConns()
@@ -228,7 +226,12 @@ func (b *Requester) Finish() *Report {
 		b.config.log.Debug("Finilizing report")
 	}
 
-	return b.reporter.Finalize(b.stopReason, total)
+	var r StopReason
+	b.lock.Lock()
+	r = b.stopReason
+	b.lock.Unlock()
+
+	return b.reporter.Finalize(r, total)
 }
 
 func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
@@ -330,59 +333,141 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	return grpc.DialContext(ctx, b.config.host, opts...)
 }
 
-func (b *Requester) runWorkers() error {
-	nReqPerWorker := b.config.n / b.config.c
+func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 
-	if b.config.c == 0 {
-		return nil
-	}
+	wct := wt.Ticker()
+
+	var wm sync.Mutex
+
+	// worker control ticker goroutine
+	go func() {
+		wt.Run()
+	}()
 
 	errC := make(chan error, b.config.c)
+	done := make(chan struct{})
+	ticks := make(chan TickValue)
+	counter := Counter{}
 
-	// Ignore the case where b.N % b.C != 0.
+	go func() {
+		n := 0
+		wc := 0
+		for tv := range wct {
+			if b.config.hasLog {
+				b.config.log.Debugw("Worker ticker.", "delta", tv.Delta)
+			}
 
-	n := 0                            // connection counter
-	for i := 0; i < b.config.c; i++ { // concurrency counter
+			if tv.Delta > 0 {
+				for i := 0; i < tv.Delta; i++ {
+					wID := "g" + strconv.Itoa(wc) + "c" + strconv.Itoa(n)
 
-		wID := "g" + strconv.Itoa(i) + "c" + strconv.Itoa(n)
+					if len(b.config.name) > 0 {
+						wID = b.config.name + ":" + wID
+					}
 
-		if len(b.config.name) > 0 {
-			wID = b.config.name + ":" + wID
+					if b.config.hasLog {
+						b.config.log.Debugw("Creating worker with ID: "+wID,
+							"workerID", wID, "requests per worker")
+					}
+
+					w := Worker{
+						ticks:         ticks,
+						active:        true,
+						stub:          b.stubs[n],
+						mtd:           b.mtd,
+						config:        b.config,
+						stopCh:        make(chan bool),
+						workerID:      wID,
+						arrayJSONData: b.arrayJSONData,
+					}
+
+					wc++ // increment worker id
+
+					n++ // increment connection counter
+
+					// wrap around connections if needed
+					if n == b.config.nConns {
+						n = 0
+					}
+
+					wm.Lock()
+					b.workers = append(b.workers, &w)
+					wm.Unlock()
+
+					go func() {
+						errC <- w.runWorker()
+					}()
+				}
+			} else if tv.Delta < 0 {
+				nd := -1 * tv.Delta
+				wm.Lock()
+				wdc := 0
+				for _, wrk := range b.workers {
+					if wdc == nd {
+						break
+					}
+
+					wrk := wrk
+					if wrk.active {
+						wrk.Stop()
+						wdc++
+					}
+				}
+				wm.Unlock()
+			}
 		}
+	}()
 
-		if b.config.hasLog {
-			b.config.log.Debugw("Creating worker with ID: "+wID,
-				"workerID", wID, "requests per worker", nReqPerWorker)
-		}
+	go func() {
+		defer close(ticks)
+		defer wt.Finish()
 
-		w := Worker{
-			stub:          b.stubs[n],
-			mtd:           b.mtd,
-			config:        b.config,
-			stopCh:        b.stopCh,
-			qpsTick:       b.qpsTick,
-			reqCounter:    &b.reqCounter,
-			nReq:          nReqPerWorker,
-			workerID:      wID,
-			arrayJSONData: b.arrayJSONData,
-		}
-
-		n++ // increment connection counter
-
-		// wrap around connections if needed
-		if n == b.config.nConns {
-			n = 0
-		}
-
-		go func() {
-			errC <- w.runWorker()
+		defer func() {
+			wm.Lock()
+			nw := len(b.workers)
+			for i := 0; i < nw; i++ {
+				b.workers[i].Stop()
+			}
+			wm.Unlock()
 		}()
-	}
+
+		began := time.Now()
+
+		for {
+			wait, stop := p.Pace(time.Since(began), counter.Get())
+
+			if stop {
+				if b.config.hasLog {
+					b.config.log.Debugw("Received stop from pacer.")
+				}
+				done <- struct{}{}
+				return
+			}
+
+			if wait > 0 {
+				time.Sleep(wait)
+			}
+
+			select {
+			case ticks <- TickValue{instant: time.Now(), reqNumber: counter.Inc() - 1}:
+				continue
+			case <-b.stopCh:
+				if b.config.hasLog {
+					b.config.log.Debugw("Signal received from stop channel.", "count", counter.Get())
+				}
+				done <- struct{}{}
+				return
+			}
+		}
+	}()
+
+	<-done
 
 	var err error
-	for i := 0; i < b.config.c; i++ {
+	for i := 0; i < len(b.workers); i++ {
 		err = multierr.Append(err, <-errC)
 	}
+
 	return err
 }
 
@@ -391,4 +476,66 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func createWorkerTicker(config *RunConfig) load.WorkerTicker {
+	if config.workerTicker != nil {
+		return config.workerTicker
+	}
+
+	var wt load.WorkerTicker
+	switch config.cSchedule {
+	case ScheduleLine:
+		wt = &load.LineWorkerTicker{
+			C:           make(chan load.TickValue),
+			Start:       config.cStart,
+			Slope:       config.cStep,
+			Stop:        config.cEnd,
+			MaxDuration: config.cMaxDuration,
+		}
+	case ScheduleStep:
+		wt = &load.StepWorkerTicker{
+			C:            make(chan load.TickValue),
+			Start:        config.cStart,
+			Step:         config.cStep,
+			Stop:         config.cEnd,
+			StepDuration: config.cStepDuration,
+			MaxDuration:  config.cMaxDuration,
+		}
+	default:
+		wt = &load.ConstWorkerTicker{N: uint(config.c), C: make(chan load.TickValue)}
+	}
+
+	return wt
+}
+
+func createPacer(config *RunConfig) load.Pacer {
+	if config.pacer != nil {
+		return config.pacer
+	}
+
+	var p load.Pacer
+	switch config.loadSchedule {
+	case ScheduleLine:
+		p = &load.LinearPacer{
+			Start:        load.ConstantPacer{Freq: uint64(config.loadStart), Max: uint64(config.n)},
+			Slope:        int64(config.loadStep),
+			Stop:         load.ConstantPacer{Freq: uint64(config.loadEnd), Max: uint64(config.n)},
+			LoadDuration: config.loadDuration,
+			Max:          uint64(config.n),
+		}
+	case ScheduleStep:
+		p = &load.StepPacer{
+			Start:        load.ConstantPacer{Freq: uint64(config.loadStart), Max: uint64(config.n)},
+			Step:         int64(config.loadStep),
+			Stop:         load.ConstantPacer{Freq: uint64(config.loadEnd), Max: uint64(config.n)},
+			LoadDuration: config.loadDuration,
+			StepDuration: config.loadStepDuration,
+			Max:          uint64(config.n),
+		}
+	default:
+		p = &load.ConstantPacer{Freq: uint64(config.rps), Max: uint64(config.n)}
+	}
+
+	return p
 }

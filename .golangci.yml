@@ -24,5 +24,17 @@ issues:
     - path: cmd/ghz/main.go
       text: "Error return value of `logger.Sync` is not checked"
 
+    # sync.once copy in pacer test
+    - path: load/pacer_test.go
+      text: "copylocks"
+
+    # TODO fix protobuf deprecated
+    - path: runner/
+      text: "SA1019: package github.com/golang/protobuf"
+  
+    # TODO fix protobuf deprecated
+    - path: protodesc/
+      text: "SA1019: package github.com/golang/protobuf"
+
     - path: runner/requester.go
       text: "SA1019: grpc.WithBalancerName"

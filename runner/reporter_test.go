@@ -25,7 +25,7 @@ func TestReport_MarshalJSON(t *testing.T) {
 	json, err := json.Marshal(&r)
 	assert.NoError(t, err)
 
-	expected := `{"date":"2006-01-02T15:04:00-07:00","options":{"insecure":false,"binary":false,"CPUs":0},"count":1000,"total":10000000000,"average":500000000,"fastest":10000000,"slowest":1000000000,"rps":34567.89,"errorDistribution":null,"statusCodeDistribution":null,"latencyDistribution":null,"histogram":null,"details":null}`
+	expected := `{"date":"2006-01-02T15:04:00-07:00","options":{"insecure":false,"load-schedule":"","load-start":0,"load-end":0,"load-step":0,"load-step-duration":0,"load-max-duration":0,"concurrency-schedule":"","concurrency-start":0,"concurrency-end":0,"concurrency-step":0,"concurrency-step-duration":0,"concurrency-max-duration":0,"binary":false,"CPUs":0},"count":1000,"total":10000000000,"average":500000000,"fastest":10000000,"slowest":1000000000,"rps":34567.89,"errorDistribution":null,"statusCodeDistribution":null,"latencyDistribution":null,"histogram":null,"details":null}`
 	assert.Equal(t, expected, string(json))
 }
 

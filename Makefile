@@ -36,10 +36,6 @@ else
 	OPEN_COVERAGE_HTML :=
 endif
 
-#################################################
-##### Everything below should not be edited #####
-#################################################
-
 # UNAME_OS stores the value of uname -s.
 UNAME_OS := $(shell uname -s)
 # UNAME_ARCH stores the value of uname -m.
@@ -48,25 +44,16 @@ UNAME_ARCH := $(shell uname -m)
 # TMP_BASE is the base directory used for TMP.
 # Use TMP and not TMP_BASE as the temporary directory.
 TMP_BASE := .tmp
-# TMP is the temporary directory used.
-# This is based on UNAME_OS and UNAME_ARCH to make sure there are no issues
-# switching between platform builds.
-TMP := $(TMP_BASE)/$(UNAME_OS)/$(UNAME_ARCH)
-# TMP_BIN is where we install binaries for usage during development.
-TMP_BIN = $(TMP)/bin
 # TMP_COVERAGE is where we store code coverage files.
 TMP_COVERAGE := $(TMP_BASE)/coverage
 
 # Run all by default when "make" is invoked.
 .DEFAULT_GOAL := all
 
-# Install all the build and lint dependencies
-setup:
-	if [ ! -f $(GOPATH)/bin/tparse ]; then go get github.com/mfridman/tparse; fi;
-	if [ ! -f $(GOPATH)/bin/goimports ]; then go get golang.org/x/tools/cmd/goimports; fi;
-	if [ ! -f $(GOPATH)/bin/golangci-lint ]; then curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.23.8; fi;
-	go mod download
-.PHONY: setup
+# Tools
+.PHONY: tools
+tools:
+	go generate -tags tools tools/tools.go
 
 # All runs the default lint, test, and code coverage targets.
 .PHONY: all
@@ -88,11 +75,12 @@ lint:
 test:
 	go test $(GO_TEST_FLAGS) $(GO_PKGS)
 
-# gofmt and goimports all go files
+# Formats using gofmt and goimports all go files
 .PHONY: fmt
 fmt:
 	find . -name '*.go' | while read -r file; do gofmt -w -s "$$file"; goimports -w "$$file"; done
 
+# Build
 .PHONY: build
 build:
 	CGO_ENABLED=0 go build --ldflags="-s -w" -o $(DIST_DIR)/ghz ./cmd/ghz/...
