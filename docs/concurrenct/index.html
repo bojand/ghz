@@ -1,0 +1,129 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Concurrency Options · ghz</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="This is a walkthrough of different concurrency options available to control the number of concurrent workers that `ghz` utilizes to make requests to the server. All examples are done using a simple unary gRPC call."/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Concurrency Options · ghz"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ghz.sh/"/><meta property="og:description" content="This is a walkthrough of different concurrency options available to control the number of concurrent workers that `ghz` utilizes to make requests to the server. All examples are done using a simple unary gRPC call."/><meta property="og:image" content="https://ghz.sh/img/green_fwd2.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://ghz.sh/img/green_fwd2.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/green_fwd2.svg" alt="ghz"/><h2 class="headerTitleWithLogo">ghz</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/intro" target="_self">CLI</a></li><li class=""><a href="/docs/web/intro" target="_self">Web</a></li><li class=""><a href="https://godoc.org/github.com/bojand/ghz" target="_self">GoDoc</a></li><li class=""><a href="https://github.com/bojand/ghz" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Concurrency Options</h1></header><article><div><span><p>This is a walkthrough of different concurrency options available to control the number of concurrent workers that <code>ghz</code> utilizes to make requests to the server. All examples are done using a simple unary gRPC call.</p>
+<p>Many of these options are similar to the load control options, but independently control the concurrent workers utilized.</p>
+<h2><a class="anchor" aria-hidden="true" id="step-up-concurrency"></a><a href="#step-up-concurrency" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Step Up Concurrency</h2>
+<pre><code class="hljs">./dist/ghz --insecure --async --proto /Users/bdjurkovic/go/grpc-helloworld-oc/helloworld/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -n <span class="hljs-number">10000</span> --rps <span class="hljs-number">200</span> \
+  --concurrency-schedule=step --concurrency-start=<span class="hljs-number">5</span> --concurrency-step=<span class="hljs-number">5</span> --concurrency-end=<span class="hljs-number">50</span> --concurrency-step-duration=<span class="hljs-number">5</span>s \
+  -d <span class="hljs-string">'{"name":"{{.WorkerID}}"}'</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">50051</span>
+
+Summary:
+  Count:    <span class="hljs-number">10000</span>
+  Total:    <span class="hljs-number">50.05</span> s
+  Slowest:  <span class="hljs-number">52.04</span> ms
+  Fastest:  <span class="hljs-number">50.19</span> ms
+  Average:  <span class="hljs-number">50.59</span> ms
+  Requests/sec: <span class="hljs-number">199.79</span>
+
+Response time histogram:
+  <span class="hljs-number">50.187</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">50.373</span> [<span class="hljs-number">1786</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">50.558</span> [<span class="hljs-number">3032</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">50.743</span> [<span class="hljs-number">2822</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">50.929</span> [<span class="hljs-number">1536</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">51.114</span> [<span class="hljs-number">562</span>]  |∎∎∎∎∎∎∎
+  <span class="hljs-number">51.299</span> [<span class="hljs-number">194</span>]  |∎∎∎
+  <span class="hljs-number">51.485</span> [<span class="hljs-number">42</span>]   |∎
+  <span class="hljs-number">51.670</span> [<span class="hljs-number">15</span>]   |
+  <span class="hljs-number">51.855</span> [<span class="hljs-number">6</span>]    |
+  <span class="hljs-number">52.041</span> [<span class="hljs-number">4</span>]    |
+
+Latency distribution:
+  <span class="hljs-number">10</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.33</span> ms
+  <span class="hljs-number">25</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.42</span> ms
+  <span class="hljs-number">50</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.57</span> ms
+  <span class="hljs-number">75</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.73</span> ms
+  <span class="hljs-number">90</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.89</span> ms
+  <span class="hljs-number">95</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.01</span> ms
+  <span class="hljs-number">99</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.24</span> ms
+
+Status code distribution:
+</code></pre>
+<p>This test performs a constant load at <code>200</code> RPS, starting with <code>5</code> workers, and increasing concurrency by <code>5</code> workers every <code>5s</code> until we have <code>50</code> workers. At that point all <code>50</code> workers will be used to sustain the constant <code>200</code> RPS until <code>10000</code> total request limit is reached. Worker count over time would look something like:</p>
+<p><img src="images/step_up_c_const_rps_wc.svg" alt="Step Up Concurrency Constant Load"></p>
+<h2><a class="anchor" aria-hidden="true" id="step-down-concurrency"></a><a href="#step-down-concurrency" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Step Down Concurrency</h2>
+<pre><code class="hljs">./dist/ghz --insecure --async --proto /Users/bdjurkovic/go/grpc-helloworld-oc/helloworld/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -n <span class="hljs-number">10000</span> --rps <span class="hljs-number">200</span> \
+  --concurrency-schedule=step --concurrency-start=<span class="hljs-number">50</span> --concurrency-step=<span class="hljs-number">-5</span> \
+  --concurrency-step-duration=<span class="hljs-number">5</span>s --concurrency-max-duration=<span class="hljs-number">30</span>s \
+  -d <span class="hljs-string">'{"name":"{{.WorkerID}}"}'</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">50051</span>
+
+Summary:
+  Count:    <span class="hljs-number">10000</span>
+  Total:    <span class="hljs-number">50.05</span> s
+  Slowest:  <span class="hljs-number">52.13</span> ms
+  Fastest:  <span class="hljs-number">50.15</span> ms
+  Average:  <span class="hljs-number">50.63</span> ms
+  Requests/sec: <span class="hljs-number">199.79</span>
+
+Response time histogram:
+  <span class="hljs-number">50.152</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">50.350</span> [<span class="hljs-number">1145</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">50.548</span> [<span class="hljs-number">2476</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">50.746</span> [<span class="hljs-number">3491</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">50.943</span> [<span class="hljs-number">2202</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">51.141</span> [<span class="hljs-number">490</span>]  |∎∎∎∎∎∎
+  <span class="hljs-number">51.339</span> [<span class="hljs-number">148</span>]  |∎∎
+  <span class="hljs-number">51.536</span> [<span class="hljs-number">30</span>]   |
+  <span class="hljs-number">51.734</span> [<span class="hljs-number">10</span>]   |
+  <span class="hljs-number">51.932</span> [<span class="hljs-number">4</span>]    |
+  <span class="hljs-number">52.130</span> [<span class="hljs-number">3</span>]    |
+
+Latency distribution:
+  <span class="hljs-number">10</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.34</span> ms
+  <span class="hljs-number">25</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.47</span> ms
+  <span class="hljs-number">50</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.63</span> ms
+  <span class="hljs-number">75</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.77</span> ms
+  <span class="hljs-number">90</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.89</span> ms
+  <span class="hljs-number">95</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.99</span> ms
+  <span class="hljs-number">99</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.24</span> ms
+
+Status code distribution:
+  [OK]   <span class="hljs-number">10000</span> responses
+</code></pre>
+<p>This test performs a constant load at <code>200</code> RPS, starting with <code>50</code> workers, and decreasing concurrency by <code>5</code> workers every <code>5s</code> until <code>30s</code> has elapsed. At that point all remaining workers will be used to sustain the constant <code>200</code> RPS until <code>10000</code> total request limit is reached. Worker count over time would look something like:</p>
+<p><img src="images/step_down_c_const_rps_wc.svg" alt="Step Down Concurrency Constant Load"></p>
+<h2><a class="anchor" aria-hidden="true" id="linear-increase-of-concurrency"></a><a href="#linear-increase-of-concurrency" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Linear increase of concurrency</h2>
+<pre><code class="hljs">./dist/ghz --insecure --async --proto /Users/bdjurkovic/go/grpc-helloworld-oc/helloworld/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -n <span class="hljs-number">10000</span> --rps <span class="hljs-number">200</span> \
+  --concurrency-schedule=line --concurrency-start=<span class="hljs-number">20</span> --concurrency-step=<span class="hljs-number">2</span> --concurrency-max-duration=<span class="hljs-number">30</span>s \
+  -d <span class="hljs-string">'{"name":"{{.WorkerID}}"}'</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">50051</span>
+
+Summary:
+  Count:    <span class="hljs-number">10000</span>
+  Total:    <span class="hljs-number">50.05</span> s
+  Slowest:  <span class="hljs-number">58.54</span> ms
+  Fastest:  <span class="hljs-number">50.16</span> ms
+  Average:  <span class="hljs-number">50.60</span> ms
+  Requests/sec: <span class="hljs-number">199.79</span>
+
+Response time histogram:
+  <span class="hljs-number">50.157</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">50.995</span> [<span class="hljs-number">9515</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">51.834</span> [<span class="hljs-number">477</span>]  |∎∎
+  <span class="hljs-number">52.672</span> [<span class="hljs-number">3</span>]    |
+  <span class="hljs-number">53.510</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">54.349</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">55.187</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">56.025</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">56.864</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">57.702</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">58.540</span> [<span class="hljs-number">2</span>]    |
+
+Latency distribution:
+  <span class="hljs-number">10</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.31</span> ms
+  <span class="hljs-number">25</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.40</span> ms
+  <span class="hljs-number">50</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.60</span> ms
+  <span class="hljs-number">75</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.75</span> ms
+  <span class="hljs-number">90</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.89</span> ms
+  <span class="hljs-number">95</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.99</span> ms
+  <span class="hljs-number">99</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.25</span> ms
+
+Status code distribution:
+  [OK]   <span class="hljs-number">10000</span> responses
+</code></pre>
+<p>This test performs a constant load at <code>200</code> RPS, starting with <code>20</code> workers, and increasing concurrency linearly every <code>1s</code> by <code>2</code> workers until <code>30s</code> has elapsed. At that point all remaining workers will be used to sustain the constant <code>200</code> RPS until <code>10000</code> total request limit is reached.</p>
+<p><img src="images/line_up_c_const_rps_wc.svg" alt="Lene Up Concurrency Constant Load"></p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2020 Bojan D.</section></footer></div></body></html>

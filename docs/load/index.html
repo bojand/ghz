@@ -1,0 +1,212 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Load Options · ghz</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="This is a walkthrough of different load options available to control the rate in requests per second (RPS) that `ghz` attempts to make to the server. All examples are done using a simple unary gRPC call."/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Load Options · ghz"/><meta property="og:type" content="website"/><meta property="og:url" content="https://ghz.sh/"/><meta property="og:description" content="This is a walkthrough of different load options available to control the rate in requests per second (RPS) that `ghz` attempts to make to the server. All examples are done using a simple unary gRPC call."/><meta property="og:image" content="https://ghz.sh/img/green_fwd2.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://ghz.sh/img/green_fwd2.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/green_fwd2.svg" alt="ghz"/><h2 class="headerTitleWithLogo">ghz</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/intro" target="_self">CLI</a></li><li class=""><a href="/docs/web/intro" target="_self">Web</a></li><li class=""><a href="https://godoc.org/github.com/bojand/ghz" target="_self">GoDoc</a></li><li class=""><a href="https://github.com/bojand/ghz" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Load Options</h1></header><article><div><span><p>This is a walkthrough of different load options available to control the rate in requests per second (RPS) that <code>ghz</code> attempts to make to the server. All examples are done using a simple unary gRPC call.</p>
+<h2><a class="anchor" aria-hidden="true" id="constant-rps"></a><a href="#constant-rps" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Constant RPS</h2>
+<pre><code class="hljs">ghz --insecure --async \
+  --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c <span class="hljs-number">10</span> -n <span class="hljs-number">10000</span> --rps <span class="hljs-number">200</span> \
+  -d <span class="hljs-string">'{"name":"{{.WorkerID}}"}'</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">50051</span> 
+
+Summary:
+  Count:    <span class="hljs-number">10000</span>
+  Total:    <span class="hljs-number">50.05</span> s
+  Slowest:  <span class="hljs-number">56.17</span> ms
+  Fastest:  <span class="hljs-number">50.17</span> ms
+  Average:  <span class="hljs-number">50.58</span> ms
+  Requests/sec: <span class="hljs-number">199.79</span>
+
+Response time histogram:
+  <span class="hljs-number">50.167</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">50.768</span> [<span class="hljs-number">8056</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">51.368</span> [<span class="hljs-number">1900</span>] |∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">51.968</span> [<span class="hljs-number">37</span>]   |
+  <span class="hljs-number">52.568</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">53.169</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">53.769</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">54.369</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">54.969</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">55.569</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">56.170</span> [<span class="hljs-number">3</span>]    |
+
+Latency distribution:
+  <span class="hljs-number">10</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.32</span> ms
+  <span class="hljs-number">25</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.40</span> ms
+  <span class="hljs-number">50</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.56</span> ms
+  <span class="hljs-number">75</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.72</span> ms
+  <span class="hljs-number">90</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.88</span> ms
+  <span class="hljs-number">95</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.00</span> ms
+  <span class="hljs-number">99</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.23</span> ms
+
+Status code distribution:
+  [OK]   <span class="hljs-number">10000</span> responses
+</code></pre>
+<p>This will perform a constant load RPS against the server. Graphed, it may look like this:</p>
+<p><img src="images/const_c_const_rps.svg" alt="Constant Load"></p>
+<h2><a class="anchor" aria-hidden="true" id="step-up-rps"></a><a href="#step-up-rps" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Step Up RPS</h2>
+<pre><code class="hljs">ghz --insecure --async --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c <span class="hljs-number">10</span> -n <span class="hljs-number">10000</span> \
+  --load-schedule=step --load-start=<span class="hljs-number">50</span> --load-end=<span class="hljs-number">150</span> --load-step=<span class="hljs-number">10</span> --load-step-duration=<span class="hljs-number">5</span>s \
+  -d <span class="hljs-string">'{"name":"{{.WorkerID}}"}'</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">50051</span> 
+
+Summary:
+  Count:    <span class="hljs-number">10000</span>
+  Total:    <span class="hljs-number">85.05</span> s
+  Slowest:  <span class="hljs-number">60.16</span> ms
+  Fastest:  <span class="hljs-number">50.18</span> ms
+  Average:  <span class="hljs-number">51.10</span> ms
+  Requests/sec: <span class="hljs-number">117.57</span>
+
+Response time histogram:
+  <span class="hljs-number">50.181</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">51.179</span> [<span class="hljs-number">5713</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">52.177</span> [<span class="hljs-number">3923</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">53.174</span> [<span class="hljs-number">311</span>]  |∎∎
+  <span class="hljs-number">54.172</span> [<span class="hljs-number">46</span>]   |
+  <span class="hljs-number">55.170</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">56.168</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">57.166</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">58.164</span> [<span class="hljs-number">2</span>]    |
+  <span class="hljs-number">59.161</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">60.159</span> [<span class="hljs-number">2</span>]    |
+
+Latency distribution:
+  <span class="hljs-number">10</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.48</span> ms
+  <span class="hljs-number">25</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.68</span> ms
+  <span class="hljs-number">50</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.07</span> ms
+  <span class="hljs-number">75</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.41</span> ms
+  <span class="hljs-number">90</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.68</span> ms
+  <span class="hljs-number">95</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">52.02</span> ms
+  <span class="hljs-number">99</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">52.77</span> ms
+
+Status code distribution:
+  [OK]   <span class="hljs-number">10000</span> responses
+</code></pre>
+<p>Performs step load starting at <code>50</code> RPS and inscreasing by <code>10</code> RPS every <code>5s</code> until we reach <code>150</code> RPS at which point the load is sustained at constant RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
+<p><img src="images/const_c_step_up_rps.svg" alt="Step Up Load"></p>
+<h2><a class="anchor" aria-hidden="true" id="step-down-rps"></a><a href="#step-down-rps" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Step Down RPS</h2>
+<pre><code class="hljs">ghz --insecure --async --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c <span class="hljs-number">10</span> -n <span class="hljs-number">10000</span> \
+  --load-schedule=step --load-start=<span class="hljs-number">200</span> --load-step=<span class="hljs-number">-10</span> --load-step-duration=<span class="hljs-number">5</span>s --load-max-duration=<span class="hljs-number">40</span>s \
+  -d <span class="hljs-string">'{"name":"{{.WorkerID}}"}'</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">50051</span> 
+
+Summary:
+  Count:    <span class="hljs-number">10000</span>
+  Total:    <span class="hljs-number">68.38</span> s
+  Slowest:  <span class="hljs-number">55.88</span> ms
+  Fastest:  <span class="hljs-number">50.16</span> ms
+  Average:  <span class="hljs-number">50.85</span> ms
+  Requests/sec: <span class="hljs-number">146.23</span>
+
+Response time histogram:
+  <span class="hljs-number">50.159</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">50.730</span> [<span class="hljs-number">4367</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">51.302</span> [<span class="hljs-number">4281</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">51.874</span> [<span class="hljs-number">1304</span>] |∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">52.446</span> [<span class="hljs-number">43</span>]   |
+  <span class="hljs-number">53.018</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">53.590</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">54.162</span> [<span class="hljs-number">2</span>]    |
+  <span class="hljs-number">54.734</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">55.306</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">55.877</span> [<span class="hljs-number">2</span>]    |
+
+Latency distribution:
+  <span class="hljs-number">10</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.45</span> ms
+  <span class="hljs-number">25</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.60</span> ms
+  <span class="hljs-number">50</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.77</span> ms
+  <span class="hljs-number">75</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.06</span> ms
+  <span class="hljs-number">90</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.38</span> ms
+  <span class="hljs-number">95</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.54</span> ms
+  <span class="hljs-number">99</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.79</span> ms
+
+Status code distribution:
+  [OK]   <span class="hljs-number">10000</span> responses
+</code></pre>
+<p>Performs step load starting at <code>200</code> RPS and decreasing by <code>10</code> RPS every <code>10s</code> until <code>40s</code> has elapsed at which point the load is sustained at that RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
+<p><img src="images/const_c_step_down_rps.svg" alt="Step Down Load"></p>
+<h2><a class="anchor" aria-hidden="true" id="linear-load"></a><a href="#linear-load" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Linear load</h2>
+<pre><code class="hljs">ghz --insecure --async --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c <span class="hljs-number">10</span> -n <span class="hljs-number">10000</span> \
+  --load-schedule=line --load-start=<span class="hljs-number">5</span> --load-step=<span class="hljs-number">5</span> \
+  -d <span class="hljs-string">'{"name":"{{.WorkerID}}"}'</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">50051</span>
+
+Summary:
+  Count:    <span class="hljs-number">10000</span>
+  Total:    <span class="hljs-number">62.80</span> s
+  Slowest:  <span class="hljs-number">56.61</span> ms
+  Fastest:  <span class="hljs-number">50.19</span> ms
+  Average:  <span class="hljs-number">50.72</span> ms
+  Requests/sec: <span class="hljs-number">159.24</span>
+
+Response time histogram:
+  <span class="hljs-number">50.189</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">50.832</span> [<span class="hljs-number">7552</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">51.474</span> [<span class="hljs-number">1781</span>] |∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">52.117</span> [<span class="hljs-number">405</span>]  |∎∎
+  <span class="hljs-number">52.759</span> [<span class="hljs-number">139</span>]  |∎
+  <span class="hljs-number">53.402</span> [<span class="hljs-number">42</span>]   |
+  <span class="hljs-number">54.044</span> [<span class="hljs-number">28</span>]   |
+  <span class="hljs-number">54.687</span> [<span class="hljs-number">28</span>]   |
+  <span class="hljs-number">55.329</span> [<span class="hljs-number">10</span>]   |
+  <span class="hljs-number">55.972</span> [<span class="hljs-number">13</span>]   |
+  <span class="hljs-number">56.614</span> [<span class="hljs-number">1</span>]    |
+
+Latency distribution:
+  <span class="hljs-number">10</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.34</span> ms
+  <span class="hljs-number">25</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.42</span> ms
+  <span class="hljs-number">50</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.57</span> ms
+  <span class="hljs-number">75</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.82</span> ms
+  <span class="hljs-number">90</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.22</span> ms
+  <span class="hljs-number">95</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.68</span> ms
+  <span class="hljs-number">99</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">53.16</span> ms
+
+Status code distribution:
+  [OK]   <span class="hljs-number">10000</span> responses
+</code></pre>
+<p>Performs linear load starting at <code>5</code> RPS and increasing by <code>5</code> RPS every <code>1s</code> until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
+<p><img src="images/const_c_line_up_rps.svg" alt="Linear Up Load"></p>
+<h2><a class="anchor" aria-hidden="true" id="linear-load-decrease"></a><a href="#linear-load-decrease" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Linear load decrease</h2>
+<pre><code class="hljs">ghz --insecure --async --proto /protos/helloworld.proto \
+  --call helloworld.Greeter/SayHello \
+  -c <span class="hljs-number">10</span> -n <span class="hljs-number">10000</span> \
+  --load-schedule=line --load-start=<span class="hljs-number">200</span> --load-step=<span class="hljs-number">-2</span> --load-end=<span class="hljs-number">100</span> \
+  -d <span class="hljs-string">'{"name":"{{.WorkerID}}"}'</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">50051</span> 
+
+Summary:
+  Count:    <span class="hljs-number">10000</span>
+  Total:    <span class="hljs-number">74.55</span> s
+  Slowest:  <span class="hljs-number">83.20</span> ms
+  Fastest:  <span class="hljs-number">50.18</span> ms
+  Average:  <span class="hljs-number">50.89</span> ms
+  Requests/sec: <span class="hljs-number">134.13</span>
+
+Response time histogram:
+  <span class="hljs-number">50.183</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">53.486</span> [<span class="hljs-number">9989</span>] |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  <span class="hljs-number">56.788</span> [<span class="hljs-number">5</span>]    |
+  <span class="hljs-number">60.090</span> [<span class="hljs-number">1</span>]    |
+  <span class="hljs-number">63.392</span> [<span class="hljs-number">3</span>]    |
+  <span class="hljs-number">66.694</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">69.996</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">73.298</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">76.600</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">79.902</span> [<span class="hljs-number">0</span>]    |
+  <span class="hljs-number">83.205</span> [<span class="hljs-number">1</span>]    |
+
+Latency distribution:
+  <span class="hljs-number">10</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.42</span> ms
+  <span class="hljs-number">25</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.57</span> ms
+  <span class="hljs-number">50</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">50.77</span> ms
+  <span class="hljs-number">75</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.11</span> ms
+  <span class="hljs-number">90</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.49</span> ms
+  <span class="hljs-number">95</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">51.73</span> ms
+  <span class="hljs-number">99</span> % <span class="hljs-keyword">in</span> <span class="hljs-number">52.15</span> ms
+
+Status code distribution:
+  [OK]   <span class="hljs-number">10000</span> responses
+</code></pre>
+<p>Performs linear load starting at <code>200</code> RPS and decreasing by <code>2</code> RPS every <code>1s</code> until we reach <code>100</code> RPS at which point a constant rate is sustained until we accumulate <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
+<p><img src="images/const_c_line_down_rps.svg" alt="Linear Down Load"></p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2020 Bojan D.</section></footer></div></body></html>
