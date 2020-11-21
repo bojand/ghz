@@ -5,6 +5,8 @@
       "install",
       "usage",
       "options",
+      "load",
+      "concurrency",
       "calldata",
       "examples",
       "example_config",
