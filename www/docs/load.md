@@ -50,7 +50,7 @@ Status code distribution:
 
 This will perform a constant load RPS against the server. Graphed, it may look like this:
 
-![Constant Load](images/const_c_const_rps.svg)
+![Constant Load](/images/const_c_const_rps.svg)
 
 ## Step Up RPS
 
@@ -97,7 +97,7 @@ Status code distribution:
 
 Performs step load starting at `50` RPS and inscreasing by `10` RPS every `5s` until we reach `150` RPS at which point the load is sustained at constant RPS rate until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
 
-![Step Up Load](images/const_c_step_up_rps.svg)
+![Step Up Load](/images/const_c_step_up_rps.svg)
 
 ## Step Down RPS
 
@@ -144,7 +144,7 @@ Status code distribution:
 
 Performs step load starting at `200` RPS and decreasing by `10` RPS every `10s` until `40s` has elapsed at which point the load is sustained at that RPS rate until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
 
-![Step Down Load](images/const_c_step_down_rps.svg)
+![Step Down Load](/images/const_c_step_down_rps.svg)
 
 ## Linear load
 
@@ -191,7 +191,7 @@ Status code distribution:
 
 Performs linear load starting at `5` RPS and increasing by `5` RPS every `1s` until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
 
-![Linear Up Load](images/const_c_line_up_rps.svg)
+![Linear Up Load](/images/const_c_line_up_rps.svg)
 
 ## Linear load decrease
 
@@ -238,4 +238,4 @@ Status code distribution:
 
 Performs linear load starting at `200` RPS and decreasing by `2` RPS every `1s` until we reach `100` RPS at which point a constant rate is sustained until we accumulate `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
 
-![Linear Down Load](images/const_c_line_down_rps.svg)
+![Linear Down Load](/images/const_c_line_down_rps.svg)

@@ -51,7 +51,7 @@ Status code distribution:
 
 This test performs a constant load at `200` RPS, starting with `5` workers, and increasing concurrency by `5` workers every `5s` until we have `50` workers. At that point all `50` workers will be used to sustain the constant `200` RPS until `10000` total request limit is reached. Worker count over time would look something like:
 
-![Step Up Concurrency Constant Load](images/step_up_c_const_rps_wc.svg)
+![Step Up Concurrency Constant Load](/images/step_up_c_const_rps_wc.svg)
 
 ## Step Down Concurrency
 
@@ -99,7 +99,7 @@ Status code distribution:
 
 This test performs a constant load at `200` RPS, starting with `50` workers, and decreasing concurrency by `5` workers every `5s` until `30s` has elapsed. At that point all remaining workers will be used to sustain the constant `200` RPS until `10000` total request limit is reached. Worker count over time would look something like:
 
-![Step Down Concurrency Constant Load](images/step_down_c_const_rps_wc.svg)
+![Step Down Concurrency Constant Load](/images/step_down_c_const_rps_wc.svg)
 
 ## Linear increase of concurrency
 
@@ -146,4 +146,4 @@ Status code distribution:
 
 This test performs a constant load at `200` RPS, starting with `20` workers, and increasing concurrency linearly every `1s` by `2` workers until `30s` has elapsed. At that point all remaining workers will be used to sustain the constant `200` RPS until `10000` total request limit is reached.
 
-![Lene Up Concurrency Constant Load](images/line_up_c_const_rps_wc.svg)
+![Lene Up Concurrency Constant Load](/images/line_up_c_const_rps_wc.svg)
