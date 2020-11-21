@@ -1,5 +1,5 @@
 ---
-id: concurrenct
+id: concurrency
 title: Concurrency Options
 ---
 
