@@ -138,28 +138,10 @@ jobs:
   update_brew_formula:
     name: Update Brew Formula
     needs: github_release
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Prune & Unshallow
-        run: git fetch --prune --unshallow
-
-      - name: Set version
-        run: echo "RELEASE_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-
-      - name: Bump formula
-        run: |
-          echo "https://bojand:$GH_PAGES_ACTION_TOKEN@github.com" > ~/.git-credentials
-          git config --global credential.helper store
-          git config --global user.name "bojand"
-          git config --global user.email "dbojan@gmail.com"
-          cd $(brew --repo homebrew/core)
-          git fetch origin
-          sudo git reset --hard origin/master
-          cd -
-          brew bump-formula-pr --url=https://github.com/bojand/ghz/archive/${{ env.RELEASE_VERSION }}.tar.gz --message="Automated release pull request using continuous integration." --no-browse -v ghz --force
-          brew bump-formula-pr --url=https://github.com/bojand/ghz/archive/${{ env.RELEASE_VERSION }}.tar.gz --message="Automated release pull request using continuous integration." --no-browse -v ghz-web --force
+      - uses: mislav/bump-homebrew-formula-action@v1.6
+        with:
+          formula-name: ghz
         env:
-          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
+          COMMITTER_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
