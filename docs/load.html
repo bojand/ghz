@@ -96,7 +96,7 @@ Status code distribution:
   [OK]   <span class="hljs-number">10000</span> responses
 </code></pre>
 <p>This will perform a constant load RPS against the server. Graphed, it may look like this:</p>
-<p><img src="images/const_c_const_rps.svg" alt="Constant Load"></p>
+<p><img src="/images/const_c_const_rps.svg" alt="Constant Load"></p>
 <h2><a class="anchor" aria-hidden="true" id="step-up-rps"></a><a href="#step-up-rps" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Step Up RPS</h2>
 <pre><code class="hljs">ghz --insecure --async --proto /protos/helloworld.proto \
   --call helloworld.Greeter/SayHello \
@@ -138,7 +138,7 @@ Status code distribution:
   [OK]   <span class="hljs-number">10000</span> responses
 </code></pre>
 <p>Performs step load starting at <code>50</code> RPS and inscreasing by <code>10</code> RPS every <code>5s</code> until we reach <code>150</code> RPS at which point the load is sustained at constant RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
-<p><img src="images/const_c_step_up_rps.svg" alt="Step Up Load"></p>
+<p><img src="/images/const_c_step_up_rps.svg" alt="Step Up Load"></p>
 <h2><a class="anchor" aria-hidden="true" id="step-down-rps"></a><a href="#step-down-rps" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Step Down RPS</h2>
 <pre><code class="hljs">ghz --insecure --async --proto /protos/helloworld.proto \
   --call helloworld.Greeter/SayHello \
@@ -180,7 +180,7 @@ Status code distribution:
   [OK]   <span class="hljs-number">10000</span> responses
 </code></pre>
 <p>Performs step load starting at <code>200</code> RPS and decreasing by <code>10</code> RPS every <code>10s</code> until <code>40s</code> has elapsed at which point the load is sustained at that RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
-<p><img src="images/const_c_step_down_rps.svg" alt="Step Down Load"></p>
+<p><img src="/images/const_c_step_down_rps.svg" alt="Step Down Load"></p>
 <h2><a class="anchor" aria-hidden="true" id="linear-load"></a><a href="#linear-load" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Linear load</h2>
 <pre><code class="hljs">ghz --insecure --async --proto /protos/helloworld.proto \
   --call helloworld.Greeter/SayHello \
@@ -222,7 +222,7 @@ Status code distribution:
   [OK]   <span class="hljs-number">10000</span> responses
 </code></pre>
 <p>Performs linear load starting at <code>5</code> RPS and increasing by <code>5</code> RPS every <code>1s</code> until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
-<p><img src="images/const_c_line_up_rps.svg" alt="Linear Up Load"></p>
+<p><img src="/images/const_c_line_up_rps.svg" alt="Linear Up Load"></p>
 <h2><a class="anchor" aria-hidden="true" id="linear-load-decrease"></a><a href="#linear-load-decrease" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Linear load decrease</h2>
 <pre><code class="hljs">ghz --insecure --async --proto /protos/helloworld.proto \
   --call helloworld.Greeter/SayHello \
@@ -264,5 +264,5 @@ Status code distribution:
   [OK]   <span class="hljs-number">10000</span> responses
 </code></pre>
 <p>Performs linear load starting at <code>200</code> RPS and decreasing by <code>2</code> RPS every <code>1s</code> until we reach <code>100</code> RPS at which point a constant rate is sustained until we accumulate <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
-<p><img src="images/const_c_line_down_rps.svg" alt="Linear Down Load"></p>
+<p><img src="/images/const_c_line_down_rps.svg" alt="Linear Down Load"></p>
 </span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/options"><span class="arrow-prev">← </span><span>Options Reference</span></a><a class="docs-next button" href="/docs/concurrency"><span>Concurrency Options</span><span class="arrow-next"> →</span></a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/green_fwd2.svg" alt="ghz" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/intro.html">Guide</a><a href="https://godoc.org/github.com/bojand/ghz">GoDoc</a></div><div><h5>Community</h5><a href="https://www.buymeacoffee.com/bojand">Say Thanks! ❤️</a></div><div><h5>More</h5><a href="https://github.com/bojand/ghz">GitHub</a><a class="github-button" href="https://github.com/bojand/ghz" data-icon="octicon-star" data-count-href="/bojand/ghz" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2020 Bojan D.</section></footer></div></body></html>
