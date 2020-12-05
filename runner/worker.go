@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync/atomic"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -239,8 +240,8 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 	counter := 0
 
 	for err == nil {
-		inputLen := len(input)
-		if input == nil || inputLen == 0 {
+
+		closeStream := func() {
 			res, closeErr := str.CloseAndReceive()
 
 			if w.config.hasLog {
@@ -248,19 +249,26 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 					"call", w.mtd.GetFullyQualifiedName(),
 					"response", res, "error", closeErr)
 			}
+		}
 
+		var finished uint32
+
+		if w.config.streamClose > 0 {
+			go func() {
+				sct := time.NewTimer(w.config.streamClose)
+				<-sct.C
+				atomic.AddUint32(&finished, 1)
+			}()
+		}
+
+		inputLen := len(input)
+		if input == nil || inputLen == 0 {
+			closeStream()
 			break
 		}
 
 		if counter == inputLen {
-			res, closeErr := str.CloseAndReceive()
-
-			if w.config.hasLog {
-				w.config.log.Debugw("Close and receive", "workerID", w.workerID, "call type", "client-streaming",
-					"call", w.mtd.GetFullyQualifiedName(),
-					"response", res, "error", closeErr)
-			}
-
+			closeStream()
 			break
 		}
 
@@ -270,6 +278,12 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 		if w.config.streamInterval > 0 {
 			wait = time.Tick(w.config.streamInterval)
 			<-wait
+		}
+
+		toClose := atomic.LoadUint32(&finished)
+		if toClose > 0 {
+			closeStream()
+			break
 		}
 
 		err = str.SendMsg(payload)
@@ -293,8 +307,10 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 
 			break
 		}
+
 		counter++
 	}
+
 	return nil
 }
 

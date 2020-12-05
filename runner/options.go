@@ -93,6 +93,7 @@ type RunConfig struct {
 	zstop string
 
 	streamInterval time.Duration
+	streamClose    time.Duration
 
 	// data
 	data []byte
@@ -706,6 +707,15 @@ func WithStreamInterval(d time.Duration) Option {
 	}
 }
 
+// WithStreamCloseDuration sets the stream close duration
+func WithStreamCloseDuration(d time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.streamClose = d
+
+		return nil
+	}
+}
+
 // WithReflectionMetadata specifies the metadata to be used as a map
 // 	md := make(map[string]string)
 // 	md["token"] = "foobar"
@@ -979,6 +989,7 @@ func fromConfig(cfg *Config) []Option {
 		WithMetadata(cfg.Metadata),
 		WithTags(cfg.Tags),
 		WithStreamInterval(time.Duration(cfg.SI)),
+		WithStreamCloseDuration(time.Duration(cfg.StreamClose)),
 		WithReflectionMetadata(cfg.ReflectMetadata),
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),

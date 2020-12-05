@@ -88,6 +88,7 @@ type Config struct {
 	Metadata          map[string]string `json:"metadata,omitempty" toml:"metadata,omitempty" yaml:"metadata,omitempty"`
 	MetadataPath      string            `json:"metadata-file" toml:"metadata-file" yaml:"metadata-file"`
 	SI                Duration          `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
+	StreamClose       Duration          `json:"stream-close-duration" toml:"stream-close-duration" yaml:"stream-close-duration"`
 	Output            string            `json:"output" toml:"output" yaml:"output"`
 	Format            string            `json:"format" toml:"format" yaml:"format" default:"summary"`
 	DialTimeout       Duration          `json:"connect-timeout" toml:"connect-timeout" yaml:"connect-timeout" default:"10s"`

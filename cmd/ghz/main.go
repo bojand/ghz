@@ -184,6 +184,10 @@ var (
 	si      = kingpin.Flag("stream-interval", "Interval for stream requests between message sends.").
 		Default("0").IsSetByUser(&isSISet).Duration()
 
+	isSCSet = false
+	scd     = kingpin.Flag("stream-close-duration", "Duration after which client will close the stream in each streaming call.").
+		Default("0").IsSetByUser(&isSCSet).Duration()
+
 	isRMDSet = false
 	rmd      = kingpin.Flag("reflect-metadata", "Reflect metadata as stringified JSON used only for reflection request.").
 			PlaceHolder(" ").IsSetByUser(&isRMDSet).String()
@@ -426,6 +430,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.Metadata = metadata
 	cfg.MetadataPath = *mdPath
 	cfg.SI = runner.Duration(*si)
+	cfg.StreamClose = runner.Duration(*scd)
 	cfg.Output = *output
 	cfg.Format = *format
 	cfg.ImportPaths = iPaths
@@ -560,6 +565,10 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isSISet {
 		dest.SI = src.SI
+	}
+
+	if isSCSet {
+		dest.StreamClose = src.StreamClose
 	}
 
 	if isOutputSet {
