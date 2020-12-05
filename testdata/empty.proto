@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package emptymsg;
+
+option go_package = "internal/emptymsg";
+
+import "google/protobuf/empty.proto";
+
+service EmptyMessageService {
+  rpc GetEmptyMessage (EmptyMessage) returns (EmptyMessage);
+  rpc GetEmpty (google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+message EmptyMessage {}

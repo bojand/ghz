@@ -1309,3 +1309,154 @@ func TestRunWrappedUnary(t *testing.T) {
 		assert.Equal(t, report.Average, report.Fastest)
 	})
 }
+
+func TestRunEmptyUnary(t *testing.T) {
+
+	_, s, err := internal.StartEmptyMessageServer(false)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	t.Run("GetEmptyMessage json string data", func(t *testing.T) {
+		report, err := Run(
+			"emptymsg.EmptyMessageService.GetEmptyMessage",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/empty.proto", []string{"../testdata"}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataFromJSON(`{}`),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+	})
+
+	t.Run("GetEmpty json string data", func(t *testing.T) {
+		report, err := Run(
+			"emptymsg.EmptyMessageService.GetEmpty",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/empty.proto", []string{"../testdata"}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataFromJSON(`{}`),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+	})
+
+	t.Run("GetEmptyMessage json string data from file", func(t *testing.T) {
+		report, err := Run(
+			"emptymsg.EmptyMessageService.GetEmptyMessage",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/empty.proto", []string{"../testdata"}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataFromFile(`../testdata/empty_data.json`),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+	})
+
+	t.Run("GetEmpty json string data from file", func(t *testing.T) {
+		report, err := Run(
+			"emptymsg.EmptyMessageService.GetEmpty",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/empty.proto", []string{"../testdata"}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataFromFile(`../testdata/empty_data.json`),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+	})
+}
