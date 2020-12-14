@@ -2,11 +2,9 @@ package runner
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -51,7 +49,7 @@ type Requester struct {
 	stopCh  chan bool
 	start   time.Time
 
-	arrayJSONData []string
+	dataProvider *dataProvider
 
 	lock       sync.Mutex
 	stopReason StopReason
@@ -122,26 +120,12 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 	// fill in the rest
 	reqr.mtd = mtd
 
-	// fill in JSON string array data for optimization for non client-streaming
-	reqr.arrayJSONData = nil
-	if !c.binary && !reqr.mtd.IsClientStreaming() {
-		if strings.IndexRune(string(c.data), '[') == 0 { // it's an array
-			var dat []map[string]interface{}
-			if err := json.Unmarshal(c.data, &dat); err != nil {
-				return nil, err
-			}
-
-			reqr.arrayJSONData = make([]string, len(dat))
-			for i, d := range dat {
-				var strd []byte
-				if strd, err = json.Marshal(d); err != nil {
-					return nil, err
-				}
-
-				reqr.arrayJSONData[i] = string(strd)
-			}
-		}
+	dataProvider, err := newDataProvider(reqr.mtd, c.binary, c.dataFunc, c.data, c.metadata)
+	if err != nil {
+		return nil, err
 	}
+
+	reqr.dataProvider = dataProvider
 
 	return reqr, nil
 }
@@ -371,14 +355,14 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 					}
 
 					w := Worker{
-						ticks:         ticks,
-						active:        true,
-						stub:          b.stubs[n],
-						mtd:           b.mtd,
-						config:        b.config,
-						stopCh:        make(chan bool),
-						workerID:      wID,
-						arrayJSONData: b.arrayJSONData,
+						ticks:        ticks,
+						active:       true,
+						stub:         b.stubs[n],
+						mtd:          b.mtd,
+						config:       b.config,
+						stopCh:       make(chan bool),
+						workerID:     wID,
+						dataProvider: b.dataProvider,
 					}
 
 					wc++ // increment worker id

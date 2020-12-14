@@ -34,11 +34,7 @@ type Worker struct {
 	stopCh   chan bool
 	ticks    <-chan TickValue
 
-	// cached messages only for binary
-	cachedMessages []*dynamic.Message
-
-	// non-binary json optimization
-	arrayJSONData []string
+	dataProvider *dataProvider
 }
 
 func (w *Worker) runWorker() error {
@@ -82,32 +78,14 @@ func (w *Worker) makeRequest(tv TickValue) error {
 
 	ctd := newCallData(w.mtd, w.config.funcs, w.workerID, reqNum)
 
-	var inputs []*dynamic.Message
-	var err error
-
-	// try the optimized path for JSON data for non client-streaming
-	if !w.config.binary && !w.mtd.IsClientStreaming() && len(w.arrayJSONData) > 0 {
-		indx := int(reqNum % int64(len(w.arrayJSONData))) // we want to start from inputs[0] so dec reqNum
-		if inputs, err = w.getMessages(ctd, []byte(w.arrayJSONData[indx])); err != nil {
-			return err
-		}
-	} else {
-		if inputs, err = w.getMessages(ctd, w.config.data); err != nil {
-			return err
-		}
-	}
-
-	mdMap, err := ctd.executeMetadata(string(w.config.metadata))
+	inputs, err := w.dataProvider.getDataForCall(ctd)
 	if err != nil {
 		return err
 	}
 
-	var reqMD *metadata.MD
-	if len(mdMap) > 0 {
-		md := metadata.New(mdMap)
-		reqMD = &md
-	} else {
-		reqMD = &metadata.MD{}
+	reqMD, err := w.dataProvider.getMetadataForCall(ctd)
+	if err != nil {
+		return err
 	}
 
 	if w.config.enableCompression {
@@ -164,41 +142,6 @@ func (w *Worker) makeRequest(tv TickValue) error {
 	}
 
 	return err
-}
-
-func (w *Worker) getMessages(ctd *CallData, inputData []byte) ([]*dynamic.Message, error) {
-	var inputs []*dynamic.Message
-
-	if w.cachedMessages != nil {
-		return w.cachedMessages, nil
-	}
-
-	if !w.config.binary {
-		data, err := ctd.executeData(string(inputData))
-		if err != nil {
-			return nil, err
-		}
-		inputs, err = createPayloadsFromJSON(string(data), w.mtd)
-		if err != nil {
-			return nil, err
-		}
-		// Json messages are not cached due to templating
-	} else {
-		var err error
-		if w.config.dataFunc != nil {
-			inputData = w.config.dataFunc(w.mtd, ctd)
-		}
-		inputs, err = createPayloadsFromBin(inputData, w.mtd)
-		if err != nil {
-			return nil, err
-		}
-		// We only cache in case we don't dynamically change the binary message
-		if w.config.dataFunc == nil {
-			w.cachedMessages = inputs
-		}
-	}
-
-	return inputs, nil
 }
 
 func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, input *dynamic.Message) error {
