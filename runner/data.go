@@ -64,10 +64,7 @@ func newDataProvider(mtd *desc.MethodDescriptor,
 		}
 	}
 
-	// Test if we can preseed data. This is hacky.
-	// See https://golang.org/pkg/text/template/#Template
-	// The *parse.Tree field is exported only for use by html/template
-	// and should be treated as unexported by all other clients.
+	// Test if we can preseed data
 	ctd := newCallData(mtd, nil, "", 0)
 	ha, err := ctd.hasAction(string(dp.data))
 	if err != nil {

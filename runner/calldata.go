@@ -94,6 +94,10 @@ func (td *CallData) execute(data string) (*bytes.Buffer, error) {
 	return &tpl, err
 }
 
+// This is hacky.
+// See https://golang.org/pkg/text/template/#Template
+// The *parse.Tree field is exported only for use by html/template
+// and should be treated as unexported by all other clients.
 func (td *CallData) hasAction(data string) (bool, error) {
 	t, err := td.t.Parse(data)
 	if err != nil {
