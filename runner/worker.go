@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"sync/atomic"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -249,10 +248,6 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 			closeStream()
 			done = true
 		}
-
-		if done {
-			break
-		}
 	}
 
 	close(cancel)
@@ -314,20 +309,30 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 	}
 
 	counter := 0
-
 	inputLen := len(input)
-
 	recvDone := make(chan bool)
 
-	if input == nil || inputLen == 0 {
+	closeStream := func() {
 		closeErr := str.CloseSend()
 
 		if w.config.hasLog {
 			w.config.log.Debugw("Close send", "workerID", w.workerID, "call type", "bidi",
 				"call", w.mtd.GetFullyQualifiedName(), "error", closeErr)
 		}
+	}
 
+	if input == nil || inputLen == 0 {
+		closeStream()
 		return nil
+	}
+
+	cancel := make(chan struct{}, 1)
+	if w.config.streamClose > 0 {
+		go func() {
+			sct := time.NewTimer(w.config.streamClose)
+			<-sct.C
+			cancel <- struct{}{}
+		}()
 	}
 
 	go func() {
@@ -347,52 +352,14 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 		}
 	}()
 
-	closeStream := func() {
-		closeErr := str.CloseSend()
-
-		if w.config.hasLog {
-			w.config.log.Debugw("Close send", "workerID", w.workerID, "call type", "bidi",
-				"call", w.mtd.GetFullyQualifiedName(), "error", closeErr)
-		}
-	}
-
-	var finished uint32
-	if w.config.streamClose > 0 {
-		go func() {
-			sct := time.NewTimer(w.config.streamClose)
-			<-sct.C
-			atomic.AddUint32(&finished, 1)
-		}()
-	}
-
-	for err == nil {
-
+	done := false
+	for err == nil && !done {
 		if counter == inputLen {
 			closeStream()
 			break
 		}
 
 		payload := input[counter]
-
-		// we need to check before and after stream interval
-		toClose := atomic.LoadUint32(&finished)
-		if toClose > 0 {
-			closeStream()
-			break
-		}
-
-		var wait <-chan time.Time
-		if w.config.streamInterval > 0 {
-			wait = time.Tick(w.config.streamInterval)
-			<-wait
-		}
-
-		toClose = atomic.LoadUint32(&finished)
-		if toClose > 0 {
-			closeStream()
-			break
-		}
-
 		err = str.SendMsg(payload)
 		counter++
 
@@ -400,6 +367,21 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 			w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "bidi",
 				"call", w.mtd.GetFullyQualifiedName(),
 				"payload", payload, "error", err)
+		}
+
+		if w.config.streamInterval > 0 {
+			wait := time.NewTimer(w.config.streamInterval)
+			select {
+			case <-wait.C:
+				break
+			case <-cancel:
+				closeStream()
+				done = true
+			}
+		} else if w.config.streamClose > 0 && len(cancel) > 0 {
+			<-cancel
+			closeStream()
+			done = true
 		}
 	}
 
