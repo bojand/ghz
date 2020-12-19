@@ -42,8 +42,6 @@ func (w *Worker) runWorker() error {
 	var err error
 	g := new(errgroup.Group)
 
-	now := time.Now()
-
 	for {
 		select {
 		case <-w.stopCh:
@@ -51,20 +49,15 @@ func (w *Worker) runWorker() error {
 				return g.Wait()
 			}
 
-			fmt.Println("run worker done", time.Since(now).String())
 			return err
-
 		case tv := <-w.ticks:
 			if w.config.async {
 				g.Go(func() error {
 					return w.makeRequest(tv)
 				})
 			} else {
-				fmt.Println("tick make request", time.Since(now).String())
 				rErr := w.makeRequest(tv)
-				fmt.Println("tick made request. appending", time.Since(now).String())
 				err = multierr.Append(err, rErr)
-				fmt.Println("tick made request appended", time.Since(now).String())
 			}
 		}
 	}
@@ -72,21 +65,15 @@ func (w *Worker) runWorker() error {
 
 // Stop stops the worker. It has to be started with Run() again.
 func (w *Worker) Stop() {
-	now := time.Now()
-	fmt.Println("Worker Stop()", w.active)
 	if !w.active {
 		return
 	}
 
-	fmt.Println("Worker Stopping", time.Since(now).String())
 	w.active = false
 	w.stopCh <- true
-	fmt.Println("Worker Stoppped", time.Since(now).String())
 }
 
 func (w *Worker) makeRequest(tv TickValue) error {
-	now := time.Now()
-	fmt.Println(w.workerID, "makeRequest")
 	reqNum := int64(tv.reqNumber)
 
 	ctd := newCallData(w.mtd, w.config.funcs, w.workerID, reqNum)
@@ -103,8 +90,6 @@ func (w *Worker) makeRequest(tv TickValue) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(w.workerID, "made call metadata", time.Since(now).String())
 
 	if w.config.enableCompression {
 		reqMD.Append("grpc-accept-encoding", gzip.Name)
@@ -143,8 +128,6 @@ func (w *Worker) makeRequest(tv TickValue) error {
 
 	unaryInput := inputs[0]
 
-	start := time.Now()
-	fmt.Println("starting client streaming", time.Since(now).String())
 	// RPC errors are handled via stats handler
 	if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
 		_ = w.makeBidiRequest(&ctx, inputs)
@@ -155,8 +138,6 @@ func (w *Worker) makeRequest(tv TickValue) error {
 	} else {
 		_ = w.makeUnaryRequest(&ctx, reqMD, unaryInput)
 	}
-
-	fmt.Println("make request done", time.Since(now).String(), time.Since(start))
 
 	return err
 }
@@ -182,7 +163,6 @@ func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, inpu
 }
 
 func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynamic.Message) error {
-	fmt.Println("makeClientStreamingRequest()")
 	var str *grpcdynamic.ClientStream
 	var err error
 	var callOptions = []grpc.CallOption{}
@@ -210,7 +190,6 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 	}
 
 	performSend := func() bool {
-		// fmt.Println("performSend", counter)
 		inputLen := len(input)
 		if input == nil || inputLen == 0 {
 			return true
@@ -240,7 +219,6 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 	}
 
 	cancel := make(chan struct{}, 1)
-	fmt.Println(w.config.streamClose.String())
 	if w.config.streamClose > 0 {
 		go func() {
 			sct := time.NewTimer(w.config.streamClose)
@@ -250,12 +228,10 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 	}
 
 	done := false
-	start := time.Now()
 	for err == nil && !done {
 
 		if end := performSend(); end {
 			closeStream()
-			done = true
 			break
 		}
 
@@ -279,11 +255,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 		}
 	}
 
-	// fmt.Println(len(cancel), time.Since(start).String(), done)
-
 	close(cancel)
-
-	fmt.Println("returning", len(cancel), time.Since(start).String(), done, "counter:", counter)
 
 	return nil
 }
