@@ -95,17 +95,19 @@ type RunConfig struct {
 	streamInterval time.Duration
 	streamClose    time.Duration
 
-	// data
-	data []byte
-
 	// lbStrategy
 	lbStrategy string
-	// data func
+
+	// data & metadata
+	data     []byte
+	metadata []byte
+	binary   bool
 	dataFunc BinaryDataFunc
 
-	binary   bool
-	metadata []byte
-	rmd      map[string]string
+	funcs template.FuncMap
+
+	// reflection metadata
+	rmd map[string]string
 
 	// debug
 	hasLog bool
@@ -116,8 +118,6 @@ type RunConfig struct {
 	cpus      int
 	tags      []byte
 	skipFirst int
-
-	funcs template.FuncMap
 }
 
 // Option controls some aspect of run

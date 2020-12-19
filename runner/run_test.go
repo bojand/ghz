@@ -635,7 +635,6 @@ func TestRunClientStreaming(t *testing.T) {
 	defer s.Stop()
 
 	t.Run("basic", func(t *testing.T) {
-		t.Skip()
 		gs.ResetCounters()
 
 		m1 := make(map[string]interface{})
@@ -691,7 +690,6 @@ func TestRunClientStreaming(t *testing.T) {
 	})
 
 	t.Run("with stream interval", func(t *testing.T) {
-		t.Skip()
 		gs.ResetCounters()
 
 		m1 := make(map[string]interface{})
@@ -806,7 +804,6 @@ func TestRunClientStreaming(t *testing.T) {
 	})
 
 	t.Run("with stream interval and cancel", func(t *testing.T) {
-		t.Skip("skip cancel and interval")
 
 		gs.ResetCounters()
 
