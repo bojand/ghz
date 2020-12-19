@@ -82,6 +82,9 @@ func (w *Worker) makeRequest(tv TickValue) error {
 	if err != nil {
 		return err
 	}
+	if len(inputs) == 0 {
+		return fmt.Errorf("no data provided for request")
+	}
 
 	reqMD, err := w.dataProvider.getMetadataForCall(ctd)
 	if err != nil {
@@ -123,12 +126,7 @@ func (w *Worker) makeRequest(tv TickValue) error {
 			"input", inputs, "metadata", reqMD)
 	}
 
-	inputsLen := len(inputs)
-	if inputsLen == 0 {
-		return fmt.Errorf("no data provided for request")
-	}
-	inputIdx := int(reqNum % int64(inputsLen)) // we want to start from inputs[0] so dec reqNum
-	unaryInput := inputs[inputIdx]
+	unaryInput := inputs[0]
 
 	// RPC errors are handled via stats handler
 	if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
