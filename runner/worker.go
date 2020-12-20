@@ -176,6 +176,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 			"call", w.mtd.GetFullyQualifiedName(), "error", err)
 	}
 
+	indexCounter := 0
 	counter := 0
 
 	closeStream := func() {
@@ -188,18 +189,12 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 		}
 	}
 
-	performSend := func() bool {
-		inputLen := len(input)
-		if input == nil || inputLen == 0 {
-			return true
-		}
+	if len(input) == 0 {
+		closeStream()
+		return nil
+	}
 
-		if counter == inputLen {
-			return true
-		}
-
-		payload := input[counter]
-
+	performSend := func(payload *dynamic.Message) bool {
 		err = str.SendMsg(payload)
 
 		if w.config.hasLog {
@@ -211,8 +206,6 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 		if err == io.EOF {
 			return true
 		}
-
-		counter++
 
 		return false
 	}
@@ -226,13 +219,29 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 		}()
 	}
 
+	inputLen := len(input)
+	streamCloseCount := int(w.config.streamCloseCount)
 	done := false
 	for err == nil && !done {
-
-		if end := performSend(); end {
+		if streamCloseCount > 0 {
+			if counter >= streamCloseCount {
+				closeStream()
+				break
+			} else if indexCounter == inputLen {
+				indexCounter = 0
+			}
+		} else if counter == inputLen {
 			closeStream()
 			break
 		}
+
+		if end := performSend(input[indexCounter]); end {
+			closeStream()
+			break
+		}
+
+		counter++
+		indexCounter++
 
 		if w.config.streamInterval > 0 {
 			wait := time.NewTimer(w.config.streamInterval)
@@ -309,6 +318,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 	}
 
 	counter := 0
+	indexCounter := 0
 	inputLen := len(input)
 	recvDone := make(chan bool)
 
@@ -321,7 +331,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 		}
 	}
 
-	if input == nil || inputLen == 0 {
+	if inputLen == 0 {
 		closeStream()
 		return nil
 	}
@@ -352,16 +362,27 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 		}
 	}()
 
+	streamCloseCount := int(w.config.streamCloseCount)
+
 	done := false
 	for err == nil && !done {
-		if counter == inputLen {
+		if streamCloseCount > 0 {
+			if counter >= streamCloseCount {
+				closeStream()
+				break
+			} else if indexCounter == inputLen {
+				indexCounter = 0
+			}
+		} else if counter == inputLen {
 			closeStream()
 			break
 		}
 
-		payload := input[counter]
+		payload := input[indexCounter]
 		err = str.SendMsg(payload)
+
 		counter++
+		indexCounter++
 
 		if w.config.hasLog {
 			w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "bidi",

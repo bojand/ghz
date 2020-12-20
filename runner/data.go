@@ -14,6 +14,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// TODO fix this so it can be a public API via interface
+// TODO add tests
 type dataProvider struct {
 	binary   bool
 	data     []byte

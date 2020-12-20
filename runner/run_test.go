@@ -777,7 +777,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 1000*time.Millisecond && report.Total < 1050*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 1000*time.Millisecond && report.Total < 1100*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -861,6 +861,72 @@ func TestRunClientStreaming(t *testing.T) {
 
 		connCount := gs.GetConnectionCount()
 		assert.Equal(t, 1, connCount)
+	})
+
+	t.Run("with stream interval and cancel", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+
+		data := []interface{}{m1, m2, m3, m4, m5}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCloseCount(3),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 300*time.Millisecond && report.Total < 350*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 3)
 	})
 }
 
@@ -1024,7 +1090,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 800*time.Millisecond && report.Total < 820*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 800*time.Millisecond && report.Total < 850*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1078,7 +1144,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 1000*time.Millisecond && report.Total < 1050*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 1000*time.Millisecond && report.Total < 1350*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1138,7 +1204,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 650*time.Millisecond && report.Total < 670*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 650*time.Millisecond && report.Total < 690*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1162,6 +1228,72 @@ func TestRunBidi(t *testing.T) {
 
 		connCount := gs.GetConnectionCount()
 		assert.Equal(t, 1, connCount)
+	})
+
+	t.Run("with stream count", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+
+		data := []interface{}{m1, m2, m3, m4, m5}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCloseCount(3),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 300*time.Millisecond && report.Total < 350*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 3)
 	})
 }
 

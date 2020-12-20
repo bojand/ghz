@@ -92,8 +92,9 @@ type RunConfig struct {
 
 	zstop string
 
-	streamInterval time.Duration
-	streamClose    time.Duration
+	streamInterval   time.Duration
+	streamClose      time.Duration
+	streamCloseCount uint
 
 	// lbStrategy
 	lbStrategy string
@@ -716,6 +717,15 @@ func WithStreamCloseDuration(d time.Duration) Option {
 	}
 }
 
+// WithStreamCloseCount sets the stream close count
+func WithStreamCloseCount(c uint) Option {
+	return func(o *RunConfig) error {
+		o.streamCloseCount = c
+
+		return nil
+	}
+}
+
 // WithReflectionMetadata specifies the metadata to be used as a map
 // 	md := make(map[string]string)
 // 	md["token"] = "foobar"
@@ -990,6 +1000,7 @@ func fromConfig(cfg *Config) []Option {
 		WithTags(cfg.Tags),
 		WithStreamInterval(time.Duration(cfg.SI)),
 		WithStreamCloseDuration(time.Duration(cfg.StreamClose)),
+		WithStreamCloseCount(cfg.StreamCloseCount),
 		WithReflectionMetadata(cfg.ReflectMetadata),
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),
