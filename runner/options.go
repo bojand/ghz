@@ -92,9 +92,9 @@ type RunConfig struct {
 
 	zstop string
 
-	streamInterval   time.Duration
-	streamClose      time.Duration
-	streamCloseCount uint
+	streamInterval     time.Duration
+	streamCallDuration time.Duration
+	streamCallCount    uint
 
 	// lbStrategy
 	lbStrategy string
@@ -708,19 +708,19 @@ func WithStreamInterval(d time.Duration) Option {
 	}
 }
 
-// WithStreamCloseDuration sets the stream close duration
-func WithStreamCloseDuration(d time.Duration) Option {
+// WithStreamCallDuration sets the maximum stream call duration at which point the client will close the stream
+func WithStreamCallDuration(d time.Duration) Option {
 	return func(o *RunConfig) error {
-		o.streamClose = d
+		o.streamCallDuration = d
 
 		return nil
 	}
 }
 
-// WithStreamCloseCount sets the stream close count
-func WithStreamCloseCount(c uint) Option {
+// WithStreamCallCount sets the stream close count
+func WithStreamCallCount(c uint) Option {
 	return func(o *RunConfig) error {
-		o.streamCloseCount = c
+		o.streamCallCount = c
 
 		return nil
 	}
@@ -999,8 +999,8 @@ func fromConfig(cfg *Config) []Option {
 		WithMetadata(cfg.Metadata),
 		WithTags(cfg.Tags),
 		WithStreamInterval(time.Duration(cfg.SI)),
-		WithStreamCloseDuration(time.Duration(cfg.StreamClose)),
-		WithStreamCloseCount(cfg.StreamCloseCount),
+		WithStreamCallDuration(time.Duration(cfg.StreamCallDuration)),
+		WithStreamCallCount(cfg.StreamCallCount),
 		WithReflectionMetadata(cfg.ReflectMetadata),
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),

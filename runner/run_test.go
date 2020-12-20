@@ -768,7 +768,7 @@ func TestRunClientStreaming(t *testing.T) {
 			WithConcurrency(1),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
-			WithStreamCloseDuration(1000*time.Millisecond),
+			WithStreamCallDuration(1000*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
 		)
@@ -828,7 +828,7 @@ func TestRunClientStreaming(t *testing.T) {
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithStreamInterval(200*time.Millisecond),
-			WithStreamCloseDuration(650*time.Millisecond),
+			WithStreamCallDuration(650*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
 		)
@@ -888,7 +888,7 @@ func TestRunClientStreaming(t *testing.T) {
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithStreamInterval(100*time.Millisecond),
-			WithStreamCloseCount(3),
+			WithStreamCallCount(3),
 			WithData(data),
 			WithInsecure(true),
 		)
@@ -1135,7 +1135,7 @@ func TestRunBidi(t *testing.T) {
 			WithConcurrency(1),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
-			WithStreamCloseDuration(1000*time.Millisecond),
+			WithStreamCallDuration(1000*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
 		)
@@ -1195,7 +1195,7 @@ func TestRunBidi(t *testing.T) {
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithStreamInterval(200*time.Millisecond),
-			WithStreamCloseDuration(650*time.Millisecond),
+			WithStreamCallDuration(650*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
 		)
@@ -1255,7 +1255,7 @@ func TestRunBidi(t *testing.T) {
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithStreamInterval(100*time.Millisecond),
-			WithStreamCloseCount(3),
+			WithStreamCallCount(3),
 			WithData(data),
 			WithInsecure(true),
 		)

@@ -211,16 +211,16 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 	}
 
 	cancel := make(chan struct{}, 1)
-	if w.config.streamClose > 0 {
+	if w.config.streamCallDuration > 0 {
 		go func() {
-			sct := time.NewTimer(w.config.streamClose)
+			sct := time.NewTimer(w.config.streamCallDuration)
 			<-sct.C
 			cancel <- struct{}{}
 		}()
 	}
 
 	inputLen := len(input)
-	streamCloseCount := int(w.config.streamCloseCount)
+	streamCloseCount := int(w.config.streamCallCount)
 	done := false
 	for err == nil && !done {
 		if streamCloseCount > 0 {
@@ -252,7 +252,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 				closeStream()
 				done = true
 			}
-		} else if w.config.streamClose > 0 && len(cancel) > 0 {
+		} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
 			<-cancel
 			closeStream()
 			done = true
@@ -337,9 +337,9 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 	}
 
 	cancel := make(chan struct{}, 1)
-	if w.config.streamClose > 0 {
+	if w.config.streamCallDuration > 0 {
 		go func() {
-			sct := time.NewTimer(w.config.streamClose)
+			sct := time.NewTimer(w.config.streamCallDuration)
 			<-sct.C
 			cancel <- struct{}{}
 		}()
@@ -362,7 +362,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 		}
 	}()
 
-	streamCloseCount := int(w.config.streamCloseCount)
+	streamCloseCount := int(w.config.streamCallCount)
 
 	done := false
 	for err == nil && !done {
@@ -399,7 +399,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 				closeStream()
 				done = true
 			}
-		} else if w.config.streamClose > 0 && len(cancel) > 0 {
+		} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
 			<-cancel
 			closeStream()
 			done = true

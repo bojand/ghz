@@ -243,7 +243,39 @@ Path for call metadata JSON file. For example, `-M /home/user/metadata.json` or 
 
 ### `--stream-interval`
 
-Stream interval duration. Spread stream sends by given amount. Only applies to client and bidi streaming calls. Example: `100ms`
+Stream interval duration. Spread stream sends by given amount. Only applies to client and bidi streaming calls. Example: `100ms`.
+
+### `--stream-call-duration`
+
+Maximum stream call duration. For client streaming and bidi calls, we'll send messages until this duration expires. Example: `500ms`.
+
+### `--stream-call-count`
+
+The maximum number of sends the client will perform in a streaming call before closing the stream and ending the call.
+If the data array contains more elements than the count, only data up to the number specified will be used.
+If the data array contains fewer elements than the count specified, all the data will be iterated over repeatedly until count limit is reached. 
+
+Examples:
+
+```sh
+--stream-call-count=2 -d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'
+```
+
+Will cause only `[{"name":"Joe"},{"name":"Kate"}]` to be sent. Similarly:
+
+```sh
+--stream-call-count=5 -d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'
+```
+
+Will cause `[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"},{"name":"Joe"},{"name":"Kate"}]` to be sent.
+
+This is helpful in combination with template functionality to generate data. For example:
+
+```sh
+--stream-call-count=100 -d '{"name":"{{randomString 8 }}"}'
+```
+
+Will dynamically send 100 messages in a single call, generating random data for each call.
 
 ### `--reflect-metadata`
 
