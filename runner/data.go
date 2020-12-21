@@ -421,8 +421,7 @@ func (m *dynamicMessageProvider) GetStreamMessage(parentCallData *CallData) (*dy
 	}
 
 	md := m.mtd.GetInputType()
-	var msg *dynamic.Message
-	dynamic.NewMessage(md)
+	msg := dynamic.NewMessage(md)
 	err = jsonpb.UnmarshalString(string(buf), msg)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating message from data. Data: '%v' Error: %v", data, err.Error())

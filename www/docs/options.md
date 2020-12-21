@@ -269,13 +269,31 @@ Will cause only `[{"name":"Joe"},{"name":"Kate"}]` to be sent. Similarly:
 
 Will cause `[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"},{"name":"Joe"},{"name":"Kate"}]` to be sent.
 
-This is helpful in combination with template functionality to generate data. For example:
+### `--stream-dynamic-messages`
+
+In streaming calls, regenerate and apply call template data on every message send.
+This is helpful in combination with template functionality to generate data _for every message sent_ in a streaming call.
+For example:
 
 ```sh
---stream-call-count=100 -d '{"name":"{{randomString 8 }}"}'
+--stream-dynamic-messages=true --stream-call-count=5 -d '{"name":"{{randomString 8 }}"}'
 ```
 
-Will dynamically send 100 messages in a single call, generating random data for each call.
+Will result in streaming call with the following data sent:
+
+```json
+[{"name":"sKNdMCIb"}, {"name":"KLVXDvn1"}, {"name":"RJ3knnBh"}, {"name":"FTBqQ7nl"}, {"name":"FzeMQIWo"}]
+```
+
+Contrast that with dynamic messages setting off, which means the template data will be applied only once for each stream call request, but _not_ for each message sent _in_ the streaming call.
+
+```sh
+--stream-call-count=5 -d '{"name":"{{randomString 8 }}"}'
+```
+
+```json
+[{"name":"5hL64dd0"}, {"name":"5hL64dd0"}, {"name":"5hL64dd0"}, {"name":"5hL64dd0"}, {"name":"5hL64dd0"}]
+```
 
 ### `--reflect-metadata`
 
