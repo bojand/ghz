@@ -49,7 +49,8 @@ type Requester struct {
 	stopCh  chan bool
 	start   time.Time
 
-	dataProvider *dataProvider
+	dataProvider     DataProviderFunc
+	metadataProvider MetadataProviderFunc
 
 	lock       sync.Mutex
 	stopReason StopReason
@@ -125,7 +126,8 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 		return nil, err
 	}
 
-	reqr.dataProvider = dataProvider
+	reqr.dataProvider = dataProvider.getDataForCall
+	reqr.metadataProvider = dataProvider.getMetadataForCall
 
 	return reqr, nil
 }
@@ -355,14 +357,15 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 					}
 
 					w := Worker{
-						ticks:        ticks,
-						active:       true,
-						stub:         b.stubs[n],
-						mtd:          b.mtd,
-						config:       b.config,
-						stopCh:       make(chan bool),
-						workerID:     wID,
-						dataProvider: b.dataProvider,
+						ticks:            ticks,
+						active:           true,
+						stub:             b.stubs[n],
+						mtd:              b.mtd,
+						config:           b.config,
+						stopCh:           make(chan bool),
+						workerID:         wID,
+						dataProvider:     b.dataProvider,
+						metadataProvider: b.metadataProvider,
 					}
 
 					wc++ // increment worker id

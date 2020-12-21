@@ -2,6 +2,7 @@ package runner
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -13,6 +14,21 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 	"google.golang.org/grpc/metadata"
 )
+
+// ErrEndStream is a signal from message providers that worker should close the stream
+// It should not be used for erronous states
+var ErrEndStream = errors.New("ending stream")
+
+// DataProviderFunc is the interface for providing data for calls
+// For unary and server streaming calls it should return an array with a single element
+// For client and bidi streaming calls it should return an array of messages to be used
+type DataProviderFunc func(*CallData) ([]*dynamic.Message, error)
+
+// MetadataProviderFunc is the interface for providing metadadata for calls
+type MetadataProviderFunc func(*CallData) (*metadata.MD, error)
+
+// StreamMessageProviderFunc is the interface for providing a message for every message send in the course of a streaming call
+type StreamMessageProviderFunc func(*CallData) (*dynamic.Message, error)
 
 // TODO fix this so it can be a public API via interface
 // TODO add tests
@@ -135,7 +151,7 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 		data := inputData
 
 		if dp.hasActions {
-			cdata, err := ctd.executeData(string(inputData))
+			cdata, err := ctd.ExecuteData(string(inputData))
 			if err != nil {
 				return nil, err
 			}
@@ -319,4 +335,137 @@ func createPayloadsFromBin(binData []byte, mtd *desc.MethodDescriptor) ([]*dynam
 	}
 
 	return createPayloadsFromBinSingleMessage(binData, mtd)
+}
+
+type dynamicMessageProvider struct {
+	mtd           *desc.MethodDescriptor
+	data          []byte
+	arrayJSONData []string
+	arrayLen      uint
+
+	streamCallCount uint
+	counter         uint
+	indexCounter    uint
+}
+
+func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCallCount uint) (*dynamicMessageProvider, error) {
+	mp := dynamicMessageProvider{
+		mtd:             mtd,
+		data:            data,
+		arrayJSONData:   nil,
+		streamCallCount: streamCallCount,
+	}
+
+	var err error
+
+	if strings.IndexRune(string(data), '[') == 0 { // it's an array
+		var dat []map[string]interface{}
+		if err := json.Unmarshal(data, &dat); err != nil {
+			return nil, err
+		}
+
+		mp.arrayJSONData = make([]string, len(dat))
+		for i, d := range dat {
+			var strd []byte
+			if strd, err = json.Marshal(d); err != nil {
+				return nil, err
+			}
+
+			mp.arrayJSONData[i] = string(strd)
+		}
+	}
+
+	mp.arrayLen = uint(len(mp.arrayJSONData))
+
+	// Test if we have actions
+	ctd := newCallData(mtd, nil, "", 0)
+	ha, err := ctd.hasAction(string(mp.data))
+	if err != nil {
+		return nil, err
+	}
+
+	if !ha {
+		return nil, errors.New("default message provider cannot be used with static data")
+	}
+
+	return &mp, nil
+}
+
+func (m *dynamicMessageProvider) GetStreamMessage(parentCallData *CallData) (*dynamic.Message, error) {
+	if m.streamCallCount > 0 {
+		if m.counter >= m.streamCallCount {
+			return nil, ErrEndStream
+
+		} else if m.counter == m.arrayLen {
+			m.indexCounter = 0
+		}
+	} else if m.counter == m.arrayLen {
+		return nil, ErrEndStream
+	}
+
+	ctd := parentCallData.Regenerate()
+
+	data := string(m.data)
+
+	if m.arrayLen > 0 {
+		if m.counter == m.arrayLen {
+			m.indexCounter = 0
+		}
+
+		data = m.arrayJSONData[m.indexCounter]
+	}
+
+	buf, err := ctd.ExecuteData(data)
+	if err != nil {
+		return nil, err
+	}
+
+	md := m.mtd.GetInputType()
+	var msg *dynamic.Message
+	dynamic.NewMessage(md)
+	err = jsonpb.UnmarshalString(string(buf), msg)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating message from data. Data: '%v' Error: %v", data, err.Error())
+	}
+
+	m.counter++
+	m.indexCounter++
+
+	return msg, nil
+}
+
+type staticMessageProvider struct {
+	inputs          []*dynamic.Message
+	inputLen        uint
+	streamCallCount uint
+	counter         uint
+	indexCounter    uint
+}
+
+func newStaticMessageProvider(streamCallCount uint, inputs []*dynamic.Message) (*staticMessageProvider, error) {
+	return &staticMessageProvider{
+		streamCallCount: streamCallCount,
+		inputs:          inputs,
+		inputLen:        uint(len(inputs)),
+	}, nil
+}
+
+func (m *staticMessageProvider) GetStreamMessage(parentCallData *CallData) (*dynamic.Message, error) {
+	if m.streamCallCount > 0 {
+		if m.counter >= m.streamCallCount {
+			return nil, ErrEndStream
+
+		} else if m.indexCounter == m.inputLen {
+			m.indexCounter = 0
+		}
+	} else if m.counter == m.inputLen {
+		return nil, ErrEndStream
+	}
+
+	payload := m.inputs[m.indexCounter]
+
+	m.counter++
+	m.indexCounter++
+
+	return payload, nil
 }

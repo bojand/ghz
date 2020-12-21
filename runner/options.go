@@ -92,9 +92,10 @@ type RunConfig struct {
 
 	zstop string
 
-	streamInterval     time.Duration
-	streamCallDuration time.Duration
-	streamCallCount    uint
+	streamInterval        time.Duration
+	streamCallDuration    time.Duration
+	streamCallCount       uint
+	streamDynamicMessages bool
 
 	// lbStrategy
 	lbStrategy string
@@ -726,6 +727,15 @@ func WithStreamCallCount(c uint) Option {
 	}
 }
 
+// WithStreamDynamicMessages sets the stream dynamic message generation
+func WithStreamDynamicMessages(v bool) Option {
+	return func(o *RunConfig) error {
+		o.streamDynamicMessages = v
+
+		return nil
+	}
+}
+
 // WithReflectionMetadata specifies the metadata to be used as a map
 // 	md := make(map[string]string)
 // 	md["token"] = "foobar"
@@ -1001,6 +1011,7 @@ func fromConfig(cfg *Config) []Option {
 		WithStreamInterval(time.Duration(cfg.SI)),
 		WithStreamCallDuration(time.Duration(cfg.StreamCallDuration)),
 		WithStreamCallCount(cfg.StreamCallCount),
+
 		WithReflectionMetadata(cfg.ReflectMetadata),
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),

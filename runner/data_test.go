@@ -13,6 +13,8 @@ import (
 )
 
 func TestData_createPayloads(t *testing.T) {
+	t.Parallel()
+
 	mtdUnary, err := protodesc.GetMethodDescFromProto(
 		"helloworld.Greeter.SayHello",
 		"../testdata/greeter.proto",
@@ -54,12 +56,16 @@ func TestData_createPayloads(t *testing.T) {
 	assert.NotNil(t, mtdUnary)
 
 	t.Run("get empty when empty", func(t *testing.T) {
+		t.Parallel()
+
 		inputs, err := createPayloadsFromJSON("", mtdUnary)
 		assert.NoError(t, err)
 		assert.Empty(t, inputs)
 	})
 
 	t.Run("fail for invalid data shape", func(t *testing.T) {
+		t.Parallel()
+
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 		m1["unknown"] = "field"
@@ -72,6 +78,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice with single element from map for unary", func(t *testing.T) {
+		t.Parallel()
+
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -85,6 +93,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice with single element from map for client streaming", func(t *testing.T) {
+		t.Parallel()
+
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -98,6 +108,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice of messages from slice for client streaming", func(t *testing.T) {
+		t.Parallel()
+
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -115,6 +127,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("fail on invalid shape of data in slice for client streaming", func(t *testing.T) {
+		t.Parallel()
+
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -135,6 +149,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice of messages from slice for unary", func(t *testing.T) {
+		t.Parallel()
+
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 
@@ -155,6 +171,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice with single object from map for unary with camelCase property", func(t *testing.T) {
+		t.Parallel()
+
 		m1 := make(map[string]interface{})
 		m1["paramOne"] = "bob"
 
@@ -168,6 +186,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice with single object from map for unary with snake_case property", func(t *testing.T) {
+		t.Parallel()
+
 		m1 := make(map[string]interface{})
 		m1["param_one"] = "bob"
 
@@ -181,6 +201,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice with single object from map for unary with nested camelCase property", func(t *testing.T) {
+		t.Parallel()
+
 		inner := make(map[string]interface{})
 		inner["paramOne"] = "bob"
 
@@ -197,6 +219,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice with single object from map for unary with nested snake_case property", func(t *testing.T) {
+		t.Parallel()
+
 		inner := make(map[string]interface{})
 		inner["param_one"] = "bob"
 
@@ -213,6 +237,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create data with well-known wrapped type", func(t *testing.T) {
+		t.Parallel()
+
 		jsonData := `"foo"`
 
 		inputs, err := createPayloadsFromJSON(jsonData, mtdWrapped)
@@ -223,6 +249,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice from single message binary data", func(t *testing.T) {
+		t.Parallel()
+
 		msg1 := &helloworld.HelloRequest{}
 		msg1.Name = "bob"
 
@@ -238,6 +266,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("create slice from count-delimited binary data", func(t *testing.T) {
+		t.Parallel()
+
 		msg1 := &helloworld.HelloRequest{}
 		msg1.Name = "bob"
 		msg2 := &helloworld.HelloRequest{}
@@ -257,6 +287,8 @@ func TestData_createPayloads(t *testing.T) {
 	})
 
 	t.Run("on empty binary data returns empty slice", func(t *testing.T) {
+		t.Parallel()
+
 		buf := make([]byte, 0)
 		inputs, err := createPayloadsFromBin(buf, mtdUnary)
 

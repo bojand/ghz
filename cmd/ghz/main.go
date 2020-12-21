@@ -192,6 +192,10 @@ var (
 	scc      = kingpin.Flag("stream-call-count", "Count of messages sent, after which client will close the stream in each streaming call.").
 			Default("0").IsSetByUser(&isSCCSet).Uint()
 
+	isSDMSet = false
+	sdm      = kingpin.Flag("stream-dynamic-messages", "In streaming calls, regenerate and apply call template data on every message send.").
+			Default("0").IsSetByUser(&isSDMSet).Bool()
+
 	isRMDSet = false
 	rmd      = kingpin.Flag("reflect-metadata", "Reflect metadata as stringified JSON used only for reflection request.").
 			PlaceHolder(" ").IsSetByUser(&isRMDSet).String()
@@ -436,6 +440,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.SI = runner.Duration(*si)
 	cfg.StreamCallDuration = runner.Duration(*scd)
 	cfg.StreamCallCount = *scc
+	cfg.StreamDynamicMessages = *sdm
 	cfg.Output = *output
 	cfg.Format = *format
 	cfg.ImportPaths = iPaths
@@ -578,6 +583,10 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isSCCSet {
 		dest.StreamCallCount = src.StreamCallCount
+	}
+
+	if isSDMSet {
+		dest.StreamDynamicMessages = src.StreamDynamicMessages
 	}
 
 	if isOutputSet {

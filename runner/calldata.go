@@ -48,8 +48,6 @@ func newCallData(
 	mtd *desc.MethodDescriptor,
 	funcs template.FuncMap,
 	workerID string, reqNum int64) *CallData {
-	now := time.Now()
-	newUUID, _ := uuid.NewRandom()
 
 	fns := make(template.FuncMap, len(funcs)+2)
 	for k, v := range tmplFuncMap {
@@ -63,6 +61,9 @@ func newCallData(
 	}
 
 	t := template.New("call_template_data").Funcs(fns)
+
+	now := time.Now()
+	newUUID, _ := uuid.NewRandom()
 
 	return &CallData{
 		WorkerID:           workerID,
@@ -80,6 +81,31 @@ func newCallData(
 		TimestampUnixNano:  now.UnixNano(),
 		UUID:               newUUID.String(),
 		t:                  t,
+	}
+}
+
+// Regenerate generates a new instance of call data from this parent instance
+// The dynamic data like timestamps and UUIDs are re-filled
+func (td *CallData) Regenerate() *CallData {
+	now := time.Now()
+	newUUID, _ := uuid.NewRandom()
+
+	return &CallData{
+		WorkerID:           td.WorkerID,
+		RequestNumber:      td.RequestNumber,
+		FullyQualifiedName: td.FullyQualifiedName,
+		MethodName:         td.MethodName,
+		ServiceName:        td.ServiceName,
+		InputName:          td.InputName,
+		OutputName:         td.OutputName,
+		IsClientStreaming:  td.IsClientStreaming,
+		IsServerStreaming:  td.IsServerStreaming,
+		Timestamp:          now.Format(time.RFC3339),
+		TimestampUnix:      now.Unix(),
+		TimestampUnixMilli: now.UnixNano() / 1000000,
+		TimestampUnixNano:  now.UnixNano(),
+		UUID:               newUUID.String(),
+		t:                  td.t,
 	}
 }
 
@@ -125,7 +151,8 @@ func hasAction(node parse.Node) bool {
 	return has
 }
 
-func (td *CallData) executeData(data string) ([]byte, error) {
+// ExecuteData applies the call data's parsed template and data string and returns the resulting buffer
+func (td *CallData) ExecuteData(data string) ([]byte, error) {
 	if len(data) > 0 {
 		input := []byte(data)
 		tpl, err := td.execute(data)

@@ -14,6 +14,8 @@ import (
 
 func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("fail with empty call", func(t *testing.T) {
+		t.Parallel()
+
 		c, err := NewConfig("  ", "localhost:50050")
 
 		assert.Error(t, err)
@@ -21,6 +23,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("fail with empty host ", func(t *testing.T) {
+		t.Parallel()
+
 		c, err := NewConfig("  call ", "   ")
 
 		assert.Error(t, err)
@@ -28,6 +32,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("fail with invalid extension", func(t *testing.T) {
+		t.Parallel()
+
 		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.bin", []string{}),
 		)
@@ -37,6 +43,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("without any options should have defaults", func(t *testing.T) {
+		t.Parallel()
+
 		c, err := NewConfig("  call  ", "  localhost:50050  ",
 			WithProtoFile("testdata/data.proto", []string{}),
 		)
@@ -67,6 +75,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("skipFirst > n", func(t *testing.T) {
+		t.Parallel()
+
 		_, err := NewConfig("  call  ", "  localhost:50050  ",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithSkipFirst(1000),
@@ -76,6 +86,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with options", func(t *testing.T) {
+		t.Parallel()
+
 		c, err := NewConfig(
 			"call", "localhost:50050",
 			WithInsecure(true),
@@ -120,6 +132,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with binary data, protoset and metadata file", func(t *testing.T) {
+		t.Parallel()
+
 		c, err := NewConfig(
 			"call", "localhost:50050",
 			WithCertificate("../testdata/localhost.crt", "../testdata/localhost.key"),
@@ -174,6 +188,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with data interface and metadata map", func(t *testing.T) {
+		t.Parallel()
+
 		type dataStruct struct {
 			Name   string   `json:"name"`
 			Age    int      `json:"age"`
@@ -246,6 +262,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with binary data from file", func(t *testing.T) {
+		t.Parallel()
+
 		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithBinaryDataFromFile("../testdata/hello_request_data.bin"),
@@ -276,6 +294,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with data from file", func(t *testing.T) {
+		t.Parallel()
+
 		c, err := NewConfig("call", "localhost:50050",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithDataFromFile("../testdata/data.json"),
@@ -307,6 +327,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with data from reader", func(t *testing.T) {
+		t.Parallel()
 
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
@@ -343,6 +364,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with connections", func(t *testing.T) {
+		t.Parallel()
 
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
@@ -380,6 +402,7 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with invalid connections > concurrency", func(t *testing.T) {
+		t.Parallel()
 
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
@@ -396,6 +419,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with config", func(t *testing.T) {
+		t.Parallel()
+
 		filename := "../testdata/config.json"
 
 		t.Run("from file", func(t *testing.T) {
@@ -417,6 +442,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("from file 2", func(t *testing.T) {
+			t.Parallel()
+
 			c, err := NewConfig("", "",
 				WithConfigFromFile("../testdata/config5.toml"))
 			assert.Nil(t, err)
@@ -435,6 +462,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("from reader", func(t *testing.T) {
+			t.Parallel()
+
 			file, _ := os.Open(filename)
 			defer file.Close()
 
@@ -456,6 +485,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("from reader", func(t *testing.T) {
+			t.Parallel()
+
 			file, _ := os.Open(filename)
 			defer file.Close()
 
@@ -480,6 +511,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("invalid schedule", func(t *testing.T) {
+		t.Parallel()
+
 		_, err := NewConfig("  call  ", "  localhost:50050  ",
 			WithProtoFile("testdata/data.proto", []string{}),
 			WithLoadSchedule("foo"),
@@ -490,6 +523,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 	t.Run("with load step", func(t *testing.T) {
 		t.Run("no step", func(t *testing.T) {
+			t.Parallel()
+
 			_, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadSchedule(ScheduleStep),
@@ -502,6 +537,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("no step duration", func(t *testing.T) {
+			t.Parallel()
+
 			_, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadSchedule(ScheduleStep),
@@ -512,6 +549,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("with all load settings", func(t *testing.T) {
+			t.Parallel()
+
 			c, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadSchedule(ScheduleStep),
@@ -535,6 +574,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 	t.Run("with load line", func(t *testing.T) {
 		t.Run("no step", func(t *testing.T) {
+			t.Parallel()
+
 			_, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadSchedule(ScheduleLine),
@@ -544,6 +585,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("with all setting", func(t *testing.T) {
+			t.Parallel()
+
 			c, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithLoadSchedule(ScheduleLine),
@@ -566,6 +609,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 	t.Run("with concurrency step", func(t *testing.T) {
 		t.Run("no step", func(t *testing.T) {
+			t.Parallel()
+
 			_, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithConcurrencySchedule(ScheduleStep),
@@ -575,6 +620,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("with all concurrency settings", func(t *testing.T) {
+			t.Parallel()
+
 			c, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithConcurrencySchedule(ScheduleStep),
@@ -598,6 +645,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 
 	t.Run("with concurrency line", func(t *testing.T) {
 		t.Run("no step", func(t *testing.T) {
+			t.Parallel()
+
 			_, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithConcurrencySchedule(ScheduleLine),
@@ -607,6 +656,8 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		})
 
 		t.Run("with all concurrency settings", func(t *testing.T) {
+			t.Parallel()
+
 			c, err := NewConfig("  call  ", "  localhost:50050  ",
 				WithProtoFile("testdata/data.proto", []string{}),
 				WithConcurrencySchedule(ScheduleLine),

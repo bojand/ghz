@@ -70,6 +70,8 @@ func TestConfig_Load(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run("toml "+tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var actual Config
 			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".toml"
 			err := LoadConfig(cfgPath, &actual)
@@ -82,6 +84,8 @@ func TestConfig_Load(t *testing.T) {
 		})
 
 		t.Run("json "+tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var actual Config
 			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".toml"
 			err := LoadConfig(cfgPath, &actual)
@@ -94,6 +98,8 @@ func TestConfig_Load(t *testing.T) {
 		})
 
 		t.Run("yaml "+tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var actual Config
 			cfgPath := "../testdata/config/config" + strconv.Itoa(i) + ".yaml"
 			err := LoadConfig(cfgPath, &actual)

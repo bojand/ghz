@@ -34,7 +34,8 @@ type Worker struct {
 	stopCh   chan bool
 	ticks    <-chan TickValue
 
-	dataProvider *dataProvider
+	dataProvider     DataProviderFunc
+	metadataProvider MetadataProviderFunc
 }
 
 func (w *Worker) runWorker() error {
@@ -77,7 +78,7 @@ func (w *Worker) makeRequest(tv TickValue) error {
 
 	ctd := newCallData(w.mtd, w.config.funcs, w.workerID, reqNum)
 
-	inputs, err := w.dataProvider.getDataForCall(ctd)
+	inputs, err := w.dataProvider(ctd)
 	if err != nil {
 		return err
 	}
@@ -85,7 +86,7 @@ func (w *Worker) makeRequest(tv TickValue) error {
 		return fmt.Errorf("no data provided for request")
 	}
 
-	reqMD, err := w.dataProvider.getMetadataForCall(ctd)
+	reqMD, err := w.metadataProvider(ctd)
 	if err != nil {
 		return err
 	}
@@ -126,12 +127,30 @@ func (w *Worker) makeRequest(tv TickValue) error {
 	}
 
 	unaryInput := inputs[0]
+	var msgProvider StreamMessageProviderFunc
+	if w.mtd.IsClientStreaming() {
+		if w.config.streamDynamicMessages {
+			mp, err := newDynamicMessageProvider(w.mtd, w.config.data, w.config.streamCallCount)
+			if err != nil {
+				return err
+			}
+
+			msgProvider = mp.GetStreamMessage
+		} else {
+			mp, err := newStaticMessageProvider(w.config.streamCallCount, inputs)
+			if err != nil {
+				return err
+			}
+
+			msgProvider = mp.GetStreamMessage
+		}
+	}
 
 	// RPC errors are handled via stats handler
 	if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
-		_ = w.makeBidiRequest(&ctx, inputs)
+		_ = w.makeBidiRequest(&ctx, ctd, msgProvider)
 	} else if w.mtd.IsClientStreaming() {
-		_ = w.makeClientStreamingRequest(&ctx, inputs)
+		_ = w.makeClientStreamingRequest(&ctx, ctd, msgProvider)
 	} else if w.mtd.IsServerStreaming() {
 		_ = w.makeServerStreamingRequest(&ctx, unaryInput)
 	} else {
@@ -161,7 +180,8 @@ func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, inpu
 	return resErr
 }
 
-func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynamic.Message) error {
+func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
+	ctd *CallData, messageProvider StreamMessageProviderFunc) error {
 	var str *grpcdynamic.ClientStream
 	var err error
 	var callOptions = []grpc.CallOption{}
@@ -176,9 +196,6 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 			"call", w.mtd.GetFullyQualifiedName(), "error", err)
 	}
 
-	indexCounter := 0
-	counter := 0
-
 	closeStream := func() {
 		res, closeErr := str.CloseAndReceive()
 
@@ -187,11 +204,6 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 				"call", w.mtd.GetFullyQualifiedName(),
 				"response", res, "error", closeErr)
 		}
-	}
-
-	if len(input) == 0 {
-		closeStream()
-		return nil
 	}
 
 	performSend := func(payload *dynamic.Message) bool {
@@ -219,29 +231,18 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context, input []*dynam
 		}()
 	}
 
-	inputLen := len(input)
-	streamCloseCount := int(w.config.streamCallCount)
 	done := false
 	for err == nil && !done {
-		if streamCloseCount > 0 {
-			if counter >= streamCloseCount {
-				closeStream()
-				break
-			} else if indexCounter == inputLen {
-				indexCounter = 0
-			}
-		} else if counter == inputLen {
+		payload, err := messageProvider(ctd)
+		if err == ErrEndStream {
 			closeStream()
 			break
 		}
 
-		if end := performSend(input[indexCounter]); end {
+		if end := performSend(payload); end {
 			closeStream()
 			break
 		}
-
-		counter++
-		indexCounter++
 
 		if w.config.streamInterval > 0 {
 			wait := time.NewTimer(w.config.streamInterval)
@@ -298,7 +299,8 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 	return err
 }
 
-func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message) error {
+func (w *Worker) makeBidiRequest(ctx *context.Context,
+	ctd *CallData, messageProvider StreamMessageProviderFunc) error {
 	var str *grpcdynamic.BidiStream
 	var err error
 	var callOptions = []grpc.CallOption{}
@@ -319,7 +321,6 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 
 	counter := 0
 	indexCounter := 0
-	inputLen := len(input)
 	recvDone := make(chan bool)
 
 	closeStream := func() {
@@ -329,11 +330,6 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 			w.config.log.Debugw("Close send", "workerID", w.workerID, "call type", "bidi",
 				"call", w.mtd.GetFullyQualifiedName(), "error", closeErr)
 		}
-	}
-
-	if inputLen == 0 {
-		closeStream()
-		return nil
 	}
 
 	cancel := make(chan struct{}, 1)
@@ -362,23 +358,14 @@ func (w *Worker) makeBidiRequest(ctx *context.Context, input []*dynamic.Message)
 		}
 	}()
 
-	streamCloseCount := int(w.config.streamCallCount)
-
 	done := false
 	for err == nil && !done {
-		if streamCloseCount > 0 {
-			if counter >= streamCloseCount {
-				closeStream()
-				break
-			} else if indexCounter == inputLen {
-				indexCounter = 0
-			}
-		} else if counter == inputLen {
+		payload, err := messageProvider(ctd)
+		if err == ErrEndStream {
 			closeStream()
 			break
 		}
 
-		payload := input[indexCounter]
 		err = str.SendMsg(payload)
 
 		counter++
