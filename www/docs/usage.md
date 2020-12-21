@@ -51,7 +51,8 @@ Flags:
   -M, --metadata-file=           File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
       --stream-interval=0        Interval for stream requests between message sends.
       --stream-call-duration=0   Duration after which client will close the stream in each streaming call.
-      --stream-call-count=0      Count of messages sent after which client will close the stream in each streaming call.
+      --stream-call-count=0      Count of messages sent, after which client will close the stream in each streaming call.
+      --stream-dynamic-messages  In streaming calls, regenerate and apply call template data on every message send.
       --reflect-metadata=        Reflect metadata as stringified JSON used only for reflection request.
   -o, --output=                  Output path. If none provided stdout is used.
   -O, --format=                  Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.
