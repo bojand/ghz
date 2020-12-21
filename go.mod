@@ -12,7 +12,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.2
 	github.com/golangci/golangci-lint v1.31.0
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.2
 	github.com/jhump/protoreflect v1.5.0
 	github.com/jinzhu/configor v1.1.1
 	github.com/jinzhu/gorm v1.9.11
@@ -28,6 +28,6 @@ require (
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/tools v0.0.0-20200812195022-5ae4c3c160a0
-	google.golang.org/grpc v1.24.0
+	google.golang.org/grpc v1.34.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
