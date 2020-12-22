@@ -271,7 +271,7 @@ Will cause `[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"},{"name":"Joe"},{"nam
 
 ### `--stream-dynamic-messages`
 
-In streaming calls, regenerate and apply call template data on every message send.
+In streaming calls, regenerate and apply call template data on every message send operation.
 This is helpful in combination with template functionality to generate data _for every message sent_ in a streaming call.
 For example:
 
@@ -282,17 +282,19 @@ For example:
 Will result in streaming call with the following data sent:
 
 ```json
-[{"name":"sKNdMCIb"}, {"name":"KLVXDvn1"}, {"name":"RJ3knnBh"}, {"name":"FTBqQ7nl"}, {"name":"FzeMQIWo"}]
+[{"name":"sKNdMCIb"},{"name":"KLVXDvn1"},{"name":"RJ3knnBh"},{"name":"FTBqQ7nl"},{"name":"FzeMQIWo"}]
 ```
 
-Contrast that with dynamic messages setting off, which means the template data will be applied only once for each stream call request, but _not_ for each message sent _in_ the streaming call.
+Contrast that with the default dynamic messages setting turned off; which means the template data will be applied only once for each stream call request, but _not_ for each message sent _in_ the streaming call.
 
 ```sh
 --stream-call-count=5 -d '{"name":"{{randomString 8 }}"}'
 ```
 
+Results in the following data sent:
+
 ```json
-[{"name":"5hL64dd0"}, {"name":"5hL64dd0"}, {"name":"5hL64dd0"}, {"name":"5hL64dd0"}, {"name":"5hL64dd0"}]
+[{"name":"5hL64dd0"},{"name":"5hL64dd0"},{"name":"5hL64dd0"},{"name":"5hL64dd0"},{"name":"5hL64dd0"}]
 ```
 
 ### `--reflect-metadata`
