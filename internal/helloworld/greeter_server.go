@@ -30,13 +30,16 @@ var Bidi CallType = "bidi"
 
 // Greeter implements the GreeterServer for tests
 type Greeter struct {
-	streamData []*HelloReply
+	StreamData []*HelloReply
 
 	Stats *HWStatsHandler
 
 	mutex      *sync.RWMutex
 	callCounts map[CallType]int
 	calls      map[CallType][][]*HelloRequest
+
+	sendMutex  *sync.RWMutex
+	sendCounts map[CallType]map[int]int
 }
 
 func randomSleep() {
@@ -62,6 +65,13 @@ func (s *Greeter) recordMessage(ct CallType, callIdx int, msg *HelloRequest) {
 	s.calls[ct][callIdx] = append(s.calls[ct][callIdx], msg)
 }
 
+func (s *Greeter) recordStreamSendCounter(ct CallType, callIdx int) {
+	s.sendMutex.Lock()
+	defer s.sendMutex.Unlock()
+
+	s.sendCounts[ct][callIdx] = s.sendCounts[ct][callIdx] + 1
+}
+
 // SayHello implements helloworld.GreeterServer
 func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, error) {
 	callIdx := s.recordCall(Unary)
@@ -79,10 +89,12 @@ func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) e
 
 	randomSleep()
 
-	for _, msg := range s.streamData {
+	for _, msg := range s.StreamData {
 		if err := stream.Send(msg); err != nil {
 			return err
 		}
+
+		s.recordStreamSendCounter(ServerStream, callIdx)
 	}
 
 	return nil
@@ -130,6 +142,7 @@ func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 		if err := stream.Send(&HelloReply{Message: msg}); err != nil {
 			return err
 		}
+		s.recordStreamSendCounter(ServerStream, callIdx)
 	}
 }
 
@@ -150,6 +163,14 @@ func (s *Greeter) ResetCounters() {
 	s.calls[Bidi] = make([][]*HelloRequest, 0)
 
 	s.mutex.Unlock()
+
+	s.sendMutex.Lock()
+	s.sendCounts = make(map[CallType]map[int]int)
+	s.sendCounts[Unary] = make(map[int]int)
+	s.sendCounts[ServerStream] = make(map[int]int)
+	s.sendCounts[ClientStream] = make(map[int]int)
+	s.sendCounts[Bidi] = make(map[int]int)
+	s.sendMutex.Unlock()
 
 	if s.Stats != nil {
 		s.Stats.mutex.Lock()
@@ -181,6 +202,19 @@ func (s *Greeter) GetCalls(key CallType) [][]*HelloRequest {
 	return nil
 }
 
+// GetSendCounts gets the stream send counts
+func (s *Greeter) GetSendCounts(key CallType) map[int]int {
+	s.sendMutex.RLock()
+	val, ok := s.sendCounts[key]
+	s.sendMutex.RUnlock()
+
+	if ok {
+		return val
+	}
+
+	return nil
+}
+
 // GetConnectionCount gets the connection count
 func (s *Greeter) GetConnectionCount() int {
 	return s.Stats.GetConnectionCount()
@@ -195,7 +229,7 @@ func NewGreeter() *Greeter {
 		{Message: "Hello Sara"},
 	}
 
-	greeter := &Greeter{streamData: streamData, mutex: &sync.RWMutex{}}
+	greeter := &Greeter{StreamData: streamData, mutex: &sync.RWMutex{}, sendMutex: &sync.RWMutex{}}
 	greeter.ResetCounters()
 
 	return greeter

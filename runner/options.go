@@ -116,10 +116,12 @@ type RunConfig struct {
 	log    Logger
 
 	// misc
-	name      string
-	cpus      int
-	tags      []byte
-	skipFirst int
+	name        string
+	cpus        int
+	tags        []byte
+	skipFirst   int
+	countErrors bool
+	recvMsgFunc StreamRecvMsgInterceptFunc
 }
 
 // Option controls some aspect of run
@@ -660,6 +662,15 @@ func WithSkipFirst(c uint) Option {
 	}
 }
 
+// WithCountErrors is the count errors option
+func WithCountErrors(v bool) Option {
+	return func(o *RunConfig) error {
+		o.countErrors = v
+
+		return nil
+	}
+}
+
 // WithProtoFile specified proto file path and optionally import paths
 // We will automatically add the proto file path's directory and the current directory
 //	WithProtoFile("greeter.proto", []string{"/home/protos"})
@@ -934,6 +945,15 @@ func WithPacer(p load.Pacer) Option {
 func WithWorkerTicker(ticker load.WorkerTicker) Option {
 	return func(o *RunConfig) error {
 		o.workerTicker = ticker
+
+		return nil
+	}
+}
+
+// WithStreamRecvMsgIntercept specified the stream receive intercept function
+func WithStreamRecvMsgIntercept(fn StreamRecvMsgInterceptFunc) Option {
+	return func(o *RunConfig) error {
+		o.recvMsgFunc = fn
 
 		return nil
 	}

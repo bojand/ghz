@@ -50,10 +50,11 @@ func (d *Duration) UnmarshalJSON(text []byte) error {
 
 // MarshalJSON implements encoding JSONMarshaler
 func (d Duration) MarshalJSON() ([]byte, error) {
-	return []byte(time.Duration(d).String()), nil
+	return []byte(`"` + time.Duration(d).String() + `"`), nil
 }
 
 // Config for the run.
+// TODO fix casing and consistency.
 type Config struct {
 	Proto                 string            `json:"proto" toml:"proto" yaml:"proto"`
 	Protoset              string            `json:"protoset" toml:"protoset" yaml:"protoset"`
@@ -61,6 +62,7 @@ type Config struct {
 	RootCert              string            `json:"cacert" toml:"cacert" yaml:"cacert"`
 	Cert                  string            `json:"cert" toml:"cert" yaml:"cert"`
 	Key                   string            `json:"key" toml:"key" yaml:"key"`
+	CountErrors           bool              `json:"count-errors" toml:"count-errors" yaml:"count-errors"`
 	SkipTLSVerify         bool              `json:"skipTLS" toml:"skipTLS" yaml:"skipTLS"`
 	SkipFirst             uint              `json:"skipFirst" toml:"skipFirst" yaml:"skipFirst"`
 	CName                 string            `json:"cname" toml:"cname" yaml:"cname"`

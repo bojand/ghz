@@ -17,6 +17,7 @@ import (
 
 	"go.uber.org/multierr"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
@@ -167,8 +168,9 @@ func (b *Requester) Run() (*Report, error) {
 
 	err = b.runWorkers(wt, p)
 
-	report := b.Finish()
 	b.closeClientConns()
+
+	report := b.Finish()
 
 	return report, err
 }
@@ -256,7 +258,11 @@ func (b *Requester) closeClientConns() {
 	}
 
 	for _, cc := range b.conns {
+		shutdownCh := connectionOnState(context.Background(), cc, connectivity.Shutdown)
+
 		_ = cc.Close()
+
+		<-shutdownCh
 	}
 
 	b.conns = nil
@@ -352,8 +358,7 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 					}
 
 					if b.config.hasLog {
-						b.config.log.Debugw("Creating worker with ID: "+wID,
-							"workerID", wID, "requests per worker")
+						b.config.log.Debugw("Creating worker with ID: "+wID, "workerID", wID)
 					}
 
 					w := Worker{
@@ -366,6 +371,7 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 						workerID:         wID,
 						dataProvider:     b.dataProvider,
 						metadataProvider: b.metadataProvider,
+						streamRecv:       b.config.recvMsgFunc,
 					}
 
 					wc++ // increment worker id
@@ -525,4 +531,30 @@ func createPacer(config *RunConfig) load.Pacer {
 	}
 
 	return p
+}
+
+func connectionOnState(ctx context.Context, conn *grpc.ClientConn, states ...connectivity.State) <-chan struct{} {
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+
+		for {
+
+			currentState := conn.GetState()
+
+			for _, s := range states {
+				if currentState == s {
+					return
+				}
+			}
+
+			change := conn.WaitForStateChange(ctx, conn.GetState())
+			if !change {
+				return
+			}
+		}
+	}()
+
+	return done
 }

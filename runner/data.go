@@ -30,7 +30,11 @@ type MetadataProviderFunc func(*CallData) (*metadata.MD, error)
 // StreamMessageProviderFunc is the interface for providing a message for every message send in the course of a streaming call
 type StreamMessageProviderFunc func(*CallData) (*dynamic.Message, error)
 
-// TODO fix this so it can be a public API via interface
+// StreamRecvMsgInterceptFunc is an interface for function invoked when we receive a stream message
+// Clients can return ErrEndStream to end the call early
+type StreamRecvMsgInterceptFunc func(*dynamic.Message, error) error
+
+// TODO move to own pacakge?
 // TODO add tests
 type dataProvider struct {
 	binary   bool

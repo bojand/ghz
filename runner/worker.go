@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -36,6 +37,7 @@ type Worker struct {
 
 	dataProvider     DataProviderFunc
 	metadataProvider MetadataProviderFunc
+	streamRecv       StreamRecvMsgInterceptFunc
 }
 
 func (w *Worker) runWorker() error {
@@ -234,7 +236,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 	done := false
 	for err == nil && !done {
 		payload, err := messageProvider(ctd)
-		if err == ErrEndStream {
+		if errors.Is(err, ErrEndStream) {
 			closeStream()
 			break
 		}
@@ -270,7 +272,11 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 	if w.config.enableCompression {
 		callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
 	}
-	str, err := w.stub.InvokeRpcServerStream(*ctx, w.mtd, input, callOptions...)
+
+	callCtx, callCancel := context.WithCancel(*ctx)
+	defer callCancel()
+
+	str, err := w.stub.InvokeRpcServerStream(callCtx, w.mtd, input, callOptions...)
 
 	if err != nil && w.config.hasLog {
 		w.config.log.Errorw("Invoke Server Streaming RPC call error: "+err.Error(), "workerID", w.workerID,
@@ -279,6 +285,17 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 			"input", input, "error", err)
 	}
 
+	cancel := make(chan struct{}, 1)
+	if w.config.streamCallDuration > 0 {
+		go func() {
+			sct := time.NewTimer(w.config.streamCallDuration)
+			<-sct.C
+			cancel <- struct{}{}
+		}()
+	}
+
+	interceptCanceled := false
+	counter := uint(0)
 	for err == nil {
 		res, err := str.RecvMsg()
 
@@ -288,13 +305,40 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 				"response", res, "error", err)
 		}
 
+		// with any of the cancellation operations we can't just bail
+		// we have to drain the messages until the server gets the cancel and ends their side of the stream
+
+		if w.streamRecv != nil {
+			if converted, ok := res.(*dynamic.Message); ok {
+				err = w.streamRecv(converted, err)
+				if errors.Is(err, ErrEndStream) && !interceptCanceled {
+					interceptCanceled = true
+					err = nil
+
+					callCancel()
+				}
+			}
+		}
+
 		if err != nil {
 			if err == io.EOF {
 				err = nil
 			}
+
 			break
 		}
+
+		counter++
+
+		if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+			<-cancel
+			callCancel()
+		} else if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
+			callCancel()
+		}
 	}
+
+	close(cancel)
 
 	return err
 }
@@ -341,6 +385,8 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		}()
 	}
 
+	interceptCanceled := false
+
 	go func() {
 		for {
 			res, err := str.RecvMsg()
@@ -349,6 +395,17 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				w.config.log.Debugw("Receive message", "workerID", w.workerID, "call type", "bidi",
 					"call", w.mtd.GetFullyQualifiedName(),
 					"response", res, "error", err)
+			}
+
+			if w.streamRecv != nil {
+				if converted, ok := res.(*dynamic.Message); ok {
+					err = w.streamRecv(converted, err)
+					if errors.Is(err, ErrEndStream) && !interceptCanceled {
+						interceptCanceled = true
+						cancel <- struct{}{}
+						err = nil
+					}
+				}
 			}
 
 			if err != nil {
@@ -361,7 +418,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 	done := false
 	for err == nil && !done {
 		payload, err := messageProvider(ctd)
-		if err == ErrEndStream {
+		if errors.Is(err, ErrEndStream) {
 			closeStream()
 			break
 		}
@@ -386,7 +443,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				closeStream()
 				done = true
 			}
-		} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+		} else if len(cancel) > 0 {
 			<-cancel
 			closeStream()
 			done = true
