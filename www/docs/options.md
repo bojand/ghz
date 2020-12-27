@@ -375,7 +375,7 @@ Enable gzip compression on requests.
 
 ### `--count-errors`
 
-By default stats for fastest, slowest, average, histogram, and latency distributions only take into account the responses with OK status. This option enabled counting of erroneous (non-OK) resoponses in stats calculations as well.
+By default stats for fastest, slowest, average, histogram, and latency distributions only take into account the responses with OK status. This option enabled counting of erroneous (non-OK) responses in stats calculations as well.
 
 ### `-v`, `--version`
 
