@@ -122,13 +122,25 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 	// fill in the rest
 	reqr.mtd = mtd
 
-	dataProvider, err := newDataProvider(reqr.mtd, c.binary, c.dataFunc, c.data, c.metadata)
-	if err != nil {
-		return nil, err
+	if c.dataProviderFunc != nil {
+		reqr.dataProvider = c.dataProviderFunc
+	} else {
+		defaultDataProvider, err := newDataProvider(reqr.mtd, c.binary, c.dataFunc, c.data)
+		if err != nil {
+			return nil, err
+		}
+		reqr.dataProvider = defaultDataProvider.getDataForCall
 	}
 
-	reqr.dataProvider = dataProvider.getDataForCall
-	reqr.metadataProvider = dataProvider.getMetadataForCall
+	if c.mdProviderFunc != nil {
+		reqr.metadataProvider = c.mdProviderFunc
+	} else {
+		defaultMDProvider, err := newMetadataProvider(reqr.mtd, c.metadata)
+		if err != nil {
+			return nil, err
+		}
+		reqr.metadataProvider = defaultMDProvider.getMetadataForCall
+	}
 
 	return reqr, nil
 }

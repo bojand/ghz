@@ -100,11 +100,15 @@ type RunConfig struct {
 	// lbStrategy
 	lbStrategy string
 
+	// TODO consolidate these actual value fields to be implemented via provider funcs
 	// data & metadata
 	data     []byte
 	metadata []byte
 	binary   bool
-	dataFunc BinaryDataFunc
+
+	dataFunc         BinaryDataFunc
+	dataProviderFunc DataProviderFunc
+	mdProviderFunc   MetadataProviderFunc
 
 	funcs template.FuncMap
 
@@ -968,6 +972,23 @@ func WithWorkerTicker(ticker load.WorkerTicker) Option {
 func WithStreamRecvMsgIntercept(fn StreamRecvMsgInterceptFunc) Option {
 	return func(o *RunConfig) error {
 		o.recvMsgFunc = fn
+
+		return nil
+	}
+}
+
+// WithDataProvider provides custom data provider
+//	WithDataProvider(func(*CallData) ([]*dynamic.Message, error) {
+//		protoMsg := &helloworld.HelloRequest{Name: "Bob"}
+//		dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
+//		if err != nil {
+//			return nil, err
+//		}
+//		return []*dynamic.Message{dynamicMsg}, nil
+//	}),
+func WithDataProvider(fn DataProviderFunc) Option {
+	return func(o *RunConfig) error {
+		o.dataProviderFunc = fn
 
 		return nil
 	}

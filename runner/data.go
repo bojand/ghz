@@ -15,6 +15,10 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// TODO move to own pacakge?
+// TODO add tests
+// TODO expose public API utilizing only proto API and not dynamic
+
 // ErrEndStream is a signal from message providers that worker should close the stream
 // It should not be used for erronous states
 var ErrEndStream = errors.New("ending stream")
@@ -34,12 +38,9 @@ type StreamMessageProviderFunc func(*CallData) (*dynamic.Message, error)
 // Clients can return ErrEndStream to end the call early
 type StreamRecvMsgInterceptFunc func(*dynamic.Message, error) error
 
-// TODO move to own pacakge?
-// TODO add tests
 type dataProvider struct {
 	binary   bool
 	data     []byte
-	metadata []byte
 	mtd      *desc.MethodDescriptor
 	dataFunc BinaryDataFunc
 
@@ -51,16 +52,18 @@ type dataProvider struct {
 	cachedMessages []*dynamic.Message
 }
 
+type mdProvider struct {
+	metadata []byte
+}
+
 func newDataProvider(mtd *desc.MethodDescriptor,
-	binary bool, dataFunc BinaryDataFunc,
-	data, metadata []byte) (*dataProvider, error) {
+	binary bool, dataFunc BinaryDataFunc, data []byte) (*dataProvider, error) {
 
 	dp := dataProvider{
 		binary:         binary,
 		dataFunc:       dataFunc,
 		mtd:            mtd,
 		data:           data,
-		metadata:       metadata,
 		cachedMessages: nil,
 	}
 
@@ -208,7 +211,11 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 	return inputs, nil
 }
 
-func (dp *dataProvider) getMetadataForCall(ctd *CallData) (*metadata.MD, error) {
+func newMetadataProvider(mtd *desc.MethodDescriptor, metadata []byte) (*mdProvider, error) {
+	return &mdProvider{metadata: metadata}, nil
+}
+
+func (dp *mdProvider) getMetadataForCall(ctd *CallData) (*metadata.MD, error) {
 	mdMap, err := ctd.executeMetadata(string(dp.metadata))
 	if err != nil {
 		return nil, err
