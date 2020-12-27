@@ -951,6 +951,20 @@ func WithWorkerTicker(ticker load.WorkerTicker) Option {
 }
 
 // WithStreamRecvMsgIntercept specified the stream receive intercept function
+//
+//	WithStreamRecvMsgIntercept(func(msg *dynamic.Message, err error) error {
+//		if err == nil && msg != nil {
+//			reply := &helloworld.HelloReply{}
+//			convertErr := msg.ConvertTo(reply)
+//			if convertErr == nil {
+//				if reply.GetMessage() == "Hello bar" {
+//					return ErrEndStream
+//				}
+//			}
+//		}
+//		return nil
+//	})
+//
 func WithStreamRecvMsgIntercept(fn StreamRecvMsgInterceptFunc) Option {
 	return func(o *RunConfig) error {
 		o.recvMsgFunc = fn

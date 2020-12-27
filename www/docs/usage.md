@@ -57,6 +57,7 @@ Flags:
   -o, --output=                  Output path. If none provided stdout is used.
   -O, --format=                  Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.
       --skipFirst=0              Skip the first X requests when doing the results tally.
+      --count-errors             Count erroneous (non-OK) resoponses in stats calculations.
       --connections=1            Number of connections to use. Concurrency is distributed evenly among all the connections. Default is 1.
       --connect-timeout=10s      Connection timeout for the initial connection dial. Default is 10s.
       --keepalive=0              Keepalive time duration. Only used if present and above 0.

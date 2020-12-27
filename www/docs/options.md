@@ -247,13 +247,21 @@ Stream interval duration. Spread stream sends by given amount. Only applies to c
 
 ### `--stream-call-duration`
 
-Maximum stream call duration. For client streaming and bidi calls, we'll send messages until this duration expires. Example: `500ms`.
+Maximum stream call duration. For client streaming and bidi calls, we'll send messages until this duration expires.
+
+For server streaming calls we will receive message until the duration has expired. Note that in streaming calls the cancellation will result in call cancelled error.  
+
+Example: `500ms`.
 
 ### `--stream-call-count`
 
-The maximum number of sends the client will perform in a streaming call before closing the stream and ending the call.
+The maximum number of message sends or receives the client will perform in a streaming call before closing the stream and ending the call. For client and bidi streaming calls this dictates the number of messages we will send.
+
 If the data array contains more elements than the count, only data up to the number specified will be used.
+
 If the data array contains fewer elements than the count specified, all the data will be iterated over repeatedly until count limit is reached. 
+
+For server streaming calls we will receive message until the specified count is reached. Note that in streaming calls the cancellation will result in call cancelled error.  
 
 Examples:
 
@@ -364,6 +372,10 @@ ghz --insecure \
 ### `-e`, `--enable-compression`               
 
 Enable gzip compression on requests.
+
+### `--count-errors`
+
+By default stats for fastest, slowest, average, histogram, and latency distributions only take into account the responses with OK status. This option enabled counting of erroneous (non-OK) resoponses in stats calculations as well.
 
 ### `-v`, `--version`
 
