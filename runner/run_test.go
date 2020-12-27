@@ -568,8 +568,6 @@ func TestRunUnary(t *testing.T) {
 
 func TestRunServerStreaming(t *testing.T) {
 
-	t.Skip("asdf")
-
 	callType := helloworld.ServerStream
 
 	gs, s, err := internal.StartServer(false)
@@ -1075,7 +1073,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 500*time.Millisecond && report.Total < 600*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 500*time.Millisecond && report.Total < 650*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1264,7 +1262,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 400*time.Millisecond && report.Total < 450*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 400*time.Millisecond && report.Total < 500*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)

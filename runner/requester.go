@@ -258,7 +258,10 @@ func (b *Requester) closeClientConns() {
 	}
 
 	for _, cc := range b.conns {
-		shutdownCh := connectionOnState(context.Background(), cc, connectivity.Shutdown)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+		defer cancel()
+
+		shutdownCh := connectionOnState(ctx, cc, connectivity.Shutdown)
 
 		_ = cc.Close()
 
@@ -533,28 +536,41 @@ func createPacer(config *RunConfig) load.Pacer {
 	return p
 }
 
-func connectionOnState(ctx context.Context, conn *grpc.ClientConn, states ...connectivity.State) <-chan struct{} {
-	done := make(chan struct{})
+func checkState(conn *grpc.ClientConn, states ...connectivity.State) bool {
+	currentState := conn.GetState()
+	for _, s := range states {
+		if currentState == s {
+			return true
+		}
+	}
+
+	return false
+}
+
+func connectionOnState(ctx context.Context, conn *grpc.ClientConn, states ...connectivity.State) <-chan bool {
+
+	stateCh := make(chan bool)
 
 	go func() {
-		defer close(done)
+		defer close(stateCh)
+		if checkState(conn, states...) {
+			stateCh <- true
+			return
+		}
 
 		for {
-
-			currentState := conn.GetState()
-
-			for _, s := range states {
-				if currentState == s {
-					return
-				}
-			}
-
 			change := conn.WaitForStateChange(ctx, conn.GetState())
 			if !change {
+				stateCh <- checkState(conn, states...)
+				return
+			}
+
+			if checkState(conn, states...) {
+				stateCh <- true
 				return
 			}
 		}
 	}()
 
-	return done
+	return stateCh
 }
