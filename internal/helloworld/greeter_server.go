@@ -9,6 +9,7 @@ import (
 	"time"
 
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/stats"
 )
 
@@ -75,7 +76,26 @@ func (s *Greeter) recordStreamSendCounter(ct CallType, callIdx int) {
 // SayHello implements helloworld.GreeterServer
 func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, error) {
 	callIdx := s.recordCall(Unary)
-	s.recordMessage(Unary, callIdx, in)
+
+	if in.GetName() == "__record_metadata__" {
+		mdval := ""
+		md, ok := metadata.FromIncomingContext(ctx)
+		if ok {
+			for k, v := range md {
+				if k == "token" {
+					mdval = mdval + k + ":"
+					for _, vv := range v {
+						mdval = mdval + vv
+					}
+				}
+			}
+		}
+
+		newReq := &HelloRequest{Name: in.GetName() + "||" + mdval}
+		s.recordMessage(Unary, callIdx, newReq)
+	} else {
+		s.recordMessage(Unary, callIdx, in)
+	}
 
 	randomSleep()
 

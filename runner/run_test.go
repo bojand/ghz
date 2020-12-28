@@ -12,6 +12,7 @@ import (
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/metadata"
 )
 
 func changeFunc(mtd *desc.MethodDescriptor, cd *CallData) []byte {
@@ -628,6 +629,79 @@ func TestRunUnary(t *testing.T) {
 		}
 
 		assert.Equal(t, []string{"0", "1", "2", "3", "4"}, names)
+	})
+
+	t.Run("with metadata provider", func(t *testing.T) {
+		gs.ResetCounters()
+
+		callCounter := 0
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(5),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataProvider(func(*CallData) ([]*dynamic.Message, error) {
+				name := strconv.Itoa(callCounter)
+				if callCounter == 1 || callCounter == 3 {
+					name = "__record_metadata__"
+				}
+				protoMsg := &helloworld.HelloRequest{Name: name}
+				dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
+				if err != nil {
+					return nil, err
+				}
+
+				callCounter++
+
+				return []*dynamic.Message{dynamicMsg}, nil
+			}),
+			WithMetadataProvider(func(*CallData) (*metadata.MD, error) {
+				mdv := "secret" + strconv.Itoa(callCounter)
+				return &metadata.MD{"token": []string{mdv}}, nil
+			}),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 5, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 5, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 5)
+		names := make([]string, 0)
+		for _, msgs := range calls {
+			for _, msg := range msgs {
+				names = append(names, msg.GetName())
+			}
+		}
+
+		assert.Equal(t, []string{"0", "__record_metadata__||token:secret2", "2", "__record_metadata__||token:secret4", "4"}, names)
 	})
 }
 

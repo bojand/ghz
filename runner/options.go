@@ -994,6 +994,18 @@ func WithDataProvider(fn DataProviderFunc) Option {
 	}
 }
 
+// WithMetadataProvider provides custom metadata provider
+//	WithMetadataProvider(ctd *CallData) (*metadata.MD, error) {
+//		return &metadata.MD{"token": []string{"secret"}}, nil
+//	}),
+func WithMetadataProvider(fn MetadataProviderFunc) Option {
+	return func(o *RunConfig) error {
+		o.mdProviderFunc = fn
+
+		return nil
+	}
+}
+
 func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFile, clientKeyFile, cname string) (credentials.TransportCredentials, error) {
 	var tlsConf tls.Config
 
