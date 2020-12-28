@@ -913,7 +913,7 @@ func TestRunServerStreaming(t *testing.T) {
 
 		oldData := gs.StreamData
 
-		nc := 1000
+		nc := 5000
 		gs.StreamData = make([]*helloworld.HelloReply, nc)
 		for i := 0; i < nc; i++ {
 			name := "name " + strconv.FormatInt(int64(i), 10)
@@ -970,7 +970,7 @@ func TestRunServerStreaming(t *testing.T) {
 		assert.NotNil(t, sends)
 		assert.Len(t, sends, 1)
 		sendCount := sends[0]
-		assert.True(t, sendCount <= 300, sendCount)
+		assert.True(t, sendCount <= 1000, sendCount)
 
 		// reset
 		gs.StreamData = oldData
