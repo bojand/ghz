@@ -1187,7 +1187,7 @@ func TestRunClientStreaming(t *testing.T) {
 	t.Run("with stream cancel", func(t *testing.T) {
 		gs.ResetCounters()
 
-		nc := 1000000
+		nc := 100000
 		data := make([]interface{}, nc)
 		for i := 0; i < nc; i++ {
 			data[i] = map[string]interface{}{
@@ -1203,7 +1203,7 @@ func TestRunClientStreaming(t *testing.T) {
 			WithConcurrency(1),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
-			WithStreamCallDuration(500*time.Millisecond),
+			WithStreamCallDuration(200*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
 		)
@@ -1212,7 +1212,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 500*time.Millisecond && report.Total < 650*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 200*time.Millisecond && report.Total < 350*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1241,7 +1241,7 @@ func TestRunClientStreaming(t *testing.T) {
 		assert.NotNil(t, calls)
 		assert.Len(t, calls, 1)
 		msgs := calls[0]
-		assert.True(t, len(msgs) < 350000, len(msgs))
+		assert.True(t, len(msgs) < 35000, len(msgs))
 	})
 
 	t.Run("with stream interval and cancel", func(t *testing.T) {
