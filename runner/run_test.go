@@ -1709,7 +1709,7 @@ func TestRunBidi(t *testing.T) {
 			WithConcurrency(1),
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
-			WithStreamCallDuration(500*time.Millisecond),
+			WithStreamCallDuration(200*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
 		)
@@ -1718,7 +1718,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 500*time.Millisecond && report.Total < 800*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 200*time.Millisecond && report.Total < 500*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1747,7 +1747,7 @@ func TestRunBidi(t *testing.T) {
 		assert.NotNil(t, calls)
 		assert.Len(t, calls, 1)
 		msgs := calls[0]
-		assert.True(t, len(msgs) < 25000, len(msgs))
+		assert.True(t, len(msgs) < 100000, len(msgs))
 	})
 
 	t.Run("with stream interval and cancel", func(t *testing.T) {
