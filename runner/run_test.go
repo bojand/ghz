@@ -970,7 +970,7 @@ func TestRunServerStreaming(t *testing.T) {
 		assert.NotNil(t, sends)
 		assert.Len(t, sends, 1)
 		sendCount := sends[0]
-		assert.True(t, sendCount <= 3000, sendCount)
+		assert.True(t, sendCount <= 3500, sendCount)
 
 		// reset
 		gs.StreamData = oldData
