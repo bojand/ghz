@@ -225,11 +225,17 @@ func (s *Greeter) GetCalls(key CallType) [][]*HelloRequest {
 // GetSendCounts gets the stream send counts
 func (s *Greeter) GetSendCounts(key CallType) map[int]int {
 	s.sendMutex.RLock()
+	defer s.sendMutex.RUnlock()
+
 	val, ok := s.sendCounts[key]
-	s.sendMutex.RUnlock()
 
 	if ok {
-		return val
+		cm := map[int]int{}
+		for k, v := range val {
+			cm[k] = v
+		}
+
+		return cm
 	}
 
 	return nil
