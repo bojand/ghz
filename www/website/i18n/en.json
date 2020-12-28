@@ -3,7 +3,7 @@
   "localized-strings": {
     "next": "Next",
     "previous": "Previous",
-    "tagline": "Simple gRPC benchmarking and load testing tool ",
+    "tagline": "gRPC benchmarking and load testing tool",
     "docs": {
       "calldata": {
         "title": "Call Template Data"
