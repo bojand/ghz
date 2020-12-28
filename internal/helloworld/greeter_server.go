@@ -43,8 +43,8 @@ type Greeter struct {
 	sendCounts map[CallType]map[int]int
 }
 
-func randomSleep() {
-	msCount := rand.Intn(4) + 1
+func randomSleep(max int) {
+	msCount := rand.Intn(max) + 1
 	time.Sleep(time.Millisecond * time.Duration(msCount))
 }
 
@@ -97,7 +97,7 @@ func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, 
 		s.recordMessage(Unary, callIdx, in)
 	}
 
-	randomSleep()
+	randomSleep(4)
 
 	return &HelloReply{Message: "Hello " + in.Name}, nil
 }
@@ -107,12 +107,12 @@ func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) e
 	callIdx := s.recordCall(ServerStream)
 	s.recordMessage(ServerStream, callIdx, req)
 
-	randomSleep()
-
 	for _, msg := range s.StreamData {
 		if err := stream.Send(msg); err != nil {
 			return err
 		}
+
+		randomSleep(4)
 
 		s.recordStreamSendCounter(ServerStream, callIdx)
 	}
@@ -124,7 +124,7 @@ func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) e
 func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 	callIdx := s.recordCall(ClientStream)
 
-	randomSleep()
+	randomSleep(4)
 
 	msgCount := 0
 
@@ -146,8 +146,6 @@ func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 	callIdx := s.recordCall(Bidi)
 
-	randomSleep()
-
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -158,10 +156,12 @@ func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 		}
 
 		s.recordMessage(Bidi, callIdx, in)
+
 		msg := "Hello " + in.Name
 		if err := stream.Send(&HelloReply{Message: msg}); err != nil {
 			return err
 		}
+
 		s.recordStreamSendCounter(ServerStream, callIdx)
 	}
 }

@@ -1278,7 +1278,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 650*time.Millisecond && report.Total < 670*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 650*time.Millisecond && report.Total < 700*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1747,7 +1747,7 @@ func TestRunBidi(t *testing.T) {
 		assert.NotNil(t, calls)
 		assert.Len(t, calls, 1)
 		msgs := calls[0]
-		assert.True(t, len(msgs) < 210000, len(msgs))
+		assert.True(t, len(msgs) < 10000, len(msgs))
 	})
 
 	t.Run("with stream interval and cancel", func(t *testing.T) {

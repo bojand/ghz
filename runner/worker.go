@@ -366,6 +366,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 	counter := 0
 	indexCounter := 0
 	recvDone := make(chan bool)
+	sendDone := make(chan bool)
 
 	closeStream := func() {
 		closeErr := str.CloseSend()
@@ -385,9 +386,9 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		}()
 	}
 
-	interceptCanceled := false
-
 	go func() {
+		interceptCanceled := false
+
 		for {
 			res, err := str.RecvMsg()
 
@@ -415,43 +416,57 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		}
 	}()
 
-	done := false
-	for err == nil && !done {
-		payload, err := messageProvider(ctd)
-		if errors.Is(err, ErrEndStream) {
-			closeStream()
-			break
-		}
+	go func() {
+		done := false
 
-		err = str.SendMsg(payload)
-
-		counter++
-		indexCounter++
-
-		if w.config.hasLog {
-			w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "bidi",
-				"call", w.mtd.GetFullyQualifiedName(),
-				"payload", payload, "error", err)
-		}
-
-		if w.config.streamInterval > 0 {
-			wait := time.NewTimer(w.config.streamInterval)
-			select {
-			case <-wait.C:
+		for err == nil && !done {
+			payload, err := messageProvider(ctd)
+			if errors.Is(err, ErrEndStream) {
+				closeStream()
 				break
-			case <-cancel:
+			}
+
+			err = str.SendMsg(payload)
+
+			counter++
+			indexCounter++
+
+			if w.config.hasLog {
+				w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "bidi",
+					"call", w.mtd.GetFullyQualifiedName(),
+					"payload", payload, "error", err)
+			}
+
+			if w.config.streamInterval > 0 {
+				wait := time.NewTimer(w.config.streamInterval)
+				select {
+				case <-wait.C:
+					break
+				case <-cancel:
+					closeStream()
+					done = true
+				}
+			} else if len(cancel) > 0 {
+				fmt.Println("received cancel in sender")
+				<-cancel
 				closeStream()
 				done = true
 			}
-		} else if len(cancel) > 0 {
-			<-cancel
-			closeStream()
-			done = true
 		}
-	}
+
+		close(sendDone)
+	}()
 
 	if err == nil {
-		<-recvDone
+		recv, send := false, false
+		for !recv || !send {
+			select {
+			case <-recvDone:
+				recv = true
+			case <-sendDone:
+				send = true
+			}
+		}
 	}
 
 	return nil
