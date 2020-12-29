@@ -1907,7 +1907,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 400*time.Millisecond && report.Total < 450*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 400*time.Millisecond && report.Total < 500*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
