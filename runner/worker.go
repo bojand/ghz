@@ -447,7 +447,6 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 					done = true
 				}
 			} else if len(cancel) > 0 {
-				fmt.Println("received cancel in sender")
 				<-cancel
 				closeStream()
 				done = true
