@@ -180,9 +180,9 @@ func (b *Requester) Run() (*Report, error) {
 
 	err = b.runWorkers(wt, p)
 
-	b.closeClientConns()
-
 	report := b.Finish()
+
+	b.closeClientConns()
 
 	return report, err
 }
