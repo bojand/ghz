@@ -302,7 +302,7 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 			"input", input, "error", err)
 	}
 
-	doneCh := make(chan struct{}, 1)
+	doneCh := make(chan struct{})
 	cancel := make(chan struct{}, 1)
 	if w.config.streamCallDuration > 0 {
 		go func() {
@@ -401,7 +401,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		}
 	}
 
-	doneCh := make(chan struct{}, 1)
+	doneCh := make(chan struct{})
 	cancel := make(chan struct{}, 1)
 	if w.config.streamCallDuration > 0 {
 		go func() {
