@@ -262,11 +262,15 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 		if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
 			closeStream()
 			done = true
-		} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+		}
+
+		if w.config.streamCallDuration > 0 && len(cancel) > 0 {
 			<-cancel
 			closeStream()
 			done = true
-		} else if w.config.streamInterval > 0 {
+		}
+
+		if w.config.streamInterval > 0 {
 			wait := time.NewTimer(w.config.streamInterval)
 			select {
 			case <-wait.C:
@@ -355,7 +359,9 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 
 		if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
 			callCancel()
-		} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+		}
+
+		if w.config.streamCallDuration > 0 && len(cancel) > 0 {
 			<-cancel
 			callCancel()
 		}
@@ -475,11 +481,15 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
 				closeStream()
 				done = true
-			} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+			}
+
+			if w.config.streamCallDuration > 0 && len(cancel) > 0 {
 				<-cancel
 				closeStream()
 				done = true
-			} else if w.config.streamInterval > 0 {
+			}
+
+			if w.config.streamInterval > 0 {
 				wait := time.NewTimer(w.config.streamInterval)
 				select {
 				case <-wait.C:
