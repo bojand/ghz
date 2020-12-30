@@ -224,17 +224,27 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 		return false
 	}
 
+	doneCh := make(chan struct{})
 	cancel := make(chan struct{}, 1)
 	if w.config.streamCallDuration > 0 {
 		go func() {
 			sct := time.NewTimer(w.config.streamCallDuration)
-			<-sct.C
-			cancel <- struct{}{}
+			select {
+			case <-sct.C:
+				cancel <- struct{}{}
+			case <-doneCh:
+				return
+			}
 		}()
 	}
 
 	done := false
+	counter := uint(0)
 	for err == nil && !done {
+		// default message provider checks counter
+		// but we also need to keep our own counts
+		// in case of custom client providers
+
 		payload, err := messageProvider(ctd)
 		if errors.Is(err, ErrEndStream) {
 			closeStream()
@@ -245,6 +255,8 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			closeStream()
 			break
 		}
+
+		counter++
 
 		if w.config.streamInterval > 0 {
 			wait := time.NewTimer(w.config.streamInterval)
@@ -259,9 +271,13 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			<-cancel
 			closeStream()
 			done = true
+		} else if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
+			closeStream()
+			done = true
 		}
 	}
 
+	close(doneCh)
 	close(cancel)
 
 	return nil
@@ -285,12 +301,17 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 			"input", input, "error", err)
 	}
 
+	doneCh := make(chan struct{}, 1)
 	cancel := make(chan struct{}, 1)
 	if w.config.streamCallDuration > 0 {
 		go func() {
 			sct := time.NewTimer(w.config.streamCallDuration)
-			<-sct.C
-			cancel <- struct{}{}
+			select {
+			case <-sct.C:
+				cancel <- struct{}{}
+			case <-doneCh:
+				return
+			}
 		}()
 	}
 
@@ -338,6 +359,7 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 		}
 	}
 
+	close(doneCh)
 	close(cancel)
 
 	return err
@@ -377,12 +399,17 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		}
 	}
 
+	doneCh := make(chan struct{}, 1)
 	cancel := make(chan struct{}, 1)
 	if w.config.streamCallDuration > 0 {
 		go func() {
 			sct := time.NewTimer(w.config.streamCallDuration)
-			<-sct.C
-			cancel <- struct{}{}
+			select {
+			case <-sct.C:
+				cancel <- struct{}{}
+			case <-doneCh:
+				return
+			}
 		}()
 	}
 
@@ -467,6 +494,9 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			}
 		}
 	}
+
+	close(doneCh)
+	close(cancel)
 
 	return nil
 }

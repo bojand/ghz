@@ -462,7 +462,7 @@ func (m *staticMessageProvider) GetStreamMessage(parentCallData *CallData) (*dyn
 		} else if m.indexCounter == m.inputLen {
 			m.indexCounter = 0
 		}
-	} else if m.counter == m.inputLen {
+	} else if m.counter >= m.inputLen {
 		return nil, ErrEndStream
 	}
 
