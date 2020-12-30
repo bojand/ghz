@@ -259,7 +259,14 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 
 		counter++
 
-		if w.config.streamInterval > 0 {
+		if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
+			closeStream()
+			done = true
+		} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+			<-cancel
+			closeStream()
+			done = true
+		} else if w.config.streamInterval > 0 {
 			wait := time.NewTimer(w.config.streamInterval)
 			select {
 			case <-wait.C:
@@ -268,13 +275,6 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 				closeStream()
 				done = true
 			}
-		} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
-			<-cancel
-			closeStream()
-			done = true
-		} else if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
-			closeStream()
-			done = true
 		}
 	}
 
@@ -353,10 +353,10 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 
 		counter++
 
-		if w.config.streamCallDuration > 0 && len(cancel) > 0 {
-			<-cancel
+		if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
 			callCancel()
-		} else if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
+		} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+			<-cancel
 			callCancel()
 		}
 	}
@@ -387,7 +387,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		return err
 	}
 
-	counter := 0
+	counter := uint(0)
 	indexCounter := 0
 	recvDone := make(chan bool)
 	sendDone := make(chan bool)
@@ -450,6 +450,11 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		done := false
 
 		for err == nil && !done {
+
+			// default message provider checks counter
+			// but we also need to keep our own counts
+			// in case of custom client providers
+
 			payload, err := messageProvider(ctd)
 			if errors.Is(err, ErrEndStream) {
 				closeStream()
@@ -467,7 +472,14 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 					"payload", payload, "error", err)
 			}
 
-			if w.config.streamInterval > 0 {
+			if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
+				closeStream()
+				done = true
+			} else if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+				<-cancel
+				closeStream()
+				done = true
+			} else if w.config.streamInterval > 0 {
 				wait := time.NewTimer(w.config.streamInterval)
 				select {
 				case <-wait.C:
@@ -476,10 +488,6 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 					closeStream()
 					done = true
 				}
-			} else if len(cancel) > 0 {
-				<-cancel
-				closeStream()
-				done = true
 			}
 		}
 

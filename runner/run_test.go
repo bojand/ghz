@@ -1361,7 +1361,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 200*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1388,7 +1388,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
-		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 300*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
@@ -1422,7 +1422,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 400*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1449,7 +1449,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
-		assert.True(t, dr.Latency > 400*time.Millisecond && dr.Latency < 500*time.Millisecond, dr.Latency.String()+" not in interval")
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
@@ -1497,7 +1497,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 400*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1524,7 +1524,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
-		assert.True(t, dr.Latency > 400*time.Millisecond && dr.Latency < 460*time.Millisecond, dr.Latency.String()+" not in interval")
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
@@ -1911,7 +1911,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 200*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1938,7 +1938,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
-		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 300*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
@@ -1972,7 +1972,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 400*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1999,7 +1999,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
-		assert.True(t, dr.Latency > 400*time.Millisecond && dr.Latency < 500*time.Millisecond, dr.Latency.String()+" not in interval")
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
@@ -2047,7 +2047,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 400*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -2074,7 +2074,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
-		assert.True(t, dr.Latency > 400*time.Millisecond && dr.Latency < 500*time.Millisecond, dr.Latency.String()+" not in interval")
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
