@@ -1078,7 +1078,7 @@ func fromConfig(cfg *Config) []Option {
 		WithStreamInterval(time.Duration(cfg.SI)),
 		WithStreamCallDuration(time.Duration(cfg.StreamCallDuration)),
 		WithStreamCallCount(cfg.StreamCallCount),
-
+		WithStreamDynamicMessages(cfg.StreamDynamicMessages),
 		WithReflectionMetadata(cfg.ReflectMetadata),
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),
@@ -1096,6 +1096,7 @@ func fromConfig(cfg *Config) []Option {
 		WithConcurrencyStep(cfg.CStep),
 		WithConcurrencyStepDuration(time.Duration(cfg.CStepDuration)),
 		WithConcurrencyDuration(time.Duration(cfg.CMaxDuration)),
+		WithCountErrors(cfg.CountErrors),
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil
