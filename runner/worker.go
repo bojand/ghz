@@ -232,6 +232,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			select {
 			case <-sct.C:
 				cancel <- struct{}{}
+				return
 			case <-doneCh:
 				return
 			}
@@ -309,6 +310,7 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 			select {
 			case <-sct.C:
 				cancel <- struct{}{}
+				return
 			case <-doneCh:
 				return
 			}
@@ -407,6 +409,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			select {
 			case <-sct.C:
 				cancel <- struct{}{}
+				return
 			case <-doneCh:
 				return
 			}
