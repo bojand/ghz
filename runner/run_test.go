@@ -9,6 +9,7 @@ import (
 	"github.com/bojand/ghz/internal"
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/golang/protobuf/proto"
+	"github.com/google/uuid"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/stretchr/testify/assert"
@@ -1432,9 +1433,17 @@ func TestRunClientStreaming(t *testing.T) {
 		msgs := calls[0]
 		assert.Len(t, msgs, 4)
 		for i, m1 := range msgs {
+			parsed, err := uuid.Parse(m1.GetName())
+			assert.NoError(t, err)
+			assert.NotEmpty(t, parsed)
+
 			for j, m2 := range msgs {
+				parsed, err = uuid.Parse(m2.GetName())
+				assert.NoError(t, err)
+				assert.NotEmpty(t, parsed)
+
 				if i != j {
-					assert.NotEqual(t, m1, m2)
+					assert.NotEqual(t, m1.GetName(), m2.GetName())
 				}
 			}
 		}
@@ -1495,9 +1504,17 @@ func TestRunClientStreaming(t *testing.T) {
 		msgs := calls[0]
 		assert.Len(t, msgs, 4)
 		for i, m1 := range msgs {
+			parsed, err := uuid.Parse(m1.GetName())
+			assert.NoError(t, err)
+			assert.NotEmpty(t, parsed)
+
 			for j, m2 := range msgs {
+				parsed, err = uuid.Parse(m2.GetName())
+				assert.NoError(t, err)
+				assert.NotEmpty(t, parsed)
+
 				if i != j {
-					assert.Equal(t, m1, m2)
+					assert.Equal(t, m1.GetName(), m2.GetName())
 				}
 			}
 		}
@@ -1938,9 +1955,17 @@ func TestRunBidi(t *testing.T) {
 		msgs := calls[0]
 		assert.Len(t, msgs, 4)
 		for i, m1 := range msgs {
+			parsed, err := uuid.Parse(m1.GetName())
+			assert.NoError(t, err)
+			assert.NotEmpty(t, parsed)
+
 			for j, m2 := range msgs {
+				parsed, err = uuid.Parse(m2.GetName())
+				assert.NoError(t, err)
+				assert.NotEmpty(t, parsed)
+
 				if i != j {
-					assert.NotEqual(t, m1, m2)
+					assert.NotEqual(t, m1.GetName(), m2.GetName())
 				}
 			}
 		}
@@ -2001,9 +2026,17 @@ func TestRunBidi(t *testing.T) {
 		msgs := calls[0]
 		assert.Len(t, msgs, 4)
 		for i, m1 := range msgs {
+			parsed, err := uuid.Parse(m1.GetName())
+			assert.NoError(t, err)
+			assert.NotEmpty(t, parsed)
+
 			for j, m2 := range msgs {
+				parsed, err = uuid.Parse(m2.GetName())
+				assert.NoError(t, err)
+				assert.NotEmpty(t, parsed)
+
 				if i != j {
-					assert.Equal(t, m1, m2)
+					assert.Equal(t, m1.GetName(), m2.GetName())
 				}
 			}
 		}
@@ -2058,6 +2091,7 @@ func TestRunBidi(t *testing.T) {
 		assert.NotNil(t, report)
 
 		// assert.True(t, report.Total > 30*time.Millisecond && report.Total < 45*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 30*time.Millisecond)
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -2140,6 +2174,7 @@ func TestRunBidi(t *testing.T) {
 		assert.NotNil(t, report)
 
 		// assert.True(t, report.Total > 60*time.Millisecond && report.Total < 75*time.Millisecond, report.Total.String()+" not in interval")
+		assert.True(t, report.Total > 60*time.Millisecond)
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)

@@ -188,7 +188,6 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 					dp.cachedMessages = append(dp.cachedMessages, inputs...)
 				}
 			}
-
 			dp.mutex.Unlock()
 		}
 	} else {
@@ -221,15 +220,12 @@ func (dp *mdProvider) getMetadataForCall(ctd *CallData) (*metadata.MD, error) {
 		return nil, err
 	}
 
-	var reqMD *metadata.MD
 	if len(mdMap) > 0 {
 		md := metadata.New(mdMap)
-		reqMD = &md
-	} else {
-		reqMD = &metadata.MD{}
+		return &md, nil
 	}
 
-	return reqMD, nil
+	return &metadata.MD{}, nil
 }
 
 // creates a message from a map
@@ -406,7 +402,6 @@ func (m *dynamicMessageProvider) GetStreamMessage(parentCallData *CallData) (*dy
 	if m.streamCallCount > 0 {
 		if m.counter >= m.streamCallCount {
 			return nil, ErrEndStream
-
 		} else if m.counter == m.arrayLen {
 			m.indexCounter = 0
 		}
@@ -464,7 +459,6 @@ func (m *staticMessageProvider) GetStreamMessage(parentCallData *CallData) (*dyn
 	if m.streamCallCount > 0 {
 		if m.counter >= m.streamCallCount {
 			return nil, ErrEndStream
-
 		} else if m.indexCounter == m.inputLen {
 			m.indexCounter = 0
 		}
