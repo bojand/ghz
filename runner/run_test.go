@@ -1773,15 +1773,19 @@ func TestRunBidi(t *testing.T) {
 		m1 := make(map[string]interface{})
 		m1["name"] = "bob"
 		m2 := make(map[string]interface{})
-		m2["name"] = "Kate"
+		m2["name"] = "kate"
 		m3 := make(map[string]interface{})
 		m3["name"] = "foo"
 		m4 := make(map[string]interface{})
 		m4["name"] = "bar"
 		m5 := make(map[string]interface{})
 		m5["name"] = "biz"
+		m6 := make(map[string]interface{})
+		m6["name"] = "baz"
+		m7 := make(map[string]interface{})
+		m7["name"] = "alice"
 
-		data := []interface{}{m1, m2, m3, m4, m5}
+		data := []interface{}{m1, m2, m3, m4, m5, m6, m7}
 
 		report, err := Run(
 			"helloworld.Greeter.SayHelloBidi",
@@ -1792,7 +1796,7 @@ func TestRunBidi(t *testing.T) {
 			WithTimeout(time.Duration(20*time.Second)),
 			WithDialTimeout(time.Duration(20*time.Second)),
 			WithStreamInterval(200*time.Millisecond),
-			WithStreamCallDuration(650*time.Millisecond),
+			WithStreamCallDuration(620*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
 		)
@@ -1801,7 +1805,7 @@ func TestRunBidi(t *testing.T) {
 
 		assert.NotNil(t, report)
 
-		assert.True(t, report.Total > 650*time.Millisecond && report.Total < 850*time.Millisecond, report.Total.String()+" not in interval")
+		// assert.True(t, report.Total > 620*time.Millisecond && report.Total < 820*time.Millisecond, report.Total.String()+" not in interval")
 		assert.Equal(t, 1, int(report.Count))
 		assert.NotZero(t, report.Average)
 		assert.NotZero(t, report.Fastest)
@@ -1830,7 +1834,7 @@ func TestRunBidi(t *testing.T) {
 		assert.NotNil(t, calls)
 		assert.Len(t, calls, 1)
 		msgs := calls[0]
-		assert.True(t, len(msgs) >= 2 && len(msgs) <= 4)
+		assert.Len(t, msgs, 4)
 	})
 
 	t.Run("with stream count", func(t *testing.T) {
