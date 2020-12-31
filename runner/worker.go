@@ -427,6 +427,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			sct := time.NewTimer(w.config.streamCallDuration)
 			select {
 			case <-sct.C:
+				fmt.Println("cancel timer up sending cancel")
 				cancel <- struct{}{}
 				return
 			case <-doneCh:
@@ -435,30 +436,35 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		}()
 	}
 
+	var recvErr error
+
 	go func() {
 		interceptCanceled := false
 
-		for {
-			res, err := str.RecvMsg()
+		for recvErr == nil {
+			var res proto.Message
+			res, recvErr = str.RecvMsg()
 
 			if w.config.hasLog {
 				w.config.log.Debugw("Receive message", "workerID", w.workerID, "call type", "bidi",
 					"call", w.mtd.GetFullyQualifiedName(),
-					"response", res, "error", err)
+					"response", res, "error", recvErr)
 			}
 
 			if w.streamRecv != nil {
 				if converted, ok := res.(*dynamic.Message); ok {
-					err = w.streamRecv(converted, err)
-					if errors.Is(err, ErrEndStream) && !interceptCanceled {
+					iErr := w.streamRecv(converted, recvErr)
+					if errors.Is(iErr, ErrEndStream) && !interceptCanceled {
 						interceptCanceled = true
-						cancel <- struct{}{}
-						err = nil
+						if len(cancel) == 0 {
+							cancel <- struct{}{}
+						}
+						recvErr = nil
 					}
 				}
 			}
 
-			if err != nil {
+			if recvErr != nil {
 				close(recvDone)
 				break
 			}
@@ -509,6 +515,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			}
 
 			if len(cancel) > 0 {
+				fmt.Println("got cancel in sender 1")
 				<-cancel
 				closeStream()
 				done = true
@@ -520,7 +527,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				case <-wait.C:
 					break
 				case <-cancel:
-					fmt.Println("got cancel in sender")
+					fmt.Println("got cancel in sender 2")
 					closeStream()
 					done = true
 					break
@@ -534,15 +541,20 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 	fmt.Println("waiting for both sides to finish")
 	_, _ = <-recvDone, <-sendDone
 
-	fmt.Println("waiting for both sides to finish done. closing.")
-	close(doneCh)
-
+	fmt.Println("waiting for both sides to finish done. draining.")
 	for len(cancel) > 0 {
 		<-cancel
 	}
+
+	fmt.Println("drained. closing.")
+	close(doneCh)
 	close(cancel)
 
 	fmt.Println("closed.")
+
+	if err == nil && recvErr != nil {
+		err = recvErr
+	}
 
 	return err
 }
