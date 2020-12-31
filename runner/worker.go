@@ -508,7 +508,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				done = true
 			}
 
-			if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+			if len(cancel) > 0 {
 				<-cancel
 				closeStream()
 				done = true
@@ -520,6 +520,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				case <-wait.C:
 					break
 				case <-cancel:
+					fmt.Println("got cancel in sender")
 					closeStream()
 					done = true
 					break
@@ -530,18 +531,18 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		close(sendDone)
 	}()
 
-	recv, send := false, false
-	for !recv || !send {
-		select {
-		case <-recvDone:
-			recv = true
-		case <-sendDone:
-			send = true
-		}
-	}
+	fmt.Println("waiting for both sides to finish")
+	_, _ = <-recvDone, <-sendDone
 
+	fmt.Println("waiting for both sides to finish done. closing.")
 	close(doneCh)
+
+	for len(cancel) > 0 {
+		<-cancel
+	}
 	close(cancel)
+
+	fmt.Println("closed.")
 
 	return err
 }
