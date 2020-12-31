@@ -185,17 +185,19 @@ func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, inpu
 func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 	ctd *CallData, messageProvider StreamMessageProviderFunc) error {
 	var str *grpcdynamic.ClientStream
-	var err error
 	var callOptions = []grpc.CallOption{}
 	if w.config.enableCompression {
 		callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
 	}
-	str, err = w.stub.InvokeRpcClientStream(*ctx, w.mtd, callOptions...)
+	str, err := w.stub.InvokeRpcClientStream(*ctx, w.mtd, callOptions...)
+	if err != nil {
+		if w.config.hasLog {
+			w.config.log.Errorw("Invoke Client Streaming RPC call error: "+err.Error(), "workerID", w.workerID,
+				"call type", "client-streaming",
+				"call", w.mtd.GetFullyQualifiedName(), "error", err)
+		}
 
-	if err != nil && w.config.hasLog {
-		w.config.log.Errorw("Invoke Client Streaming RPC call error: "+err.Error(), "workerID", w.workerID,
-			"call type", "client-streaming",
-			"call", w.mtd.GetFullyQualifiedName(), "error", err)
+		return err
 	}
 
 	closeStream := func() {
@@ -208,8 +210,8 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 		}
 	}
 
-	performSend := func(payload *dynamic.Message) bool {
-		err = str.SendMsg(payload)
+	performSend := func(payload *dynamic.Message) (bool, error) {
+		err := str.SendMsg(payload)
 
 		if w.config.hasLog {
 			w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "client-streaming",
@@ -218,10 +220,10 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 		}
 
 		if err == io.EOF {
-			return true
+			return true, nil
 		}
 
-		return false
+		return false, err
 	}
 
 	doneCh := make(chan struct{})
@@ -241,18 +243,24 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 
 	done := false
 	counter := uint(0)
-	for err == nil && !done {
+	end := false
+	for !done {
 		// default message provider checks counter
 		// but we also need to keep our own counts
 		// in case of custom client providers
 
-		payload, err := messageProvider(ctd)
-		if errors.Is(err, ErrEndStream) {
+		var payload *dynamic.Message
+		payload, err = messageProvider(ctd)
+		if err != nil {
+			if errors.Is(err, ErrEndStream) {
+				err = nil
+			}
+
 			closeStream()
 			break
 		}
 
-		if end := performSend(payload); end {
+		if end, err = performSend(payload); end || err != nil {
 			closeStream()
 			break
 		}
@@ -261,13 +269,12 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 
 		if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
 			closeStream()
-			done = true
+			break
 		}
 
 		if w.config.streamCallDuration > 0 && len(cancel) > 0 {
 			<-cancel
 			closeStream()
-			done = true
 		}
 
 		if w.config.streamInterval > 0 {
@@ -299,11 +306,15 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 
 	str, err := w.stub.InvokeRpcServerStream(callCtx, w.mtd, input, callOptions...)
 
-	if err != nil && w.config.hasLog {
-		w.config.log.Errorw("Invoke Server Streaming RPC call error: "+err.Error(), "workerID", w.workerID,
-			"call type", "server-streaming",
-			"call", w.mtd.GetFullyQualifiedName(),
-			"input", input, "error", err)
+	if err != nil {
+		if w.config.hasLog {
+			w.config.log.Errorw("Invoke Server Streaming RPC call error: "+err.Error(), "workerID", w.workerID,
+				"call type", "server-streaming",
+				"call", w.mtd.GetFullyQualifiedName(),
+				"input", input, "error", err)
+		}
+
+		return err
 	}
 
 	doneCh := make(chan struct{})
@@ -324,7 +335,8 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 	interceptCanceled := false
 	counter := uint(0)
 	for err == nil {
-		res, err := str.RecvMsg()
+		var res proto.Message
+		res, err = str.RecvMsg()
 
 		if w.config.hasLog {
 			w.config.log.Debugw("Receive message", "workerID", w.workerID, "call type", "server-streaming",
@@ -375,13 +387,13 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 
 func (w *Worker) makeBidiRequest(ctx *context.Context,
 	ctd *CallData, messageProvider StreamMessageProviderFunc) error {
-	var str *grpcdynamic.BidiStream
-	var err error
+
 	var callOptions = []grpc.CallOption{}
+
 	if w.config.enableCompression {
 		callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
 	}
-	str, err = w.stub.InvokeRpcBidiStream(*ctx, w.mtd, callOptions...)
+	str, err := w.stub.InvokeRpcBidiStream(*ctx, w.mtd, callOptions...)
 
 	if err != nil {
 		if w.config.hasLog {
@@ -461,13 +473,25 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			// but we also need to keep our own counts
 			// in case of custom client providers
 
-			payload, err := messageProvider(ctd)
-			if errors.Is(err, ErrEndStream) {
+			var payload *dynamic.Message
+			payload, err = messageProvider(ctd)
+			if err != nil {
+				if errors.Is(err, ErrEndStream) {
+					err = nil
+				}
+
 				closeStream()
 				break
 			}
 
 			err = str.SendMsg(payload)
+			if err != nil {
+				if err == io.EOF {
+					err = nil
+				}
+
+				break
+			}
 
 			counter++
 			indexCounter++
@@ -504,20 +528,18 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		close(sendDone)
 	}()
 
-	if err == nil {
-		recv, send := false, false
-		for !recv || !send {
-			select {
-			case <-recvDone:
-				recv = true
-			case <-sendDone:
-				send = true
-			}
+	recv, send := false, false
+	for !recv || !send {
+		select {
+		case <-recvDone:
+			recv = true
+		case <-sendDone:
+			send = true
 		}
 	}
 
 	close(doneCh)
 	close(cancel)
 
-	return nil
+	return err
 }
