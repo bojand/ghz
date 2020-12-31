@@ -11,8 +11,6 @@ import (
 )
 
 func TestReport_MarshalJSON(t *testing.T) {
-	t.Parallel()
-
 	z, _ := time.Parse(time.RFC822Z, "02 Jan 06 15:04 -0700")
 	r := &Report{
 		Date:    z,
@@ -32,8 +30,6 @@ func TestReport_MarshalJSON(t *testing.T) {
 }
 
 func TestReport_CorrectDetails(t *testing.T) {
-	t.Parallel()
-
 	callResultsChan := make(chan *callResult)
 	config, _ := NewConfig("call", "host")
 	reporter := newReporter(callResultsChan, config)
@@ -121,8 +117,6 @@ func TestReport_latencies(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run("latencies "+strconv.FormatInt(int64(i), 10), func(t *testing.T) {
-			t.Parallel()
-
 			lats := latencies(tt.input)
 			assert.Equal(t, tt.expected, lats)
 		})

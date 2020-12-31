@@ -21,8 +21,6 @@ func TestReason_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			actual := tt.in.String()
 			assert.Equal(t, tt.expected, actual)
 		})
@@ -65,8 +63,6 @@ func TestReason_UnmarshalJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			var actual StopReason
 			err := json.Unmarshal([]byte(tt.in), &actual)
 			assert.NoError(t, err)
@@ -89,8 +85,6 @@ func TestReason_MarshalJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			actual, err := json.Marshal(tt.in)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected, string(actual))

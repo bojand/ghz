@@ -11,7 +11,6 @@ import (
 )
 
 func TestCallData_New(t *testing.T) {
-	t.Parallel()
 
 	md, err := protodesc.GetMethodDescFromProto("helloworld.Greeter/SayHello", "../testdata/greeter.proto", []string{})
 	assert.NoError(t, err)
@@ -118,7 +117,6 @@ func TestCallData_ExecuteMetadata(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 
 			ctd := newCallData(md, nil, "worker_id_123", 200)
 			assert.NotNil(t, ctd)
@@ -141,7 +139,6 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 	assert.NotNil(t, md)
 
 	t.Run("newUUID", func(t *testing.T) {
-		t.Parallel()
 
 		ctd := newCallData(md, nil, "worker_id_123", 200)
 		assert.NotNil(t, ctd)
@@ -253,7 +250,6 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 	})
 
 	t.Run("custom functions", func(t *testing.T) {
-		t.Parallel()
 
 		ctd := newCallData(md, nil, "worker_id_123", 200)
 		assert.NotNil(t, ctd)
