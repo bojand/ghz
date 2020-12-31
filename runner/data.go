@@ -402,10 +402,10 @@ func (m *dynamicMessageProvider) GetStreamMessage(parentCallData *CallData) (*dy
 	if m.streamCallCount > 0 {
 		if m.counter >= m.streamCallCount {
 			return nil, ErrEndStream
-		} else if m.counter == m.arrayLen {
+		} else if m.counter >= m.arrayLen {
 			m.indexCounter = 0
 		}
-	} else if m.counter == m.arrayLen {
+	} else if m.counter >= m.arrayLen {
 		return nil, ErrEndStream
 	}
 
@@ -414,7 +414,7 @@ func (m *dynamicMessageProvider) GetStreamMessage(parentCallData *CallData) (*dy
 	data := string(m.data)
 
 	if m.arrayLen > 0 {
-		if m.counter == m.arrayLen {
+		if m.counter >= m.arrayLen {
 			m.indexCounter = 0
 		}
 

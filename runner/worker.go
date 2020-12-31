@@ -285,6 +285,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			case <-cancel:
 				closeStream()
 				done = true
+				break
 			}
 		}
 	}
@@ -521,6 +522,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				case <-cancel:
 					closeStream()
 					done = true
+					break
 				}
 			}
 		}
