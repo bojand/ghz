@@ -233,6 +233,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			sct := time.NewTimer(w.config.streamCallDuration)
 			select {
 			case <-sct.C:
+				fmt.Println("got cancel timer")
 				cancel <- struct{}{}
 				return
 			case <-doneCh:
@@ -244,7 +245,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 	done := false
 	counter := uint(0)
 	end := false
-	for !done {
+	for !done && len(cancel) == 0 {
 		// default message provider checks counter
 		// but we also need to keep our own counts
 		// in case of custom client providers
@@ -255,26 +256,17 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			if errors.Is(err, ErrEndStream) {
 				err = nil
 			}
-
-			closeStream()
 			break
 		}
 
 		if end, err = performSend(payload); end || err != nil {
-			closeStream()
 			break
 		}
 
 		counter++
 
 		if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
-			closeStream()
 			break
-		}
-
-		if w.config.streamCallDuration > 0 && len(cancel) > 0 {
-			<-cancel
-			closeStream()
 		}
 
 		if w.config.streamInterval > 0 {
@@ -283,12 +275,17 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			case <-wait.C:
 				break
 			case <-cancel:
-				closeStream()
 				done = true
 				break
 			}
 		}
 	}
+
+	for len(cancel) > 0 {
+		<-cancel
+	}
+
+	closeStream()
 
 	close(doneCh)
 	close(cancel)
@@ -336,6 +333,13 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 	interceptCanceled := false
 	counter := uint(0)
 	for err == nil {
+		// we should check before receiving a message too
+		if w.config.streamCallDuration > 0 && len(cancel) > 0 {
+			<-cancel
+			callCancel()
+			break
+		}
+
 		var res proto.Message
 		res, err = str.RecvMsg()
 
@@ -476,6 +480,14 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 
 		for err == nil && !done {
 
+			// check at start before send too
+			if len(cancel) > 0 {
+				fmt.Println("got cancel in sender before")
+				<-cancel
+				closeStream()
+				break
+			}
+
 			// default message provider checks counter
 			// but we also need to keep our own counts
 			// in case of custom client providers
@@ -511,14 +523,14 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 
 			if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
 				closeStream()
-				done = true
+				break
 			}
 
 			if len(cancel) > 0 {
-				fmt.Println("got cancel in sender 1")
+				fmt.Println("got cancel in sender after")
 				<-cancel
 				closeStream()
-				done = true
+				break
 			}
 
 			if w.config.streamInterval > 0 {
