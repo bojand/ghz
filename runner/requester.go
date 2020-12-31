@@ -472,7 +472,10 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 	<-done
 
 	var err error
-	for i := 0; i < len(b.workers); i++ {
+	wm.Lock()
+	nw := len(b.workers)
+	wm.Unlock()
+	for i := 0; i < nw; i++ {
 		err = multierr.Append(err, <-errC)
 	}
 
