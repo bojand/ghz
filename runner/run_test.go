@@ -1388,7 +1388,8 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
-		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 300*time.Millisecond, dr.Latency.String()+" not in interval")
+		// allow extra time for last message send
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		calls := gs.GetCalls(callType)
 		assert.NotNil(t, calls)
