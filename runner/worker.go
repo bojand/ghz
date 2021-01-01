@@ -233,7 +233,6 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			sct := time.NewTimer(w.config.streamCallDuration)
 			select {
 			case <-sct.C:
-				fmt.Println("got cancel timer")
 				cancel <- struct{}{}
 				return
 			case <-doneCh:
@@ -448,11 +447,9 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			sct := time.NewTimer(w.config.streamCallDuration)
 			select {
 			case <-sct.C:
-				fmt.Println("cancel timer up sending cancel")
 				cancel <- struct{}{}
 				return
 			case <-doneCh:
-				fmt.Println("doneCh received")
 				if !sct.Stop() {
 					<-sct.C
 				}
@@ -503,7 +500,6 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 
 			// check at start before send too
 			if len(cancel) > 0 {
-				fmt.Println("got cancel in sender before")
 				<-cancel
 				closeStream()
 				break
@@ -560,7 +556,6 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			}
 
 			if len(cancel) > 0 {
-				fmt.Println("got cancel in sender after")
 				<-cancel
 				closeStream()
 				break
@@ -572,7 +567,6 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				case <-wait.C:
 					break
 				case <-cancel:
-					fmt.Println("got cancel in sender 2")
 					if !wait.Stop() {
 						<-wait.C
 					}
@@ -586,19 +580,14 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 		close(sendDone)
 	}()
 
-	fmt.Println("waiting for both sides to finish")
 	_, _ = <-recvDone, <-sendDone
 
-	fmt.Println("waiting for both sides to finish done. draining.")
 	for len(cancel) > 0 {
 		<-cancel
 	}
 
-	fmt.Println("drained. closing.")
 	close(doneCh)
 	close(cancel)
-
-	fmt.Println("closed.")
 
 	if err == nil && recvErr != nil {
 		err = recvErr
