@@ -266,11 +266,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			break
 		}
 
-		if end, err = performSend(payload); end || err != nil {
-			break
-		}
-
-		if isLast {
+		if end, err = performSend(payload); end || err != nil || isLast || len(cancel) > 0 {
 			break
 		}
 
