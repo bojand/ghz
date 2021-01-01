@@ -249,7 +249,7 @@ Stream interval duration. Spread stream sends by given amount. Only applies to c
 
 Maximum stream call duration. For client streaming and bidi calls, we'll send messages until this duration expires.
 
-For server streaming calls we will receive message until the duration has expired. Note that in streaming calls the cancellation will result in call cancelled error.  
+For server streaming calls we will receive message until the duration has expired. Note that in server streaming calls the cancellation will result in call cancelled error.  
 
 Example: `500ms`.
 
@@ -261,7 +261,7 @@ If the data array contains more elements than the count, only data up to the num
 
 If the data array contains fewer elements than the count specified, all the data will be iterated over repeatedly until count limit is reached. 
 
-For server streaming calls we will receive message until the specified count is reached. Note that in streaming calls the cancellation will result in call cancelled error.  
+For server streaming calls we will receive message until the specified count is reached. Note that in server streaming calls the cancellation will result in call cancelled error.  
 
 Examples:
 
