@@ -1449,6 +1449,7 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
+		// allow 100ms for each dynamic message (re)generation
 		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 700*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		calls := gs.GetCalls(callType)
@@ -1730,7 +1731,8 @@ func TestRunBidi(t *testing.T) {
 
 		assert.Len(t, report.Details, 1)
 		dr := report.Details[0]
-		assert.True(t, dr.Latency > 600*time.Millisecond && dr.Latency < 800*time.Millisecond, dr.Latency.String()+" not in interval")
+		// allow extra for the last send and receive
+		assert.True(t, dr.Latency > 600*time.Millisecond && dr.Latency < 950*time.Millisecond, dr.Latency.String()+" not in interval")
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 1, count)

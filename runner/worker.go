@@ -526,6 +526,12 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				break
 			}
 
+			if w.config.hasLog {
+				w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "bidi",
+					"call", w.mtd.GetFullyQualifiedName(),
+					"payload", payload, "error", err)
+			}
+
 			if isLast {
 				closeStream()
 				break
@@ -533,12 +539,6 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 
 			counter++
 			indexCounter++
-
-			if w.config.hasLog {
-				w.config.log.Debugw("Send message", "workerID", w.workerID, "call type", "bidi",
-					"call", w.mtd.GetFullyQualifiedName(),
-					"payload", payload, "error", err)
-			}
 
 			if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
 				closeStream()
