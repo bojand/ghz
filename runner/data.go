@@ -23,6 +23,11 @@ import (
 // It should not be used for erronous states
 var ErrEndStream = errors.New("ending stream")
 
+// ErrLastMessage is a signal from message providers that the returned payload is the last one of the stream
+// This is optional but encouraged for optimized performance
+// Message payload returned along with this error must be valid and may not be nil
+var ErrLastMessage = errors.New("last message")
+
 // DataProviderFunc is the interface for providing data for calls
 // For unary and server streaming calls it should return an array with a single element
 // For client and bidi streaming calls it should return an array of messages to be used
@@ -399,14 +404,19 @@ func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCa
 }
 
 func (m *dynamicMessageProvider) GetStreamMessage(parentCallData *CallData) (*dynamic.Message, error) {
+	isLast := false
 	if m.streamCallCount > 0 {
 		if m.counter >= m.streamCallCount {
 			return nil, ErrEndStream
 		} else if m.counter >= m.arrayLen {
 			m.indexCounter = 0
 		}
+
+		isLast = m.counter == m.streamCallCount-1
 	} else if m.counter >= m.arrayLen {
 		return nil, ErrEndStream
+	} else if m.counter == m.arrayLen-1 {
+		isLast = true
 	}
 
 	ctd := parentCallData.Regenerate()
@@ -436,7 +446,11 @@ func (m *dynamicMessageProvider) GetStreamMessage(parentCallData *CallData) (*dy
 	m.counter++
 	m.indexCounter++
 
-	return msg, nil
+	if err == nil && isLast {
+		err = ErrLastMessage
+	}
+
+	return msg, err
 }
 
 type staticMessageProvider struct {
@@ -456,14 +470,19 @@ func newStaticMessageProvider(streamCallCount uint, inputs []*dynamic.Message) (
 }
 
 func (m *staticMessageProvider) GetStreamMessage(parentCallData *CallData) (*dynamic.Message, error) {
+	isLast := false
 	if m.streamCallCount > 0 {
 		if m.counter >= m.streamCallCount {
 			return nil, ErrEndStream
 		} else if m.indexCounter == m.inputLen {
 			m.indexCounter = 0
 		}
+
+		isLast = m.counter == m.streamCallCount-1
 	} else if m.counter >= m.inputLen {
 		return nil, ErrEndStream
+	} else if m.counter == m.inputLen-1 {
+		isLast = true
 	}
 
 	payload := m.inputs[m.indexCounter]
@@ -471,5 +490,10 @@ func (m *staticMessageProvider) GetStreamMessage(parentCallData *CallData) (*dyn
 	m.counter++
 	m.indexCounter++
 
-	return payload, nil
+	var err error
+	if err == nil && isLast {
+		err = ErrLastMessage
+	}
+
+	return payload, err
 }

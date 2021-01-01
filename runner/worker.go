@@ -252,6 +252,13 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 
 		var payload *dynamic.Message
 		payload, err = messageProvider(ctd)
+
+		isLast := false
+		if errors.Is(err, ErrLastMessage) {
+			isLast = true
+			err = nil
+		}
+
 		if err != nil {
 			if errors.Is(err, ErrEndStream) {
 				err = nil
@@ -260,6 +267,10 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 		}
 
 		if end, err = performSend(payload); end || err != nil {
+			break
+		}
+
+		if isLast {
 			break
 		}
 
@@ -494,6 +505,13 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 
 			var payload *dynamic.Message
 			payload, err = messageProvider(ctd)
+
+			isLast := false
+			if errors.Is(err, ErrLastMessage) {
+				isLast = true
+				err = nil
+			}
+
 			if err != nil {
 				if errors.Is(err, ErrEndStream) {
 					err = nil
@@ -509,6 +527,11 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 					err = nil
 				}
 
+				break
+			}
+
+			if isLast {
+				closeStream()
 				break
 			}
 
