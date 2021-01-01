@@ -452,6 +452,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				cancel <- struct{}{}
 				return
 			case <-doneCh:
+				fmt.Println("doneCh received")
 				if !sct.Stop() {
 					<-sct.C
 				}
