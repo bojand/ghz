@@ -237,6 +237,9 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 				cancel <- struct{}{}
 				return
 			case <-doneCh:
+				if !sct.Stop() {
+					<-sct.C
+				}
 				return
 			}
 		}()
@@ -266,7 +269,8 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			break
 		}
 
-		if end, err = performSend(payload); end || err != nil || isLast || len(cancel) > 0 {
+		end, err = performSend(payload)
+		if end || err != nil || isLast || len(cancel) > 0 {
 			break
 		}
 
@@ -282,6 +286,9 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			case <-wait.C:
 				break
 			case <-cancel:
+				if !wait.Stop() {
+					<-wait.C
+				}
 				done = true
 				break
 			}
@@ -332,6 +339,9 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 				cancel <- struct{}{}
 				return
 			case <-doneCh:
+				if !sct.Stop() {
+					<-sct.C
+				}
 				return
 			}
 		}()
@@ -442,6 +452,9 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				cancel <- struct{}{}
 				return
 			case <-doneCh:
+				if !sct.Stop() {
+					<-sct.C
+				}
 				return
 			}
 		}()
@@ -559,6 +572,9 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 					break
 				case <-cancel:
 					fmt.Println("got cancel in sender 2")
+					if !wait.Stop() {
+						<-wait.C
+					}
 					closeStream()
 					done = true
 					break
