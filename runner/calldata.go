@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"text/template"
+	"text/template/parse"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,7 +35,7 @@ type CallData struct {
 	TimestampUnixNano  int64  // timestamp of the call as unix time in nanoseconds
 	UUID               string // generated UUIDv4 for each call
 
-	templateFuncs template.FuncMap
+	t *template.Template
 }
 
 var tmplFuncMap = template.FuncMap{
@@ -47,8 +48,6 @@ func newCallData(
 	mtd *desc.MethodDescriptor,
 	funcs template.FuncMap,
 	workerID string, reqNum int64) *CallData {
-	now := time.Now()
-	newUUID, _ := uuid.NewRandom()
 
 	fns := make(template.FuncMap, len(funcs)+2)
 	for k, v := range tmplFuncMap {
@@ -60,6 +59,11 @@ func newCallData(
 			fns[k] = v
 		}
 	}
+
+	t := template.New("call_template_data").Funcs(fns)
+
+	now := time.Now()
+	newUUID, _ := uuid.NewRandom()
 
 	return &CallData{
 		WorkerID:           workerID,
@@ -76,18 +80,79 @@ func newCallData(
 		TimestampUnixMilli: now.UnixNano() / 1000000,
 		TimestampUnixNano:  now.UnixNano(),
 		UUID:               newUUID.String(),
-		templateFuncs:      fns,
+		t:                  t,
+	}
+}
+
+// Regenerate generates a new instance of call data from this parent instance
+// The dynamic data like timestamps and UUIDs are re-filled
+func (td *CallData) Regenerate() *CallData {
+	now := time.Now()
+	newUUID, _ := uuid.NewRandom()
+
+	return &CallData{
+		WorkerID:           td.WorkerID,
+		RequestNumber:      td.RequestNumber,
+		FullyQualifiedName: td.FullyQualifiedName,
+		MethodName:         td.MethodName,
+		ServiceName:        td.ServiceName,
+		InputName:          td.InputName,
+		OutputName:         td.OutputName,
+		IsClientStreaming:  td.IsClientStreaming,
+		IsServerStreaming:  td.IsServerStreaming,
+		Timestamp:          now.Format(time.RFC3339),
+		TimestampUnix:      now.Unix(),
+		TimestampUnixMilli: now.UnixNano() / 1000000,
+		TimestampUnixNano:  now.UnixNano(),
+		UUID:               newUUID.String(),
+		t:                  td.t,
 	}
 }
 
 func (td *CallData) execute(data string) (*bytes.Buffer, error) {
-	t := template.Must(template.New("call_template_data").Funcs(td.templateFuncs).Parse(data))
+	t, err := td.t.Parse(data)
+	if err != nil {
+		return nil, err
+	}
+
 	var tpl bytes.Buffer
-	err := t.Execute(&tpl, td)
+	err = t.Execute(&tpl, td)
 	return &tpl, err
 }
 
-func (td *CallData) executeData(data string) ([]byte, error) {
+// This is hacky.
+// See https://golang.org/pkg/text/template/#Template
+// The *parse.Tree field is exported only for use by html/template
+// and should be treated as unexported by all other clients.
+func (td *CallData) hasAction(data string) (bool, error) {
+	t, err := td.t.Parse(data)
+	if err != nil {
+		return false, err
+	}
+
+	hasAction := hasAction(t.Tree.Root)
+	return hasAction, nil
+}
+
+func hasAction(node parse.Node) bool {
+	has := false
+	if node.Type() == parse.NodeAction {
+		return true
+	} else if ln, ok := node.(*parse.ListNode); ok {
+		for _, n := range ln.Nodes {
+			v := hasAction(n)
+			if !has && v {
+				has = true
+				break
+			}
+		}
+	}
+
+	return has
+}
+
+// ExecuteData applies the call data's parsed template and data string and returns the resulting buffer
+func (td *CallData) ExecuteData(data string) ([]byte, error) {
 	if len(data) > 0 {
 		input := []byte(data)
 		tpl, err := td.execute(data)

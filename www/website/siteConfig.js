@@ -5,7 +5,7 @@ const users = [];
 
 const siteConfig = {
   title: 'ghz', // Title for your website.
-  tagline: 'Simple gRPC benchmarking and load testing tool ',
+  tagline: 'gRPC benchmarking and load testing tool',
   url: 'https://ghz.sh', // Your website URL
   baseUrl: '/', // Base URL for your project */
 

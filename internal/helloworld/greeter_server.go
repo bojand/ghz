@@ -9,6 +9,7 @@ import (
 	"time"
 
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/stats"
 )
 
@@ -30,17 +31,20 @@ var Bidi CallType = "bidi"
 
 // Greeter implements the GreeterServer for tests
 type Greeter struct {
-	streamData []*HelloReply
+	StreamData []*HelloReply
 
 	Stats *HWStatsHandler
 
 	mutex      *sync.RWMutex
 	callCounts map[CallType]int
 	calls      map[CallType][][]*HelloRequest
+
+	sendMutex  *sync.RWMutex
+	sendCounts map[CallType]map[int]int
 }
 
-func randomSleep() {
-	msCount := rand.Intn(4) + 1
+func randomSleep(max int) {
+	msCount := rand.Intn(max) + 1
 	time.Sleep(time.Millisecond * time.Duration(msCount))
 }
 
@@ -62,12 +66,38 @@ func (s *Greeter) recordMessage(ct CallType, callIdx int, msg *HelloRequest) {
 	s.calls[ct][callIdx] = append(s.calls[ct][callIdx], msg)
 }
 
+func (s *Greeter) recordStreamSendCounter(ct CallType, callIdx int) {
+	s.sendMutex.Lock()
+	defer s.sendMutex.Unlock()
+
+	s.sendCounts[ct][callIdx] = s.sendCounts[ct][callIdx] + 1
+}
+
 // SayHello implements helloworld.GreeterServer
 func (s *Greeter) SayHello(ctx context.Context, in *HelloRequest) (*HelloReply, error) {
 	callIdx := s.recordCall(Unary)
-	s.recordMessage(Unary, callIdx, in)
 
-	randomSleep()
+	if in.GetName() == "__record_metadata__" {
+		mdval := ""
+		md, ok := metadata.FromIncomingContext(ctx)
+		if ok {
+			for k, v := range md {
+				if k == "token" {
+					mdval = mdval + k + ":"
+					for _, vv := range v {
+						mdval = mdval + vv
+					}
+				}
+			}
+		}
+
+		newReq := &HelloRequest{Name: in.GetName() + "||" + mdval}
+		s.recordMessage(Unary, callIdx, newReq)
+	} else {
+		s.recordMessage(Unary, callIdx, in)
+	}
+
+	randomSleep(4)
 
 	return &HelloReply{Message: "Hello " + in.Name}, nil
 }
@@ -77,12 +107,14 @@ func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) e
 	callIdx := s.recordCall(ServerStream)
 	s.recordMessage(ServerStream, callIdx, req)
 
-	randomSleep()
-
-	for _, msg := range s.streamData {
+	for _, msg := range s.StreamData {
 		if err := stream.Send(msg); err != nil {
 			return err
 		}
+
+		randomSleep(4)
+
+		s.recordStreamSendCounter(ServerStream, callIdx)
 	}
 
 	return nil
@@ -92,7 +124,7 @@ func (s *Greeter) SayHellos(req *HelloRequest, stream Greeter_SayHellosServer) e
 func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 	callIdx := s.recordCall(ClientStream)
 
-	randomSleep()
+	randomSleep(4)
 
 	msgCount := 0
 
@@ -114,8 +146,6 @@ func (s *Greeter) SayHelloCS(stream Greeter_SayHelloCSServer) error {
 func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 	callIdx := s.recordCall(Bidi)
 
-	randomSleep()
-
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -126,10 +156,13 @@ func (s *Greeter) SayHelloBidi(stream Greeter_SayHelloBidiServer) error {
 		}
 
 		s.recordMessage(Bidi, callIdx, in)
+
 		msg := "Hello " + in.Name
 		if err := stream.Send(&HelloReply{Message: msg}); err != nil {
 			return err
 		}
+
+		s.recordStreamSendCounter(ServerStream, callIdx)
 	}
 }
 
@@ -150,6 +183,14 @@ func (s *Greeter) ResetCounters() {
 	s.calls[Bidi] = make([][]*HelloRequest, 0)
 
 	s.mutex.Unlock()
+
+	s.sendMutex.Lock()
+	s.sendCounts = make(map[CallType]map[int]int)
+	s.sendCounts[Unary] = make(map[int]int)
+	s.sendCounts[ServerStream] = make(map[int]int)
+	s.sendCounts[ClientStream] = make(map[int]int)
+	s.sendCounts[Bidi] = make(map[int]int)
+	s.sendMutex.Unlock()
 
 	if s.Stats != nil {
 		s.Stats.mutex.Lock()
@@ -181,6 +222,25 @@ func (s *Greeter) GetCalls(key CallType) [][]*HelloRequest {
 	return nil
 }
 
+// GetSendCounts gets the stream send counts
+func (s *Greeter) GetSendCounts(key CallType) map[int]int {
+	s.sendMutex.RLock()
+	defer s.sendMutex.RUnlock()
+
+	val, ok := s.sendCounts[key]
+
+	if ok {
+		cm := map[int]int{}
+		for k, v := range val {
+			cm[k] = v
+		}
+
+		return cm
+	}
+
+	return nil
+}
+
 // GetConnectionCount gets the connection count
 func (s *Greeter) GetConnectionCount() int {
 	return s.Stats.GetConnectionCount()
@@ -195,7 +255,7 @@ func NewGreeter() *Greeter {
 		{Message: "Hello Sara"},
 	}
 
-	greeter := &Greeter{streamData: streamData, mutex: &sync.RWMutex{}}
+	greeter := &Greeter{StreamData: streamData, mutex: &sync.RWMutex{}, sendMutex: &sync.RWMutex{}}
 	greeter.ResetCounters()
 
 	return greeter

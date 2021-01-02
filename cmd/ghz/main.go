@@ -184,6 +184,18 @@ var (
 	si      = kingpin.Flag("stream-interval", "Interval for stream requests between message sends.").
 		Default("0").IsSetByUser(&isSISet).Duration()
 
+	isSCSet = false
+	scd     = kingpin.Flag("stream-call-duration", "Duration after which client will close the stream in each streaming call.").
+		Default("0").IsSetByUser(&isSCSet).Duration()
+
+	isSCCSet = false
+	scc      = kingpin.Flag("stream-call-count", "Count of messages sent, after which client will close the stream in each streaming call.").
+			Default("0").IsSetByUser(&isSCCSet).Uint()
+
+	isSDMSet = false
+	sdm      = kingpin.Flag("stream-dynamic-messages", "In streaming calls, regenerate and apply call template data on every message send.").
+			Default("false").IsSetByUser(&isSDMSet).Bool()
+
 	isRMDSet = false
 	rmd      = kingpin.Flag("reflect-metadata", "Reflect metadata as stringified JSON used only for reflection request.").
 			PlaceHolder(" ").IsSetByUser(&isRMDSet).String()
@@ -200,6 +212,10 @@ var (
 	isSkipFirstSet = false
 	skipFirst      = kingpin.Flag("skipFirst", "Skip the first X requests when doing the results tally.").
 			Default("0").IsSetByUser(&isSkipFirstSet).Uint()
+
+	isCESet     = false
+	countErrors = kingpin.Flag("count-errors", "Count erroneous (non-OK) resoponses in stats calculations.").
+			Default("false").IsSetByUser(&isCESet).Bool()
 
 	// Connection
 	isConnSet = false
@@ -426,6 +442,9 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.Metadata = metadata
 	cfg.MetadataPath = *mdPath
 	cfg.SI = runner.Duration(*si)
+	cfg.StreamCallDuration = runner.Duration(*scd)
+	cfg.StreamCallCount = *scc
+	cfg.StreamDynamicMessages = *sdm
 	cfg.Output = *output
 	cfg.Format = *format
 	cfg.ImportPaths = iPaths
@@ -451,6 +470,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.CEnd = *cEnd
 	cfg.CStepDuration = runner.Duration(*cStepDuration)
 	cfg.CMaxDuration = runner.Duration(*cMaxDuration)
+	cfg.CountErrors = *countErrors
 
 	return nil
 }
@@ -492,10 +512,6 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 		dest.SkipTLSVerify = src.SkipTLSVerify
 	}
 
-	if isSkipFirstSet {
-		dest.SkipFirst = src.SkipFirst
-	}
-
 	if isInsecSet {
 		dest.Insecure = src.Insecure
 	}
@@ -506,6 +522,14 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isCNameSet {
 		dest.CName = src.CName
+	}
+
+	if isSkipFirstSet {
+		dest.SkipFirst = src.SkipFirst
+	}
+
+	if isCESet {
+		dest.CountErrors = src.CountErrors
 	}
 
 	// run
@@ -560,6 +584,18 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isSISet {
 		dest.SI = src.SI
+	}
+
+	if isSCSet {
+		dest.StreamCallDuration = src.StreamCallDuration
+	}
+
+	if isSCCSet {
+		dest.StreamCallCount = src.StreamCallCount
+	}
+
+	if isSDMSet {
+		dest.StreamDynamicMessages = src.StreamDynamicMessages
 	}
 
 	if isOutputSet {

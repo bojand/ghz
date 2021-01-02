@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"encoding/json"
 	"strconv"
 	"testing"
 	"time"
@@ -105,4 +106,18 @@ func TestConfig_Load(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConfig_MarshalJSON(t *testing.T) {
+	cfg := Config{
+		Insecure: true,
+		Proto:    "proto/service.proto",
+		Call:     "grpcbin.GRPCBin.DummyUnary",
+		Data:     "{interval_in_seconds:10,latitude:-23.43,longitude:-46.45,radius:5000}",
+		Host:     "localhost:8080",
+	}
+
+	_, err := json.Marshal(cfg)
+
+	assert.NoError(t, err)
 }

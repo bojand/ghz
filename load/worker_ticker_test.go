@@ -26,8 +26,6 @@ func TestConstWorkerTicker(t *testing.T) {
 }
 
 func TestStepWorkerTicker(t *testing.T) {
-	t.Parallel()
-
 	t.Run("step increase load duration", func(t *testing.T) {
 		wt := StepWorkerTicker{
 			C:            make(chan TickValue),

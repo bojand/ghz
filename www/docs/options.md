@@ -243,7 +243,67 @@ Path for call metadata JSON file. For example, `-M /home/user/metadata.json` or 
 
 ### `--stream-interval`
 
-Stream interval duration. Spread stream sends by given amount. Only applies to client and bidi streaming calls. Example: `100ms`
+Stream interval duration. Spread stream sends by given amount. Only applies to client and bidi streaming calls. Example: `100ms`.
+
+### `--stream-call-duration`
+
+Maximum stream call duration. For client streaming and bidi calls, we'll send messages until this duration expires.
+
+For server streaming calls we will receive message until the duration has expired. Note that in server streaming calls the cancellation will result in call cancelled error.  
+
+Example: `500ms`.
+
+### `--stream-call-count`
+
+The maximum number of message sends or receives the client will perform in a streaming call before closing the stream and ending the call. For client and bidi streaming calls this dictates the number of messages we will send.
+
+If the data array contains more elements than the count, only data up to the number specified will be used.
+
+If the data array contains fewer elements than the count specified, all the data will be iterated over repeatedly until count limit is reached. 
+
+For server streaming calls we will receive message until the specified count is reached. Note that in server streaming calls the cancellation will result in call cancelled error.  
+
+Examples:
+
+```sh
+--stream-call-count=2 -d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'
+```
+
+Will cause only `[{"name":"Joe"},{"name":"Kate"}]` to be sent. Similarly:
+
+```sh
+--stream-call-count=5 -d '[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'
+```
+
+Will cause `[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"},{"name":"Joe"},{"name":"Kate"}]` to be sent.
+
+### `--stream-dynamic-messages`
+
+In streaming calls, regenerate and apply call template data on every message send operation.
+This is helpful in combination with template functionality to generate data _for every message sent_ in a streaming call.
+For example:
+
+```sh
+--stream-dynamic-messages=true --stream-call-count=5 -d '{"name":"{{randomString 8 }}"}'
+```
+
+Will result in streaming call with the following data sent:
+
+```json
+[{"name":"sKNdMCIb"},{"name":"KLVXDvn1"},{"name":"RJ3knnBh"},{"name":"FTBqQ7nl"},{"name":"FzeMQIWo"}]
+```
+
+Contrast that with the default dynamic messages setting turned off; which means the template data will be applied only once for each stream call request, but _not_ for each message sent _in_ the streaming call.
+
+```sh
+--stream-call-count=5 -d '{"name":"{{randomString 8 }}"}'
+```
+
+Results in the following data sent:
+
+```json
+[{"name":"5hL64dd0"},{"name":"5hL64dd0"},{"name":"5hL64dd0"},{"name":"5hL64dd0"},{"name":"5hL64dd0"}]
+```
 
 ### `--reflect-metadata`
 
@@ -312,6 +372,10 @@ ghz --insecure \
 ### `-e`, `--enable-compression`               
 
 Enable gzip compression on requests.
+
+### `--count-errors`
+
+By default stats for fastest, slowest, average, histogram, and latency distributions only take into account the responses with OK status. This option enabled counting of erroneous (non-OK) responses in stats calculations as well.
 
 ### `-v`, `--version`
 

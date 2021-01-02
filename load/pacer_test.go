@@ -10,8 +10,6 @@ import (
 )
 
 func TestConstantPacer(t *testing.T) {
-	t.Parallel()
-
 	for _, tc := range []struct {
 		freq    uint64
 		max     uint64
@@ -135,8 +133,6 @@ func TestConstantPacer(t *testing.T) {
 }
 
 func TestConstantPacer_Rate(t *testing.T) {
-	t.Parallel()
-
 	for _, tc := range []struct {
 		freq    uint64
 		elapsed time.Duration
@@ -166,8 +162,6 @@ func TestConstantPacer_String(t *testing.T) {
 }
 
 func TestLinearPacer(t *testing.T) {
-
-	t.Parallel()
 
 	for ti, tt := range []struct {
 		// pacer config
@@ -422,7 +416,6 @@ func TestLinearPacer(t *testing.T) {
 }
 
 func TestStepPacer_hits(t *testing.T) {
-	t.Parallel()
 
 	// TODO improve this to have different pacer params
 	p := StepPacer{
@@ -448,8 +441,6 @@ func TestStepPacer_hits(t *testing.T) {
 }
 
 func TestStepPacer_Rate(t *testing.T) {
-	t.Parallel()
-
 	for _, tc := range []struct {
 		// pacer config
 		start        uint64
@@ -769,7 +760,6 @@ func TestStepPacer_Rate(t *testing.T) {
 }
 
 func TestStepPacer(t *testing.T) {
-	t.Parallel()
 
 	for ti, tc := range []struct {
 		// pacer config

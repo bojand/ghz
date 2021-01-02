@@ -307,7 +307,6 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with data from reader", func(t *testing.T) {
-
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
 
@@ -343,7 +342,6 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with connections", func(t *testing.T) {
-
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
 
@@ -380,7 +378,6 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	})
 
 	t.Run("with invalid connections > concurrency", func(t *testing.T) {
-
 		file, _ := os.Open("../testdata/data.json")
 		defer file.Close()
 

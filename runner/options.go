@@ -92,31 +92,40 @@ type RunConfig struct {
 
 	zstop string
 
-	streamInterval time.Duration
-
-	// data
-	data []byte
+	streamInterval        time.Duration
+	streamCallDuration    time.Duration
+	streamCallCount       uint
+	streamDynamicMessages bool
 
 	// lbStrategy
 	lbStrategy string
-	// data func
-	dataFunc BinaryDataFunc
 
-	binary   bool
+	// TODO consolidate these actual value fields to be implemented via provider funcs
+	// data & metadata
+	data     []byte
 	metadata []byte
-	rmd      map[string]string
+	binary   bool
+
+	dataFunc         BinaryDataFunc
+	dataProviderFunc DataProviderFunc
+	mdProviderFunc   MetadataProviderFunc
+
+	funcs template.FuncMap
+
+	// reflection metadata
+	rmd map[string]string
 
 	// debug
 	hasLog bool
 	log    Logger
 
 	// misc
-	name      string
-	cpus      int
-	tags      []byte
-	skipFirst int
-
-	funcs template.FuncMap
+	name        string
+	cpus        int
+	tags        []byte
+	skipFirst   int
+	countErrors bool
+	recvMsgFunc StreamRecvMsgInterceptFunc
 }
 
 // Option controls some aspect of run
@@ -657,6 +666,15 @@ func WithSkipFirst(c uint) Option {
 	}
 }
 
+// WithCountErrors is the count errors option
+func WithCountErrors(v bool) Option {
+	return func(o *RunConfig) error {
+		o.countErrors = v
+
+		return nil
+	}
+}
+
 // WithProtoFile specified proto file path and optionally import paths
 // We will automatically add the proto file path's directory and the current directory
 //	WithProtoFile("greeter.proto", []string{"/home/protos"})
@@ -701,6 +719,33 @@ func WithProtoset(protoset string) Option {
 func WithStreamInterval(d time.Duration) Option {
 	return func(o *RunConfig) error {
 		o.streamInterval = d
+
+		return nil
+	}
+}
+
+// WithStreamCallDuration sets the maximum stream call duration at which point the client will close the stream
+func WithStreamCallDuration(d time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.streamCallDuration = d
+
+		return nil
+	}
+}
+
+// WithStreamCallCount sets the stream close count
+func WithStreamCallCount(c uint) Option {
+	return func(o *RunConfig) error {
+		o.streamCallCount = c
+
+		return nil
+	}
+}
+
+// WithStreamDynamicMessages sets the stream dynamic message generation
+func WithStreamDynamicMessages(v bool) Option {
+	return func(o *RunConfig) error {
+		o.streamDynamicMessages = v
 
 		return nil
 	}
@@ -909,6 +954,58 @@ func WithWorkerTicker(ticker load.WorkerTicker) Option {
 	}
 }
 
+// WithStreamRecvMsgIntercept specified the stream receive intercept function
+//
+//	WithStreamRecvMsgIntercept(func(msg *dynamic.Message, err error) error {
+//		if err == nil && msg != nil {
+//			reply := &helloworld.HelloReply{}
+//			convertErr := msg.ConvertTo(reply)
+//			if convertErr == nil {
+//				if reply.GetMessage() == "Hello bar" {
+//					return ErrEndStream
+//				}
+//			}
+//		}
+//		return nil
+//	})
+//
+func WithStreamRecvMsgIntercept(fn StreamRecvMsgInterceptFunc) Option {
+	return func(o *RunConfig) error {
+		o.recvMsgFunc = fn
+
+		return nil
+	}
+}
+
+// WithDataProvider provides custom data provider
+//	WithDataProvider(func(*CallData) ([]*dynamic.Message, error) {
+//		protoMsg := &helloworld.HelloRequest{Name: "Bob"}
+//		dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
+//		if err != nil {
+//			return nil, err
+//		}
+//		return []*dynamic.Message{dynamicMsg}, nil
+//	}),
+func WithDataProvider(fn DataProviderFunc) Option {
+	return func(o *RunConfig) error {
+		o.dataProviderFunc = fn
+
+		return nil
+	}
+}
+
+// WithMetadataProvider provides custom metadata provider
+//	WithMetadataProvider(ctd *CallData) (*metadata.MD, error) {
+//		return &metadata.MD{"token": []string{"secret"}}, nil
+//	}),
+func WithMetadataProvider(fn MetadataProviderFunc) Option {
+	return func(o *RunConfig) error {
+		o.mdProviderFunc = fn
+
+		return nil
+	}
+}
+
 func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFile, clientKeyFile, cname string) (credentials.TransportCredentials, error) {
 	var tlsConf tls.Config
 
@@ -979,6 +1076,9 @@ func fromConfig(cfg *Config) []Option {
 		WithMetadata(cfg.Metadata),
 		WithTags(cfg.Tags),
 		WithStreamInterval(time.Duration(cfg.SI)),
+		WithStreamCallDuration(time.Duration(cfg.StreamCallDuration)),
+		WithStreamCallCount(cfg.StreamCallCount),
+		WithStreamDynamicMessages(cfg.StreamDynamicMessages),
 		WithReflectionMetadata(cfg.ReflectMetadata),
 		WithConnections(cfg.Connections),
 		WithEnableCompression(cfg.EnableCompression),
@@ -996,6 +1096,7 @@ func fromConfig(cfg *Config) []Option {
 		WithConcurrencyStep(cfg.CStep),
 		WithConcurrencyStepDuration(time.Duration(cfg.CStepDuration)),
 		WithConcurrencyDuration(time.Duration(cfg.CMaxDuration)),
+		WithCountErrors(cfg.CountErrors),
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil

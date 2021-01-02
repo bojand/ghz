@@ -9,8 +9,11 @@ import (
 	"github.com/bojand/ghz/internal"
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/golang/protobuf/proto"
+	"github.com/google/uuid"
 	"github.com/jhump/protoreflect/desc"
+	"github.com/jhump/protoreflect/dynamic"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/metadata"
 )
 
 func changeFunc(mtd *desc.MethodDescriptor, cd *CallData) []byte {
@@ -563,9 +566,148 @@ func TestRunUnary(t *testing.T) {
 
 		assert.Equal(t, []string{"0", "1", "2", "0", "1", "2"}, names)
 	})
+
+	t.Run("with data provider", func(t *testing.T) {
+		gs.ResetCounters()
+
+		callCounter := 0
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(5),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataProvider(func(*CallData) ([]*dynamic.Message, error) {
+				protoMsg := &helloworld.HelloRequest{Name: strconv.Itoa(callCounter)}
+				dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
+				if err != nil {
+					return nil, err
+				}
+
+				callCounter++
+
+				return []*dynamic.Message{dynamicMsg}, nil
+			}),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 5, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 5, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 5)
+		names := make([]string, 0)
+		for _, msgs := range calls {
+			for _, msg := range msgs {
+				names = append(names, msg.GetName())
+			}
+		}
+
+		assert.Equal(t, []string{"0", "1", "2", "3", "4"}, names)
+	})
+
+	t.Run("with metadata provider", func(t *testing.T) {
+		gs.ResetCounters()
+
+		callCounter := 0
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(5),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataProvider(func(*CallData) ([]*dynamic.Message, error) {
+				name := strconv.Itoa(callCounter)
+				if callCounter == 1 || callCounter == 3 {
+					name = "__record_metadata__"
+				}
+				protoMsg := &helloworld.HelloRequest{Name: name}
+				dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
+				if err != nil {
+					return nil, err
+				}
+
+				callCounter++
+
+				return []*dynamic.Message{dynamicMsg}, nil
+			}),
+			WithMetadataProvider(func(*CallData) (*metadata.MD, error) {
+				mdv := "secret" + strconv.Itoa(callCounter)
+				return &metadata.MD{"token": []string{mdv}}, nil
+			}),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 5, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 5, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 5)
+		names := make([]string, 0)
+		for _, msgs := range calls {
+			for _, msg := range msgs {
+				names = append(names, msg.GetName())
+			}
+		}
+
+		assert.Equal(t, []string{"0", "__record_metadata__||token:secret2", "2", "__record_metadata__||token:secret4", "4"}, names)
+	})
 }
 
 func TestRunServerStreaming(t *testing.T) {
+
 	callType := helloworld.ServerStream
 
 	gs, s, err := internal.StartServer(false)
@@ -576,51 +718,353 @@ func TestRunServerStreaming(t *testing.T) {
 
 	defer s.Stop()
 
-	gs.ResetCounters()
+	t.Run("basic", func(t *testing.T) {
 
-	data := make(map[string]interface{})
-	data["name"] = "bob"
+		gs.ResetCounters()
 
-	report, err := Run(
-		"helloworld.Greeter.SayHellos",
-		internal.TestLocalhost,
-		WithProtoFile("../testdata/greeter.proto", []string{}),
-		WithTotalRequests(15),
-		WithConcurrency(3),
-		WithTimeout(time.Duration(20*time.Second)),
-		WithDialTimeout(time.Duration(20*time.Second)),
-		WithData(data),
-		WithInsecure(true),
-		WithName("server streaming test"),
-	)
+		data := make(map[string]interface{})
+		data["name"] = "bob"
 
-	assert.NoError(t, err)
+		report, err := Run(
+			"helloworld.Greeter.SayHellos",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(15),
+			WithConcurrency(3),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithName("server streaming test"),
+		)
 
-	assert.NotNil(t, report)
+		assert.NoError(t, err)
 
-	assert.Equal(t, 15, int(report.Count))
-	assert.NotZero(t, report.Average)
-	assert.NotZero(t, report.Fastest)
-	assert.NotZero(t, report.Slowest)
-	assert.NotZero(t, report.Rps)
-	assert.Equal(t, "server streaming test", report.Name)
-	assert.NotEmpty(t, report.Date)
-	assert.NotEmpty(t, report.Options)
-	assert.NotEmpty(t, report.Details)
-	assert.Equal(t, true, report.Options.Insecure)
-	assert.NotEmpty(t, report.LatencyDistribution)
-	assert.Equal(t, ReasonNormalEnd, report.EndReason)
-	assert.Empty(t, report.ErrorDist)
+		assert.NotNil(t, report)
 
-	assert.NotEqual(t, report.Average, report.Slowest)
-	assert.NotEqual(t, report.Average, report.Fastest)
-	assert.NotEqual(t, report.Slowest, report.Fastest)
+		assert.Equal(t, 15, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "server streaming test", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
 
-	count := gs.GetCount(callType)
-	assert.Equal(t, 15, count)
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
 
-	connCount := gs.GetConnectionCount()
-	assert.Equal(t, 1, connCount)
+		count := gs.GetCount(callType)
+		assert.Equal(t, 15, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+	})
+
+	t.Run("with stream cancel", func(t *testing.T) {
+
+		t.Skip("stream cancel returns errors normally")
+
+		gs.ResetCounters()
+
+		oldData := gs.StreamData
+
+		nc := 100000
+		gs.StreamData = make([]*helloworld.HelloReply, nc)
+		for i := 0; i < nc; i++ {
+			name := "name " + strconv.FormatInt(int64(i), 10)
+			gs.StreamData[i] = &helloworld.HelloReply{Message: "Hello " + name}
+		}
+
+		data := make(map[string]interface{})
+		data["name"] = "bob"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHellos",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithName("server streaming test"),
+			WithStreamCallDuration(200*time.Millisecond),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 200*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "server streaming test", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 300*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		sends := gs.GetSendCounts(callType)
+		assert.NotNil(t, sends)
+		assert.Len(t, sends, 1)
+		sendCount := sends[0]
+		assert.True(t, sendCount < 20000, sendCount)
+
+		// reset
+		gs.StreamData = oldData
+	})
+
+	t.Run("with stream cancel count errors", func(t *testing.T) {
+
+		gs.ResetCounters()
+
+		oldData := gs.StreamData
+
+		nc := 100000
+		gs.StreamData = make([]*helloworld.HelloReply, nc)
+		for i := 0; i < nc; i++ {
+			name := "name " + strconv.FormatInt(int64(i), 10)
+			gs.StreamData[i] = &helloworld.HelloReply{Message: "Hello " + name}
+		}
+
+		data := make(map[string]interface{})
+		data["name"] = "bob"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHellos",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithName("server streaming test"),
+			WithStreamCallDuration(200*time.Millisecond),
+			WithCountErrors(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 200*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "server streaming test", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Len(t, report.ErrorDist, 1)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 300*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		sends := gs.GetSendCounts(callType)
+		assert.NotNil(t, sends)
+		assert.Len(t, sends, 1)
+		sendCount := sends[0]
+		assert.True(t, sendCount < 30000, sendCount)
+
+		// reset
+		gs.StreamData = oldData
+	})
+
+	t.Run("with stream call count and count errors", func(t *testing.T) {
+
+		gs.ResetCounters()
+
+		oldData := gs.StreamData
+
+		nc := 5000
+		gs.StreamData = make([]*helloworld.HelloReply, nc)
+		for i := 0; i < nc; i++ {
+			name := "name " + strconv.FormatInt(int64(i), 10)
+			gs.StreamData[i] = &helloworld.HelloReply{Message: "Hello " + name}
+		}
+
+		data := make(map[string]interface{})
+		data["name"] = "bob"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHellos",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithName("server streaming test"),
+			WithStreamCallCount(50),
+			WithCountErrors(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "server streaming test", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Len(t, report.ErrorDist, 1)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		sends := gs.GetSendCounts(callType)
+		assert.NotNil(t, sends)
+		assert.Len(t, sends, 1)
+		sendCount := sends[0]
+		assert.True(t, sendCount <= 3500, sendCount)
+
+		// reset
+		gs.StreamData = oldData
+	})
+
+	t.Run("with recv intercept", func(t *testing.T) {
+
+		gs.ResetCounters()
+
+		oldData := gs.StreamData
+
+		nc := 10000
+		gs.StreamData = make([]*helloworld.HelloReply, nc)
+		for i := 0; i < nc; i++ {
+			name := "name " + strconv.FormatInt(int64(i), 10)
+			gs.StreamData[i] = &helloworld.HelloReply{Message: "Hello " + name}
+		}
+
+		data := make(map[string]interface{})
+		data["name"] = "bob"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHellos",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithName("server streaming test"),
+			WithCountErrors(true),
+			WithStreamRecvMsgIntercept(func(msg *dynamic.Message, err error) error {
+				if err == nil {
+					reply := &helloworld.HelloReply{}
+					convertErr := msg.ConvertTo(reply)
+					if convertErr == nil {
+						if reply.GetMessage() == "Hello name 100" {
+							return ErrEndStream
+						}
+					}
+				}
+
+				return nil
+			}),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "server streaming test", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Len(t, report.ErrorDist, 1)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		sends := gs.GetSendCounts(callType)
+		assert.NotNil(t, sends)
+		assert.Len(t, sends, 1)
+		sendCount := sends[0]
+		assert.True(t, sendCount <= 1500, sendCount)
+
+		// reset
+		gs.StreamData = oldData
+	})
 }
 
 func TestRunClientStreaming(t *testing.T) {
@@ -634,58 +1078,481 @@ func TestRunClientStreaming(t *testing.T) {
 
 	defer s.Stop()
 
-	gs.ResetCounters()
+	t.Run("basic", func(t *testing.T) {
+		gs.ResetCounters()
 
-	m1 := make(map[string]interface{})
-	m1["name"] = "bob"
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
 
-	m2 := make(map[string]interface{})
-	m2["name"] = "Kate"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
 
-	m3 := make(map[string]interface{})
-	m3["name"] = "foo"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
 
-	data := []interface{}{m1, m2, m3}
+		data := []interface{}{m1, m2, m3}
 
-	report, err := Run(
-		"helloworld.Greeter.SayHelloCS",
-		internal.TestLocalhost,
-		WithProtoFile("../testdata/greeter.proto", []string{}),
-		WithTotalRequests(16),
-		WithConcurrency(4),
-		WithTimeout(time.Duration(20*time.Second)),
-		WithDialTimeout(time.Duration(20*time.Second)),
-		WithData(data),
-		WithInsecure(true),
-	)
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(16),
+			WithConcurrency(4),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+		)
 
-	assert.NoError(t, err)
+		assert.NoError(t, err)
 
-	assert.NotNil(t, report)
+		assert.NotNil(t, report)
 
-	assert.Equal(t, 16, int(report.Count))
-	assert.NotZero(t, report.Average)
-	assert.NotZero(t, report.Fastest)
-	assert.NotZero(t, report.Slowest)
-	assert.NotZero(t, report.Rps)
-	assert.Empty(t, report.Name)
-	assert.NotEmpty(t, report.Date)
-	assert.NotEmpty(t, report.Details)
-	assert.NotEmpty(t, report.Options)
-	assert.Equal(t, true, report.Options.Insecure)
-	assert.NotEmpty(t, report.LatencyDistribution)
-	assert.Equal(t, ReasonNormalEnd, report.EndReason)
-	assert.Empty(t, report.ErrorDist)
+		assert.Equal(t, 16, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
 
-	assert.NotEqual(t, report.Average, report.Slowest)
-	assert.NotEqual(t, report.Average, report.Fastest)
-	assert.NotEqual(t, report.Slowest, report.Fastest)
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
 
-	count := gs.GetCount(callType)
-	assert.Equal(t, 16, count)
+		count := gs.GetCount(callType)
+		assert.Equal(t, 16, count)
 
-	connCount := gs.GetConnectionCount()
-	assert.Equal(t, 1, connCount)
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+	})
+
+	t.Run("with stream interval", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+
+		data := []interface{}{m1, m2, m3, m4}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(200*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 600*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 600*time.Millisecond && dr.Latency < 800*time.Millisecond, dr.Latency.String()+" not in interval")
+	})
+
+	t.Run("with stream cancel", func(t *testing.T) {
+		gs.ResetCounters()
+
+		nc := 100000
+		data := make([]interface{}, nc)
+		for i := 0; i < nc; i++ {
+			data[i] = map[string]interface{}{
+				"name": "name " + strconv.FormatInt(int64(i), 10),
+			}
+		}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamCallDuration(200*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 200*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.True(t, len(msgs) < 15000, len(msgs))
+	})
+
+	t.Run("with stream interval and cancel", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+
+		data := []interface{}{m1, m2, m3, m4, m5}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(200*time.Millisecond),
+			WithStreamCallDuration(650*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 650*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 650*time.Millisecond && dr.Latency < 800*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 4)
+	})
+
+	t.Run("with stream interval and call count", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+
+		data := []interface{}{m1, m2, m3, m4, m5}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCallCount(3),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 200*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		// allow extra time for last message send
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 3)
+	})
+
+	t.Run("with stream dynamic message true", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{newUUID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCallCount(4),
+			WithStreamDynamicMessages(true),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		// allow 100ms for each dynamic message (re)generation
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 700*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 4)
+		for i, m1 := range msgs {
+			parsed, err := uuid.Parse(m1.GetName())
+			assert.NoError(t, err)
+			assert.NotEmpty(t, parsed)
+
+			for j, m2 := range msgs {
+				parsed, err = uuid.Parse(m2.GetName())
+				assert.NoError(t, err)
+				assert.NotEmpty(t, parsed)
+
+				if i != j {
+					assert.NotEqual(t, m1.GetName(), m2.GetName())
+				}
+			}
+		}
+	})
+
+	t.Run("with stream dynamic message false", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{newUUID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCallCount(4),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 4)
+		for i, m1 := range msgs {
+			parsed, err := uuid.Parse(m1.GetName())
+			assert.NoError(t, err)
+			assert.NotEmpty(t, parsed)
+
+			for j, m2 := range msgs {
+				parsed, err = uuid.Parse(m2.GetName())
+				assert.NoError(t, err)
+				assert.NotEmpty(t, parsed)
+
+				if i != j {
+					assert.Equal(t, m1.GetName(), m2.GetName())
+				}
+			}
+		}
+	})
 }
 
 func TestRunClientStreamingBinary(t *testing.T) {
@@ -759,61 +1626,660 @@ func TestRunBidi(t *testing.T) {
 
 	defer s.Stop()
 
-	gs.ResetCounters()
+	t.Run("basic", func(t *testing.T) {
+		gs.ResetCounters()
 
-	m1 := make(map[string]interface{})
-	m1["name"] = "bob"
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
 
-	m2 := make(map[string]interface{})
-	m2["name"] = "Kate"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
 
-	m3 := make(map[string]interface{})
-	m3["name"] = "foo"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
 
-	data := []interface{}{m1, m2, m3}
+		data := []interface{}{m1, m2, m3}
 
-	report, err := Run(
-		"helloworld.Greeter.SayHelloBidi",
-		internal.TestLocalhost,
-		WithProtoFile("../testdata/greeter.proto", []string{}),
-		WithTotalRequests(20),
-		WithConcurrency(4),
-		WithTimeout(time.Duration(20*time.Second)),
-		WithDialTimeout(time.Duration(20*time.Second)),
-		WithData(data),
-		WithInsecure(true),
-	)
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(20),
+			WithConcurrency(4),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+		)
 
-	assert.NoError(t, err)
+		assert.NoError(t, err)
 
-	assert.NotNil(t, report)
+		assert.NotNil(t, report)
 
-	assert.Equal(t, 20, int(report.Count))
-	assert.NotZero(t, report.Average)
-	assert.NotZero(t, report.Fastest)
-	assert.NotZero(t, report.Slowest)
-	assert.NotZero(t, report.Rps)
-	assert.Empty(t, report.Name)
-	assert.NotEmpty(t, report.Date)
-	assert.NotEmpty(t, report.Details)
-	assert.NotEmpty(t, report.Options)
-	assert.NotEmpty(t, report.LatencyDistribution)
-	assert.Equal(t, ReasonNormalEnd, report.EndReason)
-	assert.Equal(t, true, report.Options.Insecure)
-	assert.Empty(t, report.ErrorDist)
+		assert.Equal(t, 20, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
 
-	assert.NotEqual(t, report.Average, report.Slowest)
-	assert.NotEqual(t, report.Average, report.Fastest)
-	assert.NotEqual(t, report.Slowest, report.Fastest)
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
 
-	count := gs.GetCount(callType)
-	assert.Equal(t, 20, count)
+		count := gs.GetCount(callType)
+		assert.Equal(t, 20, count)
 
-	connCount := gs.GetConnectionCount()
-	assert.Equal(t, 1, connCount)
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+	})
+
+	t.Run("with stream interval", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+
+		data := []interface{}{m1, m2, m3, m4}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(200*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 600*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		// allow extra for the last send and receive
+		assert.True(t, dr.Latency > 600*time.Millisecond && dr.Latency < 950*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+	})
+
+	t.Run("with stream cancel", func(t *testing.T) {
+		gs.ResetCounters()
+
+		nc := 100000
+		data := make([]interface{}, nc)
+		for i := 0; i < nc; i++ {
+			data[i] = map[string]interface{}{
+				"name": "name " + strconv.FormatInt(int64(i), 10),
+			}
+		}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamCallDuration(200*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 200*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 1000*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.True(t, len(msgs) < 15000, len(msgs))
+	})
+
+	t.Run("with stream interval and cancel", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+		m6 := make(map[string]interface{})
+		m6["name"] = "baz"
+		m7 := make(map[string]interface{})
+		m7["name"] = "alice"
+
+		data := []interface{}{m1, m2, m3, m4, m5, m6, m7}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(200*time.Millisecond),
+			WithStreamCallDuration(620*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 620*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 620*time.Millisecond && dr.Latency < 820*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 4)
+	})
+
+	t.Run("with stream count", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+
+		data := []interface{}{m1, m2, m3, m4, m5}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCallCount(3),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 200*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 200*time.Millisecond && dr.Latency < 300*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 3)
+	})
+
+	t.Run("with stream dynamic message true", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{newUUID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCallCount(4),
+			WithStreamDynamicMessages(true),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 4)
+		for i, m1 := range msgs {
+			parsed, err := uuid.Parse(m1.GetName())
+			assert.NoError(t, err)
+			assert.NotEmpty(t, parsed)
+
+			for j, m2 := range msgs {
+				parsed, err = uuid.Parse(m2.GetName())
+				assert.NoError(t, err)
+				assert.NotEmpty(t, parsed)
+
+				if i != j {
+					assert.NotEqual(t, m1.GetName(), m2.GetName())
+				}
+			}
+		}
+	})
+
+	t.Run("with stream dynamic message false", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{newUUID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCallCount(4),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 300*time.Millisecond, report.Total.String()+" not in interval")
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 4)
+		for i, m1 := range msgs {
+			parsed, err := uuid.Parse(m1.GetName())
+			assert.NoError(t, err)
+			assert.NotEmpty(t, parsed)
+
+			for j, m2 := range msgs {
+				parsed, err = uuid.Parse(m2.GetName())
+				assert.NoError(t, err)
+				assert.NotEmpty(t, parsed)
+
+				if i != j {
+					assert.Equal(t, m1.GetName(), m2.GetName())
+				}
+			}
+		}
+	})
+
+	t.Run("with stream recv message", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+		m6 := make(map[string]interface{})
+		m6["name"] = "baz"
+
+		data := []interface{}{m1, m2, m3, m4, m5, m6}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+			WithStreamRecvMsgIntercept(func(msg *dynamic.Message, err error) error {
+				if err == nil {
+					reply := &helloworld.HelloReply{}
+					convertErr := msg.ConvertTo(reply)
+					if convertErr == nil {
+						if reply.GetMessage() == "Hello bar" {
+							return ErrEndStream
+						}
+					}
+				}
+
+				return nil
+			}),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 300*time.Millisecond)
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 300*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 4)
+	})
+
+	t.Run("with stream recv message no stop", func(t *testing.T) {
+
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+		m6 := make(map[string]interface{})
+		m6["name"] = "baz"
+
+		data := []interface{}{m1, m2, m3, m4, m5, m6}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+			WithStreamRecvMsgIntercept(func(msg *dynamic.Message, err error) error {
+				if err == nil {
+					reply := &helloworld.HelloReply{}
+					convertErr := msg.ConvertTo(reply)
+					if convertErr == nil {
+						// bat doesn't exist
+						if reply.GetMessage() == "Hello bat" {
+							return ErrEndStream
+						}
+					}
+				}
+
+				return nil
+			}),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.True(t, report.Total > 500*time.Millisecond)
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+		assert.True(t, dr.Latency > 500*time.Millisecond && dr.Latency < 600*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 6)
+	})
 }
 
 func TestRunUnarySecure(t *testing.T) {
+
+	t.Skip("asdf")
+
 	callType := helloworld.Unary
 
 	gs, s, err := internal.StartServer(true)

@@ -23,6 +23,7 @@ type Reporter struct {
 }
 
 // Options represents the request options
+// TODO fix casing and consistency
 type Options struct {
 	Call              string   `json:"call,omitempty"`
 	Host              string   `json:"host,omitempty"`
@@ -71,7 +72,8 @@ type Options struct {
 	CPUs int    `json:"CPUs"`
 	Name string `json:"name,omitempty"`
 
-	SkipFirst uint `json:"skipFirst,omitempty"`
+	SkipFirst   uint `json:"skipFirst,omitempty"`
+	CountErrors bool `json:"count-errors,omitempty"`
 }
 
 // Report holds the data for the full test
@@ -161,6 +163,7 @@ func (r *Reporter) Run() {
 			skipCount++
 			continue
 		}
+
 		errStr := ""
 		r.totalCount++
 		r.totalLatenciesSec += res.duration.Seconds()
@@ -235,10 +238,11 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		DialTimeout:   r.config.dialTimeout,
 		KeepaliveTime: r.config.keepaliveTime,
 
-		Binary:    r.config.binary,
-		CPUs:      r.config.cpus,
-		Name:      r.config.name,
-		SkipFirst: uint(r.config.skipFirst),
+		Binary:      r.config.binary,
+		CPUs:        r.config.cpus,
+		Name:        r.config.name,
+		SkipFirst:   uint(r.config.skipFirst),
+		CountErrors: r.config.countErrors,
 	}
 
 	_ = json.Unmarshal(r.config.data, &rep.Options.Data)
@@ -255,7 +259,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 
 		okLats := make([]float64, 0)
 		for _, d := range r.details {
-			if d.Error == "" {
+			if d.Error == "" || rep.Options.CountErrors {
 				okLats = append(okLats, d.Latency.Seconds())
 			}
 		}
