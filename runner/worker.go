@@ -37,7 +37,9 @@ type Worker struct {
 
 	dataProvider     DataProviderFunc
 	metadataProvider MetadataProviderFunc
-	streamRecv       StreamRecvMsgInterceptFunc
+	msgProvider      StreamMessageProviderFunc
+
+	streamRecv StreamRecvMsgInterceptFunc
 }
 
 func (w *Worker) runWorker() error {
@@ -80,14 +82,6 @@ func (w *Worker) makeRequest(tv TickValue) error {
 
 	ctd := newCallData(w.mtd, w.config.funcs, w.workerID, reqNum)
 
-	inputs, err := w.dataProvider(ctd)
-	if err != nil {
-		return err
-	}
-	if len(inputs) == 0 {
-		return fmt.Errorf("no data provided for request")
-	}
-
 	reqMD, err := w.metadataProvider(ctd)
 	if err != nil {
 		return err
@@ -112,25 +106,15 @@ func (w *Worker) makeRequest(tv TickValue) error {
 		ctx = metadata.NewOutgoingContext(ctx, *reqMD)
 	}
 
-	var callType string
-	if w.config.hasLog {
-		callType = "unary"
-		if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
-			callType = "bidi"
-		} else if w.mtd.IsServerStreaming() {
-			callType = "server-streaming"
-		} else if w.mtd.IsClientStreaming() {
-			callType = "client-streaming"
-		}
-
-		w.config.log.Debugw("Making request", "workerID", w.workerID,
-			"call type", callType, "call", w.mtd.GetFullyQualifiedName(),
-			"input", inputs, "metadata", reqMD)
+	inputs, err := w.dataProvider(ctd)
+	if err != nil {
+		return err
 	}
 
-	unaryInput := inputs[0]
 	var msgProvider StreamMessageProviderFunc
-	if w.mtd.IsClientStreaming() {
+	if w.msgProvider != nil {
+		msgProvider = w.msgProvider
+	} else if w.mtd.IsClientStreaming() {
 		if w.config.streamDynamicMessages {
 			mp, err := newDynamicMessageProvider(w.mtd, w.config.data, w.config.streamCallCount)
 			if err != nil {
@@ -148,15 +132,35 @@ func (w *Worker) makeRequest(tv TickValue) error {
 		}
 	}
 
+	if len(inputs) == 0 && msgProvider == nil {
+		return fmt.Errorf("no data provided for request")
+	}
+
+	var callType string
+	if w.config.hasLog {
+		callType = "unary"
+		if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
+			callType = "bidi"
+		} else if w.mtd.IsServerStreaming() {
+			callType = "server-streaming"
+		} else if w.mtd.IsClientStreaming() {
+			callType = "client-streaming"
+		}
+
+		w.config.log.Debugw("Making request", "workerID", w.workerID,
+			"call type", callType, "call", w.mtd.GetFullyQualifiedName(),
+			"input", inputs, "metadata", reqMD)
+	}
+
 	// RPC errors are handled via stats handler
 	if w.mtd.IsClientStreaming() && w.mtd.IsServerStreaming() {
 		_ = w.makeBidiRequest(&ctx, ctd, msgProvider)
 	} else if w.mtd.IsClientStreaming() {
 		_ = w.makeClientStreamingRequest(&ctx, ctd, msgProvider)
 	} else if w.mtd.IsServerStreaming() {
-		_ = w.makeServerStreamingRequest(&ctx, unaryInput)
+		_ = w.makeServerStreamingRequest(&ctx, inputs[0])
 	} else {
-		_ = w.makeUnaryRequest(&ctx, reqMD, unaryInput)
+		_ = w.makeUnaryRequest(&ctx, reqMD, inputs[0])
 	}
 
 	return err
