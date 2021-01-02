@@ -94,6 +94,9 @@
 <li><a href="#-m---metadata"><code>-m</code>, <code>--metadata</code></a></li>
 <li><a href="#-m---metadata-file"><code>-M</code>, <code>--metadata-file</code></a></li>
 <li><a href="#--stream-interval"><code>--stream-interval</code></a></li>
+<li><a href="#--stream-call-duration"><code>--stream-call-duration</code></a></li>
+<li><a href="#--stream-call-count"><code>--stream-call-count</code></a></li>
+<li><a href="#--stream-dynamic-messages"><code>--stream-dynamic-messages</code></a></li>
 <li><a href="#--reflect-metadata"><code>--reflect-metadata</code></a></li>
 <li><a href="#-o---output"><code>-o</code>, <code>--output</code></a></li>
 <li><a href="#-o---format"><code>-O</code>, <code>--format</code></a></li>
@@ -106,6 +109,7 @@
 <li><a href="#--cpus"><code>--cpus</code></a></li>
 <li><a href="#--debug"><code>--debug</code></a></li>
 <li><a href="#-e---enable-compression"><code>-e</code>, <code>--enable-compression</code></a></li>
+<li><a href="#--count-errors"><code>--count-errors</code></a></li>
 <li><a href="#-v---version"><code>-v</code>, <code>--version</code></a></li>
 <li><a href="#-h---help"><code>-h</code>, <code>--help</code></a></li>
 </ul>
@@ -234,7 +238,38 @@ binData := buf.Bytes() <span class="hljs-comment">// pass this as input</span>
 <h3><a class="anchor" aria-hidden="true" id="-m---metadata-file"></a><a href="#-m---metadata-file" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>-M</code>, <code>--metadata-file</code></h3>
 <p>Path for call metadata JSON file. For example, <code>-M /home/user/metadata.json</code> or <code>-M ./metadata.json</code>.</p>
 <h3><a class="anchor" aria-hidden="true" id="--stream-interval"></a><a href="#--stream-interval" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>--stream-interval</code></h3>
-<p>Stream interval duration. Spread stream sends by given amount. Only applies to client and bidi streaming calls. Example: <code>100ms</code></p>
+<p>Stream interval duration. Spread stream sends by given amount. Only applies to client and bidi streaming calls. Example: <code>100ms</code>.</p>
+<h3><a class="anchor" aria-hidden="true" id="--stream-call-duration"></a><a href="#--stream-call-duration" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>--stream-call-duration</code></h3>
+<p>Maximum stream call duration. For client streaming and bidi calls, we'll send messages until this duration expires.</p>
+<p>For server streaming calls we will receive message until the duration has expired. Note that in server streaming calls the cancellation will result in call cancelled error.</p>
+<p>Example: <code>500ms</code>.</p>
+<h3><a class="anchor" aria-hidden="true" id="--stream-call-count"></a><a href="#--stream-call-count" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>--stream-call-count</code></h3>
+<p>The maximum number of message sends or receives the client will perform in a streaming call before closing the stream and ending the call. For client and bidi streaming calls this dictates the number of messages we will send.</p>
+<p>If the data array contains more elements than the count, only data up to the number specified will be used.</p>
+<p>If the data array contains fewer elements than the count specified, all the data will be iterated over repeatedly until count limit is reached.</p>
+<p>For server streaming calls we will receive message until the specified count is reached. Note that in server streaming calls the cancellation will result in call cancelled error.</p>
+<p>Examples:</p>
+<pre><code class="hljs css language-sh">--stream-call-count=2 -d <span class="hljs-string">'[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'</span>
+</code></pre>
+<p>Will cause only <code>[{&quot;name&quot;:&quot;Joe&quot;},{&quot;name&quot;:&quot;Kate&quot;}]</code> to be sent. Similarly:</p>
+<pre><code class="hljs css language-sh">--stream-call-count=5 -d <span class="hljs-string">'[{"name":"Joe"},{"name":"Kate"},{"name":"Sara"}]'</span>
+</code></pre>
+<p>Will cause <code>[{&quot;name&quot;:&quot;Joe&quot;},{&quot;name&quot;:&quot;Kate&quot;},{&quot;name&quot;:&quot;Sara&quot;},{&quot;name&quot;:&quot;Joe&quot;},{&quot;name&quot;:&quot;Kate&quot;}]</code> to be sent.</p>
+<h3><a class="anchor" aria-hidden="true" id="--stream-dynamic-messages"></a><a href="#--stream-dynamic-messages" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>--stream-dynamic-messages</code></h3>
+<p>In streaming calls, regenerate and apply call template data on every message send operation.
+This is helpful in combination with template functionality to generate data <em>for every message sent</em> in a streaming call.
+For example:</p>
+<pre><code class="hljs css language-sh">--stream-dynamic-messages=<span class="hljs-literal">true</span> --stream-call-count=5 -d <span class="hljs-string">'{"name":"{{randomString 8 }}"}'</span>
+</code></pre>
+<p>Will result in streaming call with the following data sent:</p>
+<pre><code class="hljs css language-json">[{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"sKNdMCIb"</span>},{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"KLVXDvn1"</span>},{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"RJ3knnBh"</span>},{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"FTBqQ7nl"</span>},{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"FzeMQIWo"</span>}]
+</code></pre>
+<p>Contrast that with the default dynamic messages setting turned off; which means the template data will be applied only once for each stream call request, but <em>not</em> for each message sent <em>in</em> the streaming call.</p>
+<pre><code class="hljs css language-sh">--stream-call-count=5 -d <span class="hljs-string">'{"name":"{{randomString 8 }}"}'</span>
+</code></pre>
+<p>Results in the following data sent:</p>
+<pre><code class="hljs css language-json">[{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"5hL64dd0"</span>},{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"5hL64dd0"</span>},{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"5hL64dd0"</span>},{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"5hL64dd0"</span>},{<span class="hljs-attr">"name"</span>:<span class="hljs-string">"5hL64dd0"</span>}]
+</code></pre>
 <h3><a class="anchor" aria-hidden="true" id="--reflect-metadata"></a><a href="#--reflect-metadata" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>--reflect-metadata</code></h3>
 <p>Reflect metadata as stringified JSON used only for reflection request.</p>
 <h3><a class="anchor" aria-hidden="true" id="-o---output"></a><a href="#-o---output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>-o</code>, <code>--output</code></h3>
@@ -275,6 +310,8 @@ binData := buf.Bytes() <span class="hljs-comment">// pass this as input</span>
 </code></pre>
 <h3><a class="anchor" aria-hidden="true" id="-e---enable-compression"></a><a href="#-e---enable-compression" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>-e</code>, <code>--enable-compression</code></h3>
 <p>Enable gzip compression on requests.</p>
+<h3><a class="anchor" aria-hidden="true" id="--count-errors"></a><a href="#--count-errors" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>--count-errors</code></h3>
+<p>By default stats for fastest, slowest, average, histogram, and latency distributions only take into account the responses with OK status. This option enabled counting of erroneous (non-OK) responses in stats calculations as well.</p>
 <h3><a class="anchor" aria-hidden="true" id="-v---version"></a><a href="#-v---version" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>-v</code>, <code>--version</code></h3>
 <p>Print the version.</p>
 <h3><a class="anchor" aria-hidden="true" id="-h---help"></a><a href="#-h---help" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>-h</code>, <code>--help</code></h3>
