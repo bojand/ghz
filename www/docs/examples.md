@@ -7,6 +7,7 @@ title: Examples
 - [Server reflection](#server-reflection)
 - [Metadata using template variables](#metadata-template)
 - [Binary data](#binary-data)
+- [Binary fields](#binary-fields)
 - [Variable data for unary calls](#variable-data)
 - [Custom parameters](#custom-parameters)
 - [Protoset](#protoset)
@@ -73,6 +74,48 @@ ghz --proto ./greeter.proto \
   --call helloworld.Greeter.SayHello \
   0.0.0.0:50051 < ./hello_request_data.bin
 ```
+
+<a name="binary-fields">
+### Binary data
+
+Lets say we have the following example proto
+
+```proto
+syntax = "proto3";
+
+package bytes;
+
+service ImageService {
+  rpc Save (ImageSaveRequest) returns (ImageSaveResponse) {}
+}
+
+message ImageSaveRequest {
+  string name = 1;
+  bytes data = 2;
+}
+
+message ImageSaveResponse {}
+```
+
+One way to create the request for a test is to use the binary data option `-B` to specify a binary file like we did in the prior exammple. Simply [serialize the whole](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message) message to a binary file first.
+
+Alternatively we can [use base64 string](https://developers.google.com/protocol-buffers/docs/proto3#json) representation of the image as the value for the `data` field.
+
+If we have a file `favicon.ico` that we want to send in the message, we can have a simple bash script to encode and send as part of the JSON input:
+
+```sh
+#!/bin/bash
+
+data=`base64 favicon.ico`
+
+ghz --insecure \
+--proto /protos/bytes.proto \
+--call bytes.ImageService.Save \
+-d "{\"name\":\"icon.ico\", \"data\":\"${data}\"}" \
+-c 1 -n 1 0.0.0.0:50051
+```
+
+On the server side we would have to decode from `base64` into the binary data, which depending on the specifics may not be desireable. We could additionally add a `bool is_base64 = 3;` flag field to specify if the message is `base64` encoded. But the complexity of this workaround may be why, if possible, saving the whole test message may be more appropriate. 
 
 <a name="variable-data">
 ### Variable data for unary calls
