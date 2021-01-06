@@ -95,8 +95,15 @@ ghz --insecure \
   --call helloworld.Greeter.SayHello \
   -d '[{"name":"Joe"},{"name":"Bob"}]' \
   -m '[{"item one":"value 1"},{"item two":"value 2"}]' \
+  --plaintext-metadata \
   0.0.0.0:50051
 ```
+
+If you are using large metadata array and don't rely on template functionality in metadata
+JSON string, you should also use ``--plaintext-metadata`` as shown above.
+
+This will cause the code to skip rendering the metadata item as a template for every single
+RPC request and will speed things up.
 
 <a name="custom-parameters">
 ### Custom parameters

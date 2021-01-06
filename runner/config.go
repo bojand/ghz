@@ -82,6 +82,7 @@ type Config struct {
 	BinDataPath       string            `json:"binary-file" toml:"binary-file" yaml:"binary-file"`
 	Metadata          interface{}       `json:"metadata,omitempty" toml:"metadata,omitempty" yaml:"metadata,omitempty"`
 	MetadataPath      string            `json:"metadata-file" toml:"metadata-file" yaml:"metadata-file"`
+	PlaintextMetadata bool              `json:"plaintextMetadata" toml:"plaintextMetadata" yaml:"PlaintextMetadata"`
 	SI                Duration          `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
 	Output            string            `json:"output" toml:"output" yaml:"output"`
 	Format            string            `json:"format" toml:"format" yaml:"format" default:"summary"`

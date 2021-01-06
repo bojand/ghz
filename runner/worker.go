@@ -32,6 +32,10 @@ type Worker struct {
 	// cached messages only for binary
 	cachedMessages []*dynamic.Message
 
+	// cached metadata array for situations where metadata templating
+	// functionality is not used
+	cachedReqMDs []metadata.MD
+
 	// non-binary json optimization
 	arrayJSONData []string
 }
@@ -82,19 +86,28 @@ func (w *Worker) makeRequest() error {
 		}
 	}
 
-	mdArray, err := ctd.executeMetadataArray(string(w.config.metadata))
-	if err != nil {
-		return err
-	}
-
 	var reqMDs []metadata.MD
 
-	if len(mdArray) > 0 {
-		for _, mdItem := range mdArray {
-			reqMDs = append(reqMDs, metadata.New(mdItem))
-		}
+	if w.cachedReqMDs != nil {
+		// If templating is not used and cached metadata is available, we use this
+		// array. This way we avoid rendering and json loading potentially very
+		// large metadata object for every single request
+		reqMDs = w.cachedReqMDs
 	} else {
-		reqMDs = append(reqMDs, metadata.MD{})
+		mdArray, err := ctd.executeMetadataArray(string(w.config.metadata))
+		if err != nil {
+			return err
+		}
+
+		if len(mdArray) > 0 {
+			for _, mdItem := range mdArray {
+				reqMDs = append(reqMDs, metadata.New(mdItem))
+			}
+		} else {
+			reqMDs = append(reqMDs, metadata.MD{})
+		}
+
+		w.cachedReqMDs = reqMDs
 	}
 
 	metadatasLen := len(reqMDs)

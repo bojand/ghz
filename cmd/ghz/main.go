@@ -130,6 +130,10 @@ var (
 	mdPath      = kingpin.Flag("metadata-file", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.").
 			Short('M').PlaceHolder(" ").IsSetByUser(&isMDPathSet).String()
 
+	isPlainTextMetadataSet = false
+	plaintextMetadata      = kingpin.Flag("plaintext-metadata", "Don't try to templatize metadata string for each request and used cached value for all the requests.").
+				Default("false").IsSetByUser(&isPlainTextMetadataSet).Bool()
+
 	isSISet = false
 	si      = kingpin.Flag("stream-interval", "Interval for stream requests between message sends.").
 		Default("0").IsSetByUser(&isSISet).Duration()
@@ -394,6 +398,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.BinDataPath = *binPath
 	cfg.Metadata = metadataArray
 	cfg.MetadataPath = *mdPath
+	cfg.PlaintextMetadata = *plaintextMetadata
 	cfg.SI = runner.Duration(*si)
 	cfg.Output = *output
 	cfg.Format = *format
@@ -510,6 +515,10 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isMDPathSet {
 		dest.MetadataPath = src.MetadataPath
+	}
+
+	if isPlainTextMetadataSet {
+		dest.PlaintextMetadata = src.PlaintextMetadata
 	}
 
 	if isSISet {

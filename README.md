@@ -86,6 +86,7 @@ Flags:
   -B, --binary-file=           File path for the call data as serialized binary message or multiple count-prefixed messages.
   -m, --metadata=              Request metadata as stringified JSON. Either as an object or an array of objects.
   -M, --metadata-file=         File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.
+      --plaintext-metadata     True to not try to templatize the metadata object. This should be used when using large metadata obejects when template functionality is not used since it speeds things up.
       --stream-interval=0      Interval for stream requests between message sends.
       --reflect-metadata=      Reflect metadata as stringified JSON used only for reflection request.
   -o, --output=                Output path. If none provided stdout is used.

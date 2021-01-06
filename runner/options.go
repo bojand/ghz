@@ -58,10 +58,11 @@ type RunConfig struct {
 	streamInterval time.Duration
 
 	// data
-	data     []byte
-	binary   bool
-	metadata []byte
-	rmd      map[string]string
+	data              []byte
+	binary            bool
+	metadata          []byte
+	PlaintextMetadata bool
+	rmd               map[string]string
 
 	// debug
 	hasLog bool
@@ -435,6 +436,15 @@ func WithMetadataFromFile(path string) Option {
 	}
 }
 
+// WithPlaintextMetadata to not utilize metadata templating functionality
+func WithPlaintextMetadata(value bool) Option {
+	return func(o *RunConfig) error {
+		o.PlaintextMetadata = value
+
+		return nil
+	}
+}
+
 // WithName sets the name of the test run
 //	WithName("greeter service test")
 func WithName(name string) Option {
@@ -725,6 +735,7 @@ func fromConfig(cfg *Config) []Option {
 		WithName(cfg.Name),
 		WithCPUs(cfg.CPUs),
 		WithMetadata(cfg.Metadata),
+		WithPlaintextMetadata(cfg.PlaintextMetadata),
 		WithTags(cfg.Tags),
 		WithStreamInterval(time.Duration(cfg.SI)),
 		WithReflectionMetadata(cfg.ReflectMetadata),
