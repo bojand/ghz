@@ -702,7 +702,7 @@ func TestRunUnary(t *testing.T) {
 			}
 		}
 
-		assert.Equal(t, []string{"0", "__record_metadata__||token:secret2", "2", "__record_metadata__||token:secret4", "4"}, names)
+		assert.Equal(t, []string{"0", "__record_metadata__||token:secret1", "2", "__record_metadata__||token:secret3", "4"}, names)
 	})
 }
 
@@ -1553,6 +1553,76 @@ func TestRunClientStreaming(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("with stream message provider", func(t *testing.T) {
+		gs.ResetCounters()
+
+		callCounter := 0
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithInsecure(true),
+			WithStreamMessageProvider(func(cd *CallData) (*dynamic.Message, error) {
+				protoMsg := &helloworld.HelloRequest{Name: cd.WorkerID + ": " + strconv.Itoa(callCounter)}
+				dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
+				if err != nil {
+					return nil, err
+				}
+
+				callCounter++
+
+				if callCounter == 5 {
+					err = ErrLastMessage
+				}
+
+				return dynamicMsg, err
+			}),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.NotZero(t, report.Total)
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 5)
+
+		assert.Equal(t, "g0c0: 0", msgs[0].GetName())
+		assert.Equal(t, "g0c0: 4", msgs[4].GetName())
+	})
 }
 
 func TestRunClientStreamingBinary(t *testing.T) {
@@ -2273,6 +2343,76 @@ func TestRunBidi(t *testing.T) {
 		assert.Len(t, calls, 1)
 		msgs := calls[0]
 		assert.Len(t, msgs, 6)
+	})
+
+	t.Run("with stream message provider", func(t *testing.T) {
+		gs.ResetCounters()
+
+		callCounter := 0
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithInsecure(true),
+			WithStreamMessageProvider(func(cd *CallData) (*dynamic.Message, error) {
+				protoMsg := &helloworld.HelloRequest{Name: cd.WorkerID + ": " + strconv.Itoa(callCounter)}
+				dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
+				if err != nil {
+					return nil, err
+				}
+
+				callCounter++
+
+				if callCounter == 7 {
+					err = ErrLastMessage
+				}
+
+				return dynamicMsg, err
+			}),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.NotZero(t, report.Total)
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Details)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+		assert.Equal(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		connCount := gs.GetConnectionCount()
+		assert.Equal(t, 1, connCount)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 7)
+
+		assert.Equal(t, "g0c0: 0", msgs[0].GetName())
+		assert.Equal(t, "g0c0: 6", msgs[6].GetName())
 	})
 }
 

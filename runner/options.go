@@ -108,6 +108,7 @@ type RunConfig struct {
 
 	dataFunc         BinaryDataFunc
 	dataProviderFunc DataProviderFunc
+	dataStreamFunc   StreamMessageProviderFunc
 	mdProviderFunc   MetadataProviderFunc
 
 	funcs template.FuncMap
@@ -1001,6 +1002,30 @@ func WithDataProvider(fn DataProviderFunc) Option {
 func WithMetadataProvider(fn MetadataProviderFunc) Option {
 	return func(o *RunConfig) error {
 		o.mdProviderFunc = fn
+
+		return nil
+	}
+}
+
+// WithStreamMessageProvider sets custom stream message provider
+//	WithStreamMessageProvider(func(cd *CallData) (*dynamic.Message, error) {
+//		protoMsg := &helloworld.HelloRequest{Name: cd.WorkerID + ": " + strconv.FormatInt(cd.RequestNumber, 10)}
+//		dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		callCounter++
+//
+//		if callCounter == 5 {
+//			err = ErrLastMessage
+//		}
+//
+//		return dynamicMsg, err
+//	}),
+func WithStreamMessageProvider(fn StreamMessageProviderFunc) Option {
+	return func(o *RunConfig) error {
+		o.dataStreamFunc = fn
 
 		return nil
 	}
