@@ -254,6 +254,10 @@ var (
 	isEnableCompressionSet = false
 	enableCompression      = kingpin.Flag("enable-compression", "Enable Gzip compression on requests.").
 				Short('e').Default("false").IsSetByUser(&isEnableCompressionSet).Bool()
+
+	isLBStrategySet = false
+	lbStrategy      = kingpin.Flag("lb-strategy", "Client load balancing strategy.").
+			PlaceHolder(" ").IsSetByUser(&isLBStrategySet).String()
 )
 
 func main() {
@@ -471,6 +475,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.CStepDuration = runner.Duration(*cStepDuration)
 	cfg.CMaxDuration = runner.Duration(*cMaxDuration)
 	cfg.CountErrors = *countErrors
+	cfg.LBStrategy = *lbStrategy
 
 	return nil
 }
@@ -644,6 +649,10 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isHostSet {
 		dest.Host = src.Host
+	}
+
+	if isLBStrategySet {
+		dest.LBStrategy = src.LBStrategy
 	}
 
 	// load
