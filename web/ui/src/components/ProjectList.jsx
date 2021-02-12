@@ -110,7 +110,7 @@ export default class ProjectList extends Component {
 
         <Table marginY={24}>
           <Table.Head>
-            <Table.TextHeaderCell maxWidth={80}>
+            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               <Pane display='flex'>
                 ID
                 <IconButton
@@ -126,10 +126,10 @@ export default class ProjectList extends Component {
               onChange={v => this.handleFilterChange(v)}
               value={this.state.searchQuery}
             />
-            <Table.TextHeaderCell>
+            <Table.TextHeaderCell textProps={{ size: 400 }}>
               Description
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell maxWidth={80}>
+            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               Status
             </Table.TextHeaderCell>
             <Table.HeaderCell maxWidth={50}>

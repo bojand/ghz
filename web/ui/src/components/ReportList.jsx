@@ -194,12 +194,12 @@ class ReportList extends Component {
                 />
               </Pane>
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell maxWidth={80}>
+            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               <Pane display='flex'>
                 ID
               </Pane>
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell minWidth={280}>
+            <Table.TextHeaderCell minWidth={280} textProps={{ size: 400 }}>
               <Pane display='flex'>
                 Date
                 <IconButton
@@ -213,10 +213,10 @@ class ReportList extends Component {
             </Table.TextHeaderCell>
             {
               selectedColumns.map(col =>
-                <Table.TextHeaderCell key={col.title}>{col.title}</Table.TextHeaderCell>
+                <Table.TextHeaderCell key={col.title} textProps={{ size: 400 }}>{col.title}</Table.TextHeaderCell>
               )
             }
-            <Table.TextHeaderCell maxWidth={80}>
+            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
               Status
             </Table.TextHeaderCell>
           </Table.Head>
@@ -245,7 +245,7 @@ class ReportList extends Component {
                   </RouterLink>
                 </Table.TextCell>
                 {selectedColumns.map(col => 
-                <Table.TextCell key={col.key} {...col.props}>
+                <Table.TextCell key={col.key} textProps={{ size: 400 }} {...col.props}>
                   {col.formatter ? col.formatter(p[col.key]) : p[col.key]}
                 </Table.TextCell>
                 )}
