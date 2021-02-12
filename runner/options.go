@@ -1114,6 +1114,7 @@ func fromConfig(cfg *Config) []Option {
 		WithLoadStepDuration(time.Duration(cfg.LoadStepDuration)),
 		WithLoadEnd(cfg.LoadEnd),
 		WithLoadDuration(time.Duration(cfg.LoadMaxDuration)),
+		WithClientLoadBalancing(cfg.LBStrategy),
 		WithAsync(cfg.Async),
 		WithConcurrencySchedule(cfg.CSchedule),
 		WithConcurrencyStart(cfg.CStart),

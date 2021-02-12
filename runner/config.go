@@ -111,6 +111,7 @@ type Config struct {
 	LoadStep              int               `json:"load-step" toml:"load-step" yaml:"load-step"`
 	LoadStepDuration      Duration          `json:"load-step-duration" toml:"load-step-duration" yaml:"load-step-duration"`
 	LoadMaxDuration       Duration          `json:"load-max-duration" toml:"load-max-duration" yaml:"load-max-duration"`
+	LBStrategy            string            `json:"lb-strategy" toml:"lb-strategy" yaml:"lb-strategy"`
 }
 
 func checkData(data interface{}) error {
