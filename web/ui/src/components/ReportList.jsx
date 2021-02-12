@@ -123,7 +123,7 @@ class ReportList extends Component {
     const nSelected = Object.keys(this.state.selected).length
 
     let selectedColumns = this.state.selectedColumnsKeys.map(
-      key => this.state.columns.find(col => col.key == key)
+      key => this.state.columns.find(col => col.key === key)
     )
 
     return (
@@ -194,12 +194,12 @@ class ReportList extends Component {
                 />
               </Pane>
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
+            <Table.TextHeaderCell maxWidth={80}>
               <Pane display='flex'>
                 ID
               </Pane>
             </Table.TextHeaderCell>
-            <Table.TextHeaderCell minWidth={280} textProps={{ size: 400 }}>
+            <Table.TextHeaderCell minWidth={280}>
               <Pane display='flex'>
                 Date
                 <IconButton
@@ -213,10 +213,10 @@ class ReportList extends Component {
             </Table.TextHeaderCell>
             {
               selectedColumns.map(col =>
-                <Table.TextHeaderCell textProps={{ size: 400 }}>{col.title}</Table.TextHeaderCell>
+                <Table.TextHeaderCell key={col.title}>{col.title}</Table.TextHeaderCell>
               )
             }
-            <Table.TextHeaderCell maxWidth={80} textProps={{ size: 400 }}>
+            <Table.TextHeaderCell maxWidth={80}>
               Status
             </Table.TextHeaderCell>
           </Table.Head>
