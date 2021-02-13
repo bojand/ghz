@@ -304,6 +304,10 @@ func main() {
 		options = append(options, runner.WithLogger(logger))
 	}
 
+	if isLBStrategySet && cfg.Host != "" && !strings.HasPrefix(cfg.Host, "dns:///") {
+		logger.Warn("Load balancing strategy set without using DNS (dns:///) scheme. Strategy: %v. Host: %+v.", cfg.LBStrategy, cfg.Host)
+	}
+
 	if logger != nil {
 		logger.Debugw("Start Run", "config", cfg)
 	}
