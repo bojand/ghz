@@ -265,3 +265,83 @@ func TestData_createPayloads(t *testing.T) {
 		assert.Len(t, inputs, 0)
 	})
 }
+
+func TestMetadata_newMetadataProvider(t *testing.T) {
+	t.Run("no action", func(t *testing.T) {
+		mtdUnary, err := protodesc.GetMethodDescFromProto(
+			"helloworld.Greeter.SayHello",
+			"../testdata/greeter.proto",
+			nil)
+		assert.NoError(t, err)
+
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`))
+		assert.NoError(t, err)
+		assert.NotNil(t, mdp)
+		assert.NotNil(t, mdp.preseed)
+		assert.Equal(t, []string{"asdf"}, mdp.preseed.Get("token"))
+	})
+
+	t.Run("with action", func(t *testing.T) {
+		mtdUnary, err := protodesc.GetMethodDescFromProto(
+			"helloworld.Greeter.SayHello",
+			"../testdata/greeter.proto",
+			nil)
+		assert.NoError(t, err)
+
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`))
+		assert.NoError(t, err)
+		assert.NotNil(t, mdp)
+		assert.Nil(t, mdp.preseed)
+	})
+}
+
+func TestMetadata_getMetadataForCall(t *testing.T) {
+	t.Run("no action", func(t *testing.T) {
+		mtdUnary, err := protodesc.GetMethodDescFromProto(
+			"helloworld.Greeter.SayHello",
+			"../testdata/greeter.proto",
+			nil)
+		assert.NoError(t, err)
+
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`))
+		assert.NoError(t, err)
+		assert.NotNil(t, mdp.preseed)
+
+		cd := newCallData(mtdUnary, nil, "123", 1)
+
+		md, err := mdp.getMetadataForCall(cd)
+		assert.NoError(t, err)
+		assert.NotNil(t, md)
+		assert.Equal(t, []string{"asdf"}, md.Get("token"))
+		assert.Same(t, &mdp.preseed, md)
+	})
+
+	t.Run("with action", func(t *testing.T) {
+		mtdUnary, err := protodesc.GetMethodDescFromProto(
+			"helloworld.Greeter.SayHello",
+			"../testdata/greeter.proto",
+			nil)
+		assert.NoError(t, err)
+
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`))
+		assert.NoError(t, err)
+		assert.Nil(t, mdp.preseed)
+
+		cd := newCallData(mtdUnary, nil, "123", 1)
+
+		md1, err := mdp.getMetadataForCall(cd)
+		assert.NoError(t, err)
+		assert.NotNil(t, md1)
+		assert.Equal(t, []string{"1"}, md1.Get("token"))
+		assert.NotSame(t, mdp.preseed, md1)
+
+		cd = newCallData(mtdUnary, nil, "123", 2)
+		md2, err := mdp.getMetadataForCall(cd)
+		assert.NoError(t, err)
+		assert.NotNil(t, md2)
+		assert.Equal(t, []string{"2"}, md2.Get("token"))
+		assert.NotSame(t, mdp.preseed, md2)
+		assert.NotSame(t, md1, md2)
+		assert.NotEqual(t, md1, md2)
+	})
+}

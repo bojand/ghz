@@ -59,6 +59,7 @@ type dataProvider struct {
 
 type mdProvider struct {
 	metadata []byte
+	preseed  metadata.MD
 }
 
 func newDataProvider(mtd *desc.MethodDescriptor,
@@ -215,11 +216,34 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 	return inputs, nil
 }
 
-func newMetadataProvider(mtd *desc.MethodDescriptor, metadata []byte) (*mdProvider, error) {
-	return &mdProvider{metadata: metadata}, nil
+func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte) (*mdProvider, error) {
+	// Test if we can preseed data
+	ctd := newCallData(mtd, nil, "", 0)
+	ha, err := ctd.hasAction(string(mdData))
+	if err != nil {
+		return nil, err
+	}
+
+	var preseed metadata.MD = nil
+	if !ha {
+		mdMap, err := ctd.executeMetadata(string(mdData))
+		if err != nil {
+			return nil, err
+		}
+
+		if len(mdMap) > 0 {
+			preseed = metadata.New(mdMap)
+		}
+	}
+
+	return &mdProvider{metadata: mdData, preseed: preseed}, nil
 }
 
 func (dp *mdProvider) getMetadataForCall(ctd *CallData) (*metadata.MD, error) {
+	if dp.preseed != nil {
+		return &dp.preseed, nil
+	}
+
 	mdMap, err := ctd.executeMetadata(string(dp.metadata))
 	if err != nil {
 		return nil, err
