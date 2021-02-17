@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 	"text/template"
@@ -247,6 +248,44 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 		assert.NotEqual(t, rm["trace_id"], rs)
 		assert.NotEqual(t, rm["trace_id"], rs2)
 		assert.NotEqual(t, rm["trace_id"], rm["span_id"])
+	})
+
+	t.Run("randomInt", func(t *testing.T) {
+		ctd := newCallData(md, nil, "worker_id_123", 200)
+		assert.NotNil(t, ctd)
+
+		// no template
+		r, err := ctd.ExecuteData(`{"trace_id":"asdf"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"asdf"}`, string(r))
+
+		rm, err := ctd.executeMetadata(`{"trace_id":"asdf"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, map[string]string{"trace_id": "asdf"}, rm)
+
+		// 0 when 0
+		r, err = ctd.ExecuteData(`{"trace_id":"{{randomInt 0 0}}"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"0"}`, string(r))
+
+		// 0 when min -1
+		r, err = ctd.ExecuteData(`{"trace_id":"{{randomInt -1 1}}"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"0"}`, string(r))
+
+		// 0 when max -1
+		r, err = ctd.ExecuteData(`{"trace_id":"{{randomInt 0 -1}}"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"0"}`, string(r))
+
+		// specific range
+		r, err = ctd.ExecuteData(`{"trace_id":"{{randomInt 4 10}}"}`)
+		assert.NoError(t, err)
+		rs := strings.Replace(string(r), `{"trace_id":"`, "", -1)
+		rs = strings.Replace(rs, `"}`, "", -1)
+		n, err := strconv.Atoi(rs)
+		assert.NoError(t, err)
+		assert.True(t, 4 <= n && n < 10)
 	})
 
 	t.Run("custom functions", func(t *testing.T) {
