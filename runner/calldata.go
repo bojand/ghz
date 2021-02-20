@@ -41,6 +41,7 @@ type CallData struct {
 var tmplFuncMap = template.FuncMap{
 	"newUUID":      newUUID,
 	"randomString": randomString,
+	"randomInt":    randomInt,
 }
 
 // newCallData returns new CallData
@@ -207,4 +208,16 @@ func randomString(length int) string {
 	}
 
 	return stringWithCharset(length, charset)
+}
+
+func randomInt(min, max int) int {
+	if min < 0 {
+		min = 0
+	}
+
+	if max <= 0 {
+		max = 1
+	}
+
+	return seededRand.Intn(max-min) + min
 }
