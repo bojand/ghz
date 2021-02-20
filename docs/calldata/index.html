@@ -102,9 +102,13 @@
 }
 </code></pre>
 <p><strong>Template Functions</strong></p>
-<p>There are also two template functions available:</p>
-<p><code>newUUID</code> - Generates a new UUID for each invocation.</p>
-<p><code>randomString</code> - Generates a new random string for each incovation. Accepts a length parameter. If the argument is <code>&lt;= 0</code> then a ranom string is generated with a random length between length of <code>2</code> and <code>16</code>.</p>
+<p>There are also template functions available:</p>
+<p><code>func newUUID() string</code>  <br>
+Generates a new UUID for each invocation.</p>
+<p><code>func randomString(length int) string</code>  <br>
+Generates a new random string for each incovation. Accepts a length parameter. If the argument is <code>&lt;= 0</code> then a ranom string is generated with a random length between length of <code>2</code> and <code>16</code>.</p>
+<p><code>func randomInt(min, max int) int</code>  <br>
+Generates a new non-negative pseudo-random number in range <code>[min, max)</code>.</p>
 <p><strong>Examples</strong></p>
 <p>This can be useful to inject variable information into the message data JSON or metadata JSON payloads for each request, such as timestamp or unique request number. For example:</p>
 <pre><code class="hljs css language-sh">-m <span class="hljs-string">'{"request-id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}'</span>
