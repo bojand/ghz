@@ -1,366 +1,363 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime"
-	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/bojand/ghz/printer"
 	"github.com/bojand/ghz/runner"
+	"github.com/bojand/ghz/web/config"
 )
 
 var (
 	// set by goreleaser with -ldflags="-X main.version=..."
 	version = "dev"
-
-	nCPUs = runtime.GOMAXPROCS(-1)
-
-	cPath = kingpin.Flag("config", "Path to the JSON or TOML config file that specifies all the test run settings.").PlaceHolder(" ").String()
-
-	// Proto
-	isProtoSet = false
-	proto      = kingpin.Flag("proto", `The Protocol Buffer .proto file.`).
-			PlaceHolder(" ").IsSetByUser(&isProtoSet).String()
-
-	isProtoSetSet = false
-	protoset      = kingpin.Flag("protoset", "The compiled protoset file. Alternative to proto. -proto takes precedence.").
-			PlaceHolder(" ").IsSetByUser(&isProtoSetSet).String()
-
-	isCallSet = false
-	call      = kingpin.Flag("call", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`).
-			PlaceHolder(" ").IsSetByUser(&isCallSet).String()
-
-	isImportSet = false
-	paths       = kingpin.Flag("import-paths", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.").
-			Short('i').PlaceHolder(" ").IsSetByUser(&isImportSet).String()
-
-	// Security
-	isCACertSet = false
-	cacert      = kingpin.Flag("cacert", "File containing trusted root certificates for verifying the server.").
-			PlaceHolder(" ").IsSetByUser(&isCACertSet).String()
-
-	isCertSet = false
-	cert      = kingpin.Flag("cert", "File containing client certificate (public key), to present to the server. Must also provide -key option.").
-			PlaceHolder(" ").IsSetByUser(&isCertSet).String()
-
-	isKeySet = false
-	key      = kingpin.Flag("key", "File containing client private key, to present to the server. Must also provide -cert option.").
-			PlaceHolder(" ").IsSetByUser(&isKeySet).String()
-
-	isCNameSet = false
-	cname      = kingpin.Flag("cname", "Server name override when validating TLS certificate - useful for self signed certs.").
-			PlaceHolder(" ").IsSetByUser(&isCNameSet).String()
-
-	isSkipSet  = false
-	skipVerify = kingpin.Flag("skipTLS", "Skip TLS client verification of the server's certificate chain and host name.").
-			Default("false").IsSetByUser(&isSkipSet).Bool()
-
-	isInsecSet = false
-	insecure   = kingpin.Flag("insecure", "Use plaintext and insecure connection.").
-			Default("false").IsSetByUser(&isInsecSet).Bool()
-
-	isAuthSet = false
-	authority = kingpin.Flag("authority", "Value to be used as the :authority pseudo-header. Only works if -insecure is used.").
-			PlaceHolder(" ").IsSetByUser(&isAuthSet).String()
-
-	// Run
-	isAsyncSet = false
-	async      = kingpin.Flag("async", "Make requests asynchronous as soon as possible. Does not wait for request to finish before sending next one.").
-			Default("false").IsSetByUser(&isAsyncSet).Bool()
-
-	isRPSSet = false
-	rps      = kingpin.Flag("rps", "Requests per second (RPS) rate limit for constant load schedule. Default is no rate limit.").
-			Default("0").Short('r').IsSetByUser(&isRPSSet).Uint()
-
-	isScheduleSet = false
-	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are const, step, or line. Default is const.").
-			Default("const").IsSetByUser(&isScheduleSet).String()
-
-	isLoadStartSet = false
-	loadStart      = kingpin.Flag("load-start", "Specifies the RPS load start value for step or line schedules.").
-			Default("0").IsSetByUser(&isLoadStartSet).Uint()
-
-	isLoadStepSet = false
-	loadStep      = kingpin.Flag("load-step", "Specifies the load step value or slope value.").
-			Default("0").IsSetByUser(&isLoadStepSet).Int()
-
-	isLoadEndSet = false
-	loadEnd      = kingpin.Flag("load-end", "Specifies the load end value for step or line load schedules.").
-			Default("0").IsSetByUser(&isLoadEndSet).Uint()
-
-	isLoadStepDurSet = false
-	loadStepDuration = kingpin.Flag("load-step-duration", "Specifies the load step duration value for step load schedule.").
-				Default("0").IsSetByUser(&isLoadStepDurSet).Duration()
-
-	isLoadMaxDurSet = false
-	loadMaxDuration = kingpin.Flag("load-max-duration", "Specifies the max load duration value for step or line load schedule.").
-			Default("0").IsSetByUser(&isLoadMaxDurSet).Duration()
-
-	// Concurrency
-	isCSet = false
-	c      = kingpin.Flag("concurrency", "Number of request workers to run concurrently for const concurrency schedule. Default is 50.").
-		Short('c').Default("50").IsSetByUser(&isCSet).Uint()
-
-	isCScheduleSet = false
-	cschdule       = kingpin.Flag("concurrency-schedule", "Concurrency change schedule. Options are const, step, or line. Default is const.").
-			Default("const").IsSetByUser(&isCScheduleSet).String()
-
-	isCStartSet = false
-	cStart      = kingpin.Flag("concurrency-start", "Concurrency start value for step and line concurrency schedules.").
-			Default("0").IsSetByUser(&isCStartSet).Uint()
-
-	isCEndSet = false
-	cEnd      = kingpin.Flag("concurrency-end", "Concurrency end value for step and line concurrency schedules.").
-			Default("0").IsSetByUser(&isCEndSet).Uint()
-
-	isCStepSet = false
-	cstep      = kingpin.Flag("concurrency-step", "Concurrency step / slope value for step and line concurrency schedules.").
-			Default("1").IsSetByUser(&isCStepSet).Int()
-
-	isCStepDurSet = false
-	cStepDuration = kingpin.Flag("concurrency-step-duration", "Specifies the concurrency step duration value for step concurrency schedule.").
-			Default("0").IsSetByUser(&isCStepDurSet).Duration()
-
-	isCMaxDurSet = false
-	cMaxDuration = kingpin.Flag("concurrency-max-duration", "Specifies the max concurrency adjustment duration value for step or line concurrency schedule.").
-			Default("0").IsSetByUser(&isCMaxDurSet).Duration()
-
-	// Other
-	isNSet = false
-	n      = kingpin.Flag("total", "Number of requests to run. Default is 200.").
-		Short('n').Default("200").IsSetByUser(&isNSet).Uint()
-
-	isTSet = false
-	t      = kingpin.Flag("timeout", "Timeout for each request. Default is 20s, use 0 for infinite.").
-		Default("20s").Short('t').IsSetByUser(&isTSet).Duration()
-
-	isZSet = false
-	z      = kingpin.Flag("duration", "Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.").
-		Short('z').Default("0").IsSetByUser(&isZSet).Duration()
-
-	isXSet = false
-	x      = kingpin.Flag("max-duration", "Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits. Examples: -x 10s -x 3m.").
-		Short('x').Default("0").IsSetByUser(&isXSet).Duration()
-
-	isZStopSet = false
-	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore. Default is close.").
-			Default("close").IsSetByUser(&isZStopSet).String()
-
-	// Data
-	isDataSet = false
-	data      = kingpin.Flag("data", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.").
-			Short('d').PlaceHolder(" ").IsSetByUser(&isDataSet).String()
-
-	isDataPathSet = false
-	dataPath      = kingpin.Flag("data-file", "File path for call data JSON file. Examples: /home/user/file.json or ./file.json.").
-			Short('D').PlaceHolder("PATH").PlaceHolder(" ").IsSetByUser(&isDataPathSet).String()
-
-	isBinDataSet = false
-	binData      = kingpin.Flag("binary", "The call data comes as serialized binary message or multiple count-prefixed messages read from stdin.").
-			Short('b').Default("false").IsSetByUser(&isBinDataSet).Bool()
-
-	isBinDataPathSet = false
-	binPath          = kingpin.Flag("binary-file", "File path for the call data as serialized binary message or multiple count-prefixed messages.").
-				Short('B').PlaceHolder(" ").IsSetByUser(&isBinDataPathSet).String()
-
-	isMDSet = false
-	md      = kingpin.Flag("metadata", "Request metadata as stringified JSON.").
-		Short('m').PlaceHolder(" ").IsSetByUser(&isMDSet).String()
-
-	isMDPathSet = false
-	mdPath      = kingpin.Flag("metadata-file", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.").
-			Short('M').PlaceHolder(" ").IsSetByUser(&isMDPathSet).String()
-
-	isSISet = false
-	si      = kingpin.Flag("stream-interval", "Interval for stream requests between message sends.").
-		Default("0").IsSetByUser(&isSISet).Duration()
-
-	isSCSet = false
-	scd     = kingpin.Flag("stream-call-duration", "Duration after which client will close the stream in each streaming call.").
-		Default("0").IsSetByUser(&isSCSet).Duration()
-
-	isSCCSet = false
-	scc      = kingpin.Flag("stream-call-count", "Count of messages sent, after which client will close the stream in each streaming call.").
-			Default("0").IsSetByUser(&isSCCSet).Uint()
-
-	isSDMSet = false
-	sdm      = kingpin.Flag("stream-dynamic-messages", "In streaming calls, regenerate and apply call template data on every message send.").
-			Default("false").IsSetByUser(&isSDMSet).Bool()
-
-	isRMDSet = false
-	rmd      = kingpin.Flag("reflect-metadata", "Reflect metadata as stringified JSON used only for reflection request.").
-			PlaceHolder(" ").IsSetByUser(&isRMDSet).String()
-
-	// Output
-	isOutputSet = false
-	output      = kingpin.Flag("output", "Output path. If none provided stdout is used.").
-			Short('o').PlaceHolder(" ").IsSetByUser(&isOutputSet).String()
-
-	isFormatSet = false
-	format      = kingpin.Flag("format", "Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.").
-			Short('O').Default("summary").PlaceHolder(" ").IsSetByUser(&isFormatSet).Enum("summary", "csv", "json", "pretty", "html", "influx-summary", "influx-details")
-
-	isSkipFirstSet = false
-	skipFirst      = kingpin.Flag("skipFirst", "Skip the first X requests when doing the results tally.").
-			Default("0").IsSetByUser(&isSkipFirstSet).Uint()
-
-	isCESet     = false
-	countErrors = kingpin.Flag("count-errors", "Count erroneous (non-OK) resoponses in stats calculations.").
-			Default("false").IsSetByUser(&isCESet).Bool()
-
-	// Connection
-	isConnSet = false
-	conns     = kingpin.Flag("connections", "Number of connections to use. Concurrency is distributed evenly among all the connections. Default is 1.").
-			Default("1").IsSetByUser(&isConnSet).Uint()
-
-	isCTSet = false
-	ct      = kingpin.Flag("connect-timeout", "Connection timeout for the initial connection dial. Default is 10s.").
-		Default("10s").IsSetByUser(&isCTSet).Duration()
-
-	isKTSet = false
-	kt      = kingpin.Flag("keepalive", "Keepalive time duration. Only used if present and above 0.").
-		Default("0").IsSetByUser(&isKTSet).Duration()
-
-	// Meta
-	isNameSet = false
-	name      = kingpin.Flag("name", "User specified name for the test.").
-			PlaceHolder(" ").IsSetByUser(&isNameSet).String()
-
-	isTagsSet = false
-	tags      = kingpin.Flag("tags", "JSON representation of user-defined string tags.").
-			PlaceHolder(" ").IsSetByUser(&isTagsSet).String()
-
-	isCPUSet = false
-	cpus     = kingpin.Flag("cpus", "Number of cpu cores to use.").
-			Default(strconv.FormatUint(uint64(nCPUs), 10)).IsSetByUser(&isCPUSet).Uint()
-
-	// Debug
-	isDebugSet = false
-	debug      = kingpin.Flag("debug", "The path to debug log file.").
-			PlaceHolder(" ").IsSetByUser(&isDebugSet).String()
-
-	isHostSet = false
-	host      = kingpin.Arg("host", "Host and port to test.").String()
-
-	isEnableCompressionSet = false
-	enableCompression      = kingpin.Flag("enable-compression", "Enable Gzip compression on requests.").
-				Short('e').Default("false").IsSetByUser(&isEnableCompressionSet).Bool()
-
-	isLBStrategySet = false
-	lbStrategy      = kingpin.Flag("lb-strategy", "Client load balancing strategy.").
-			PlaceHolder(" ").IsSetByUser(&isLBStrategySet).String()
 )
 
 func main() {
-	kingpin.Version(version)
-	kingpin.CommandLine.HelpFlag.Short('h')
-	kingpin.CommandLine.VersionFlag.Short('v')
-	kingpin.Parse()
 
-	isHostSet = *host != ""
+	// var (
+	// 	nCPUs = runtime.GOMAXPROCS(-1)
 
-	cfgPath := strings.TrimSpace(*cPath)
+	// 	// config
+	// 	cPath string
 
-	var cfg runner.Config
+	// 	// proto
+	// 	proto    string
+	// 	protoset string
+	// 	call     string
+	// 	paths    []string
 
-	if cfgPath != "" {
-		err := runner.LoadConfig(cfgPath, &cfg)
-		kingpin.FatalIfError(err, "")
+	// 	// security
+	// 	cacert     string
+	// 	cert       string
+	// 	key        string
+	// 	cname      string
+	// 	skipVerify bool
+	// 	insecure   bool
+	// 	authority  string
 
-		args := os.Args[1:]
-		if len(args) > 1 {
-			var cmdCfg runner.Config
-			err = createConfigFromArgs(&cmdCfg)
-			kingpin.FatalIfError(err, "")
+	// 	// run
+	// 	async bool
+	// 	rps   uint
 
-			err = mergeConfig(&cfg, &cmdCfg)
-			kingpin.FatalIfError(err, "")
-		}
-	} else {
-		err := createConfigFromArgs(&cfg)
+	// 	// load
+	// 	loadSchedule     string
+	// 	loadStart        uint
+	// 	loadStep         int
+	// 	loadEnd          uint
+	// 	loadStepDuration time.Duration
+	// 	loadMaxDuration  time.Duration
 
-		kingpin.FatalIfError(err, "")
-	}
+	// 	// concurrency
+	// 	c             uint
+	// 	cschdule      string
+	// 	cStart        uint
+	// 	cEnd          uint
+	// 	cStep         int
+	// 	cStepDuration time.Duration
+	// 	cMaxDuration  time.Duration
 
-	var logger *zap.SugaredLogger
+	// 	// other
+	// 	total          uint
+	// 	requestTimeout time.Duration
+	// 	totalDuration  time.Duration
+	// 	maxDuration    time.Duration
+	// 	zstop          string
 
-	options := []runner.Option{runner.WithConfig(&cfg)}
-	if len(cfg.Debug) > 0 {
-		var err error
-		logger, err = createLogger(cfg.Debug)
-		kingpin.FatalIfError(err, "")
+	// 	// data
+	// 	data     string
+	// 	dataPath string
+	// 	binData  bool
+	// 	binPath  string
+	// 	md       string
+	// 	mdPath   string
+	// 	si       time.Duration
+	// 	scd      time.Duration
+	// 	scc      uint
+	// 	sdm      bool
+	// 	rmd      string
 
-		defer logger.Sync()
+	// 	// output
+	// 	output      string
+	// 	format      string
+	// 	skipFirst   uint
+	// 	countErrors bool
 
-		options = append(options, runner.WithLogger(logger))
-	}
+	// 	// connection
+	// 	conns             uint
+	// 	ct                time.Duration
+	// 	kt                time.Duration
+	// 	enableCompression bool
+	// 	lbStrategy        string
 
-	if isLBStrategySet && cfg.Host != "" && !strings.HasPrefix(cfg.Host, "dns:///") {
-		logger.Warn("Load balancing strategy set without using DNS (dns:///) scheme. Strategy: %v. Host: %+v.", cfg.LBStrategy, cfg.Host)
-	}
+	// 	// meta
+	// 	name  string
+	// 	tags  string
+	// 	cpus  uint
+	// 	debug string
+	// )
 
-	if logger != nil {
-		logger.Debugw("Start Run", "config", cfg)
-	}
+	var (
+		nCPUs = runtime.GOMAXPROCS(-1)
 
-	report, err := runner.Run(cfg.Call, cfg.Host, options...)
-	if err != nil {
-		if logger != nil {
-			logger.Errorf("Error from run: %+v", err.Error())
-		}
+		// config
+		cPath string
 
-		handleError(err)
-	}
+		config config.Config
+	)
 
-	output := os.Stdout
-	outputPath := strings.TrimSpace(cfg.Output)
+	rootCmd := &cobra.Command{
+		Use:   "ghz [host]",
+		Short: "ghz description",
+		Args:  cobra.ExactArgs(1),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("on init")
+			v := viper.New()
 
-	if logger != nil {
-		logger.Debug("Run finished")
-	}
-
-	if outputPath != "" {
-		f, err := os.Create(outputPath)
-		if err != nil {
-			if logger != nil {
-				logger.Errorw("Error opening file "+outputPath+": "+err.Error(),
-					"error", err)
+			if cPath != "" {
+				fmt.Println("on init have config... setting it")
+				v.SetConfigFile(cPath)
 			}
 
-			handleError(err)
+			err := v.ReadInConfig()
+			if err == nil {
+				fmt.Println("Using config file:", v.ConfigFileUsed())
+			}
+
+			mergeFlags(cmd, v)
+
+			return err
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("ghz args: %v\n", args)
+			fmt.Println("flags:", cPath, proto, protoset, call)
+
+			fmt.Println("proto changed: ", cmd.Flag("proto").Changed)
+			fmt.Println("call changed: ", cmd.Flag("call").Changed)
+
+			var logger *zap.SugaredLogger
+
+			options := []runner.Option{runner.WithConfig(&cfg)}
+			if len(debug) > 0 {
+				var err error
+				logger, err = createLogger(cfg.Debug)
+				kingpin.FatalIfError(err, "")
+
+				defer logger.Sync()
+
+				options = append(options, runner.WithLogger(logger))
+			}
+
+			if isLBStrategySet && cfg.Host != "" && !strings.HasPrefix(cfg.Host, "dns:///") {
+				logger.Warn("Load balancing strategy set without using DNS (dns:///) scheme. Strategy: %v. Host: %+v.", cfg.LBStrategy, cfg.Host)
+			}
+
+			if logger != nil {
+				logger.Debugw("Start Run", "config", cfg)
+			}
+
+			report, err := runner.Run(cfg.Call, cfg.Host, options...)
+			if err != nil {
+				if logger != nil {
+					logger.Errorf("Error from run: %+v", err.Error())
+				}
+
+				handleError(err)
+			}
+
+			output := os.Stdout
+			outputPath := strings.TrimSpace(cfg.Output)
+
+			if logger != nil {
+				logger.Debug("Run finished")
+			}
+
+			if outputPath != "" {
+				f, err := os.Create(outputPath)
+				if err != nil {
+					if logger != nil {
+						logger.Errorw("Error opening file "+outputPath+": "+err.Error(),
+							"error", err)
+					}
+
+					handleError(err)
+				}
+
+				defer func() {
+					handleError(f.Close())
+				}()
+
+				output = f
+			}
+
+			if logger != nil {
+				logPath := "stdout"
+				if outputPath != "" {
+					logPath = outputPath
+				}
+
+				logger.Debugw("Printing report to "+logPath, "path", logPath)
+			}
+
+			p := printer.ReportPrinter{
+				Report: report,
+				Out:    output,
+			}
+
+			handleError(p.Print(cfg.Format))
+		},
+	}
+
+	rootCmd.Flags().SortFlags = false
+	rootCmd.PersistentFlags().SortFlags = false
+
+	rootCmd.PersistentFlags().StringVar(&cPath, "config", "",
+		"Path to the JSON or TOML config file that specifies all the test run settings.")
+
+	// proto
+	rootCmd.PersistentFlags().StringVar(&proto, "proto", "", "The Protocol Buffer .proto file.")
+	rootCmd.PersistentFlags().StringVar(&protoset, "protoset", "",
+		"The compiled protoset file. Alternative to proto. -proto takes precedence.")
+	rootCmd.PersistentFlags().StringVar(&call, "call", "",
+		"A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.")
+	rootCmd.PersistentFlags().StringSliceVarP(&paths, "import-paths", "i", []string{},
+		"Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.")
+
+	// security
+	rootCmd.PersistentFlags().StringVar(&cacert, "cacert", "",
+		"File containing trusted root certificates for verifying the server.")
+	rootCmd.PersistentFlags().StringVar(&cert, "cert", "",
+		"File containing client certificate (public key), to present to the server. Must also provide -key option.")
+	rootCmd.PersistentFlags().StringVar(&key, "key", "",
+		"File containing client private key, to present to the server. Must also provide -cert option.")
+	rootCmd.PersistentFlags().StringVar(&cname, "cname", "",
+		"Server name override when validating TLS certificate - useful for self signed certs.")
+	rootCmd.PersistentFlags().BoolVar(&skipVerify, "skip-verify", false,
+		"Skip TLS client verification of the server's certificate chain and host name.")
+	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false,
+		"Use plaintext and insecure connection.")
+	rootCmd.PersistentFlags().StringVar(&authority, "authority", "",
+		"Value to be used as the :authority pseudo-header. Only works if -insecure is used.")
+
+	// run
+	rootCmd.PersistentFlags().BoolVar(&async, "async", false,
+		"Make requests asynchronous as soon as possible. Does not wait for request to finish before sending next one.")
+	rootCmd.PersistentFlags().UintVarP(&rps, "rps", "r", 0,
+		"Requests per second (RPS) rate limit for constant load schedule. Default is no rate limit.")
+	rootCmd.PersistentFlags().StringVar(&loadSchedule, "load-schedule", "const",
+		"Specifies the load schedule. Options are const, step, or line. Default is const.")
+	rootCmd.PersistentFlags().UintVar(&loadStart, "load-start", 0,
+		"Specifies the RPS load start value for step or line schedules.")
+	rootCmd.PersistentFlags().IntVar(&loadStep, "load-step", 0,
+		"Specifies the load step value or slope value.")
+	rootCmd.PersistentFlags().UintVar(&loadEnd, "load-end", 0,
+		"Specifies the load end value for step or line load schedules.")
+	rootCmd.PersistentFlags().DurationVar(&loadStepDuration, "load-step-duration", 0,
+		"Specifies the load step duration value for step load schedule.")
+	rootCmd.PersistentFlags().DurationVar(&loadMaxDuration, "load-max-duration", 0,
+		"Specifies the max load duration value for step or line load schedule.")
+
+	// concurrency
+	rootCmd.PersistentFlags().UintVarP(&c, "concurrency", "c", 50,
+		"Number of request workers to run concurrently for const concurrency schedule. Default is 50.")
+	rootCmd.PersistentFlags().StringVar(&cschdule, "concurrency-schedule", "const",
+		"Concurrency change schedule. Options are const, step, or line. Default is const.")
+	rootCmd.PersistentFlags().UintVar(&cStart, "concurrency-start", 0,
+		"Concurrency start value for step and line concurrency schedules.")
+	rootCmd.PersistentFlags().UintVar(&cEnd, "concurrency-end", 0,
+		"Concurrency end value for step and line concurrency schedules..")
+	rootCmd.PersistentFlags().IntVar(&cStep, "concurrency-step", 1,
+		"Concurrency step / slope value for step and line concurrency schedules.")
+	rootCmd.PersistentFlags().DurationVar(&cStepDuration, "concurrency-step-duration", 0,
+		"Specifies the concurrency step duration value for step concurrency schedule.")
+	rootCmd.PersistentFlags().DurationVar(&cMaxDuration, "concurrency-max-duration", 0,
+		"Specifies the max concurrency adjustment duration value for step or line concurrency schedule.")
+
+	// other
+	rootCmd.PersistentFlags().UintVarP(&total, "total", "n", 200,
+		"Number of requests to run. Default is 200.")
+	rootCmd.PersistentFlags().DurationVar(&requestTimeout, "timeout", time.Second*20,
+		"Timeout for each request. Default is 20s, use 0 for infinite.")
+	rootCmd.PersistentFlags().DurationVarP(&totalDuration, "duration", "z", 0,
+		"Duration of application to send requests. When duration is reached, application stops and exits. If duration is specified, n is ignored. Examples: -z 10s -z 3m.")
+	rootCmd.PersistentFlags().DurationVarP(&maxDuration, "max-duration", "x", 0,
+		"Maximum duration of application to send requests with n setting respected. If duration is reached before n requests are completed, application stops and exits. Examples: -x 10s -x 3m.")
+	rootCmd.PersistentFlags().StringVar(&zstop, "duration-stop", "close",
+		"Specifies how duration stop is reported. Options are close, wait or ignore. Default is close.")
+
+	// data
+	rootCmd.PersistentFlags().StringVarP(&data, "data", "d", "",
+		"The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.")
+	rootCmd.PersistentFlags().StringVarP(&dataPath, "data-file", "D", "",
+		"File path for call data JSON file. Examples: /home/user/file.json or ./file.json.")
+	rootCmd.PersistentFlags().BoolVarP(&binData, "binary", "b", false,
+		"The call data comes as serialized binary message or multiple count-prefixed messages read from stdin.")
+	rootCmd.PersistentFlags().StringVarP(&binPath, "binary-file", "B", "",
+		"File path for the call data as serialized binary message or multiple count-prefixed messages.")
+	rootCmd.PersistentFlags().StringVarP(&md, "metadata", "m", "",
+		"Request metadata as stringified JSON.")
+	rootCmd.PersistentFlags().StringVarP(&mdPath, "metadata-file", "M", "",
+		"File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.")
+	rootCmd.PersistentFlags().DurationVar(&si, "stream-interval", 0,
+		"Timeout interval for stream requests between individual message sends.")
+	rootCmd.PersistentFlags().DurationVar(&scd, "stream-call-duration", 0,
+		"Duration after which client will close the stream in each streaming call.")
+	rootCmd.PersistentFlags().UintVar(&scc, "stream-call-count", 0,
+		"Count of messages sent, after which client will close the stream in each streaming call.")
+	rootCmd.PersistentFlags().BoolVar(&sdm, "stream-dynamic-messages", false,
+		"In streaming calls, regenerate and apply call template data on every message send.")
+	rootCmd.PersistentFlags().StringVar(&rmd, "reflect-metadata", "",
+		"Reflect metadata as stringified JSON used only for reflection request.")
+
+	// output
+	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", "",
+		"Output path. If none provided stdout is used.")
+	rootCmd.PersistentFlags().StringVarP(&format, "format", "O", "summary",
+		"Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.")
+	rootCmd.PersistentFlags().UintVar(&skipFirst, "skip-first", 0, "Skip the first X requests when doing the results tally.")
+	rootCmd.PersistentFlags().BoolVar(&countErrors, "count-errors", false, "Count erroneous (non-OK) resoponses in stats calculations.")
+
+	// connection
+	rootCmd.PersistentFlags().UintVar(&conns, "connections", 1,
+		"Number of connections to use. Concurrency is distributed evenly among all the connections. Default is 1.")
+	rootCmd.PersistentFlags().DurationVar(&ct, "connect-timeout", 10*time.Second,
+		"Connection timeout for the initial connection dial. Default is 10s.")
+	rootCmd.PersistentFlags().DurationVar(&kt, "keepalive", 0,
+		"Keepalive time duration. Only used if present and above 0.")
+	rootCmd.PersistentFlags().BoolVarP(&enableCompression, "enable-compression", "e", false,
+		"Enable Gzip compression on requests.")
+	rootCmd.PersistentFlags().StringVar(&lbStrategy, "lb-strategy", "", "Client load balancing strategy.")
+
+	// meta
+	rootCmd.PersistentFlags().StringVar(&name, "name", "", "User specified name for the test.")
+	rootCmd.PersistentFlags().StringVar(&tags, "tags", "", "JSON representation of user-defined string tags.")
+	rootCmd.PersistentFlags().UintVar(&cpus, "cpus", uint(nCPUs), "Number of cpu cores to use.")
+	rootCmd.PersistentFlags().StringVar(&debug, "debug", "", "The path to debug log file.")
+
+	viper.BindPFlags(rootCmd.PersistentFlags())
+
+	rootCmd.Execute()
+}
+
+func mergeFlags(cmd *cobra.Command, v *viper.Viper) {
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		// Apply the viper config value to the flag when the flag is not set and viper has a value
+		if !f.Changed && v.IsSet(f.Name) {
+			val := v.Get(f.Name)
+			cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
 		}
-
-		defer func() {
-			handleError(f.Close())
-		}()
-
-		output = f
-	}
-
-	if logger != nil {
-		logPath := "stdout"
-		if outputPath != "" {
-			logPath = outputPath
-		}
-
-		logger.Debugw("Printing report to "+logPath, "path", logPath)
-	}
-
-	p := printer.ReportPrinter{
-		Report: report,
-		Out:    output,
-	}
-
-	handleError(p.Print(cfg.Format))
+	})
 }
 
 func handleError(err error) {
@@ -372,359 +369,117 @@ func handleError(err error) {
 	}
 }
 
-func createConfigFromArgs(cfg *runner.Config) error {
-	if cfg == nil {
-		return errors.New("config cannot be nil")
-	}
-
-	iPaths := []string{}
-	pathsTrimmed := strings.TrimSpace(*paths)
-	if pathsTrimmed != "" {
-		iPaths = strings.Split(pathsTrimmed, ",")
-	}
-
-	var binaryData []byte
-	if *binData {
-		b, err := ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			return err
-		}
-
-		binaryData = b
-	}
-
-	var metadata map[string]string
-	*md = strings.TrimSpace(*md)
-	if *md != "" {
-		if err := json.Unmarshal([]byte(*md), &metadata); err != nil {
-			return fmt.Errorf("Error unmarshaling metadata '%v': %v", *md, err.Error())
-		}
-	}
-
-	var dataObj interface{}
-	if *data != "@" && strings.TrimSpace(*data) != "" {
-		if err := json.Unmarshal([]byte(*data), &dataObj); err != nil {
-			return fmt.Errorf("Error unmarshaling data '%v': %v", *data, err.Error())
-		}
-	}
-
-	var tagsMap map[string]string
-	*tags = strings.TrimSpace(*tags)
-	if *tags != "" {
-		if err := json.Unmarshal([]byte(*tags), &tagsMap); err != nil {
-			return fmt.Errorf("Error unmarshaling tags '%v': %v", *tags, err.Error())
-		}
-	}
-
-	var rmdMap map[string]string
-	*rmd = strings.TrimSpace(*rmd)
-	if *rmd != "" {
-		if err := json.Unmarshal([]byte(*rmd), &rmdMap); err != nil {
-			return fmt.Errorf("Error unmarshaling reflection metadata '%v': %v", *rmd, err.Error())
-		}
-	}
-
-	cfg.Host = *host
-	cfg.Proto = *proto
-	cfg.Protoset = *protoset
-	cfg.Call = *call
-	cfg.RootCert = *cacert
-	cfg.Cert = *cert
-	cfg.Key = *key
-	cfg.SkipTLSVerify = *skipVerify
-	cfg.SkipFirst = *skipFirst
-	cfg.Insecure = *insecure
-	cfg.Authority = *authority
-	cfg.CName = *cname
-	cfg.N = *n
-	cfg.C = *c
-	cfg.RPS = *rps
-	cfg.Z = runner.Duration(*z)
-	cfg.X = runner.Duration(*x)
-	cfg.Timeout = runner.Duration(*t)
-	cfg.ZStop = *zstop
-	cfg.Data = dataObj
-	cfg.DataPath = *dataPath
-	cfg.BinData = binaryData
-	cfg.BinDataPath = *binPath
-	cfg.Metadata = metadata
-	cfg.MetadataPath = *mdPath
-	cfg.SI = runner.Duration(*si)
-	cfg.StreamCallDuration = runner.Duration(*scd)
-	cfg.StreamCallCount = *scc
-	cfg.StreamDynamicMessages = *sdm
-	cfg.Output = *output
-	cfg.Format = *format
-	cfg.ImportPaths = iPaths
-	cfg.Connections = *conns
-	cfg.DialTimeout = runner.Duration(*ct)
-	cfg.KeepaliveTime = runner.Duration(*kt)
-	cfg.CPUs = *cpus
-	cfg.Name = *name
-	cfg.Tags = tagsMap
-	cfg.ReflectMetadata = rmdMap
-	cfg.Debug = *debug
-	cfg.EnableCompression = *enableCompression
-	cfg.LoadSchedule = *schedule
-	cfg.LoadStart = *loadStart
-	cfg.LoadStep = *loadStep
-	cfg.LoadEnd = *loadEnd
-	cfg.LoadStepDuration = runner.Duration(*loadStepDuration)
-	cfg.LoadMaxDuration = runner.Duration(*loadMaxDuration)
-	cfg.Async = *async
-	cfg.CSchedule = *cschdule
-	cfg.CStart = *cStart
-	cfg.CStep = *cstep
-	cfg.CEnd = *cEnd
-	cfg.CStepDuration = runner.Duration(*cStepDuration)
-	cfg.CMaxDuration = runner.Duration(*cMaxDuration)
-	cfg.CountErrors = *countErrors
-	cfg.LBStrategy = *lbStrategy
-
-	return nil
-}
-
-func mergeConfig(dest *runner.Config, src *runner.Config) error {
-	if src == nil || dest == nil {
-		return errors.New("config cannot be nil")
-	}
-
-	// proto
-
-	if isProtoSet {
-		dest.Proto = src.Proto
-	}
-
-	if isProtoSetSet {
-		dest.Protoset = src.Protoset
-	}
-
-	if isCallSet {
-		dest.Call = src.Call
-	}
-
-	// security
-
-	if isCACertSet {
-		dest.RootCert = src.RootCert
-	}
-
-	if isCertSet {
-		dest.Cert = src.Cert
-	}
-
-	if isKeySet {
-		dest.Key = src.Key
-	}
-
-	if isSkipSet {
-		dest.SkipTLSVerify = src.SkipTLSVerify
-	}
-
-	if isInsecSet {
-		dest.Insecure = src.Insecure
-	}
-
-	if isAuthSet {
-		dest.Authority = src.Authority
-	}
-
-	if isCNameSet {
-		dest.CName = src.CName
-	}
-
-	if isSkipFirstSet {
-		dest.SkipFirst = src.SkipFirst
-	}
-
-	if isCESet {
-		dest.CountErrors = src.CountErrors
-	}
-
-	// run
-
-	if isNSet {
-		dest.N = src.N
-	}
-
-	if isZSet {
-		dest.Z = src.Z
-	}
-
-	if isXSet {
-		dest.X = src.X
-	}
-
-	if isTSet {
-		dest.Timeout = src.Timeout
-	}
-
-	if isZStopSet {
-		dest.ZStop = src.ZStop
-	}
-
-	// data
-
-	if isDataSet {
-		dest.Data = src.Data
-	}
-
-	if isDataPathSet {
-		dest.DataPath = src.DataPath
-	}
-
-	if isBinDataSet {
-		dest.BinData = src.BinData
-	}
-
-	if isBinDataPathSet {
-		dest.BinDataPath = src.BinDataPath
-	}
-
-	if isMDSet {
-		dest.Metadata = src.Metadata
-	}
-
-	if isMDPathSet {
-		dest.MetadataPath = src.MetadataPath
-	}
-
-	// other
-
-	if isSISet {
-		dest.SI = src.SI
-	}
-
-	if isSCSet {
-		dest.StreamCallDuration = src.StreamCallDuration
-	}
-
-	if isSCCSet {
-		dest.StreamCallCount = src.StreamCallCount
-	}
-
-	if isSDMSet {
-		dest.StreamDynamicMessages = src.StreamDynamicMessages
-	}
-
-	if isOutputSet {
-		dest.Output = src.Output
-	}
-
-	if isFormatSet {
-		dest.Format = src.Format
-	}
-
-	if isImportSet {
-		dest.ImportPaths = src.ImportPaths
-	}
-
-	if isConnSet {
-		dest.Connections = src.Connections
-	}
-
-	if isCTSet {
-		dest.DialTimeout = src.DialTimeout
-	}
-
-	if isKTSet {
-		dest.KeepaliveTime = src.KeepaliveTime
-	}
-
-	if isCPUSet {
-		dest.CPUs = src.CPUs
-	}
-
-	if isNameSet {
-		dest.Name = src.Name
-	}
-
-	if isTagsSet {
-		dest.Tags = src.Tags
-	}
-
-	if isRMDSet {
-		dest.ReflectMetadata = src.ReflectMetadata
-	}
-
-	if isDebugSet {
-		dest.Debug = src.Debug
-	}
-
-	if isHostSet {
-		dest.Host = src.Host
-	}
-
-	if isLBStrategySet {
-		dest.LBStrategy = src.LBStrategy
-	}
-
-	// load
-
-	if isAsyncSet {
-		dest.Async = src.Async
-	}
-
-	if isRPSSet {
-		dest.RPS = src.RPS
-	}
-
-	if isScheduleSet {
-		dest.LoadSchedule = src.LoadSchedule
-	}
-
-	if isLoadStartSet {
-		dest.LoadStart = src.LoadStart
-	}
-
-	if isLoadStepSet {
-		dest.LoadStep = src.LoadStep
-	}
-
-	if isLoadEndSet {
-		dest.LoadEnd = src.LoadEnd
-	}
-
-	if isLoadStepDurSet {
-		dest.LoadStepDuration = src.LoadStepDuration
-	}
-
-	if isLoadMaxDurSet {
-		dest.LoadMaxDuration = src.LoadMaxDuration
-	}
-
-	// concurrency
-
-	if isCSet {
-		dest.C = src.C
-	}
-
-	if isCScheduleSet {
-		dest.CSchedule = src.CSchedule
-	}
-
-	if isCStartSet {
-		dest.CStart = src.CStart
-	}
-
-	if isCStepSet {
-		dest.CStep = src.CStep
-	}
-
-	if isCEndSet {
-		dest.CEnd = src.CEnd
-	}
-
-	if isCStepDurSet {
-		dest.CStepDuration = src.CStepDuration
-	}
-
-	if isCMaxDurSet {
-		dest.CMaxDuration = src.CMaxDuration
-	}
-
-	return nil
-}
+// func createConfigFromArgs(cfg *runner.Config) error {
+// 	if cfg == nil {
+// 		return errors.New("config cannot be nil")
+// 	}
+
+// 	iPaths := []string{}
+// 	pathsTrimmed := strings.TrimSpace(*paths)
+// 	if pathsTrimmed != "" {
+// 		iPaths = strings.Split(pathsTrimmed, ",")
+// 	}
+
+// 	var binaryData []byte
+// 	if *binData {
+// 		b, err := ioutil.ReadAll(os.Stdin)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		binaryData = b
+// 	}
+
+// 	var metadata map[string]string
+// 	*md = strings.TrimSpace(*md)
+// 	if *md != "" {
+// 		if err := json.Unmarshal([]byte(*md), &metadata); err != nil {
+// 			return fmt.Errorf("Error unmarshaling metadata '%v': %v", *md, err.Error())
+// 		}
+// 	}
+
+// 	var dataObj interface{}
+// 	if *data != "@" && strings.TrimSpace(*data) != "" {
+// 		if err := json.Unmarshal([]byte(*data), &dataObj); err != nil {
+// 			return fmt.Errorf("Error unmarshaling data '%v': %v", *data, err.Error())
+// 		}
+// 	}
+
+// 	var tagsMap map[string]string
+// 	*tags = strings.TrimSpace(*tags)
+// 	if *tags != "" {
+// 		if err := json.Unmarshal([]byte(*tags), &tagsMap); err != nil {
+// 			return fmt.Errorf("Error unmarshaling tags '%v': %v", *tags, err.Error())
+// 		}
+// 	}
+
+// 	var rmdMap map[string]string
+// 	*rmd = strings.TrimSpace(*rmd)
+// 	if *rmd != "" {
+// 		if err := json.Unmarshal([]byte(*rmd), &rmdMap); err != nil {
+// 			return fmt.Errorf("Error unmarshaling reflection metadata '%v': %v", *rmd, err.Error())
+// 		}
+// 	}
+
+// 	cfg.Host = *host
+// 	cfg.Proto = *proto
+// 	cfg.Protoset = *protoset
+// 	cfg.Call = *call
+// 	cfg.RootCert = *cacert
+// 	cfg.Cert = *cert
+// 	cfg.Key = *key
+// 	cfg.SkipTLSVerify = *skipVerify
+// 	cfg.SkipFirst = *skipFirst
+// 	cfg.Insecure = *insecure
+// 	cfg.Authority = *authority
+// 	cfg.CName = *cname
+// 	cfg.N = *n
+// 	cfg.C = *c
+// 	cfg.RPS = *rps
+// 	cfg.Z = runner.Duration(*z)
+// 	cfg.X = runner.Duration(*x)
+// 	cfg.Timeout = runner.Duration(*t)
+// 	cfg.ZStop = *zstop
+// 	cfg.Data = dataObj
+// 	cfg.DataPath = *dataPath
+// 	cfg.BinData = binaryData
+// 	cfg.BinDataPath = *binPath
+// 	cfg.Metadata = metadata
+// 	cfg.MetadataPath = *mdPath
+// 	cfg.SI = runner.Duration(*si)
+// 	cfg.StreamCallDuration = runner.Duration(*scd)
+// 	cfg.StreamCallCount = *scc
+// 	cfg.StreamDynamicMessages = *sdm
+// 	cfg.Output = *output
+// 	cfg.Format = *format
+// 	cfg.ImportPaths = iPaths
+// 	cfg.Connections = *conns
+// 	cfg.DialTimeout = runner.Duration(*ct)
+// 	cfg.KeepaliveTime = runner.Duration(*kt)
+// 	cfg.CPUs = *cpus
+// 	cfg.Name = *name
+// 	cfg.Tags = tagsMap
+// 	cfg.ReflectMetadata = rmdMap
+// 	cfg.Debug = *debug
+// 	cfg.EnableCompression = *enableCompression
+// 	cfg.LoadSchedule = *schedule
+// 	cfg.LoadStart = *loadStart
+// 	cfg.LoadStep = *loadStep
+// 	cfg.LoadEnd = *loadEnd
+// 	cfg.LoadStepDuration = runner.Duration(*loadStepDuration)
+// 	cfg.LoadMaxDuration = runner.Duration(*loadMaxDuration)
+// 	cfg.Async = *async
+// 	cfg.CSchedule = *cschdule
+// 	cfg.CStart = *cStart
+// 	cfg.CStep = *cstep
+// 	cfg.CEnd = *cEnd
+// 	cfg.CStepDuration = runner.Duration(*cStepDuration)
+// 	cfg.CMaxDuration = runner.Duration(*cMaxDuration)
+// 	cfg.CountErrors = *countErrors
+// 	cfg.LBStrategy = *lbStrategy
+
+// 	return nil
+// }
 
 // createLogger creates a new zap logger
 func createLogger(path string) (*zap.SugaredLogger, error) {
