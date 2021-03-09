@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"text/template"
 	"time"
 
 	"github.com/bojand/ghz/internal"
@@ -75,6 +76,113 @@ func TestRunUnary(t *testing.T) {
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 1, count)
+	})
+
+	t.Run("test predefined template functions", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{ newUUID }}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		parsed, err := uuid.Parse(msg.GetName())
+		assert.NoError(t, err)
+		assert.NotEmpty(t, parsed)
+	})
+
+	t.Run("test custom template functions", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{customFunc}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithTemplateFuncs(template.FuncMap{
+				"customFunc": func() string {
+					return "custom-value"
+				},
+			}),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		assert.Equal(t, msg.GetName(), "custom-value")
+	})
+
+	t.Run("test custom template functions are added to predefined functions", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{newUUID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithTemplateFuncs(template.FuncMap{
+				"customFunc": func() string {
+					return "custom-value"
+				},
+			}),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		parsed, err := uuid.Parse(msg.GetName())
+		assert.NoError(t, err)
+		assert.NotEmpty(t, parsed)
 	})
 
 	t.Run("test skip first N", func(t *testing.T) {
