@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"text/template"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -63,7 +64,8 @@ type mdProvider struct {
 }
 
 func newDataProvider(mtd *desc.MethodDescriptor,
-	binary bool, dataFunc BinaryDataFunc, data []byte) (*dataProvider, error) {
+	binary bool, dataFunc BinaryDataFunc, data []byte,
+	funcs template.FuncMap) (*dataProvider, error) {
 
 	dp := dataProvider{
 		binary:         binary,
@@ -96,7 +98,7 @@ func newDataProvider(mtd *desc.MethodDescriptor,
 	}
 
 	// Test if we can preseed data
-	ctd := newCallData(mtd, nil, "", 0)
+	ctd := newCallData(mtd, funcs, "", 0)
 	ha, err := ctd.hasAction(string(dp.data))
 	if err != nil {
 		return nil, err
