@@ -254,22 +254,22 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 
 // WithConfigFromFile uses a configuration JSON file to populate the RunConfig
 //  WithConfigFromFile("config.json")
-func WithConfigFromFile(file string) Option {
-	return func(o *RunConfig) error {
-		var cfg Config
-		err := LoadConfig(file, &cfg)
-		if err != nil {
-			return err
-		}
+// func WithConfigFromFile(file string) Option {
+// 	return func(o *RunConfig) error {
+// 		var cfg Config
+// 		err := LoadConfig(file, &cfg)
+// 		if err != nil {
+// 			return err
+// 		}
 
-		for _, option := range fromConfig(&cfg) {
-			if err := option(o); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-}
+// 		for _, option := range fromConfig(&cfg) {
+// 			if err := option(o); err != nil {
+// 				return err
+// 			}
+// 		}
+// 		return nil
+// 	}
+// }
 
 // WithConfigFromReader uses a reader containing JSON data to populate the RunConfig
 // See also: WithConfigFromFile
@@ -295,10 +295,10 @@ func WithConfig(cfg *Config) Option {
 	return func(o *RunConfig) error {
 
 		// init / fix up durations
-		if cfg.X > 0 {
-			cfg.Z = cfg.X
-		} else if cfg.Z > 0 {
-			cfg.N = math.MaxInt32
+		if cfg.MaxDuration > 0 {
+			cfg.TotalDuration = cfg.MaxDuration
+		} else if cfg.TotalDuration > 0 {
+			cfg.Total = math.MaxInt32
 		}
 
 		for _, option := range fromConfig(cfg) {
@@ -1073,10 +1073,10 @@ func fromConfig(cfg *Config) []Option {
 	options := make([]Option, 0, 17)
 
 	// init / fix up durations
-	if cfg.X > 0 {
-		cfg.Z = cfg.X
-	} else if cfg.Z > 0 {
-		cfg.N = math.MaxInt32
+	if cfg.MaxDuration > 0 {
+		cfg.TotalDuration = cfg.MaxDuration
+	} else if cfg.TotalDuration > 0 {
+		cfg.MaxDuration = math.MaxInt32
 	}
 
 	options = append(options,
@@ -1090,10 +1090,10 @@ func fromConfig(cfg *Config) []Option {
 		WithInsecure(cfg.Insecure),
 		WithAuthority(cfg.Authority),
 		WithConcurrency(cfg.C),
-		WithTotalRequests(cfg.N),
+		WithTotalRequests(cfg.Total),
 		WithRPS(cfg.RPS),
 		WithTimeout(time.Duration(cfg.Timeout)),
-		WithRunDuration(time.Duration(cfg.Z)),
+		WithRunDuration(time.Duration(cfg.TotalDuration)),
 		WithDialTimeout(time.Duration(cfg.DialTimeout)),
 		WithKeepalive(time.Duration(cfg.KeepaliveTime)),
 		WithName(cfg.Name),

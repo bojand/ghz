@@ -395,41 +395,41 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 	t.Run("with config", func(t *testing.T) {
 		filename := "../testdata/config.json"
 
-		t.Run("from file", func(t *testing.T) {
-			c, err := NewConfig("", "",
-				WithConfigFromFile(filename))
-			assert.Nil(t, err)
-			assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
-			assert.Equal(t, "0.0.0.0:50051", c.host)
-			assert.Equal(t, "../../testdata/greeter.proto", c.proto)
-			assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
-			assert.Equal(t, math.MaxInt32, c.n) // max-duration set so n ignored
-			assert.Equal(t, 50, c.c)
-			assert.Equal(t, 5, c.skipFirst)
-			assert.Equal(t, 7*time.Second, c.z) // max-duration (x) is set to z becomes x
-			assert.Equal(t, 500*time.Millisecond, c.streamInterval)
-			assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
-			assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
-			assert.Equal(t, true, c.insecure)
-		})
+		// t.Run("from file", func(t *testing.T) {
+		// 	c, err := NewConfig("", "",
+		// 		WithConfigFromFile(filename))
+		// 	assert.Nil(t, err)
+		// 	assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
+		// 	assert.Equal(t, "0.0.0.0:50051", c.host)
+		// 	assert.Equal(t, "../../testdata/greeter.proto", c.proto)
+		// 	assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
+		// 	assert.Equal(t, math.MaxInt32, c.n) // max-duration set so n ignored
+		// 	assert.Equal(t, 50, c.c)
+		// 	assert.Equal(t, 5, c.skipFirst)
+		// 	assert.Equal(t, 7*time.Second, c.z) // max-duration (x) is set to z becomes x
+		// 	assert.Equal(t, 500*time.Millisecond, c.streamInterval)
+		// 	assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
+		// 	assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
+		// 	assert.Equal(t, true, c.insecure)
+		// })
 
-		t.Run("from file 2", func(t *testing.T) {
-			c, err := NewConfig("", "",
-				WithConfigFromFile("../testdata/config5.toml"))
-			assert.Nil(t, err)
-			assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
-			assert.Equal(t, "0.0.0.0:50051", c.host)
-			assert.Equal(t, "../../testdata/greeter.proto", c.proto)
-			assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
-			assert.Equal(t, 5000, c.n)
-			assert.Equal(t, 40, c.c)
-			assert.Equal(t, 100, c.skipFirst)
-			assert.Equal(t, time.Duration(0), c.z)
-			assert.Equal(t, time.Duration(0), c.streamInterval)
-			assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
-			assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
-			assert.Equal(t, true, c.insecure)
-		})
+		// t.Run("from file 2", func(t *testing.T) {
+		// 	c, err := NewConfig("", "",
+		// 		WithConfigFromFile("../testdata/config5.toml"))
+		// 	assert.Nil(t, err)
+		// 	assert.Equal(t, "helloworld.Greeter.SayHello", c.call)
+		// 	assert.Equal(t, "0.0.0.0:50051", c.host)
+		// 	assert.Equal(t, "../../testdata/greeter.proto", c.proto)
+		// 	assert.Equal(t, []string{"../../testdata", "."}, c.importPaths)
+		// 	assert.Equal(t, 5000, c.n)
+		// 	assert.Equal(t, 40, c.c)
+		// 	assert.Equal(t, 100, c.skipFirst)
+		// 	assert.Equal(t, time.Duration(0), c.z)
+		// 	assert.Equal(t, time.Duration(0), c.streamInterval)
+		// 	assert.Equal(t, []byte(`{"name":"Bob {{.TimestampUnix}}"}`), c.data)
+		// 	assert.Equal(t, []byte(`{"rn":"{{.RequestNumber}}"}`), c.metadata)
+		// 	assert.Equal(t, true, c.insecure)
+		// })
 
 		t.Run("from reader", func(t *testing.T) {
 			file, _ := os.Open(filename)
