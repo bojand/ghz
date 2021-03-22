@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bojand/ghz/internal/gtime"
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/bojand/ghz/internal/sleep"
 	"github.com/bojand/ghz/internal/wrapped"
@@ -128,4 +129,37 @@ func StartWrappedServer(secure bool) (*wrapped.WrappedService, *grpc.Server, err
 	}()
 
 	return &ws, s, err
+}
+
+// StartTimeServer starts the wrapped test server
+func StartTimeServer(secure bool) (*gtime.TimeService, *grpc.Server, error) {
+	lis, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var opts []grpc.ServerOption
+
+	if secure {
+		creds, err := credentials.NewServerTLSFromFile("../testdata/localhost.crt", "../testdata/localhost.key")
+		if err != nil {
+			return nil, nil, err
+		}
+		opts = []grpc.ServerOption{grpc.Creds(creds)}
+	}
+
+	s := grpc.NewServer(opts...)
+
+	gs := gtime.TimeService{}
+	gtime.RegisterTimeServiceServer(s, &gs)
+	reflection.Register(s)
+
+	TestPort = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
+	TestLocalhost = "localhost:" + TestPort
+
+	go func() {
+		_ = s.Serve(lis)
+	}()
+
+	return &gs, s, err
 }

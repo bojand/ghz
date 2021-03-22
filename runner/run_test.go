@@ -2526,8 +2526,6 @@ func TestRunBidi(t *testing.T) {
 
 func TestRunUnarySecure(t *testing.T) {
 
-	t.Skip("asdf")
-
 	callType := helloworld.Unary
 
 	gs, s, err := internal.StartServer(true)
@@ -3021,5 +3019,98 @@ func TestRunWrappedUnary(t *testing.T) {
 
 		assert.Equal(t, report.Average, report.Slowest)
 		assert.Equal(t, report.Average, report.Fastest)
+	})
+}
+
+func TestRunGtimeUnary(t *testing.T) {
+
+	ts, s, err := internal.StartTimeServer(false)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	t.Run("json string data", func(t *testing.T) {
+		data := `{"ts":"2020-01-20T01:30:30.01Z", "dur":"30s", "user_id":"12"}`
+
+		report, err := Run(
+			"gtime.TimeService.TestCall",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/gtime.proto", []string{"../testdata"}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataFromJSON(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+
+		expectedTime, err := time.Parse(time.RFC3339, "2020-01-20T01:30:30.01Z")
+		assert.NoError(t, err)
+
+		expectedDur := time.Duration(30 * time.Second)
+
+		assert.Equal(t, expectedTime, ts.LastTimestamp)
+		assert.Equal(t, expectedDur, ts.LastDuration)
+	})
+
+	t.Run("json file data", func(t *testing.T) {
+
+		report, err := Run(
+			"",
+			internal.TestLocalhost,
+			WithConfigFromFile("../testdata/tsconfig.json"),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "TimeService - TestCall", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+
+		expectedTime, err := time.Parse(time.RFC3339, "2020-01-22T02:30:30.01Z")
+		assert.NoError(t, err)
+
+		expectedDur := time.Duration(40 * time.Second)
+
+		assert.Equal(t, expectedTime, ts.LastTimestamp)
+		assert.Equal(t, expectedDur, ts.LastDuration)
 	})
 }

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package gtime;
+
+option go_package = "internal/gtime";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+service TimeService {
+    rpc TestCall (CallRequest) returns (CallReply) {}
+}
+
+message CallRequest {
+    google.protobuf.Timestamp ts = 1;
+    google.protobuf.Duration dur = 2;
+    uint64 user_id = 3;
+}
+  
+message CallReply {
+    google.protobuf.Timestamp ts = 1;
+    google.protobuf.Duration dur = 2;
+    string message = 3;
+}
