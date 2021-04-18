@@ -106,7 +106,7 @@
 <p><code>func newUUID() string</code>  <br>
 Generates a new UUID for each invocation.</p>
 <p><code>func randomString(length int) string</code>  <br>
-Generates a new random string for each incovation. Accepts a length parameter. If the argument is <code>&lt;= 0</code> then a ranom string is generated with a random length between length of <code>2</code> and <code>16</code>.</p>
+Generates a new random string for each incovation. Accepts a length parameter. If the argument is <code>&lt;= 0</code> then a random string is generated with a random length between length of <code>2</code> and <code>16</code>.</p>
 <p><code>func randomInt(min, max int) int</code>  <br>
 Generates a new non-negative pseudo-random number in range <code>[min, max)</code>.</p>
 <p><strong>Examples</strong></p>
@@ -120,7 +120,7 @@ Generates a new non-negative pseudo-random number in range <code>[min, max)</cod
   <span class="hljs-attr">"timestamp"</span>: <span class="hljs-string">"1544890252"</span>
 }
 </code></pre>
-<pre><code class="hljs css language-sh">-d <span class="hljs-string">'{"order_id":"{{newUUID}}", "item_id":"{{newUUID}}", "sku":"{{randomString 8 }}", "product_name":"{{ranomdString 0}}"}'</span>
+<pre><code class="hljs css language-sh">-d <span class="hljs-string">'{"order_id":"{{newUUID}}", "item_id":"{{newUUID}}", "sku":"{{randomString 8 }}", "product_name":"{{randomString 0}}"}'</span>
 </code></pre>
 <p>Would result in data with JSON representation:</p>
 <pre><code class="hljs css language-json">{
