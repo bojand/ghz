@@ -61,7 +61,7 @@ There are also template functions available:
 Generates a new UUID for each invocation.
 
 `func randomString(length int) string`  
-Generates a new random string for each incovation. Accepts a length parameter. If the argument is `<= 0` then a ranom string is generated with a random length between length of `2` and `16`.
+Generates a new random string for each incovation. Accepts a length parameter. If the argument is `<= 0` then a random string is generated with a random length between length of `2` and `16`.
 
 `func randomInt(min, max int) int`  
 Generates a new non-negative pseudo-random number in range `[min, max)`.
@@ -86,7 +86,7 @@ Would result in server getting the following metadata map represented here in JS
 ```
 
 ```sh
--d '{"order_id":"{{newUUID}}", "item_id":"{{newUUID}}", "sku":"{{randomString 8 }}", "product_name":"{{ranomdString 0}}"}'
+-d '{"order_id":"{{newUUID}}", "item_id":"{{newUUID}}", "sku":"{{randomString 8 }}", "product_name":"{{randomString 0}}"}'
 ```
 
 Would result in data with JSON representation:
