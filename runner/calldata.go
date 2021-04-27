@@ -2,8 +2,10 @@ package runner
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"math/rand"
+	"strings"
 	"text/template"
 	"text/template/parse"
 	"time"
@@ -180,6 +182,16 @@ func (td *CallData) executeMetadata(metadata string) (map[string]string, error) 
 		err = json.Unmarshal(input, &mdMap)
 		if err != nil {
 			return nil, err
+		}
+
+		for key, value := range mdMap {
+			if strings.HasSuffix(key, "-bin") {
+				decoded, err := base64.StdEncoding.DecodeString(value)
+				if err != nil {
+					return nil, err
+				}
+				mdMap[key] = string(decoded)
+			}
 		}
 	}
 
