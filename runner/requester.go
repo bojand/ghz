@@ -135,7 +135,7 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 	if c.mdProviderFunc != nil {
 		reqr.metadataProvider = c.mdProviderFunc
 	} else {
-		defaultMDProvider, err := newMetadataProvider(reqr.mtd, c.metadata)
+		defaultMDProvider, err := newMetadataProvider(reqr.mtd, c.metadata, c.funcs)
 		if err != nil {
 			return nil, err
 		}
