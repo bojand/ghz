@@ -114,6 +114,11 @@ func TestCallData_ExecuteMetadata(t *testing.T) {
 			map[string]string{"trace_id": "asdf {{.Something}} {{.MethodName}} bob"},
 			false,
 		},
+		{"with binary data",
+			`{"data-bin":"YmFzZTY0"}`,
+			map[string]string{"data-bin": "base64"},
+			false,
+		},
 	}
 
 	for _, tt := range tests {
