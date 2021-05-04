@@ -218,9 +218,9 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 	return inputs, nil
 }
 
-func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte) (*mdProvider, error) {
+func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte, funcs template.FuncMap) (*mdProvider, error) {
 	// Test if we can preseed data
-	ctd := newCallData(mtd, nil, "", 0)
+	ctd := newCallData(mtd, funcs, "", 0)
 	ha, err := ctd.hasAction(string(mdData))
 	if err != nil {
 		return nil, err

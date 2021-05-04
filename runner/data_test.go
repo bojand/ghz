@@ -3,6 +3,7 @@ package runner
 import (
 	"encoding/json"
 	"testing"
+	"text/template"
 
 	"github.com/golang/protobuf/proto"
 
@@ -274,7 +275,7 @@ func TestMetadata_newMetadataProvider(t *testing.T) {
 			nil)
 		assert.NoError(t, err)
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`))
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`), nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, mdp)
 		assert.NotNil(t, mdp.preseed)
@@ -288,7 +289,7 @@ func TestMetadata_newMetadataProvider(t *testing.T) {
 			nil)
 		assert.NoError(t, err)
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`))
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`), nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, mdp)
 		assert.Nil(t, mdp.preseed)
@@ -303,7 +304,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 			nil)
 		assert.NoError(t, err)
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`))
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`), nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, mdp.preseed)
 
@@ -323,7 +324,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 			nil)
 		assert.NoError(t, err)
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`))
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`), nil)
 		assert.NoError(t, err)
 		assert.Nil(t, mdp.preseed)
 
@@ -343,5 +344,31 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 		assert.NotSame(t, mdp.preseed, md2)
 		assert.NotSame(t, md1, md2)
 		assert.NotEqual(t, md1, md2)
+	})
+
+	t.Run("with cunstom function", func(t *testing.T) {
+		mtdUnary, err := protodesc.GetMethodDescFromProto(
+			"helloworld.Greeter.SayHello",
+			"../testdata/greeter.proto",
+			nil)
+		assert.NoError(t, err)
+
+		funcs := template.FuncMap{
+			"customFunc": func() string {
+				return "custom-value"
+			},
+		}
+
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ customFunc }}"}`), funcs)
+		assert.NoError(t, err)
+		assert.Nil(t, mdp.preseed)
+
+		cd := newCallData(mtdUnary, funcs, "123", 1)
+
+		md1, err := mdp.getMetadataForCall(cd)
+		assert.NoError(t, err)
+		assert.NotNil(t, md1)
+		assert.Equal(t, []string{"custom-value"}, md1.Get("token"))
+		assert.NotSame(t, mdp.preseed, md1)
 	})
 }
