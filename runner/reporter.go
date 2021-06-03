@@ -115,7 +115,7 @@ func (r Report) MarshalJSON() ([]byte, error) {
 
 // LatencyDistribution holds latency distribution data
 type LatencyDistribution struct {
-	Percentage int           `json:"percentage"`
+	Percentage float64       `json:"percentage"`
 	Latency    time.Duration `json:"latency"`
 }
 
@@ -282,11 +282,11 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 }
 
 func latencies(latencies []float64) []LatencyDistribution {
-	pctls := []int{10, 25, 50, 75, 90, 95, 99}
+	pctls := []float64{10, 25, 50, 75, 90, 95, 99, 99.9, 99.99}
 	data := make([]float64, len(pctls))
 	lt := float64(len(latencies))
 	for i, p := range pctls {
-		ip := (float64(p) / 100.0) * lt
+		ip := (p / 100.0) * lt
 		di := int(ip)
 
 		// since we're dealing with 0th based ranks we need to
