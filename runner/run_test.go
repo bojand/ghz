@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"text/template"
 	"time"
 
 	"github.com/bojand/ghz/internal"
@@ -75,6 +76,113 @@ func TestRunUnary(t *testing.T) {
 
 		count := gs.GetCount(callType)
 		assert.Equal(t, 1, count)
+	})
+
+	t.Run("test predefined template functions", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{ newUUID }}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		parsed, err := uuid.Parse(msg.GetName())
+		assert.NoError(t, err)
+		assert.NotEmpty(t, parsed)
+	})
+
+	t.Run("test custom template functions", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{customFunc}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithTemplateFuncs(template.FuncMap{
+				"customFunc": func() string {
+					return "custom-value"
+				},
+			}),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		assert.Equal(t, msg.GetName(), "custom-value")
+	})
+
+	t.Run("test custom template functions are added to predefined functions", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{newUUID}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithTemplateFuncs(template.FuncMap{
+				"customFunc": func() string {
+					return "custom-value"
+				},
+			}),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		parsed, err := uuid.Parse(msg.GetName())
+		assert.NoError(t, err)
+		assert.NotEmpty(t, parsed)
 	})
 
 	t.Run("test skip first N", func(t *testing.T) {
@@ -632,6 +740,63 @@ func TestRunUnary(t *testing.T) {
 		assert.Equal(t, []string{"0", "1", "2", "3", "4"}, names)
 	})
 
+	t.Run("with data custom function", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{customFunc}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(3),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithTemplateFuncs(template.FuncMap{
+				"customFunc": func() string {
+					return "custom-value"
+				},
+			}),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 3, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 3, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 3)
+		fmt.Printf("%+v\n", calls)
+		assert.Equal(t, "custom-value", calls[0][0].GetName())
+		assert.Equal(t, "custom-value", calls[1][0].GetName())
+		assert.Equal(t, "custom-value", calls[2][0].GetName())
+	})
+
 	t.Run("with metadata provider", func(t *testing.T) {
 		gs.ResetCounters()
 
@@ -703,6 +868,75 @@ func TestRunUnary(t *testing.T) {
 		}
 
 		assert.Equal(t, []string{"0", "__record_metadata__||token:secret1", "2", "__record_metadata__||token:secret3", "4"}, names)
+	})
+
+	t.Run("with metadata custom function", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "__record_metadata__"
+
+		metadata := make(map[string]string)
+		metadata["token"] = "{{customFunc}}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(3),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithMetadata(metadata),
+			WithTemplateFuncs(template.FuncMap{
+				"customFunc": func() string {
+					return "custom-value"
+				},
+			}),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 3, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.NotEqual(t, report.Average, report.Slowest)
+		assert.NotEqual(t, report.Average, report.Fastest)
+		assert.NotEqual(t, report.Slowest, report.Fastest)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 3, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 3)
+		names := make([]string, 0)
+		for _, msgs := range calls {
+			for _, msg := range msgs {
+				names = append(names, msg.GetName())
+			}
+		}
+
+		assert.Equal(t, []string{
+			"__record_metadata__||token:custom-value",
+			"__record_metadata__||token:custom-value",
+			"__record_metadata__||token:custom-value",
+		}, names)
 	})
 }
 
@@ -2418,8 +2652,6 @@ func TestRunBidi(t *testing.T) {
 
 func TestRunUnarySecure(t *testing.T) {
 
-	t.Skip("asdf")
-
 	callType := helloworld.Unary
 
 	gs, s, err := internal.StartServer(true)
@@ -2913,5 +3145,98 @@ func TestRunWrappedUnary(t *testing.T) {
 
 		assert.Equal(t, report.Average, report.Slowest)
 		assert.Equal(t, report.Average, report.Fastest)
+	})
+}
+
+func TestRunGtimeUnary(t *testing.T) {
+
+	ts, s, err := internal.StartTimeServer(false)
+
+	if err != nil {
+		assert.FailNow(t, err.Error())
+	}
+
+	defer s.Stop()
+
+	t.Run("json string data", func(t *testing.T) {
+		data := `{"ts":"2020-01-20T01:30:30.01Z", "dur":"30s", "user_id":"12"}`
+
+		report, err := Run(
+			"gtime.TimeService.TestCall",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/gtime.proto", []string{"../testdata"}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithDataFromJSON(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+
+		expectedTime, err := time.Parse(time.RFC3339, "2020-01-20T01:30:30.01Z")
+		assert.NoError(t, err)
+
+		expectedDur := time.Duration(30 * time.Second)
+
+		assert.Equal(t, expectedTime, ts.LastTimestamp)
+		assert.Equal(t, expectedDur, ts.LastDuration)
+	})
+
+	t.Run("json file data", func(t *testing.T) {
+
+		report, err := Run(
+			"",
+			internal.TestLocalhost,
+			WithConfigFromFile("../testdata/tsconfig.json"),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
+		assert.NotZero(t, report.Average)
+		assert.NotZero(t, report.Fastest)
+		assert.NotZero(t, report.Slowest)
+		assert.NotZero(t, report.Rps)
+		assert.Equal(t, "TimeService - TestCall", report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.NotEmpty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.NotEmpty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+
+		expectedTime, err := time.Parse(time.RFC3339, "2020-01-22T02:30:30.01Z")
+		assert.NoError(t, err)
+
+		expectedDur := time.Duration(40 * time.Second)
+
+		assert.Equal(t, expectedTime, ts.LastTimestamp)
+		assert.Equal(t, expectedDur, ts.LastDuration)
 	})
 }

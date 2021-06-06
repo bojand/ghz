@@ -1,0 +1,14 @@
+{
+    "proto": "../testdata/gtime.proto",
+    "call": "gtime.TimeService.TestCall",
+    "name": "TimeService - TestCall",
+    "total": 1,
+    "concurrency": 1,
+    "connections": 1,
+    "insecure": true,
+    "data": {
+      "ts":"2020-01-22T02:30:30.01Z",
+      "dur": "40s",
+      "user_id": 100
+    }
+  }
