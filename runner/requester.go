@@ -78,6 +78,8 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 		mtd, err = protodesc.GetMethodDescFromProto(c.call, c.proto, c.importPaths)
 	} else if c.protoset != "" {
 		mtd, err = protodesc.GetMethodDescFromProtoSet(c.call, c.protoset)
+	} else if c.protosetBinary != nil {
+		mtd, err = protodesc.GetMethodDescFromProtoSetBinary(c.call, c.protosetBinary)
 	} else {
 		// use reflection to get method descriptor
 		var cc *grpc.ClientConn

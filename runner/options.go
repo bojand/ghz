@@ -43,6 +43,7 @@ type RunConfig struct {
 	proto             string
 	importPaths       []string
 	protoset          string
+	protosetBinary    []byte
 	enableCompression bool
 
 	// security settings
