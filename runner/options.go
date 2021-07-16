@@ -717,6 +717,14 @@ func WithProtoset(protoset string) Option {
 	}
 }
 
+func WithProtosetBinary(b []byte) Option {
+	return func(o *RunConfig) error {
+		o.protosetBinary = b
+
+		return nil
+	}
+}
+
 // WithStreamInterval sets the stream interval
 func WithStreamInterval(d time.Duration) Option {
 	return func(o *RunConfig) error {
