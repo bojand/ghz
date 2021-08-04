@@ -43,6 +43,7 @@ type RunConfig struct {
 	proto             string
 	importPaths       []string
 	protoset          string
+	protosetBinary    []byte
 	enableCompression bool
 
 	// security settings
@@ -711,6 +712,14 @@ func WithProtoset(protoset string) Option {
 	return func(o *RunConfig) error {
 		protoset = strings.TrimSpace(protoset)
 		o.protoset = protoset
+
+		return nil
+	}
+}
+
+func WithProtosetBinary(b []byte) Option {
+	return func(o *RunConfig) error {
+		o.protosetBinary = b
 
 		return nil
 	}

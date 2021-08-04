@@ -41,17 +41,27 @@ func GetMethodDescFromProto(call, proto string, imports []string) (*desc.MethodD
 	return getMethodDesc(call, files)
 }
 
-// GetMethodDescFromProtoSet gets method descritor for the given call symbol from protoset file given my path protoset
+// GetMethodDescFromProtoSet gets method descriptor for the given call symbol from protoset file given my path protoset
 func GetMethodDescFromProtoSet(call, protoset string) (*desc.MethodDescriptor, error) {
 	b, err := ioutil.ReadFile(protoset)
 	if err != nil {
 		return nil, fmt.Errorf("could not load protoset file %q: %v", protoset, err)
 	}
 
-	var fds descriptor.FileDescriptorSet
-	err = proto.Unmarshal(b, &fds)
-	if err != nil {
+	res, err := GetMethodDescFromProtoSetBinary(call, b)
+	if err != nil && strings.Contains(err.Error(), "could not parse contents of protoset binary") {
 		return nil, fmt.Errorf("could not parse contents of protoset file %q: %v", protoset, err)
+	}
+
+	return res, err
+}
+
+// GetMethodDescFromProtoSetBinary gets method descriptor for the given call symbol from protoset binary
+func GetMethodDescFromProtoSetBinary(call string, b []byte) (*desc.MethodDescriptor, error) {
+	var fds descriptor.FileDescriptorSet
+	err := proto.Unmarshal(b, &fds)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse contents of protoset binary: %v", err)
 	}
 
 	unresolved := map[string]*descriptor.FileDescriptorProto{}
