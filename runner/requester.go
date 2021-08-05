@@ -298,6 +298,10 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 		opts = append(opts, grpc.WithAuthority(b.config.authority))
 	}
 
+	if len(b.config.defaultCallOptions) > 0 {
+		opts = append(opts, grpc.WithDefaultCallOptions(b.config.defaultCallOptions...))
+	}
+
 	ctx := context.Background()
 	ctx, _ = context.WithTimeout(ctx, b.config.dialTimeout)
 	// cancel is ignored here as connection.Close() is used.
