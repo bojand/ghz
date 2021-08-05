@@ -10,6 +10,7 @@ import (
 	"github.com/bojand/ghz/internal"
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/uuid"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
@@ -3110,6 +3111,30 @@ func TestRunWrappedUnary(t *testing.T) {
 
 		assert.Equal(t, report.Average, report.Slowest)
 		assert.Equal(t, report.Average, report.Fastest)
+	})
+
+	t.Run("wrapped bin data with template chars", func(t *testing.T) {
+		protoMsg := wrappers.BytesValue{Value: []byte{'\x7b', '\x7b', '\xc2', '\x7d', '\x7d'}}
+		msg, err := proto.Marshal(&protoMsg)
+		assert.NoError(t, err)
+
+		report, err := Run(
+			"wrapped.WrappedService.GetBytesMessage",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/wrapped.proto", []string{"../testdata"}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithBinaryData(msg),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 1, int(report.Count))
 	})
 
 	t.Run("json string data from file", func(t *testing.T) {

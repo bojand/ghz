@@ -8,4 +8,5 @@ import "google/protobuf/wrappers.proto";
 
 service WrappedService {
   rpc GetMessage (google.protobuf.StringValue) returns (google.protobuf.StringValue);
+  rpc GetBytesMessage (google.protobuf.BytesValue) returns (google.protobuf.BytesValue);
 }
