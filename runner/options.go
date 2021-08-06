@@ -185,6 +185,10 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 		return nil, errors.New("host required")
 	}
 
+	if c.binary && c.streamDynamicMessages {
+		return nil, errors.New("cannot use dynamic messages with binary data")
+	}
+
 	if c.loadSchedule != ScheduleConst &&
 		c.loadSchedule != ScheduleStep &&
 		c.loadSchedule != ScheduleLine {
