@@ -58,7 +58,7 @@ ghz --insecure \
 <a name="binary-data">
 ### Binary data
 
-Using binary data file (see [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message)):
+Using binary data file (see [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing_a_message)):
 
 ```sh
 ghz --proto ./greeter.proto \
@@ -97,7 +97,7 @@ message ImageSaveRequest {
 message ImageSaveResponse {}
 ```
 
-One way to create the request for a test is to use the binary data option `-B` to specify a binary file like we did in the prior exammple. Simply [serialize the whole](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message) message to a binary file first.
+One way to create the request for a test is to use the binary data option `-B` to specify a binary file like we did in the prior exammple. Simply [serialize the whole](https://developers.google.com/protocol-buffers/docs/gotutorial#writing_a_message) message to a binary file first.
 
 Alternatively we can [use base64 string](https://developers.google.com/protocol-buffers/docs/proto3#json) representation of the image as the value for the `data` field.
 

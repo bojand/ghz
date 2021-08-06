@@ -211,7 +211,7 @@ The path for call data JSON file. For example, `-D /home/user/file.json` or `-D 
 
 The call data comes as serialized protocol buffer messages read from standard input. 
 
-We support two formats of binary data: single message and multiple count-delimited messages. See [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing-a-message) on how to serialize a single message. 
+We support two formats of binary data: single message and multiple count-delimited messages. See [writing a message](https://developers.google.com/protocol-buffers/docs/gotutorial#writing_a_message) on how to serialize a single message. 
 
 For multiple messages prefix each message with its length in bytes. See [streaming multiple messages](https://developers.google.com/protocol-buffers/docs/techniques#streaming) in protobuf documentation.
 

@@ -99,9 +99,12 @@ func newDataProvider(mtd *desc.MethodDescriptor,
 
 	// Test if we can preseed data
 	ctd := newCallData(mtd, funcs, "", 0)
-	ha, err := ctd.hasAction(string(dp.data))
-	if err != nil {
-		return nil, err
+	ha := false
+	if !dp.binary {
+		ha, err = ctd.hasAction(string(dp.data))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	dp.hasActions = ha
