@@ -1163,15 +1163,19 @@ func fromConfig(cfg *Config) []Option {
 	if cfg.MaxCallRecvMsgSize != "" {
 		v, err := humanize.ParseBytes(cfg.MaxCallRecvMsgSize)
 		if err != nil {
-			defaultCallOptions = append(defaultCallOptions, grpc.MaxCallRecvMsgSize(int(v)))
+			return nil
 		}
+
+		defaultCallOptions = append(defaultCallOptions, grpc.MaxCallRecvMsgSize(int(v)))
 	}
 
 	if cfg.MaxCallSendMsgSize != "" {
 		v, err := humanize.ParseBytes(cfg.MaxCallSendMsgSize)
 		if err != nil {
-			defaultCallOptions = append(defaultCallOptions, grpc.MaxCallSendMsgSize(int(v)))
+			return nil
 		}
+
+		defaultCallOptions = append(defaultCallOptions, grpc.MaxCallSendMsgSize(int(v)))
 	}
 
 	if len(defaultCallOptions) > 0 {
