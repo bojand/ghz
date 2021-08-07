@@ -249,9 +249,6 @@ var (
 	debug      = kingpin.Flag("debug", "The path to debug log file.").
 			PlaceHolder(" ").IsSetByUser(&isDebugSet).String()
 
-	isHostSet = false
-	host      = kingpin.Arg("host", "Host and port to test.").String()
-
 	isEnableCompressionSet = false
 	enableCompression      = kingpin.Flag("enable-compression", "Enable Gzip compression on requests.").
 				Short('e').Default("false").IsSetByUser(&isEnableCompressionSet).Bool()
@@ -261,11 +258,16 @@ var (
 			PlaceHolder(" ").IsSetByUser(&isLBStrategySet).String()
 
 	// message size
-	isMaxRecvMsgSize = false
-	maxRecvMsgSize   = kingpin.Arg("max-recv-message-size", "Maximum message size the client can receive.").String()
+	isMaxRecvMsgSizeSet = false
+	maxRecvMsgSize      = kingpin.Flag("max-recv-message-size", "Maximum message size the client can receive.").
+				PlaceHolder(" ").IsSetByUser(&isMaxRecvMsgSizeSet).String()
 
-	isMaxSendMsgSize = false
-	maxSendMsgSize   = kingpin.Arg("max-send-message-size", "Maximum message size the client can send.").String()
+	isMaxSendMsgSizeSet = false
+	maxSendMsgSize      = kingpin.Flag("max-send-message-size", "Maximum message size the client can send.").
+				PlaceHolder(" ").IsSetByUser(&isMaxSendMsgSizeSet).String()
+
+	isHostSet = false
+	host      = kingpin.Arg("host", "Host and port to test.").String()
 )
 
 func main() {
@@ -432,14 +434,18 @@ func createConfigFromArgs(cfg *runner.Config) error {
 		}
 	}
 
-	_, err := humanize.ParseBytes(*maxRecvMsgSize)
-	if err != nil {
-		return errors.New("invalid max call recv message size: " + err.Error())
+	if isMaxRecvMsgSizeSet {
+		_, err := humanize.ParseBytes(*maxRecvMsgSize)
+		if err != nil {
+			return errors.New("invalid max call recv message size: " + err.Error())
+		}
 	}
 
-	_, err = humanize.ParseBytes(*maxSendMsgSize)
-	if err != nil {
-		return errors.New("invalid max call send message size: " + err.Error())
+	if isMaxSendMsgSizeSet {
+		_, err := humanize.ParseBytes(*maxSendMsgSize)
+		if err != nil {
+			return errors.New("invalid max call send message size: " + err.Error())
+		}
 	}
 
 	cfg.Host = *host
@@ -745,11 +751,11 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	// message size
 
-	if isMaxRecvMsgSize {
+	if isMaxRecvMsgSizeSet {
 		dest.MaxCallRecvMsgSize = src.MaxCallRecvMsgSize
 	}
 
-	if isMaxSendMsgSize {
+	if isMaxSendMsgSizeSet {
 		dest.MaxCallSendMsgSize = src.MaxCallSendMsgSize
 	}
 
