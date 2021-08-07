@@ -300,6 +300,14 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 
 	if len(b.config.defaultCallOptions) > 0 {
 		opts = append(opts, grpc.WithDefaultCallOptions(b.config.defaultCallOptions...))
+	} else {
+		// increase max receive and send message sizes
+		opts = append(opts,
+			grpc.WithDefaultCallOptions(
+				grpc.MaxCallRecvMsgSize(math.MaxInt32),
+				grpc.MaxCallSendMsgSize(math.MaxInt32),
+			))
+
 	}
 
 	ctx := context.Background()
@@ -330,13 +338,6 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	if b.config.hasLog {
 		b.config.log.Debugw("Creating client connection", "options", opts)
 	}
-
-	// increase max receive and send message sizes
-	opts = append(opts,
-		grpc.WithDefaultCallOptions(
-			grpc.MaxCallRecvMsgSize(math.MaxInt32),
-			grpc.MaxCallSendMsgSize(math.MaxInt32),
-		))
 
 	if b.config.lbStrategy != "" {
 		opts = append(opts, grpc.WithBalancerName(b.config.lbStrategy))
