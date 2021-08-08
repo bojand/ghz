@@ -266,6 +266,7 @@ var (
 	maxSendMsgSize      = kingpin.Flag("max-send-message-size", "Maximum message size the client can send.").
 				PlaceHolder(" ").IsSetByUser(&isMaxSendMsgSizeSet).String()
 
+	// host main argument
 	isHostSet = false
 	host      = kingpin.Arg("host", "Host and port to test.").String()
 )
