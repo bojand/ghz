@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/jinzhu/configor"
+
+	humanize "github.com/dustin/go-humanize"
 )
 
 // Duration is our duration with TOML support
@@ -112,6 +114,8 @@ type Config struct {
 	LoadStepDuration      Duration          `json:"load-step-duration" toml:"load-step-duration" yaml:"load-step-duration"`
 	LoadMaxDuration       Duration          `json:"load-max-duration" toml:"load-max-duration" yaml:"load-max-duration"`
 	LBStrategy            string            `json:"lb-strategy" toml:"lb-strategy" yaml:"lb-strategy"`
+	MaxCallRecvMsgSize    string            `json:"max-recv-message-size" toml:"max-recv-message-size" yaml:"max-recv-message-size"`
+	MaxCallSendMsgSize    string            `json:"max-send-message-size" toml:"max-send-message-size" yaml:"max-send-message-size"`
 }
 
 func checkData(data interface{}) error {
@@ -119,15 +123,15 @@ func checkData(data interface{}) error {
 	if !isObjData {
 		arrData, isArrData := data.([]interface{})
 		if !isArrData {
-			return errors.New("Unsupported type for Data")
+			return errors.New("unsupported type for Data")
 		}
 		if len(arrData) == 0 {
-			return errors.New("Data array must not be empty")
+			return errors.New("data array must not be empty")
 		}
 		for _, elem := range arrData {
 			_, isObjData = elem.(map[string]interface{})
 			if !isObjData {
-				return errors.New("Data array contains unsupported type")
+				return errors.New("data array contains unsupported type")
 			}
 		}
 
@@ -152,7 +156,7 @@ func LoadConfig(p string, c *Config) error {
 				for k, v := range objData {
 					sk, isString := k.(string)
 					if !isString {
-						return errors.New("Data key must string")
+						return errors.New("data key must string")
 					}
 					if len(sk) > 0 {
 						nd[sk] = v
@@ -172,6 +176,20 @@ func LoadConfig(p string, c *Config) error {
 	c.ZStop = strings.ToLower(c.ZStop)
 	if c.ZStop != "close" && c.ZStop != "ignore" && c.ZStop != "wait" {
 		c.ZStop = "close"
+	}
+
+	if c.MaxCallRecvMsgSize != "" {
+		_, err = humanize.ParseBytes(c.MaxCallRecvMsgSize)
+		if err != nil {
+			return errors.New("invalid max call recv message size: " + err.Error())
+		}
+	}
+
+	if c.MaxCallSendMsgSize != "" {
+		_, err = humanize.ParseBytes(c.MaxCallSendMsgSize)
+		if err != nil {
+			return errors.New("invalid max call send message size: " + err.Error())
+		}
 	}
 
 	return nil

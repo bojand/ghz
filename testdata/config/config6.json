@@ -10,8 +10,8 @@
     "max-duration": "60s",
     "stream-interval": "25s",
     "timeout": "30s",
-    "max-recv-message-size": "1024mb",
-    "max-send-message-size": "2000mib",
+    "max-recv-message-size": "1024nb",
+    "max-send-message-size": "2000nib",
     "data": {
         "f_strings": [
             "123",

@@ -59,13 +59,20 @@ func TestConfig_Load(t *testing.T) {
 				Data: map[string]interface{}{
 					"f_strings": []interface{}{"123", "456"},
 				},
-				Format:       "summary",
-				DialTimeout:  Duration(10 * time.Second),
-				LoadSchedule: "const",
-				CSchedule:    "const",
-				CStart:       1,
+				Format:             "summary",
+				DialTimeout:        Duration(10 * time.Second),
+				LoadSchedule:       "const",
+				CSchedule:          "const",
+				CStart:             1,
+				MaxCallRecvMsgSize: "1024mb",
+				MaxCallSendMsgSize: "2000mib",
 			},
 			true,
+		},
+		{
+			"invalid message size",
+			&Config{},
+			false,
 		},
 	}
 

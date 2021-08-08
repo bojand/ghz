@@ -309,6 +309,14 @@ Results in the following data sent:
 
 Reflect metadata as stringified JSON used only for reflection request.
 
+### `--max-recv-message-size`
+
+Maximum message size the client can receive. Can be specified as bytes, or using [human readable value](https://pkg.go.dev/github.com/dustin/go-humanize#ParseBytes) such as `42 MB`.
+
+### `--max-send-message-size`
+
+Maximum message size the client can send. Can be specified as bytes, or using [human readable value](https://pkg.go.dev/github.com/dustin/go-humanize#ParseBytes) such as `42 MB`.
+
 ### `-o`, `--output`
 
 Output path. If none is provided by default we print to standard output (stdout).

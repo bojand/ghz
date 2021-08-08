@@ -18,7 +18,10 @@ import (
 	"github.com/bojand/ghz/load"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	humanize "github.com/dustin/go-humanize"
 )
 
 // BinaryDataFunc is a function that can be used for provide binary data for request programatically.
@@ -38,13 +41,14 @@ const ScheduleLine = "line"
 // RunConfig represents the request Configs
 type RunConfig struct {
 	// call settings
-	call              string
-	host              string
-	proto             string
-	importPaths       []string
-	protoset          string
-	protosetBinary    []byte
-	enableCompression bool
+	call               string
+	host               string
+	proto              string
+	importPaths        []string
+	protoset           string
+	protosetBinary     []byte
+	enableCompression  bool
+	defaultCallOptions []grpc.CallOption
 
 	// security settings
 	creds      credentials.TransportCredentials
@@ -1044,6 +1048,15 @@ func WithStreamMessageProvider(fn StreamMessageProviderFunc) Option {
 	}
 }
 
+// WithDefaultCallOptions sets the default CallOptions for calls over the connection.
+func WithDefaultCallOptions(opts []grpc.CallOption) Option {
+	return func(o *RunConfig) error {
+		o.defaultCallOptions = opts
+
+		return nil
+	}
+}
+
 func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFile, clientKeyFile, cname string) (credentials.TransportCredentials, error) {
 	var tlsConf tls.Config
 
@@ -1145,6 +1158,29 @@ func fromConfig(cfg *Config) []Option {
 			return nil
 		},
 	)
+
+	var defaultCallOptions []grpc.CallOption
+	if cfg.MaxCallRecvMsgSize != "" {
+		v, err := humanize.ParseBytes(cfg.MaxCallRecvMsgSize)
+		if err != nil {
+			return nil
+		}
+
+		defaultCallOptions = append(defaultCallOptions, grpc.MaxCallRecvMsgSize(int(v)))
+	}
+
+	if cfg.MaxCallSendMsgSize != "" {
+		v, err := humanize.ParseBytes(cfg.MaxCallSendMsgSize)
+		if err != nil {
+			return nil
+		}
+
+		defaultCallOptions = append(defaultCallOptions, grpc.MaxCallSendMsgSize(int(v)))
+	}
+
+	if len(defaultCallOptions) > 0 {
+		options = append(options, WithDefaultCallOptions(defaultCallOptions))
+	}
 
 	if strings.TrimSpace(cfg.MetadataPath) != "" {
 		options = append(options, WithMetadataFromFile(strings.TrimSpace(cfg.MetadataPath)))
