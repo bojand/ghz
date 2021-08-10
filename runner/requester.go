@@ -22,6 +22,9 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
+
+	// To register the xds resolvers and balancers.
+	_ "google.golang.org/grpc/xds"
 )
 
 // Max size of the buffer of result channel.
