@@ -40,26 +40,26 @@ type Options struct {
 	Insecure  bool   `json:"insecure"`
 	Authority string `json:"authority,omitempty"`
 
-	RPS              uint          `json:"rps,omitempty"`
+	RPS              int           `json:"rps,omitempty"`
 	LoadSchedule     string        `json:"load-schedule"`
-	LoadStart        uint          `json:"load-start"`
-	LoadEnd          uint          `json:"load-end"`
+	LoadStart        int           `json:"load-start"`
+	LoadEnd          int           `json:"load-end"`
 	LoadStep         int           `json:"load-step"`
 	LoadStepDuration time.Duration `json:"load-step-duration"`
 	LoadMaxDuration  time.Duration `json:"load-max-duration"`
 
-	Concurrency   uint          `json:"concurrency,omitempty"`
+	Concurrency   int           `json:"concurrency,omitempty"`
 	CSchedule     string        `json:"concurrency-schedule"`
-	CStart        uint          `json:"concurrency-start"`
-	CEnd          uint          `json:"concurrency-end"`
+	CStart        int           `json:"concurrency-start"`
+	CEnd          int           `json:"concurrency-end"`
 	CStep         int           `json:"concurrency-step"`
 	CStepDuration time.Duration `json:"concurrency-step-duration"`
 	CMaxDuration  time.Duration `json:"concurrency-max-duration"`
 
-	Total uint `json:"total,omitempty"`
+	Total int  `json:"total,omitempty"`
 	Async bool `json:"async,omitempty"`
 
-	Connections   uint          `json:"connections,omitempty"`
+	Connections   int           `json:"connections,omitempty"`
 	Duration      time.Duration `json:"duration,omitempty"`
 	Timeout       time.Duration `json:"timeout,omitempty"`
 	DialTimeout   time.Duration `json:"dial-timeout,omitempty"`
@@ -72,7 +72,7 @@ type Options struct {
 	CPUs int    `json:"CPUs"`
 	Name string `json:"name,omitempty"`
 
-	SkipFirst   uint `json:"skipFirst,omitempty"`
+	SkipFirst   int  `json:"skipFirst,omitempty"`
 	CountErrors bool `json:"count-errors,omitempty"`
 }
 
@@ -80,9 +80,8 @@ type Options struct {
 type Report struct {
 	Name      string     `json:"name,omitempty"`
 	EndReason StopReason `json:"endReason,omitempty"`
-
-	Options Options   `json:"options,omitempty"`
-	Date    time.Time `json:"date"`
+	Date      time.Time  `json:"date"`
+	Options   Options    `json:"options,omitempty"`
 
 	Count   uint64        `json:"count"`
 	Total   time.Duration `json:"total"`
@@ -213,26 +212,26 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		Insecure:  r.config.insecure,
 		Authority: r.config.authority,
 
-		RPS:              uint(r.config.rps),
+		RPS:              r.config.rps,
 		LoadSchedule:     r.config.loadSchedule,
-		LoadStart:        r.config.loadStart,
-		LoadEnd:          r.config.loadEnd,
+		LoadStart:        int(r.config.loadStart),
+		LoadEnd:          int(r.config.loadEnd),
 		LoadStep:         r.config.loadStep,
 		LoadStepDuration: r.config.loadStepDuration,
 		LoadMaxDuration:  r.config.loadDuration,
 
-		Concurrency:   uint(r.config.c),
+		Concurrency:   r.config.c,
 		CSchedule:     r.config.cSchedule,
-		CStart:        r.config.cStart,
-		CEnd:          r.config.cEnd,
+		CStart:        int(r.config.cStart),
+		CEnd:          int(r.config.cEnd),
 		CStep:         r.config.cStep,
 		CStepDuration: r.config.cStepDuration,
 		CMaxDuration:  r.config.cMaxDuration,
 
-		Total: uint(r.config.n),
+		Total: r.config.n,
 		Async: r.config.async,
 
-		Connections:   uint(r.config.nConns),
+		Connections:   r.config.nConns,
 		Duration:      r.config.z,
 		Timeout:       r.config.timeout,
 		DialTimeout:   r.config.dialTimeout,
@@ -241,7 +240,7 @@ func (r *Reporter) Finalize(stopReason StopReason, total time.Duration) *Report 
 		Binary:      r.config.binary,
 		CPUs:        r.config.cpus,
 		Name:        r.config.name,
-		SkipFirst:   uint(r.config.skipFirst),
+		SkipFirst:   r.config.skipFirst,
 		CountErrors: r.config.countErrors,
 	}
 

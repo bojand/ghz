@@ -22,6 +22,8 @@ require (
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mfridman/tparse v0.8.3
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
+	github.com/prometheus/common v0.4.0
 	github.com/rakyll/statik v0.1.6
 	github.com/stretchr/testify v1.6.1
 	go.uber.org/multierr v1.3.0
