@@ -16,8 +16,133 @@ import (
 func (rp *ReportPrinter) printPrometheusLine() error {
 	encoder := expfmt.NewEncoder(rp.Out, expfmt.FmtText)
 
-	name := "ghz_run_count"
-	metricType := promtypes.MetricType_COUNTER
+	labels, err := rp.getCommonPrometheusLabels()
+	if err != nil {
+		return err
+	}
+
+	if err := rp.printPrometheusMetricGauge(
+		encoder, labels,
+		"ghz_run_count",
+		&promtypes.Gauge{Value: ptrFloat64(float64(rp.Report.Count))}); err != nil {
+		return err
+	}
+
+	if err := rp.printPrometheusMetricGauge(
+		encoder, labels,
+		"ghz_run_total", &promtypes.Gauge{Value: ptrFloat64(float64(rp.Report.Total))}); err != nil {
+		return err
+	}
+
+	if err := rp.printPrometheusMetricGauge(
+		encoder, labels,
+		"ghz_run_average", &promtypes.Gauge{Value: ptrFloat64(float64(rp.Report.Average.Nanoseconds()))}); err != nil {
+		return err
+	}
+
+	if err := rp.printPrometheusMetricGauge(
+		encoder, labels,
+		"ghz_run_fastest", &promtypes.Gauge{Value: ptrFloat64(float64(rp.Report.Fastest.Nanoseconds()))}); err != nil {
+		return err
+	}
+
+	if err := rp.printPrometheusMetricGauge(
+		encoder, labels,
+		"ghz_run_slowest", &promtypes.Gauge{Value: ptrFloat64(float64(rp.Report.Slowest.Nanoseconds()))}); err != nil {
+		return err
+	}
+
+	if err := rp.printPrometheusMetricGauge(
+		encoder, labels,
+		"ghz_run_rps", &promtypes.Gauge{Value: ptrFloat64(rp.Report.Rps)}); err != nil {
+		return err
+	}
+
+	// histogram
+	latencyName := "ghz_run_histogram"
+	metricType := promtypes.MetricType_HISTOGRAM
+	mf := promtypes.MetricFamily{
+		Name: &latencyName,
+		Type: &metricType,
+	}
+
+	metrics := make([]*promtypes.Metric, 0, 1)
+
+	metrics = append(metrics, &promtypes.Metric{
+		Label: labels,
+		Histogram: &promtypes.Histogram{
+			SampleCount: &rp.Report.Count,
+			SampleSum:   ptrFloat64(float64(rp.Report.Total.Nanoseconds())),
+			Bucket:      make([]*promtypes.Bucket, 0, len(rp.Report.Histogram)),
+		},
+	})
+
+	mf.Metric = append(mf.Metric, metrics...)
+
+	for _, v := range rp.Report.Histogram {
+		metrics[0].Histogram.Bucket = append(metrics[0].Histogram.Bucket,
+			&promtypes.Bucket{
+				CumulativeCount: ptrUint64(uint64(v.Count)),
+				UpperBound:      ptrFloat64(v.Mark),
+			})
+	}
+
+	if err := encoder.Encode(&mf); err != nil {
+		return err
+	}
+
+	// latency distribution
+	latencyName = "ghz_run_latency"
+	metricType = promtypes.MetricType_SUMMARY
+	mf = promtypes.MetricFamily{
+		Name: &latencyName,
+		Type: &metricType,
+	}
+
+	metrics = make([]*promtypes.Metric, 0, 1)
+
+	metrics = append(metrics, &promtypes.Metric{
+		Label: labels,
+		Summary: &promtypes.Summary{
+			SampleCount: &rp.Report.Count,
+			SampleSum:   ptrFloat64(float64(rp.Report.Total.Nanoseconds())),
+			Quantile:    make([]*promtypes.Quantile, 0, len(rp.Report.LatencyDistribution)),
+		},
+	})
+
+	mf.Metric = append(mf.Metric, metrics...)
+
+	for _, v := range rp.Report.LatencyDistribution {
+		metrics[0].Summary.Quantile = append(metrics[0].Summary.Quantile,
+			&promtypes.Quantile{
+				Quantile: ptrFloat64(float64(v.Percentage) / 100.0),
+				Value:    ptrFloat64(float64(v.Latency.Nanoseconds())),
+			})
+	}
+
+	if err := encoder.Encode(&mf); err != nil {
+		return err
+	}
+
+	// errors
+	errCount := 0
+	for _, v := range rp.Report.ErrorDist {
+		errCount += v
+	}
+
+	if err := rp.printPrometheusMetricGauge(
+		encoder, labels,
+		"ghz_run_errors", &promtypes.Gauge{Value: ptrFloat64(float64(errCount))}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rp *ReportPrinter) printPrometheusMetricGauge(
+	encoder expfmt.Encoder, labels []*promtypes.LabelPair,
+	name string, value *promtypes.Gauge) error {
+	metricType := promtypes.MetricType_GAUGE
 	mf := promtypes.MetricFamily{
 		Name: &name,
 		Type: &metricType,
@@ -25,24 +150,14 @@ func (rp *ReportPrinter) printPrometheusLine() error {
 
 	metrics := make([]*promtypes.Metric, 0, 1)
 
-	labels, err := rp.getCommonPrometheusLabels()
-	if err != nil {
-		return err
-	}
-
 	metrics = append(metrics, &promtypes.Metric{
-		Label:   labels,
-		Counter: &promtypes.Counter{Value: ptrFloat64(float64(rp.Report.Count))},
+		Label: labels,
+		Gauge: value,
 	})
 
 	mf.Metric = append(mf.Metric, metrics...)
 
-	err = encoder.Encode(&mf)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return encoder.Encode(&mf)
 }
 
 func (rp *ReportPrinter) getCommonPrometheusLabels() ([]*promtypes.LabelPair, error) {
@@ -112,14 +227,14 @@ func (rp *ReportPrinter) getCommonPrometheusLabels() ([]*promtypes.LabelPair, er
 		SkipFirst:        *ptrString(strconv.Itoa(rp.Report.Options.SkipFirst)),
 		Data:             "",
 		Metadata:         "",
-		LoadStepDuration: *ptrString(strconv.Itoa(int(rp.Report.Options.LoadStepDuration))),
-		LoadMaxDuration:  *ptrString(strconv.Itoa(int(rp.Report.Options.LoadMaxDuration))),
-		CStepDuration:    *ptrString(strconv.Itoa(int(rp.Report.Options.CStepDuration))),
-		CMaxDuration:     *ptrString(strconv.Itoa(int(rp.Report.Options.CMaxDuration))),
-		Duration:         *ptrString(strconv.Itoa(int(rp.Report.Options.Duration))),
-		Timeout:          *ptrString(strconv.Itoa(int(rp.Report.Options.Timeout))),
-		DialTimeout:      *ptrString(strconv.Itoa(int(rp.Report.Options.DialTimeout))),
-		KeepaliveTime:    *ptrString(strconv.Itoa(int(rp.Report.Options.KeepaliveTime))),
+		LoadStepDuration: *ptrString(strconv.Itoa(int(rp.Report.Options.LoadStepDuration.Nanoseconds()))),
+		LoadMaxDuration:  *ptrString(strconv.Itoa(int(rp.Report.Options.LoadMaxDuration.Nanoseconds()))),
+		CStepDuration:    *ptrString(strconv.Itoa(int(rp.Report.Options.CStepDuration.Nanoseconds()))),
+		CMaxDuration:     *ptrString(strconv.Itoa(int(rp.Report.Options.CMaxDuration.Nanoseconds()))),
+		Duration:         *ptrString(strconv.Itoa(int(rp.Report.Options.Duration.Nanoseconds()))),
+		Timeout:          *ptrString(strconv.Itoa(int(rp.Report.Options.Timeout.Nanoseconds()))),
+		DialTimeout:      *ptrString(strconv.Itoa(int(rp.Report.Options.DialTimeout.Nanoseconds()))),
+		KeepaliveTime:    *ptrString(strconv.Itoa(int(rp.Report.Options.KeepaliveTime.Nanoseconds()))),
 		Alias:            (*Alias)(&rp.Report.Options),
 	})
 	if err != nil {
@@ -131,6 +246,24 @@ func (rp *ReportPrinter) getCommonPrometheusLabels() ([]*promtypes.LabelPair, er
 	err = json.Unmarshal(j, &options)
 	if err != nil {
 		return nil, err
+	}
+
+	if rp.Report.Options.CSchedule == "const" {
+		delete(options, "concurrency-schedule")
+		delete(options, "concurrency-start")
+		delete(options, "concurrency-end")
+		delete(options, "concurrency-step")
+		delete(options, "concurrency-step-duration")
+		delete(options, "concurrency-max-duration")
+	}
+
+	if rp.Report.Options.LoadSchedule == "const" {
+		delete(options, "load-schedule")
+		delete(options, "load-start")
+		delete(options, "load-end")
+		delete(options, "load-step")
+		delete(options, "load-step-duration")
+		delete(options, "load-max-duration")
 	}
 
 	for k, v := range options {
@@ -154,6 +287,10 @@ func ptrInt32(v int32) *int32 {
 }
 
 func ptrInt64(v int64) *int64 {
+	return &v
+}
+
+func ptrUint64(v uint64) *uint64 {
 	return &v
 }
 
