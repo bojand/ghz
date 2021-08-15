@@ -2,7 +2,6 @@ package printer
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -240,8 +239,6 @@ func (rp *ReportPrinter) getCommonPrometheusLabels() ([]*promtypes.LabelPair, er
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(string(j))
 
 	err = json.Unmarshal(j, &options)
 	if err != nil {
