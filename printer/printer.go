@@ -81,9 +81,7 @@ func (rp *ReportPrinter) Print(format string) error {
 	case "influx-details":
 		return rp.printInfluxDetails()
 	case "prometheus":
-		return rp.printPrometheusLine()
-	case "prometheus-details":
-		return rp.printPrometheusDetails()
+		return rp.printPrometheus()
 	default:
 		return fmt.Errorf("unknown format: %s", format)
 	}

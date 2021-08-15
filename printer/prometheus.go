@@ -13,7 +13,7 @@ import (
 
 // https://github.com/prometheus/docs/blob/master/content/docs/instrumenting/exposition_formats.md
 
-func (rp *ReportPrinter) printPrometheusLine() error {
+func (rp *ReportPrinter) printPrometheus() error {
 	encoder := expfmt.NewEncoder(rp.Out, expfmt.FmtText)
 
 	labels, err := rp.getCommonPrometheusLabels()
@@ -276,18 +276,6 @@ func (rp *ReportPrinter) getCommonPrometheusLabels() ([]*promtypes.LabelPair, er
 	}
 
 	return labels, nil
-}
-
-func (rp *ReportPrinter) printPrometheusDetails() error {
-	return nil
-}
-
-func ptrInt32(v int32) *int32 {
-	return &v
-}
-
-func ptrInt64(v int64) *int64 {
-	return &v
 }
 
 func ptrUint64(v uint64) *uint64 {
