@@ -368,7 +368,7 @@ func histogram(buckets []runner.Bucket) string {
 			"  %s%s [%v]%s |%v\n",
 			markStr,
 			strings.Repeat(" ", maxMarkLen-len(markStr)),
-			buckets[i].Count,
+			countStr,
 			strings.Repeat(" ", maxCountLen-len(countStr)),
 			strings.Repeat(barChar, barLen),
 		))
