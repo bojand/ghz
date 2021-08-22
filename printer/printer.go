@@ -335,21 +335,45 @@ func formatPercent(num int, total uint64) string {
 }
 
 func histogram(buckets []runner.Bucket) string {
-	max := 0
+	maxMark := 0.0
+	maxCount := 0
 	for _, b := range buckets {
-		if v := b.Count; v > max {
-			max = v
+		if v := b.Mark; v > maxMark {
+			maxMark = v
+		}
+		if v := b.Count; v > maxCount {
+			maxCount = v
 		}
 	}
+
+	formatMark := func(mark float64) string {
+		return fmt.Sprintf("%.3f", mark*1000)
+	}
+	formatCount := func(count int) string {
+		return fmt.Sprintf("%v", count)
+	}
+
+	maxMarkLen := len(formatMark(maxMark))
+	maxCountLen := len(formatCount(maxCount))
 	res := new(bytes.Buffer)
 	for i := 0; i < len(buckets); i++ {
 		// Normalize bar lengths.
 		var barLen int
-		if max > 0 {
-			barLen = (buckets[i].Count*40 + max/2) / max
+		if maxCount > 0 {
+			barLen = (buckets[i].Count*40 + maxCount/2) / maxCount
 		}
-		res.WriteString(fmt.Sprintf("  %4.3f [%v]\t|%v\n", buckets[i].Mark*1000, buckets[i].Count, strings.Repeat(barChar, barLen)))
+		markStr := formatMark(buckets[i].Mark)
+		countStr := formatCount(buckets[i].Count)
+		res.WriteString(fmt.Sprintf(
+			"  %s%s [%v]%s |%v\n",
+			markStr,
+			strings.Repeat(" ", maxMarkLen-len(markStr)),
+			countStr,
+			strings.Repeat(" ", maxCountLen-len(countStr)),
+			strings.Repeat(barChar, barLen),
+		))
 	}
+
 	return res.String()
 }
 
