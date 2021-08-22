@@ -2,11 +2,14 @@ package printer
 
 import (
 	"bytes"
-	"fmt"
+	"io"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/bojand/ghz/runner"
+	promtypes "github.com/prometheus/client_model/go"
+	expfmt "github.com/prometheus/common/expfmt"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -123,43 +126,104 @@ func TestPrinter_printPrometheus(t *testing.T) {
 			err := p.printPrometheus()
 			assert.NoError(t, err)
 			actual := buf.String()
-			fmt.Println(actual)
-			assert.Equal(t, tt.expected, actual)
+
+			// parse actual
+			var actualMetricFamilies []*promtypes.MetricFamily
+			r := bytes.NewReader([]byte(actual))
+			decoder := expfmt.NewDecoder(r, expfmt.FmtText)
+			for {
+				metric := &promtypes.MetricFamily{}
+				err := decoder.Decode(metric)
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+					assert.NoError(t, err)
+				}
+
+				actualMetricFamilies = append(actualMetricFamilies, metric)
+			}
+
+			// parse expected
+			var expectedMetricFamilies []*promtypes.MetricFamily
+			r = bytes.NewReader([]byte(tt.expected))
+			decoder = expfmt.NewDecoder(r, expfmt.FmtText)
+			for {
+				metric := &promtypes.MetricFamily{}
+				err := decoder.Decode(metric)
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+					assert.NoError(t, err)
+				}
+
+				expectedMetricFamilies = append(expectedMetricFamilies, metric)
+			}
+
+			for i, amf := range actualMetricFamilies {
+				amf := amf
+
+				assert.True(t, i < len(expectedMetricFamilies))
+
+				emf := expectedMetricFamilies[i]
+
+				for im, am := range amf.Metric {
+					am := am
+
+					assert.True(t, im < len(emf.Metric))
+
+					em := emf.Metric[im]
+
+					assert.NotNil(t, em)
+
+					// sort actual labels
+					al := am.Label
+					sort.Slice(al, func(i, j int) bool { return *(al[i].Name) < *(al[j].Name) })
+
+					// sort expected labels
+					el := em.Label
+					sort.Slice(el, func(i, j int) bool { return *(el[i].Name) < *(el[j].Name) })
+
+					// finally compare labels
+					assert.Equal(t, el, al)
+				}
+			}
 		})
 	}
 }
 
 var expectedProm string = `
 # TYPE ghz_run_count gauge
-ghz_run_count{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 200
+ghz_run_count{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 200
 # TYPE ghz_run_total gauge
-ghz_run_total{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 2e+09
+ghz_run_total{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 2e+09
 # TYPE ghz_run_average gauge
-ghz_run_average{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 1e+07
+ghz_run_average{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 1e+07
 # TYPE ghz_run_fastest gauge
-ghz_run_fastest{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 1e+06
+ghz_run_fastest{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 1e+06
 # TYPE ghz_run_slowest gauge
-ghz_run_slowest{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 1e+08
+ghz_run_slowest{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 1e+08
 # TYPE ghz_run_rps gauge
-ghz_run_rps{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 2000
+ghz_run_rps{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 2000
 # TYPE ghz_run_histogram histogram
-ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",le="0.01"} 1
-ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",le="0.02"} 10
-ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",le="0.03"} 50
-ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",le="0.05"} 60
-ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",le="0.1"} 15
-ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",le="+Inf"} 200
-ghz_run_histogram_sum{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 2e+09
-ghz_run_histogram_count{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 200
+ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",le="0.01"} 1
+ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",le="0.02"} 10
+ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",le="0.03"} 50
+ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",le="0.05"} 60
+ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",le="0.1"} 15
+ghz_run_histogram_bucket{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",le="+Inf"} 200
+ghz_run_histogram_sum{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 2e+09
+ghz_run_histogram_count{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 200
 # TYPE ghz_run_latency summary
-ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",quantile="0.25"} 1e+06
-ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",quantile="0.5"} 5e+06
-ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",quantile="0.75"} 1e+07
-ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",quantile="0.9"} 1.5e+07
-ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",quantile="0.95"} 2e+07
-ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0",quantile="0.99"} 2.5e+07
-ghz_run_latency_sum{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 2e+09
-ghz_run_latency_count{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 200
+ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",quantile="0.25"} 1e+06
+ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",quantile="0.5"} 5e+06
+ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",quantile="0.75"} 1e+07
+ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",quantile="0.9"} 1.5e+07
+ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",quantile="0.95"} 2e+07
+ghz_run_latency{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0",quantile="0.99"} 2.5e+07
+ghz_run_latency_sum{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 2e+09
+ghz_run_latency_count{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 200
 # TYPE ghz_run_errors gauge
-ghz_run_errors{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial-timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import-paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count-errors="false",duration="0"} 5
+ghz_run_errors{name="run name",end_reason="normal",insecure="false",rps="0",connections="0",keepalive="0",skipFirst="0",dial_timeout="0",proto="/apis/greeter.proto",concurrency="50",call="helloworld.Greeter.SayHello",import_paths="",async="false",binary="false",total="200",host="0.0.0.0:50051",skipTLS="false",CPUs="0",timeout="0",count_errors="false",duration="0"} 5
 `
