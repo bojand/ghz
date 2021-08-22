@@ -87,6 +87,11 @@ HTML output can be generated using `html` as format in the `-O` option. [Sample 
 
 Using `-O json` outputs JSON data, and `-O pretty` outputs JSON in pretty format. [Sample pretty JSON output](/pretty.json).
 
+### Prometheus
+
+Using `-O prometheus` outputs the summary data as [Prometheus text exposition format
+](https://prometheus.io/docs/instrumenting/exposition_formats/). [Sample Prometheus output](/prometheus.txt).
+
 ### InfluxDB Line Protocol
 
 Using `-O influx-summary` outputs the summary data as [InfluxDB Line Protocol](https://docs.influxdata.com/influxdb/v1.6/concepts/glossary/#line-protocol). Sample output:
