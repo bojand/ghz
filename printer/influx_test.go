@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPrinter_getInfluxLine(t *testing.T) {
+func TestPrinter_printInfluxLine(t *testing.T) {
 	date := time.Now()
 	unixTimeNow := date.UnixNano()
 
@@ -119,8 +119,11 @@ func TestPrinter_getInfluxLine(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := ReportPrinter{Report: &tt.report}
-			actual := p.getInfluxLine()
+			buf := bytes.NewBufferString("")
+			p := ReportPrinter{Report: &tt.report, Out: buf}
+			err := p.printInfluxLine()
+			assert.NoError(t, err)
+			actual := buf.String()
 			assert.Equal(t, tt.expected, actual)
 		})
 	}

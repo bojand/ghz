@@ -331,6 +331,7 @@ Output type. If none provided, a summary is printed.
 - `"html"` - outputs the metrics report as HTML.
 - `"influx-summary"` - outputs the metrics summary as InfluxDB line protocol.
 - `"influx-details"` - outputs the metrics details as InfluxDB line protocol.
+- `"prometheus"` - outputs the metrics summary in Prometheus exposition format.
 
 See [output formats page](output.md) for details.
 

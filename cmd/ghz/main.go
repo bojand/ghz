@@ -208,7 +208,7 @@ var (
 
 	isFormatSet = false
 	format      = kingpin.Flag("format", "Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.").
-			Short('O').Default("summary").PlaceHolder(" ").IsSetByUser(&isFormatSet).Enum("summary", "csv", "json", "pretty", "html", "influx-summary", "influx-details")
+			Short('O').Default("summary").PlaceHolder(" ").IsSetByUser(&isFormatSet).Enum("summary", "csv", "json", "pretty", "html", "influx-summary", "influx-details", "prometheus")
 
 	isSkipFirstSet = false
 	skipFirst      = kingpin.Flag("skipFirst", "Skip the first X requests when doing the results tally.").
