@@ -141,7 +141,7 @@ func (dp *dataProvider) getDataForCall(ctd *CallData) ([]*dynamic.Message, error
 		return nil, err
 	}
 
-	if !dp.mtd.IsClientStreaming() {
+	if !dp.mtd.IsClientStreaming() && len(inputs) > 0 {
 		inputIdx := int(ctd.RequestNumber % int64(len(inputs)))
 		unaryInput := inputs[inputIdx]
 
