@@ -18,7 +18,7 @@ import (
 
 var errNoMethodNameSpecified = errors.New("no method name specified")
 
-// GetMethodDescFromProto gets method descritor for the given call symbol from proto file given my path proto
+// GetMethodDescFromProto gets method descriptor for the given call symbol from proto file given my path proto
 // imports is used for import paths in parsing the proto file
 func GetMethodDescFromProto(call, proto string, imports []string) (*desc.MethodDescriptor, error) {
 	p := &protoparse.Parser{ImportPaths: imports}

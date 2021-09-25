@@ -48,6 +48,12 @@ func TestProtodesc_GetMethodDescFromProto(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, md)
 	})
+
+	t.Run("proto3 optional support", func(t *testing.T) {
+		md, err := GetMethodDescFromProto("helloworld.OptionalGreeter/SayHello", "../testdata/optional.proto", []string{})
+		assert.NoError(t, err)
+		assert.NotNil(t, md)
+	})
 }
 
 func TestProtodesc_GetMethodDescFromProtoSet(t *testing.T) {

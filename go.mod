@@ -14,7 +14,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/golangci/golangci-lint v1.31.0
 	github.com/google/uuid v1.1.2
-	github.com/jhump/protoreflect v1.5.0
+	github.com/jhump/protoreflect v1.9.0
 	github.com/jinzhu/configor v1.1.1
 	github.com/jinzhu/gorm v1.9.11
 	github.com/labstack/echo v3.3.10+incompatible
@@ -33,6 +33,6 @@ require (
 	golang.org/x/sys v0.0.0-20210820121016-41cdb8703e55 // indirect
 	golang.org/x/tools v0.0.0-20200812195022-5ae4c3c160a0
 	google.golang.org/grpc v1.34.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.25.1-0.20200805231151-a709e31e5d12
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
