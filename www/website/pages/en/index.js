@@ -106,7 +106,7 @@ class Index extends React.Component {
             title: 'Use Proto, Protoset or Reflection',
           },
           {
-            content: 'View test results in various fomats including CLI, CSV, JSON, HTML and InfluxData',
+            content: 'View test results in various formats including CLI, CSV, JSON, HTML and InfluxData',
             imageAlign: 'top',
             title: 'Various Report Formats',
           },
