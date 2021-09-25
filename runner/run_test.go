@@ -3171,6 +3171,39 @@ func TestRunWrappedUnary(t *testing.T) {
 		assert.Equal(t, report.Average, report.Slowest)
 		assert.Equal(t, report.Average, report.Fastest)
 	})
+
+	t.Run("json string data from empty file", func(t *testing.T) {
+		report, err := Run(
+			"wrapped.WrappedService.GetMessage",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/wrapped.proto", []string{"../testdata"}),
+			WithDataFromFile(`../testdata/data_empty.json`),
+			WithInsecure(true),
+		)
+
+		assert.Error(t, err)
+
+		assert.NotNil(t, report)
+
+		assert.Equal(t, 0, int(report.Count))
+		assert.Zero(t, report.Average)
+		assert.Zero(t, report.Fastest)
+		assert.Zero(t, report.Slowest)
+		assert.Zero(t, report.Rps)
+		assert.Empty(t, report.Name)
+		assert.NotEmpty(t, report.Date)
+		assert.NotEmpty(t, report.Options)
+		assert.Empty(t, report.Details)
+		assert.Equal(t, true, report.Options.Insecure)
+		assert.Empty(t, report.LatencyDistribution)
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Equal(t, report.Average, report.Slowest)
+		assert.Equal(t, report.Average, report.Fastest)
+	})
+
+
 }
 
 func TestRunGtimeUnary(t *testing.T) {
