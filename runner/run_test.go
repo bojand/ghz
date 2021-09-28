@@ -112,6 +112,37 @@ func TestRunUnary(t *testing.T) {
 		assert.NotEmpty(t, parsed)
 	})
 
+	t.Run("test sprig template functions", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{ add 1 2 }}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		assert.Equal(t, msg.GetName(), "3")
+	})
+
 	t.Run("test custom template functions", func(t *testing.T) {
 		gs.ResetCounters()
 
@@ -3202,7 +3233,6 @@ func TestRunWrappedUnary(t *testing.T) {
 		assert.Equal(t, report.Average, report.Slowest)
 		assert.Equal(t, report.Average, report.Fastest)
 	})
-
 
 }
 
