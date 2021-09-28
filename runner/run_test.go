@@ -116,7 +116,7 @@ func TestRunUnary(t *testing.T) {
 		gs.ResetCounters()
 
 		data := make(map[string]interface{})
-		data["name"] = "{{ add 1 2 }}"
+		data["name"] = "{{ `test` | upper | repeat 5 }}"
 
 		report, err := Run(
 			"helloworld.Greeter.SayHello",
@@ -140,7 +140,7 @@ func TestRunUnary(t *testing.T) {
 		assert.Len(t, calls, 1)
 
 		msg := calls[0][0]
-		assert.Equal(t, msg.GetName(), "3")
+		assert.Equal(t, msg.GetName(), "TESTTESTTESTTESTTEST")
 	})
 
 	t.Run("test custom template functions", func(t *testing.T) {

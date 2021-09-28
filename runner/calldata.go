@@ -58,7 +58,7 @@ func newCallData(
 		fns[k] = v
 	}
 
-	for k, v := range sprig.TxtFuncMap() {
+	for k, v := range sprig.FuncMap() {
 		fns[k] = v
 	}
 
