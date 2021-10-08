@@ -66,6 +66,7 @@ Generates a new random string for each incovation. Accepts a length parameter. I
 `func randomInt(min, max int) int`  
 Generates a new non-negative pseudo-random number in range `[min, max)`.
 
+You can also use [sprig functions](http://masterminds.github.io/sprig/) within a template.
 
 **Examples**
 

@@ -10,6 +10,7 @@ import (
 	"text/template/parse"
 	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/google/uuid"
 	"github.com/jhump/protoreflect/desc"
 )
@@ -54,6 +55,10 @@ func newCallData(
 
 	fns := make(template.FuncMap, len(funcs)+2)
 	for k, v := range tmplFuncMap {
+		fns[k] = v
+	}
+
+	for k, v := range sprig.FuncMap() {
 		fns[k] = v
 	}
 

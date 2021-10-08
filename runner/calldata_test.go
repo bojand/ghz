@@ -317,4 +317,18 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 		assert.Equal(t, "custom-uuid", rm["trace_id"])
 		assert.Equal(t, "custom-sku", rm["sku"])
 	})
+
+	t.Run("sprig functions", func(t *testing.T) {
+
+		ctd := newCallData(md, nil, "worker_id_123", 200)
+		assert.NotNil(t, ctd)
+
+		r, err := ctd.ExecuteData(`{"trace_id":"{{add 1 2}}"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"3"}`, string(r))
+
+		r, err = ctd.ExecuteData(`{"trace_id":"{{"abc" | upper | repeat 3 }}"}`)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"trace_id":"ABCABCABC"}`, string(r))
+	})
 }
