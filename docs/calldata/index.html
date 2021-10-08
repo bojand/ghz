@@ -109,6 +109,7 @@ Generates a new UUID for each invocation.</p>
 Generates a new random string for each incovation. Accepts a length parameter. If the argument is <code>&lt;= 0</code> then a random string is generated with a random length between length of <code>2</code> and <code>16</code>.</p>
 <p><code>func randomInt(min, max int) int</code>  <br>
 Generates a new non-negative pseudo-random number in range <code>[min, max)</code>.</p>
+<p>You can also use <a href="http://masterminds.github.io/sprig/">sprig functions</a> within a template.</p>
 <p><strong>Examples</strong></p>
 <p>This can be useful to inject variable information into the message data JSON or metadata JSON payloads for each request, such as timestamp or unique request number. For example:</p>
 <pre><code class="hljs css language-sh">-m <span class="hljs-string">'{"request-id":"{{.RequestNumber}}", "timestamp":"{{.TimestampUnix}}"}'</span>
