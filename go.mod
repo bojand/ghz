@@ -3,6 +3,7 @@ module github.com/bojand/ghz
 go 1.14
 
 require (
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/alecthomas/kingpin v1.3.8-0.20191105203113-8c96d1c22481
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bojand/hri v1.1.0
@@ -20,7 +21,6 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/mfridman/tparse v0.8.3
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
