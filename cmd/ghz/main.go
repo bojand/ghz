@@ -316,7 +316,7 @@ func main() {
 	}
 
 	if isLBStrategySet && cfg.Host != "" && !strings.HasPrefix(cfg.Host, "dns:///") {
-		logger.Warn("Load balancing strategy set without using DNS (dns:///) scheme. Strategy: %v. Host: %+v.", cfg.LBStrategy, cfg.Host)
+		logger.Warn("Load balancing strategy set without using DNS (dns:///) scheme. ", "Strategy: ", cfg.LBStrategy, " Host: ", cfg.Host)
 	}
 
 	if logger != nil {
