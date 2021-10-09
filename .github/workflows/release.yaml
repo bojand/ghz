@@ -32,29 +32,23 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
 
       - name: Get current time
         uses: gerred/actions/current-time@master
         id: current-time
 
-      - name: Set version
-        run: |
-          echo 'RELEASE_VERSION<<EOF' >> $GITHUB_ENV
-          git describe --tags $(git rev-list --tags --max-count=1) >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
-
       - name: Build ghz
         run: |
           mkdir ./dist/
           mkdir ./dist/${{ matrix.target }}/
-          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz/...
+          go build -ldflags="-s -w -X 'main.version=${{ github.ref }}' -X 'main.commit=${{ github.sha }}' -X 'main.date=${{ steps.current-time.outputs.time }}'" -o ./dist/${{ matrix.target }}/ ./cmd/ghz/...
 
       - name: Build ghz-web
         env:
           CGO_ENABLED: 1
         run: |
-          go build -ldflags='-s -w -X main.version=${{ env.RELEASE_VERSION }} -X main.commit=${{ github.sha }} -X main.date=${{ steps.current-time.outputs.time }}' -o ./dist/${{ matrix.target }}/ ./cmd/ghz-web/...
+          go build -ldflags="-s -w -X 'main.version=${{ github.ref }}' -X 'main.commit=${{ github.sha }}' -X 'main.date=${{ steps.current-time.outputs.time }}'" -o ./dist/${{ matrix.target }}/ ./cmd/ghz-web/...
 
       - name: Prepare build artifacts [Windows]
         if: matrix.os == 'windows-latest'
