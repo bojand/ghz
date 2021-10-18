@@ -28,5 +28,5 @@ For convenience we include prebuilt [Grafana](http://grafana.com/) dashboards fo
 `ghz` can be used with [Prototool](https://github.com/uber/prototool) using the [`descriptor-set`](https://github.com/uber/prototool/tree/dev/docs#prototool-descriptor-set) command:
 
 ```
-ghz -protoset $(prototool descriptor-set --include-imports --tmp) ...
+ghz --protoset $(prototool descriptor-set --include-imports --tmp) ...
 ```
