@@ -40,6 +40,7 @@ type Worker struct {
 	msgProvider      StreamMessageProviderFunc
 
 	streamRecv StreamRecvMsgInterceptFunc
+	responseChannel *chan proto.Message
 }
 
 func (w *Worker) runWorker() error {
@@ -183,6 +184,10 @@ func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, inpu
 			"response", res, "error", resErr)
 	}
 
+	if w.config.storeResponsesAt != "" {
+		*w.responseChannel <- res
+	}
+
 	return resErr
 }
 
@@ -211,6 +216,10 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 			w.config.log.Debugw("Close and receive", "workerID", w.workerID, "call type", "client-streaming",
 				"call", w.mtd.GetFullyQualifiedName(),
 				"response", res, "error", closeErr)
+		}
+
+		if w.config.storeResponsesAt != "" {
+			*w.responseChannel <- res
 		}
 	}
 
@@ -369,6 +378,10 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 				"response", res, "error", err)
 		}
 
+		if w.config.storeResponsesAt != "" {
+			*w.responseChannel <- res
+		}
+
 		// with any of the cancellation operations we can't just bail
 		// we have to drain the messages until the server gets the cancel and ends their side of the stream
 
@@ -475,6 +488,10 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 				w.config.log.Debugw("Receive message", "workerID", w.workerID, "call type", "bidi",
 					"call", w.mtd.GetFullyQualifiedName(),
 					"response", res, "error", recvErr)
+			}
+
+			if w.config.storeResponsesAt != "" {
+				*w.responseChannel <- res
 			}
 
 			if w.streamRecv != nil {

@@ -2,14 +2,17 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/bojand/ghz/load"
 	"github.com/bojand/ghz/protodesc"
+	"github.com/gogo/protobuf/proto"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
@@ -59,6 +62,9 @@ type Requester struct {
 	lock       sync.Mutex
 	stopReason StopReason
 	workers    []*Worker
+
+	responseChannel chan proto.Message
+	stopChannel     chan bool
 }
 
 // NewRequester creates a new requestor from the passed RunConfig
@@ -178,6 +184,61 @@ func (b *Requester) Run() (*Report, error) {
 	go func() {
 		b.reporter.Run()
 	}()
+	
+	if b.config.storeResponsesAt != "" {
+		b.responseChannel = make(chan proto.Message)
+		go func(b *Requester) {
+			responses := make([]proto.Message, 0)
+			outputFile, err := os.Create(b.config.storeResponsesAt)
+			if err != nil {
+				b.config.log.Error("Failed to create file for storing responses. %s", err)
+				return
+			}
+
+
+			defer outputFile.Close()
+			stop := false
+			for !stop {
+				select {
+					case response := <- b.responseChannel:
+						responses = append(responses, response)
+
+						if len(responses) >= 100 {
+							for _, response := range responses {
+								data, err := json.Marshal(response)
+								if err != nil {
+									b.config.log.Error("Failed to marshal response %s", err)
+								}
+								data = append(data, '\n')
+								if _, err := outputFile.Write(data); err != nil {
+									b.config.log.Error("Failed to write response to file %s", err)
+								}
+							}
+							if outputFile.Sync() != nil {
+								b.config.log.Error("Failed to sync file %s", err)
+							}
+							responses = make([]proto.Message, 0)
+						}
+					case  <- b.stopChannel:
+						stop = true
+				}
+			}
+			for _, response := range responses {
+				data, err := json.Marshal(response)
+				if err != nil {
+					b.config.log.Error("Failed to marshal response %s", err)
+				}
+				data = append(data, '\n')
+				if _, err := outputFile.Write(data); err != nil {
+					b.config.log.Error("Failed to write response to file %s", err)
+				}
+			}
+			if outputFile.Sync() != nil {
+				b.config.log.Error("Failed to sync file %s", err)
+			}
+		}(b)
+	}
+	
 
 	wt := createWorkerTicker(b.config)
 
@@ -196,6 +257,7 @@ func (b *Requester) Run() (*Report, error) {
 func (b *Requester) Stop(reason StopReason) {
 
 	b.stopCh <- true
+	b.stopChannel <- true
 
 	b.lock.Lock()
 	b.stopReason = reason
@@ -218,6 +280,7 @@ func (b *Requester) Stop(reason StopReason) {
 // Finish finishes the test run
 func (b *Requester) Finish() *Report {
 	close(b.results)
+	b.stopChannel <- true
 	total := time.Since(b.start)
 
 	if b.config.hasLog {
@@ -400,6 +463,7 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 						metadataProvider: b.metadataProvider,
 						streamRecv:       b.config.recvMsgFunc,
 						msgProvider:      b.config.dataStreamFunc,
+						responseChannel:  &b.responseChannel,
 					}
 
 					wc++ // increment worker id

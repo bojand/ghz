@@ -115,7 +115,8 @@ type Config struct {
 	LoadMaxDuration       Duration          `json:"load-max-duration" toml:"load-max-duration" yaml:"load-max-duration"`
 	LBStrategy            string            `json:"lb-strategy" toml:"lb-strategy" yaml:"lb-strategy"`
 	MaxCallRecvMsgSize    string            `json:"max-recv-message-size" toml:"max-recv-message-size" yaml:"max-recv-message-size"`
-	MaxCallSendMsgSize    string            `json:"max-send-message-size" toml:"max-send-message-size" yaml:"max-send-message-size"`
+	MaxCallSendMsgSize string `json:"max-send-message-size" toml:"max-send-message-size" yaml:"max-send-message-size"`
+	StoreResponsesAt   string `json:"store-responses-at" toml:"store-responses-at" yaml:"store-responses-at"`
 }
 
 func checkData(data interface{}) error {

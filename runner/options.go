@@ -131,7 +131,8 @@ type RunConfig struct {
 	tags        []byte
 	skipFirst   int
 	countErrors bool
-	recvMsgFunc StreamRecvMsgInterceptFunc
+	recvMsgFunc      StreamRecvMsgInterceptFunc
+	storeResponsesAt string
 }
 
 // Option controls some aspect of run
@@ -142,14 +143,15 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 
 	// init with defaults
 	c := &RunConfig{
-		n:            200,
-		c:            50,
-		nConns:       1,
-		timeout:      time.Duration(20 * time.Second),
-		dialTimeout:  time.Duration(10 * time.Second),
-		cpus:         runtime.GOMAXPROCS(-1),
-		zstop:        "close",
-		loadSchedule: ScheduleConst,
+		n:                200,
+		c:                50,
+		nConns:           1,
+		timeout:          time.Duration(20 * time.Second),
+		dialTimeout:      time.Duration(10 * time.Second),
+		cpus:             runtime.GOMAXPROCS(-1),
+		zstop:            "close",
+		loadSchedule:     ScheduleConst,
+		storeResponsesAt: "",
 	}
 
 	// apply options
@@ -379,6 +381,13 @@ func WithSkipTLSVerify(skip bool) Option {
 	return func(o *RunConfig) error {
 		o.skipVerify = skip
 
+		return nil
+	}
+}
+
+func WithStoreResponsesAt(store string) Option {
+	return func(o *RunConfig) error {
+		o.storeResponsesAt = store
 		return nil
 	}
 }
@@ -1149,6 +1158,7 @@ func fromConfig(cfg *Config) []Option {
 		WithConcurrencyStepDuration(time.Duration(cfg.CStepDuration)),
 		WithConcurrencyDuration(time.Duration(cfg.CMaxDuration)),
 		WithCountErrors(cfg.CountErrors),
+		WithStoreResponsesAt(cfg.StoreResponsesAt),
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil
