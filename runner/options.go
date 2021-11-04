@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"io"
 	"io/ioutil"
 	"math"
@@ -126,13 +127,14 @@ type RunConfig struct {
 	log    Logger
 
 	// misc
-	name        string
-	cpus        int
-	tags        []byte
-	skipFirst   int
-	countErrors bool
+	name             string
+	cpus             int
+	tags             []byte
+	skipFirst        int
+	countErrors      bool
 	recvMsgFunc      StreamRecvMsgInterceptFunc
-	storeResponsesAt string
+	responsesChannel *chan proto.Message
+	stopChan *chan bool
 }
 
 // Option controls some aspect of run
@@ -151,7 +153,8 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 		cpus:             runtime.GOMAXPROCS(-1),
 		zstop:            "close",
 		loadSchedule:     ScheduleConst,
-		storeResponsesAt: "",
+		responsesChannel: nil,
+		stopChan: nil,
 	}
 
 	// apply options
@@ -385,9 +388,10 @@ func WithSkipTLSVerify(skip bool) Option {
 	}
 }
 
-func WithStoreResponsesAt(store string) Option {
+func WithResponsesChannel(channel *chan proto.Message, stopChan *chan bool) Option {
 	return func(o *RunConfig) error {
-		o.storeResponsesAt = store
+		o.responsesChannel = channel
+		o.stopChan = stopChan
 		return nil
 	}
 }
@@ -1158,7 +1162,6 @@ func fromConfig(cfg *Config) []Option {
 		WithConcurrencyStepDuration(time.Duration(cfg.CStepDuration)),
 		WithConcurrencyDuration(time.Duration(cfg.CMaxDuration)),
 		WithCountErrors(cfg.CountErrors),
-		WithStoreResponsesAt(cfg.StoreResponsesAt),
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil

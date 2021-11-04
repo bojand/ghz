@@ -40,7 +40,6 @@ type Worker struct {
 	msgProvider      StreamMessageProviderFunc
 
 	streamRecv StreamRecvMsgInterceptFunc
-	responseChannel *chan proto.Message
 }
 
 func (w *Worker) runWorker() error {
@@ -184,8 +183,8 @@ func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, inpu
 			"response", res, "error", resErr)
 	}
 
-	if w.config.storeResponsesAt != "" {
-		*w.responseChannel <- res
+	if w.config.responsesChannel != nil {
+		*w.config.responsesChannel <- res
 	}
 
 	return resErr
@@ -218,8 +217,8 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 				"response", res, "error", closeErr)
 		}
 
-		if w.config.storeResponsesAt != "" {
-			*w.responseChannel <- res
+		if w.config.responsesChannel != nil {
+			*w.config.responsesChannel <- res
 		}
 	}
 
@@ -378,8 +377,8 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 				"response", res, "error", err)
 		}
 
-		if w.config.storeResponsesAt != "" {
-			*w.responseChannel <- res
+		if w.config.responsesChannel != nil {
+			*w.config.responsesChannel <- res
 		}
 
 		// with any of the cancellation operations we can't just bail
@@ -490,8 +489,8 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 					"response", res, "error", recvErr)
 			}
 
-			if w.config.storeResponsesAt != "" {
-				*w.responseChannel <- res
+			if w.config.responsesChannel != nil {
+				*w.config.responsesChannel <- res
 			}
 
 			if w.streamRecv != nil {
