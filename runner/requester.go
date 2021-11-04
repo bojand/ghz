@@ -59,7 +59,6 @@ type Requester struct {
 	lock       sync.Mutex
 	stopReason StopReason
 	workers    []*Worker
-
 }
 
 // NewRequester creates a new requestor from the passed RunConfig

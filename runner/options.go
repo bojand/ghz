@@ -134,7 +134,7 @@ type RunConfig struct {
 	countErrors      bool
 	recvMsgFunc      StreamRecvMsgInterceptFunc
 	responsesChannel *chan proto.Message
-	stopChan *chan bool
+	stopChan         *chan bool
 }
 
 // Option controls some aspect of run
@@ -154,7 +154,7 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 		zstop:            "close",
 		loadSchedule:     ScheduleConst,
 		responsesChannel: nil,
-		stopChan: nil,
+		stopChan:         nil,
 	}
 
 	// apply options
