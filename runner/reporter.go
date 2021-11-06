@@ -331,7 +331,11 @@ func histogram(latencies []float64, slowest, fastest float64) []Bucket {
 				max = counts[bi]
 			}
 		} else if bi < len(buckets)-1 {
-			bi++
+			//if there is no latencies in next bucket,the next counts should not increase;
+			//so bi should skip the empty bucket
+			for bi < len(buckets)-1 && latencies[i] > buckets[bi] {
+				bi++
+			}
 		}
 	}
 	res := make([]Bucket, len(buckets))
