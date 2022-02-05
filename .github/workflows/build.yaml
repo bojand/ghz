@@ -65,3 +65,12 @@ jobs:
       run: $HOME/go/bin/golangci-lint run --timeout=2m ./...
     - name: Test
       run: go test -failfast -race -covermode=atomic -coverprofile=coverage.txt -cover -json ./... | $HOME/go/bin/tparse
+
+  build_docker_image:
+    name: Build Docker image from latest tag
+    runs-on: ubuntu-latest
+    steps:
+    - name: Build image
+      run: docker build https://github.com/bojand/ghz.git
+      env:
+        DOCKER_BUILDKIT: '1'

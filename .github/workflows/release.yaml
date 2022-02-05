@@ -147,3 +147,26 @@ jobs:
           formula-name: ghz
         env:
           COMMITTER_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
+
+  push_docker_image:
+    name: Push Docker image
+    needs: github_release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build image
+      run: docker build -t ghcr.io/${{ github.repository }} .
+      env:
+        DOCKER_BUILDKIT: '1'
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push image to GHCR
+      run: docker push ghcr.io/${{ github.repository }}
