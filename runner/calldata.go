@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	htmlTemplate "html/template"
 	"math/rand"
 	"strings"
 	"text/template"
@@ -20,6 +21,8 @@ const charset = "abcdefghijklmnopqrstuvwxyz" +
 
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
+
+var sprigFuncMap htmlTemplate.FuncMap = sprig.FuncMap()
 
 // CallData represents contextualized data available for templating
 type CallData struct {
@@ -47,20 +50,17 @@ var tmplFuncMap = template.FuncMap{
 	"randomInt":    randomInt,
 }
 
+var commonTemplate *template.Template = template.New("call_template_data").
+	Funcs(tmplFuncMap).
+	Funcs(template.FuncMap(sprigFuncMap))
+
 // newCallData returns new CallData
 func newCallData(
 	mtd *desc.MethodDescriptor,
 	funcs template.FuncMap,
 	workerID string, reqNum int64) *CallData {
 
-	fns := make(template.FuncMap, len(funcs)+2)
-	for k, v := range tmplFuncMap {
-		fns[k] = v
-	}
-
-	for k, v := range sprig.FuncMap() {
-		fns[k] = v
-	}
+	fns := make(template.FuncMap, len(funcs))
 
 	if len(funcs) > 0 {
 		for k, v := range funcs {
@@ -68,7 +68,8 @@ func newCallData(
 		}
 	}
 
-	t := template.New("call_template_data").Funcs(fns)
+	t, _ := commonTemplate.Clone()
+	t.Funcs(fns)
 
 	now := time.Now()
 	newUUID, _ := uuid.NewRandom()
