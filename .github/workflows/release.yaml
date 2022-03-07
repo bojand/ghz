@@ -156,6 +156,16 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Set Versions
+      uses: actions/github-script@v6
+      id: set_version
+      with:
+        script: |
+          const tag = context.ref.substring(10)
+          const no_v = tag.replace('v', '')
+          core.setOutput('tag', tag)
+          core.setOutput('nov', no_v)
+
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v1
       with:
@@ -168,5 +178,5 @@ jobs:
       with:
         push: true
         tags: |
-            ghcr.io/${{ github.repository }}:${{ github.ref }}
+            ghcr.io/${{ github.repository }}:${{steps.set_version.outputs.nov}}
             ghcr.io/${{ github.repository }}:latest
