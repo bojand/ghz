@@ -315,8 +315,8 @@ func main() {
 		options = append(options, runner.WithLogger(logger))
 	}
 
-	if isLBStrategySet && cfg.Host != "" && !strings.HasPrefix(cfg.Host, "dns:///") {
-		logger.Warn("Load balancing strategy set without using DNS (dns:///) scheme. ", "Strategy: ", cfg.LBStrategy, " Host: ", cfg.Host)
+	if logger != nil && isLBStrategySet && cfg.Host != "" && !strings.HasPrefix(cfg.Host, "dns:///") {
+		logger.Warnw("Load balancing strategy set without using DNS (dns:///) scheme. ", "strategy", cfg.LBStrategy, "host", cfg.Host)
 	}
 
 	if logger != nil {
