@@ -41,6 +41,7 @@ func TestPrinter_printPrometheus(t *testing.T) {
 					"Internal":         3,
 					"DeadlineExceeded": 2},
 				Options: runner.Options{
+					Name:         "run name",
 					Call:         "helloworld.Greeter.SayHello",
 					Proto:        "/apis/greeter.proto",
 					Host:         "0.0.0.0:50051",
