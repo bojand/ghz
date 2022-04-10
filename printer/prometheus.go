@@ -160,20 +160,12 @@ func (rp *ReportPrinter) printPrometheusMetricGauge(
 }
 
 func (rp *ReportPrinter) getCommonPrometheusLabels() ([]*promtypes.LabelPair, error) {
-	labels := make([]*promtypes.LabelPair, 0, len(rp.Report.Tags)+5)
 
-	labels = append(labels,
-		&promtypes.LabelPair{
-			Name:  ptrString("name"),
-			Value: &rp.Report.Name,
-		},
-		&promtypes.LabelPair{
-			Name:  ptrString("end_reason"),
-			Value: ptrString(string(rp.Report.EndReason)),
-		},
-	)
+	options := map[string]string{
+		"name":       rp.Report.Name,
+		"end_reason": string(rp.Report.EndReason),
+	}
 
-	options := map[string]string{}
 	type Alias runner.Options
 	j, err := json.Marshal(&struct {
 		ImportPaths      string `json:"import-paths"`
@@ -262,6 +254,8 @@ func (rp *ReportPrinter) getCommonPrometheusLabels() ([]*promtypes.LabelPair, er
 		delete(options, "load-step-duration")
 		delete(options, "load-max-duration")
 	}
+
+	labels := make([]*promtypes.LabelPair, 0, len(rp.Report.Tags)+5)
 
 	for k, v := range options {
 		k, v := k, v
