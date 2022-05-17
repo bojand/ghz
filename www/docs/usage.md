@@ -66,6 +66,7 @@ Flags:
       --cpus=12                  Number of cpu cores to use.
       --debug=                   The path to debug log file.
   -e, --enable-compression       Enable Gzip compression on requests.
+  --lb-strategy=                 Client load balancing strategy.
   -v, --version                  Show application version.
 
 Args:
