@@ -382,6 +382,10 @@ ghz --insecure \
 
 Enable gzip compression on requests.
 
+### `--lb-strategy`
+
+Client load balancing strategy. For example: `--lb-strategy "round_robin"`
+
 ### `--count-errors`
 
 By default stats for fastest, slowest, average, histogram, and latency distributions only take into account the responses with OK status. This option enabled counting of erroneous (non-OK) responses in stats calculations as well.
