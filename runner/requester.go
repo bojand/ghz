@@ -343,7 +343,8 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	}
 
 	if b.config.lbStrategy != "" {
-		opts = append(opts, grpc.WithBalancerName(b.config.lbStrategy))
+		grpcServiceConfig := fmt.Sprintf(`{"loadBalancingPolicy":"%s"}`, b.config.lbStrategy)
+		opts = append(opts, grpc.WithDefaultServiceConfig(grpcServiceConfig))
 	}
 
 	// create client connection
