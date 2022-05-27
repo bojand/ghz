@@ -9,6 +9,7 @@ import (
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func TestStatsHandler(t *testing.T) {
@@ -33,7 +34,7 @@ func TestStatsHandler(t *testing.T) {
 
 	conn, err := grpc.Dial(
 		internal.TestLocalhost,
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(&statsHandler{results: rChan}))
 
 	if err != nil {

@@ -18,6 +18,7 @@ import (
 	"go.uber.org/multierr"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
@@ -292,7 +293,7 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	var opts []grpc.DialOption
 
 	if b.config.insecure {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		opts = append(opts, grpc.WithTransportCredentials(b.config.creds))
 	}
