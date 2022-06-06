@@ -89,19 +89,19 @@ Examples:
 -n 10000 -c 10 --load-schedule=step --load-start=50 --load-step=10 --load-step-duration=5s
 ```
 
-Performs step load starting at `50` RPS and inscreasing by `10` RPS every `5s` until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
+Performs step load starting at `50` RPS and increasing by `10` RPS every `5s` until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
 
 ```sh
 -n 10000 -c 10 --load-schedule=step --load-start=50 --load-end=150 --load-step=10 --load-step-duration=5s
 ```
 
-Performs step load starting at `50` RPS and inscreasing by `10` RPS every `5s` until we reach `150` RPS at which point the load is sustained at constant RPS rate until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
+Performs step load starting at `50` RPS and increasing by `10` RPS every `5s` until we reach `150` RPS at which point the load is sustained at constant RPS rate until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
 
 ```sh
 -n 10000 -c 10 --load-schedule=step --load-start=50 --load-step=10 --load-step-duration=5s --load-max-duration=60s
 ```
 
-Performs step load starting at `50` RPS and inscreasing by `10` RPS every `5s` until `60s` has elapsed at which point the load is sustained at that RPS rate until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
+Performs step load starting at `50` RPS and increasing by `10` RPS every `5s` until `60s` has elapsed at which point the load is sustained at that RPS rate until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
 
 ```sh
 -n 10000 -c 10 --load-schedule=line --load-start=200 --load-step=-2 --load-end=50

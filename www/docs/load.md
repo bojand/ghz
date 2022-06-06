@@ -95,7 +95,7 @@ Status code distribution:
   [OK]   10000 responses
 ```
 
-Performs step load starting at `50` RPS and inscreasing by `10` RPS every `5s` until we reach `150` RPS at which point the load is sustained at constant RPS rate until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
+Performs step load starting at `50` RPS and increasing by `10` RPS every `5s` until we reach `150` RPS at which point the load is sustained at constant RPS rate until we reach `10000` total requests. The RPS load is distributed among the `10` workers, all sharing `1` connection.
 
 ![Step Up Load](/images/const_c_step_up_rps.svg)
 
