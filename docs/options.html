@@ -159,13 +159,13 @@ With <code>line</code> load schedule we do a linear increase or decrease of RPS 
 <p>Examples:</p>
 <pre><code class="hljs css language-sh">-n 10000 -c 10 --load-schedule=step --load-start=50 --load-step=10 --load-step-duration=5s
 </code></pre>
-<p>Performs step load starting at <code>50</code> RPS and inscreasing by <code>10</code> RPS every <code>5s</code> until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
+<p>Performs step load starting at <code>50</code> RPS and increasing by <code>10</code> RPS every <code>5s</code> until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
 <pre><code class="hljs css language-sh">-n 10000 -c 10 --load-schedule=step --load-start=50 --load-end=150 --load-step=10 --load-step-duration=5s
 </code></pre>
-<p>Performs step load starting at <code>50</code> RPS and inscreasing by <code>10</code> RPS every <code>5s</code> until we reach <code>150</code> RPS at which point the load is sustained at constant RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
+<p>Performs step load starting at <code>50</code> RPS and increasing by <code>10</code> RPS every <code>5s</code> until we reach <code>150</code> RPS at which point the load is sustained at constant RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
 <pre><code class="hljs css language-sh">-n 10000 -c 10 --load-schedule=step --load-start=50 --load-step=10 --load-step-duration=5s --load-max-duration=60s
 </code></pre>
-<p>Performs step load starting at <code>50</code> RPS and inscreasing by <code>10</code> RPS every <code>5s</code> until <code>60s</code> has elapsed at which point the load is sustained at that RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
+<p>Performs step load starting at <code>50</code> RPS and increasing by <code>10</code> RPS every <code>5s</code> until <code>60s</code> has elapsed at which point the load is sustained at that RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
 <pre><code class="hljs css language-sh">-n 10000 -c 10 --load-schedule=line --load-start=200 --load-step=-2 --load-end=50
 </code></pre>
 <p>Performs linear load starting at <code>200</code> RPS and decreasing by <code>2</code> RPS every <code>1s</code> until <code>20</code> RPS has been reached, at which point the load is sustained at that RPS rate until we reach <code>10000</code> total requests. The RPS load is distributed among the <code>10</code> workers, all sharing <code>1</code> connection.</p>
