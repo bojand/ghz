@@ -1,6 +1,6 @@
 # syntax=docker.io/docker/dockerfile:1@sha256:42399d4635eddd7a9b8a24be879d2f9a930d0ed040a61324cfdf59ef1357b3b2
 
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.15 AS alpine
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.16 AS alpine
 FROM --platform=$BUILDPLATFORM gcr.io/distroless/base:nonroot@sha256:02f667185ccf78dbaaf79376b6904aea6d832638e1314387c2c2932f217ac5cb AS distroless
 
 FROM alpine AS osmap-linux
