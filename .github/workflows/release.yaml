@@ -120,7 +120,7 @@ jobs:
         run: |
           # Temporary fix for https://github.com/actions/setup-go/issues/14
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install github.com/git-chglog/git-chglog/cmd/git-chglog
+          go get -u github.com/git-chglog/git-chglog/cmd/git-chglog
           # git-chglog -c .chglog/config.yml $(git describe --tags $(git rev-list --tags --max-count=1))
           git-chglog -c .chglog/config.yml ${{ env.RELEASE_VERSION }} > RELEASE-${{ env.RELEASE_VERSION }}.md
       - name: Create GitHub release ${{ matrix.target }}
