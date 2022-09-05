@@ -57,7 +57,7 @@ jobs:
         key: ${{ runner.os }}-go-bin-${{ env.GOLANGCI_LINT_VERSION }}
     - name: Install tparse
       if: steps.cache-go-bin.outputs.cache-hit != 'true'
-      run: go get github.com/mfridman/tparse
+      run: go install github.com/mfridman/tparse
     - name: Install golangci-lint
       if: steps.cache-go-bin.outputs.cache-hit != 'true'
       run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/go/bin $GOLANGCI_LINT_VERSION

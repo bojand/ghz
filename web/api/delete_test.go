@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -38,7 +37,7 @@ func TestDeleteAPI(t *testing.T) {
 
 	t.Run("Ingest", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/SayHello/report1.json")
+		dat, err := os.ReadFile("../test/SayHello/report1.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -95,8 +94,7 @@ func TestDeleteAPI(t *testing.T) {
 	})
 
 	t.Run("IngestToProject", func(t *testing.T) {
-
-		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
+		dat, err := os.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
