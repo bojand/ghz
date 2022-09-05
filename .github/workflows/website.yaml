@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
       - name: Use Node.js 12
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 12.x
       - name: Build webpage
@@ -31,7 +31,7 @@ jobs:
           mkdir -p ${{env.HOME}}/tmp/www/build
           cp -r ./www/website/build/ghz/. ${{env.HOME}}/tmp/www/build
       - name: Check out target branch
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
         with:
           ref: ${{ env.WWW_TARGET_BRANCH }}
       - name: Copy new data

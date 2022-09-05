@@ -27,12 +27,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
 
       - name: Get current time
         uses: gerred/actions/current-time@master
@@ -74,7 +74,7 @@ jobs:
           cd -
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}
           path: ${{ matrix.name }}
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Prune & Unshallow
         run: git fetch --prune --unshallow
@@ -98,17 +98,17 @@ jobs:
 
       # These can be squashed when https://github.com/actions/download-artifact/issues/6 is closed
       - name: Download releases from github_build
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: ghz-linux-x86_64.tar.gz
           path: .
       - name: Download releases from github_build
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: ghz-darwin-x86_64.tar.gz
           path: .
       - name: Download releases from github_build
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: ghz-windows-x86_64.zip
           path: .
@@ -124,7 +124,7 @@ jobs:
           # git-chglog -c .chglog/config.yml $(git describe --tags $(git rev-list --tags --max-count=1))
           git-chglog -c .chglog/config.yml ${{ env.RELEASE_VERSION }} > RELEASE-${{ env.RELEASE_VERSION }}.md
       - name: Create GitHub release ${{ matrix.target }}
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             ghz-linux-x86_64.tar.gz
@@ -142,7 +142,7 @@ jobs:
     needs: github_release
     runs-on: ubuntu-latest
     steps:
-      - uses: mislav/bump-homebrew-formula-action@v1.6
+      - uses: mislav/bump-homebrew-formula-action@v3.6
         with:
           formula-name: ghz
         env:
@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set Versions
       uses: actions/github-script@v6
@@ -167,7 +167,7 @@ jobs:
           core.setOutput('nov', no_v)
 
     - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v1
+      uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
