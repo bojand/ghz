@@ -124,7 +124,7 @@ jobs:
           # git-chglog -c .chglog/config.yml $(git describe --tags $(git rev-list --tags --max-count=1))
           git-chglog -c .chglog/config.yml ${{ env.RELEASE_VERSION }} > RELEASE-${{ env.RELEASE_VERSION }}.md
       - name: Create GitHub release ${{ matrix.target }}
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v1
         with:
           files: |
             ghz-linux-x86_64.tar.gz
