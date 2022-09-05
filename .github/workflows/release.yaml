@@ -142,7 +142,7 @@ jobs:
     needs: github_release
     runs-on: ubuntu-latest
     steps:
-      - uses: mislav/bump-homebrew-formula-action@v3.6
+      - uses: mislav/bump-homebrew-formula-action@v2
         with:
           formula-name: ghz
         env:
@@ -167,7 +167,7 @@ jobs:
           core.setOutput('nov', no_v)
 
     - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v2
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
