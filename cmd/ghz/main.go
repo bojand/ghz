@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"runtime"
 	"strconv"
@@ -396,7 +396,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 
 	var binaryData []byte
 	if *binData {
-		b, err := ioutil.ReadAll(os.Stdin)
+		b, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return err
 		}

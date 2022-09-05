@@ -36,3 +36,7 @@ issues:
     - path: protodesc/
       text: "SA1019: package github.com/golang/protobuf"
 
+    # TODO fix protobuf deprecated
+    - path: runner/
+      text: "SA1019: \"github.com/golang/protobuf/jsonpb\" is deprecated"
+

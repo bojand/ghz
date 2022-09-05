@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -262,7 +261,8 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 }
 
 // WithConfigFromFile uses a configuration JSON file to populate the RunConfig
-//  WithConfigFromFile("config.json")
+//
+//	WithConfigFromFile("config.json")
 func WithConfigFromFile(file string) Option {
 	return func(o *RunConfig) error {
 		var cfg Config
@@ -320,6 +320,7 @@ func WithConfig(cfg *Config) Option {
 }
 
 // WithCertificate specifies the certificate options for the run
+//
 //	WithCertificate("client.crt", "client.key")
 func WithCertificate(cert, key string) Option {
 	return func(o *RunConfig) error {
@@ -353,6 +354,7 @@ func WithAuthority(authority string) Option {
 }
 
 // WithRootCertificate specifies the root certificate options for the run
+//
 //	WithRootCertificate("ca.crt")
 func WithRootCertificate(cert string) Option {
 	return func(o *RunConfig) error {
@@ -365,6 +367,7 @@ func WithRootCertificate(cert string) Option {
 }
 
 // WithInsecure specifies that this run should be done using insecure mode
+//
 //	WithInsecure(true)
 func WithInsecure(insec bool) Option {
 	return func(o *RunConfig) error {
@@ -384,6 +387,7 @@ func WithSkipTLSVerify(skip bool) Option {
 }
 
 // WithTotalRequests specifies the N (number of total requests) setting
+//
 //	WithTotalRequests(1000)
 func WithTotalRequests(n uint) Option {
 	return func(o *RunConfig) error {
@@ -394,6 +398,7 @@ func WithTotalRequests(n uint) Option {
 }
 
 // WithConcurrency specifies the C (number of concurrent requests) option
+//
 //	WithConcurrency(20)
 func WithConcurrency(c uint) Option {
 	return func(o *RunConfig) error {
@@ -404,6 +409,7 @@ func WithConcurrency(c uint) Option {
 }
 
 // WithRPS specifies the RPS (requests per second) limit option
+//
 //	WithRPS(10)
 func WithRPS(v uint) Option {
 	return func(o *RunConfig) error {
@@ -414,6 +420,7 @@ func WithRPS(v uint) Option {
 }
 
 // WithRunDuration specifies the Z (total test duration) option
+//
 //	WithRunDuration(time.Duration(2*time.Minute))
 func WithRunDuration(z time.Duration) Option {
 	return func(o *RunConfig) error {
@@ -425,6 +432,7 @@ func WithRunDuration(z time.Duration) Option {
 
 // WithDurationStopAction specifies how run duration (Z) timeout is handled
 // Possible options are "close", "ignore", and "wait"
+//
 //	WithDurationStopAction("ignore")
 func WithDurationStopAction(action string) Option {
 	return func(o *RunConfig) error {
@@ -439,6 +447,7 @@ func WithDurationStopAction(action string) Option {
 }
 
 // WithTimeout specifies the timeout for each request
+//
 //	WithTimeout(time.Duration(20*time.Second))
 func WithTimeout(timeout time.Duration) Option {
 	return func(o *RunConfig) error {
@@ -449,6 +458,7 @@ func WithTimeout(timeout time.Duration) Option {
 }
 
 // WithDialTimeout specifies the initial connection dial timeout
+//
 //	WithDialTimeout(time.Duration(20*time.Second))
 func WithDialTimeout(dt time.Duration) Option {
 	return func(o *RunConfig) error {
@@ -459,6 +469,7 @@ func WithDialTimeout(dt time.Duration) Option {
 }
 
 // WithKeepalive specifies the keepalive timeout
+//
 //	WithKeepalive(time.Duration(1*time.Minute))
 func WithKeepalive(k time.Duration) Option {
 	return func(o *RunConfig) error {
@@ -469,6 +480,7 @@ func WithKeepalive(k time.Duration) Option {
 }
 
 // WithBinaryData specifies the binary data
+//
 //	msg := &helloworld.HelloRequest{}
 //	msg.Name = "bob"
 //	binData, _ := proto.Marshal(msg)
@@ -493,7 +505,8 @@ func WithClientLoadBalancing(strategy string) Option {
 }
 
 // WithBinaryDataFunc specifies the binary data func which will be called on each request
-//  WithBinaryDataFunc(changeFunc)
+//
+//	WithBinaryDataFunc(changeFunc)
 func WithBinaryDataFunc(data func(mtd *desc.MethodDescriptor, callData *CallData) []byte) Option {
 	return func(o *RunConfig) error {
 		o.dataFunc = data
@@ -504,10 +517,11 @@ func WithBinaryDataFunc(data func(mtd *desc.MethodDescriptor, callData *CallData
 }
 
 // WithBinaryDataFromFile specifies the binary data
+//
 //	WithBinaryDataFromFile("request_data.bin")
 func WithBinaryDataFromFile(path string) Option {
 	return func(o *RunConfig) error {
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
@@ -520,6 +534,7 @@ func WithBinaryDataFromFile(path string) Option {
 }
 
 // WithDataFromJSON loads JSON data from string
+//
 //	WithDataFromJSON(`{"name":"bob"}`)
 func WithDataFromJSON(data string) Option {
 	return func(o *RunConfig) error {
@@ -547,11 +562,12 @@ func WithData(data interface{}) Option {
 }
 
 // WithDataFromReader loads JSON data from reader
-// 	file, _ := os.Open("data.json")
-// 	WithDataFromReader(file)
+//
+//	file, _ := os.Open("data.json")
+//	WithDataFromReader(file)
 func WithDataFromReader(r io.Reader) Option {
 	return func(o *RunConfig) error {
-		data, err := ioutil.ReadAll(r)
+		data, err := io.ReadAll(r)
 		if err != nil {
 			return err
 		}
@@ -564,10 +580,11 @@ func WithDataFromReader(r io.Reader) Option {
 }
 
 // WithDataFromFile loads JSON data from file
+//
 //	WithDataFromFile("data.json")
 func WithDataFromFile(path string) Option {
 	return func(o *RunConfig) error {
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
@@ -580,6 +597,7 @@ func WithDataFromFile(path string) Option {
 }
 
 // WithMetadataFromJSON specifies the metadata to be read from JSON string
+//
 //	WithMetadataFromJSON(`{"request-id":"123"}`)
 func WithMetadataFromJSON(md string) Option {
 	return func(o *RunConfig) error {
@@ -590,10 +608,11 @@ func WithMetadataFromJSON(md string) Option {
 }
 
 // WithMetadata specifies the metadata to be used as a map
-// 	md := make(map[string]string)
-// 	md["token"] = "foobar"
-// 	md["request-id"] = "123"
-// 	WithMetadata(&md)
+//
+//	md := make(map[string]string)
+//	md["token"] = "foobar"
+//	md["request-id"] = "123"
+//	WithMetadata(&md)
 func WithMetadata(md map[string]string) Option {
 	return func(o *RunConfig) error {
 		mdJSON, err := json.Marshal(md)
@@ -608,10 +627,11 @@ func WithMetadata(md map[string]string) Option {
 }
 
 // WithMetadataFromFile loads JSON metadata from file
+//
 //	WithMetadataFromJSON("metadata.json")
 func WithMetadataFromFile(path string) Option {
 	return func(o *RunConfig) error {
-		mdJSON, err := ioutil.ReadFile(path)
+		mdJSON, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
@@ -623,6 +643,7 @@ func WithMetadataFromFile(path string) Option {
 }
 
 // WithName sets the name of the test run
+//
 //	WithName("greeter service test")
 func WithName(name string) Option {
 	return func(o *RunConfig) error {
@@ -636,10 +657,11 @@ func WithName(name string) Option {
 }
 
 // WithTags specifies the user defined tags as a map
-// 	tags := make(map[string]string)
-// 	tags["env"] = "staging"
-// 	tags["created by"] = "joe developer"
-// 	WithTags(&tags)
+//
+//	tags := make(map[string]string)
+//	tags["env"] = "staging"
+//	tags["created by"] = "joe developer"
+//	WithTags(&tags)
 func WithTags(tags map[string]string) Option {
 	return func(o *RunConfig) error {
 		tagsJSON, err := json.Marshal(tags)
@@ -654,6 +676,7 @@ func WithTags(tags map[string]string) Option {
 }
 
 // WithCPUs specifies the number of CPU's to be used
+//
 //	WithCPUs(4)
 func WithCPUs(c uint) Option {
 	return func(o *RunConfig) error {
@@ -687,6 +710,7 @@ func WithCountErrors(v bool) Option {
 
 // WithProtoFile specified proto file path and optionally import paths
 // We will automatically add the proto file path's directory and the current directory
+//
 //	WithProtoFile("greeter.proto", []string{"/home/protos"})
 func WithProtoFile(proto string, importPaths []string) Option {
 	return func(o *RunConfig) error {
@@ -715,6 +739,7 @@ func WithProtoFile(proto string, importPaths []string) Option {
 }
 
 // WithProtoset specified protoset file path
+//
 //	WithProtoset("bundle.protoset")
 func WithProtoset(protoset string) Option {
 	return func(o *RunConfig) error {
@@ -770,10 +795,11 @@ func WithStreamDynamicMessages(v bool) Option {
 }
 
 // WithReflectionMetadata specifies the metadata to be used as a map
-// 	md := make(map[string]string)
-// 	md["token"] = "foobar"
-// 	md["request-id"] = "123"
-// 	WithReflectionMetadata(&md)
+//
+//	md := make(map[string]string)
+//	md["token"] = "foobar"
+//	md["request-id"] = "123"
+//	WithReflectionMetadata(&md)
 func WithReflectionMetadata(md map[string]string) Option {
 	return func(o *RunConfig) error {
 		o.rmd = md
@@ -783,6 +809,7 @@ func WithReflectionMetadata(md map[string]string) Option {
 }
 
 // WithConnections specifies the number of gRPC connections to use
+//
 //	WithConnections(5)
 func WithConnections(c uint) Option {
 	return func(o *RunConfig) error {
@@ -814,6 +841,7 @@ func WithTemplateFuncs(funcMap template.FuncMap) Option {
 }
 
 // WithEnableCompression specifies that requests should be done using gzip Compressor
+//
 //	WithEnableCompression(true)
 func WithEnableCompression(enableCompression bool) Option {
 	return func(o *RunConfig) error {
@@ -824,6 +852,7 @@ func WithEnableCompression(enableCompression bool) Option {
 }
 
 // WithLoadSchedule specifies the load schedule
+//
 //	WithLoadSchedule("const")
 func WithLoadSchedule(schedule string) Option {
 	return func(o *RunConfig) error {
@@ -837,6 +866,7 @@ func WithLoadSchedule(schedule string) Option {
 }
 
 // WithLoadStart specifies the load start
+//
 //	WithLoadStart(5)
 func WithLoadStart(start uint) Option {
 	return func(o *RunConfig) error {
@@ -847,6 +877,7 @@ func WithLoadStart(start uint) Option {
 }
 
 // WithLoadEnd specifies the load end
+//
 //	WithLoadEnd(25)
 func WithLoadEnd(end uint) Option {
 	return func(o *RunConfig) error {
@@ -857,6 +888,7 @@ func WithLoadEnd(end uint) Option {
 }
 
 // WithLoadStep specifies the load step
+//
 //	WithLoadStep(5)
 func WithLoadStep(step int) Option {
 	return func(o *RunConfig) error {
@@ -894,6 +926,7 @@ func WithAsync(async bool) Option {
 }
 
 // WithConcurrencySchedule specifies the concurrency adjustment schedule
+//
 //	WithConcurrencySchedule("const")
 func WithConcurrencySchedule(schedule string) Option {
 	return func(o *RunConfig) error {
@@ -907,6 +940,7 @@ func WithConcurrencySchedule(schedule string) Option {
 }
 
 // WithConcurrencyStart specifies the concurrency start for line or step schedule
+//
 //	WithConcurrencyStart(5)
 func WithConcurrencyStart(v uint) Option {
 	return func(o *RunConfig) error {
@@ -917,6 +951,7 @@ func WithConcurrencyStart(v uint) Option {
 }
 
 // WithConcurrencyEnd specifies the concurrency end value for line or step schedule
+//
 //	WithConcurrencyEnd(25)
 func WithConcurrencyEnd(v uint) Option {
 	return func(o *RunConfig) error {
@@ -927,6 +962,7 @@ func WithConcurrencyEnd(v uint) Option {
 }
 
 // WithConcurrencyStep specifies the concurrency step value or slope
+//
 //	WithConcurrencyStep(5)
 func WithConcurrencyStep(step int) Option {
 	return func(o *RunConfig) error {
@@ -986,7 +1022,6 @@ func WithWorkerTicker(ticker load.WorkerTicker) Option {
 //		}
 //		return nil
 //	})
-//
 func WithStreamRecvMsgIntercept(fn StreamRecvMsgInterceptFunc) Option {
 	return func(o *RunConfig) error {
 		o.recvMsgFunc = fn
@@ -996,6 +1031,7 @@ func WithStreamRecvMsgIntercept(fn StreamRecvMsgInterceptFunc) Option {
 }
 
 // WithDataProvider provides custom data provider
+//
 //	WithDataProvider(func(*CallData) ([]*dynamic.Message, error) {
 //		protoMsg := &helloworld.HelloRequest{Name: "Bob"}
 //		dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
@@ -1013,6 +1049,7 @@ func WithDataProvider(fn DataProviderFunc) Option {
 }
 
 // WithMetadataProvider provides custom metadata provider
+//
 //	WithMetadataProvider(ctd *CallData) (*metadata.MD, error) {
 //		return &metadata.MD{"token": []string{"secret"}}, nil
 //	}),
@@ -1025,6 +1062,7 @@ func WithMetadataProvider(fn MetadataProviderFunc) Option {
 }
 
 // WithStreamMessageProvider sets custom stream message provider
+//
 //	WithStreamMessageProvider(func(cd *CallData) (*dynamic.Message, error) {
 //		protoMsg := &helloworld.HelloRequest{Name: cd.WorkerID + ": " + strconv.FormatInt(cd.RequestNumber, 10)}
 //		dynamicMsg, err := dynamic.AsDynamicMessage(protoMsg)
@@ -1074,7 +1112,7 @@ func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFil
 	} else if cacertFile != "" {
 		// Create a certificate pool from the certificate authority
 		certPool := x509.NewCertPool()
-		ca, err := ioutil.ReadFile(cacertFile)
+		ca, err := os.ReadFile(cacertFile)
 		if err != nil {
 			return nil, fmt.Errorf("could not read ca certificate: %v", err)
 		}

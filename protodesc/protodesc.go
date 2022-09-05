@@ -3,7 +3,7 @@ package protodesc
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -43,7 +43,7 @@ func GetMethodDescFromProto(call, proto string, imports []string) (*desc.MethodD
 
 // GetMethodDescFromProtoSet gets method descriptor for the given call symbol from protoset file given my path protoset
 func GetMethodDescFromProtoSet(call, protoset string) (*desc.MethodDescriptor, error) {
-	b, err := ioutil.ReadFile(protoset)
+	b, err := os.ReadFile(protoset)
 	if err != nil {
 		return nil, fmt.Errorf("could not load protoset file %q: %v", protoset, err)
 	}
@@ -157,10 +157,11 @@ func findServiceSymbol(resolved map[string]*desc.FileDescriptor, fullyQualifiedN
 // and the method name from the input string.
 //
 // valid inputs:
-//   package.Service.Method
-//   .package.Service.Method
-//   package.Service/Method
-//   .package.Service/Method
+//
+//	package.Service.Method
+//	.package.Service.Method
+//	package.Service/Method
+//	.package.Service/Method
 func parseServiceMethod(svcAndMethod string) (string, string, error) {
 	if len(svcAndMethod) == 0 {
 		return "", "", errNoMethodNameSpecified

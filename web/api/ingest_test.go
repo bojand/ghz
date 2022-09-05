@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -35,7 +34,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("Ingest", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/SayHello/report1.json")
+		dat, err := os.ReadFile("../test/SayHello/report1.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -92,7 +91,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("IngestToProject", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
+		dat, err := os.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -150,7 +149,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("IngestToProject 404 for unknown project", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
+		dat, err := os.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -172,7 +171,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("IngestToProject 404 for invalid project", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
+		dat, err := os.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -194,7 +193,7 @@ func TestIngestAPI(t *testing.T) {
 
 	t.Run("IngestToProject 404 for empty project", func(t *testing.T) {
 
-		dat, err := ioutil.ReadFile("../test/SayHello/report2.json")
+		dat, err := os.ReadFile("../test/SayHello/report2.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -215,7 +214,7 @@ func TestIngestAPI(t *testing.T) {
 	})
 
 	t.Run("IngestToProject status update", func(t *testing.T) {
-		dat, err := ioutil.ReadFile("../test/SayHello/report7.json")
+		dat, err := os.ReadFile("../test/SayHello/report7.json")
 		assert.NoError(t, err)
 
 		e := echo.New()
@@ -238,7 +237,7 @@ func TestIngestAPI(t *testing.T) {
 			assert.Equal(t, model.Status("fail"), r.Project.Status)
 
 			// now ingest an earlier run with no errors / status OK
-			dat, err = ioutil.ReadFile("../test/SayHello/report3.json")
+			dat, err = os.ReadFile("../test/SayHello/report3.json")
 			assert.NoError(t, err)
 
 			e = echo.New()
