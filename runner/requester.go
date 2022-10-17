@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/bojand/ghz/load"
 	"github.com/bojand/ghz/protodesc"
+
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
@@ -159,6 +161,7 @@ func (b *Requester) Run() (*Report, error) {
 
 	cc, err := b.openClientConns()
 	if err != nil {
+		b.closeClientConns()
 		return nil, err
 	}
 
@@ -249,6 +252,11 @@ func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
 	}
 
 	for n := 0; n < b.config.nConns; n++ {
+		select {
+		case <-b.stopCh:
+			return nil, errors.New("stop while open clients conn")
+		default:
+		}
 		c, err := b.newClientConn(true)
 		if err != nil {
 			if b.config.hasLog {
