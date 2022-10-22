@@ -80,7 +80,7 @@ func (w *Worker) Stop() {
 func (w *Worker) makeRequest(tv TickValue) error {
 	reqNum := int64(tv.reqNumber)
 
-	ctd := newCallData(w.mtd, w.config.funcs, w.workerID, reqNum)
+	ctd := newCallData(w.mtd, w.workerID, reqNum, true, w.config.funcs)
 
 	reqMD, err := w.metadataProvider(ctd)
 	if err != nil {

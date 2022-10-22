@@ -122,7 +122,7 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 	md := mtd.GetInputType()
 	payloadMessage := dynamic.NewMessage(md)
 	if payloadMessage == nil {
-		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
+		return nil, fmt.Errorf("no input type of method: %s", mtd.GetName())
 	}
 
 	// fill in the rest

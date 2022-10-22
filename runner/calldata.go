@@ -50,26 +50,28 @@ var tmplFuncMap = template.FuncMap{
 	"randomInt":    randomInt,
 }
 
-var commonTemplate *template.Template = template.New("call_template_data").
-	Funcs(tmplFuncMap).
-	Funcs(template.FuncMap(sprigFuncMap))
-
 // newCallData returns new CallData
 func newCallData(
 	mtd *desc.MethodDescriptor,
-	funcs template.FuncMap,
-	workerID string, reqNum int64) *CallData {
+	workerID string, reqNum int64, withFuncs bool, funcs template.FuncMap) *CallData {
 
-	fns := make(template.FuncMap, len(funcs))
+	t := template.New("call_template_data")
 
-	if len(funcs) > 0 {
-		for k, v := range funcs {
-			fns[k] = v
+	if withFuncs {
+		t = t.
+			Funcs(tmplFuncMap).
+			Funcs(template.FuncMap(sprigFuncMap))
+
+		if len(funcs) > 0 {
+			fns := make(template.FuncMap, len(funcs))
+
+			for k, v := range funcs {
+				fns[k] = v
+			}
+
+			t = t.Funcs(fns)
 		}
 	}
-
-	t, _ := commonTemplate.Clone()
-	t.Funcs(fns)
 
 	now := time.Now()
 	newUUID, _ := uuid.NewRandom()

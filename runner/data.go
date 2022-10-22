@@ -98,7 +98,7 @@ func newDataProvider(mtd *desc.MethodDescriptor,
 	}
 
 	// Test if we can preseed data
-	ctd := newCallData(mtd, funcs, "", 0)
+	ctd := newCallData(mtd, "", 0, true, funcs)
 	ha := false
 	if !dp.binary {
 		ha, err = ctd.hasAction(string(dp.data))
@@ -223,7 +223,7 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 
 func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte, funcs template.FuncMap) (*mdProvider, error) {
 	// Test if we can preseed data
-	ctd := newCallData(mtd, funcs, "", 0)
+	ctd := newCallData(mtd, "", 0, true, funcs)
 	ha, err := ctd.hasAction(string(mdData))
 	if err != nil {
 		return nil, err
@@ -419,7 +419,7 @@ func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCa
 	mp.arrayLen = uint(len(mp.arrayJSONData))
 
 	// Test if we have actions
-	ctd := newCallData(mtd, nil, "", 0)
+	ctd := newCallData(mtd, "", 0, true, nil)
 	ha, err := ctd.hasAction(string(mp.data))
 	if err != nil {
 		return nil, err

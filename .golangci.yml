@@ -11,11 +11,11 @@ issues:
     # Since we purposefully do that. See comments in code.
     - path: runner/requester.go
       text: "lostcancel"
-    
+
     # TODO Look into fixing time.Tick() usage SA1015 in worker.go
     - path: runner/worker.go
       text: "SA1015"
-    
+
     # We intentionally assign nil to err
     - path: runner/worker.go
       text: "ineffectual assignment to `err`"
@@ -30,13 +30,12 @@ issues:
 
     # TODO fix protobuf deprecated
     - path: runner/
-      text: "SA1019: package github.com/golang/protobuf"
-  
+      text: 'SA1019: "github.com/golang/protobuf/proto"'
+
     # TODO fix protobuf deprecated
     - path: protodesc/
-      text: "SA1019: package github.com/golang/protobuf"
+      text: 'SA1019: "github.com/golang/protobuf/proto"'
 
     # TODO fix protobuf deprecated
     - path: runner/
-      text: "SA1019: \"github.com/golang/protobuf/jsonpb\" is deprecated"
-
+      text: 'SA1019: "github.com/golang/protobuf/jsonpb" is deprecated'

@@ -308,7 +308,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, mdp.preseed)
 
-		cd := newCallData(mtdUnary, nil, "123", 1)
+		cd := newCallData(mtdUnary, "123", 1, true, nil)
 
 		md, err := mdp.getMetadataForCall(cd)
 		assert.NoError(t, err)
@@ -328,7 +328,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Nil(t, mdp.preseed)
 
-		cd := newCallData(mtdUnary, nil, "123", 1)
+		cd := newCallData(mtdUnary, "123", 1, true, nil)
 
 		md1, err := mdp.getMetadataForCall(cd)
 		assert.NoError(t, err)
@@ -336,7 +336,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 		assert.Equal(t, []string{"1"}, md1.Get("token"))
 		assert.NotSame(t, mdp.preseed, md1)
 
-		cd = newCallData(mtdUnary, nil, "123", 2)
+		cd = newCallData(mtdUnary, "123", 2, true, nil)
 		md2, err := mdp.getMetadataForCall(cd)
 		assert.NoError(t, err)
 		assert.NotNil(t, md2)
@@ -363,7 +363,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Nil(t, mdp.preseed)
 
-		cd := newCallData(mtdUnary, funcs, "123", 1)
+		cd := newCallData(mtdUnary, "123", 1, true, funcs)
 
 		md1, err := mdp.getMetadataForCall(cd)
 		assert.NoError(t, err)
