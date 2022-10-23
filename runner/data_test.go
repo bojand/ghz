@@ -275,7 +275,7 @@ func TestMetadata_newMetadataProvider(t *testing.T) {
 			nil)
 		assert.NoError(t, err)
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`), nil)
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`), true, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, mdp)
 		assert.NotNil(t, mdp.preseed)
@@ -289,7 +289,7 @@ func TestMetadata_newMetadataProvider(t *testing.T) {
 			nil)
 		assert.NoError(t, err)
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`), nil)
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`), true, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, mdp)
 		assert.Nil(t, mdp.preseed)
@@ -304,7 +304,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 			nil)
 		assert.NoError(t, err)
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`), nil)
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"asdf"}`), true, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, mdp.preseed)
 
@@ -324,7 +324,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 			nil)
 		assert.NoError(t, err)
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`), nil)
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ .RequestNumber }}"}`), true, nil)
 		assert.NoError(t, err)
 		assert.Nil(t, mdp.preseed)
 
@@ -359,7 +359,7 @@ func TestMetadata_getMetadataForCall(t *testing.T) {
 			},
 		}
 
-		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ customFunc }}"}`), funcs)
+		mdp, err := newMetadataProvider(mtdUnary, []byte(`{"token":"{{ customFunc }}"}`), true, funcs)
 		assert.NoError(t, err)
 		assert.Nil(t, mdp.preseed)
 

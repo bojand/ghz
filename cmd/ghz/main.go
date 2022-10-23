@@ -266,6 +266,10 @@ var (
 	maxSendMsgSize      = kingpin.Flag("max-send-message-size", "Maximum message size the client can send.").
 				PlaceHolder(" ").IsSetByUser(&isMaxSendMsgSizeSet).String()
 
+	isDisableTemplateFuncsSet = false
+	disableTemplateFuncs      = kingpin.Flag("disable-template-functions", "Do not use and execute any template functions in call template data. Useful for better performance").
+					Default("false").IsSetByUser(&isDisableTemplateFuncsSet).Bool()
+
 	// host main argument
 	isHostSet = false
 	host      = kingpin.Arg("host", "Host and port to test.").String()
@@ -507,6 +511,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.LBStrategy = *lbStrategy
 	cfg.MaxCallRecvMsgSize = *maxRecvMsgSize
 	cfg.MaxCallSendMsgSize = *maxSendMsgSize
+	cfg.DisableTemplateFuncs = *disableTemplateFuncs
 
 	return nil
 }
@@ -758,6 +763,11 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isMaxSendMsgSizeSet {
 		dest.MaxCallSendMsgSize = src.MaxCallSendMsgSize
+	}
+
+	// call data template behavior
+	if isDisableTemplateFuncsSet {
+		dest.DisableTemplateFuncs = src.DisableTemplateFuncs
 	}
 
 	return nil

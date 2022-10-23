@@ -80,7 +80,7 @@ func (w *Worker) Stop() {
 func (w *Worker) makeRequest(tv TickValue) error {
 	reqNum := int64(tv.reqNumber)
 
-	ctd := newCallData(w.mtd, w.workerID, reqNum, true, w.config.funcs)
+	ctd := newCallData(w.mtd, w.workerID, reqNum, !w.config.disableTemplateFuncs, w.config.funcs)
 
 	reqMD, err := w.metadataProvider(ctd)
 	if err != nil {
@@ -116,7 +116,7 @@ func (w *Worker) makeRequest(tv TickValue) error {
 		msgProvider = w.msgProvider
 	} else if w.mtd.IsClientStreaming() {
 		if w.config.streamDynamicMessages {
-			mp, err := newDynamicMessageProvider(w.mtd, w.config.data, w.config.streamCallCount)
+			mp, err := newDynamicMessageProvider(w.mtd, w.config.data, w.config.streamCallCount, !w.config.disableTemplateFuncs)
 			if err != nil {
 				return err
 			}

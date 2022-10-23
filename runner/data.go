@@ -65,7 +65,7 @@ type mdProvider struct {
 
 func newDataProvider(mtd *desc.MethodDescriptor,
 	binary bool, dataFunc BinaryDataFunc, data []byte,
-	funcs template.FuncMap) (*dataProvider, error) {
+	withFuncs bool, funcs template.FuncMap) (*dataProvider, error) {
 
 	dp := dataProvider{
 		binary:         binary,
@@ -98,7 +98,7 @@ func newDataProvider(mtd *desc.MethodDescriptor,
 	}
 
 	// Test if we can preseed data
-	ctd := newCallData(mtd, "", 0, true, funcs)
+	ctd := newCallData(mtd, "", 0, withFuncs, funcs)
 	ha := false
 	if !dp.binary {
 		ha, err = ctd.hasAction(string(dp.data))
@@ -221,9 +221,9 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 	return inputs, nil
 }
 
-func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte, funcs template.FuncMap) (*mdProvider, error) {
+func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte, withFuncs bool, funcs template.FuncMap) (*mdProvider, error) {
 	// Test if we can preseed data
-	ctd := newCallData(mtd, "", 0, true, funcs)
+	ctd := newCallData(mtd, "", 0, withFuncs, funcs)
 	ha, err := ctd.hasAction(string(mdData))
 	if err != nil {
 		return nil, err
@@ -389,7 +389,7 @@ type dynamicMessageProvider struct {
 	indexCounter    uint
 }
 
-func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCallCount uint) (*dynamicMessageProvider, error) {
+func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCallCount uint, withFuncs bool) (*dynamicMessageProvider, error) {
 	mp := dynamicMessageProvider{
 		mtd:             mtd,
 		data:            data,
@@ -419,7 +419,7 @@ func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCa
 	mp.arrayLen = uint(len(mp.arrayJSONData))
 
 	// Test if we have actions
-	ctd := newCallData(mtd, "", 0, true, nil)
+	ctd := newCallData(mtd, "", 0, withFuncs, nil)
 	ha, err := ctd.hasAction(string(mp.data))
 	if err != nil {
 		return nil, err
