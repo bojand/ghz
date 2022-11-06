@@ -239,16 +239,70 @@ func TestRunUnary(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, strings.Contains(err.Error(), `function "newUUID" not defined`))
 		assert.Nil(t, report)
+	})
 
-		// count := gs.GetCount(callType)
-		// assert.Equal(t, 1, count)
+	t.Run("test disabled template functions with data", func(t *testing.T) {
+		gs.ResetCounters()
 
-		// calls := gs.GetCalls(callType)
-		// assert.NotNil(t, calls)
-		// assert.Len(t, calls, 1)
+		data := make(map[string]interface{})
+		data["name"] = "{{ .RequestNumber }}"
 
-		// msg := calls[0][0]
-		// assert.Equal(t, "{{ newUUID }}", msg.GetName())
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithDisableTemplateFuncs(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		assert.Equal(t, "0", msg.GetName())
+	})
+
+	t.Run("test disabled template data", func(t *testing.T) {
+		gs.ResetCounters()
+
+		data := make(map[string]interface{})
+		data["name"] = "{{ .RequestNumber }}"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHello",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithDisableTemplateData(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+
+		count := gs.GetCount(callType)
+		assert.Equal(t, 1, count)
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+
+		msg := calls[0][0]
+		assert.Equal(t, "{{ .RequestNumber }}", msg.GetName())
 	})
 
 	t.Run("test skip first N", func(t *testing.T) {

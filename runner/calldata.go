@@ -53,23 +53,26 @@ var tmplFuncMap = template.FuncMap{
 // newCallData returns new CallData
 func newCallData(
 	mtd *desc.MethodDescriptor,
-	workerID string, reqNum int64, withFuncs bool, funcs template.FuncMap) *CallData {
+	workerID string, reqNum int64, withFuncs, withTemplateData bool, funcs template.FuncMap) *CallData {
 
-	t := template.New("call_template_data")
+	var t *template.Template
+	if withTemplateData {
+		t = template.New("call_template_data")
 
-	if withFuncs {
-		t = t.
-			Funcs(tmplFuncMap).
-			Funcs(template.FuncMap(sprigFuncMap))
+		if withFuncs {
+			t = t.
+				Funcs(tmplFuncMap).
+				Funcs(template.FuncMap(sprigFuncMap))
 
-		if len(funcs) > 0 {
-			fns := make(template.FuncMap, len(funcs))
+			if len(funcs) > 0 {
+				fns := make(template.FuncMap, len(funcs))
 
-			for k, v := range funcs {
-				fns[k] = v
+				for k, v := range funcs {
+					fns[k] = v
+				}
+
+				t = t.Funcs(fns)
 			}
-
-			t = t.Funcs(fns)
 		}
 	}
 
@@ -121,6 +124,10 @@ func (td *CallData) Regenerate() *CallData {
 }
 
 func (td *CallData) execute(data string) (*bytes.Buffer, error) {
+	if td.t == nil {
+		return nil, nil
+	}
+
 	t, err := td.t.Parse(data)
 	if err != nil {
 		return nil, err
@@ -136,6 +143,10 @@ func (td *CallData) execute(data string) (*bytes.Buffer, error) {
 // The *parse.Tree field is exported only for use by html/template
 // and should be treated as unexported by all other clients.
 func (td *CallData) hasAction(data string) (bool, error) {
+	if td.t == nil {
+		return false, nil
+	}
+
 	t, err := td.t.Parse(data)
 	if err != nil {
 		return false, err
@@ -167,7 +178,7 @@ func (td *CallData) ExecuteData(data string) ([]byte, error) {
 	if len(data) > 0 {
 		input := []byte(data)
 		tpl, err := td.execute(data)
-		if err == nil {
+		if err == nil && tpl != nil {
 			input = tpl.Bytes()
 		}
 
@@ -183,7 +194,7 @@ func (td *CallData) executeMetadata(metadata string) (map[string]string, error) 
 	if len(metadata) > 0 {
 		input := []byte(metadata)
 		tpl, err := td.execute(metadata)
-		if err == nil {
+		if err == nil && tpl != nil {
 			input = tpl.Bytes()
 		}
 

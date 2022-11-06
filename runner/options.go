@@ -126,6 +126,7 @@ type RunConfig struct {
 
 	// template call data
 	disableTemplateFuncs bool
+	disableTemplateData  bool
 
 	// misc
 	name        string
@@ -1107,6 +1108,15 @@ func WithDisableTemplateFuncs(v bool) Option {
 	}
 }
 
+// WithDisableTemplateData disables template data execution in call data
+func WithDisableTemplateData(v bool) Option {
+	return func(o *RunConfig) error {
+		o.disableTemplateData = v
+
+		return nil
+	}
+}
+
 func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFile, clientKeyFile, cname string) (credentials.TransportCredentials, error) {
 	var tlsConf tls.Config
 
@@ -1200,6 +1210,7 @@ func fromConfig(cfg *Config) []Option {
 		WithConcurrencyDuration(time.Duration(cfg.CMaxDuration)),
 		WithCountErrors(cfg.CountErrors),
 		WithDisableTemplateFuncs(cfg.DisableTemplateFuncs),
+		WithDisableTemplateData(cfg.DisableTemplateData),
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil

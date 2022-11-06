@@ -270,6 +270,10 @@ var (
 	disableTemplateFuncs      = kingpin.Flag("disable-template-functions", "Do not use and execute any template functions in call template data. Useful for better performance").
 					Default("false").IsSetByUser(&isDisableTemplateFuncsSet).Bool()
 
+	isDisableTemplateDataSet = false
+	disableTemplateData      = kingpin.Flag("disable-template-data", "Do not use and execute any call template data. Useful for better performance.").
+					Default("false").IsSetByUser(&isDisableTemplateDataSet).Bool()
+
 	// host main argument
 	isHostSet = false
 	host      = kingpin.Arg("host", "Host and port to test.").String()
@@ -512,6 +516,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.MaxCallRecvMsgSize = *maxRecvMsgSize
 	cfg.MaxCallSendMsgSize = *maxSendMsgSize
 	cfg.DisableTemplateFuncs = *disableTemplateFuncs
+	cfg.DisableTemplateData = *disableTemplateData
 
 	return nil
 }
@@ -765,9 +770,14 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 		dest.MaxCallSendMsgSize = src.MaxCallSendMsgSize
 	}
 
-	// call data template behavior
+	// call data template functions behavior
 	if isDisableTemplateFuncsSet {
 		dest.DisableTemplateFuncs = src.DisableTemplateFuncs
+	}
+
+	// call data template behavior
+	if isDisableTemplateDataSet {
+		dest.DisableTemplateData = src.DisableTemplateData
 	}
 
 	return nil
