@@ -123,3 +123,9 @@ report, err := runner.Run(
 	runner.WithBinaryDataFunc(dataFunc),
 )
 ```
+
+### Disabling
+
+Execution of call template functions can be done by setting `--disable-template-functions` to `true` or by using `WithDisableTemplateFuncs(true)`.
+
+Execution of call data template can be disabled completely by setting `--disable-template-data` to `true` or by using `WithDisableTemplateData(true)`.

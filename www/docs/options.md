@@ -390,6 +390,14 @@ Client load balancing strategy. For example: `--lb-strategy "round_robin"`
 
 By default stats for fastest, slowest, average, histogram, and latency distributions only take into account the responses with OK status. This option enabled counting of erroneous (non-OK) responses in stats calculations as well.
 
+### `--disable-template-functions`
+
+Disable execution of template functions within call data and metadata. This can be useful for some performance improvements. Note that if template functions are used within data with this option set to `true`, it will result in an error. If `--disable-template-data` is set to `true` this is automatically also set to `true`.
+
+### `--disable-template-data`
+
+Disable execution of templates within call data and metadata. This can be useful for some performance improvements. This automatically also sets `disable-template-functions` to `true`.
+
 ### `-v`, `--version`
 
 Print the version.
