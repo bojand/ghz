@@ -116,6 +116,8 @@ type Config struct {
 	LBStrategy            string            `json:"lb-strategy" toml:"lb-strategy" yaml:"lb-strategy"`
 	MaxCallRecvMsgSize    string            `json:"max-recv-message-size" toml:"max-recv-message-size" yaml:"max-recv-message-size"`
 	MaxCallSendMsgSize    string            `json:"max-send-message-size" toml:"max-send-message-size" yaml:"max-send-message-size"`
+	DisableTemplateFuncs  bool              `json:"disable-template-functions" toml:"disable-template-functions" yaml:"disable-template-functions"`
+	DisableTemplateData   bool              `json:"disable-template-data" toml:"disable-template-data" yaml:"disable-template-data"`
 }
 
 func checkData(data interface{}) error {

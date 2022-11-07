@@ -17,7 +17,7 @@ func TestCallData_New(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, md)
 
-	ctd := newCallData(md, nil, "worker_id_123", 100)
+	ctd := newCallData(md, "worker_id_123", 100, true, true, nil)
 
 	assert.NotNil(t, ctd)
 	assert.Equal(t, "worker_id_123", ctd.WorkerID)
@@ -73,7 +73,7 @@ func TestCallData_ExecuteData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctd := newCallData(md, nil, "worker_id_123", 200)
+			ctd := newCallData(md, "worker_id_123", 200, true, true, nil)
 			assert.NotNil(t, ctd)
 
 			r, err := ctd.ExecuteData(tt.in)
@@ -124,7 +124,7 @@ func TestCallData_ExecuteMetadata(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			ctd := newCallData(md, nil, "worker_id_123", 200)
+			ctd := newCallData(md, "worker_id_123", 200, true, true, nil)
 			assert.NotNil(t, ctd)
 
 			r, err := ctd.executeMetadata(tt.in)
@@ -146,7 +146,7 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 
 	t.Run("newUUID", func(t *testing.T) {
 
-		ctd := newCallData(md, nil, "worker_id_123", 200)
+		ctd := newCallData(md, "worker_id_123", 200, true, true, nil)
 		assert.NotNil(t, ctd)
 
 		// no template
@@ -194,7 +194,7 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 	})
 
 	t.Run("randomString", func(t *testing.T) {
-		ctd := newCallData(md, nil, "worker_id_123", 200)
+		ctd := newCallData(md, "worker_id_123", 200, true, true, nil)
 		assert.NotNil(t, ctd)
 
 		// no template
@@ -256,7 +256,7 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 	})
 
 	t.Run("randomInt", func(t *testing.T) {
-		ctd := newCallData(md, nil, "worker_id_123", 200)
+		ctd := newCallData(md, "worker_id_123", 200, true, true, nil)
 		assert.NotNil(t, ctd)
 
 		// no template
@@ -295,17 +295,17 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 
 	t.Run("custom functions", func(t *testing.T) {
 
-		ctd := newCallData(md, nil, "worker_id_123", 200)
+		ctd := newCallData(md, "worker_id_123", 200, true, true, nil)
 		assert.NotNil(t, ctd)
 
-		ctd = newCallData(md, template.FuncMap{
+		ctd = newCallData(md, "worker_id_123", 200, true, true, template.FuncMap{
 			"getSKU": func() string {
 				return "custom-sku"
 			},
 			"newUUID": func() string {
 				return "custom-uuid"
 			},
-		}, "worker_id_123", 200)
+		})
 
 		r, err := ctd.ExecuteData(`{"trace_id":"{{newUUID}}", "span_id":"{{getSKU}}"}`)
 		assert.NoError(t, err)
@@ -320,7 +320,7 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 
 	t.Run("sprig functions", func(t *testing.T) {
 
-		ctd := newCallData(md, nil, "worker_id_123", 200)
+		ctd := newCallData(md, "worker_id_123", 200, true, true, nil)
 		assert.NotNil(t, ctd)
 
 		r, err := ctd.ExecuteData(`{"trace_id":"{{add 1 2}}"}`)

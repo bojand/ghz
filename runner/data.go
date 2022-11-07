@@ -65,7 +65,7 @@ type mdProvider struct {
 
 func newDataProvider(mtd *desc.MethodDescriptor,
 	binary bool, dataFunc BinaryDataFunc, data []byte,
-	funcs template.FuncMap) (*dataProvider, error) {
+	withFuncs, withTemplateData bool, funcs template.FuncMap) (*dataProvider, error) {
 
 	dp := dataProvider{
 		binary:         binary,
@@ -98,12 +98,15 @@ func newDataProvider(mtd *desc.MethodDescriptor,
 	}
 
 	// Test if we can preseed data
-	ctd := newCallData(mtd, funcs, "", 0)
 	ha := false
-	if !dp.binary {
-		ha, err = ctd.hasAction(string(dp.data))
-		if err != nil {
-			return nil, err
+	ctd := newCallData(mtd, "", 0, withFuncs, withTemplateData, funcs)
+
+	if withTemplateData {
+		if !dp.binary {
+			ha, err = ctd.hasAction(string(dp.data))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -221,9 +224,9 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 	return inputs, nil
 }
 
-func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte, funcs template.FuncMap) (*mdProvider, error) {
+func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte, withFuncs, withTemplateData bool, funcs template.FuncMap) (*mdProvider, error) {
 	// Test if we can preseed data
-	ctd := newCallData(mtd, funcs, "", 0)
+	ctd := newCallData(mtd, "", 0, withFuncs, withTemplateData, funcs)
 	ha, err := ctd.hasAction(string(mdData))
 	if err != nil {
 		return nil, err
@@ -389,7 +392,7 @@ type dynamicMessageProvider struct {
 	indexCounter    uint
 }
 
-func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCallCount uint) (*dynamicMessageProvider, error) {
+func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCallCount uint, withFuncs, withTemplateData bool) (*dynamicMessageProvider, error) {
 	mp := dynamicMessageProvider{
 		mtd:             mtd,
 		data:            data,
@@ -419,10 +422,14 @@ func newDynamicMessageProvider(mtd *desc.MethodDescriptor, data []byte, streamCa
 	mp.arrayLen = uint(len(mp.arrayJSONData))
 
 	// Test if we have actions
-	ctd := newCallData(mtd, nil, "", 0)
-	ha, err := ctd.hasAction(string(mp.data))
-	if err != nil {
-		return nil, err
+	ha := false
+	ctd := newCallData(mtd, "", 0, withFuncs, withTemplateData, nil)
+
+	if withTemplateData {
+		ha, err = ctd.hasAction(string(mp.data))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if !ha {

@@ -124,6 +124,10 @@ type RunConfig struct {
 	hasLog bool
 	log    Logger
 
+	// template call data
+	disableTemplateFuncs bool
+	disableTemplateData  bool
+
 	// misc
 	name        string
 	cpus        int
@@ -1095,6 +1099,24 @@ func WithDefaultCallOptions(opts []grpc.CallOption) Option {
 	}
 }
 
+// WithDisableTemplateFuncs disables template functions in call data
+func WithDisableTemplateFuncs(v bool) Option {
+	return func(o *RunConfig) error {
+		o.disableTemplateFuncs = v
+
+		return nil
+	}
+}
+
+// WithDisableTemplateData disables template data execution in call data
+func WithDisableTemplateData(v bool) Option {
+	return func(o *RunConfig) error {
+		o.disableTemplateData = v
+
+		return nil
+	}
+}
+
 func createClientTransportCredentials(skipVerify bool, cacertFile, clientCertFile, clientKeyFile, cname string) (credentials.TransportCredentials, error) {
 	var tlsConf tls.Config
 
@@ -1187,6 +1209,8 @@ func fromConfig(cfg *Config) []Option {
 		WithConcurrencyStepDuration(time.Duration(cfg.CStepDuration)),
 		WithConcurrencyDuration(time.Duration(cfg.CMaxDuration)),
 		WithCountErrors(cfg.CountErrors),
+		WithDisableTemplateFuncs(cfg.DisableTemplateFuncs),
+		WithDisableTemplateData(cfg.DisableTemplateData),
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil

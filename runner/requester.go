@@ -122,7 +122,7 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 	md := mtd.GetInputType()
 	payloadMessage := dynamic.NewMessage(md)
 	if payloadMessage == nil {
-		return nil, fmt.Errorf("No input type of method: %s", mtd.GetName())
+		return nil, fmt.Errorf("no input type of method: %s", mtd.GetName())
 	}
 
 	// fill in the rest
@@ -131,7 +131,7 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 	if c.dataProviderFunc != nil {
 		reqr.dataProvider = c.dataProviderFunc
 	} else {
-		defaultDataProvider, err := newDataProvider(reqr.mtd, c.binary, c.dataFunc, c.data, c.funcs)
+		defaultDataProvider, err := newDataProvider(reqr.mtd, c.binary, c.dataFunc, c.data, !c.disableTemplateFuncs, !c.disableTemplateData, c.funcs)
 		if err != nil {
 			return nil, err
 		}
@@ -141,7 +141,7 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 	if c.mdProviderFunc != nil {
 		reqr.metadataProvider = c.mdProviderFunc
 	} else {
-		defaultMDProvider, err := newMetadataProvider(reqr.mtd, c.metadata, c.funcs)
+		defaultMDProvider, err := newMetadataProvider(reqr.mtd, c.metadata, !c.disableTemplateFuncs, !c.disableTemplateData, c.funcs)
 		if err != nil {
 			return nil, err
 		}
