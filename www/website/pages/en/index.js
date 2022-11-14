@@ -121,7 +121,7 @@ class Index extends React.Component {
             title: 'Flexible and featureful',
           },
           {
-            content: 'Save, track, view and analyse test results <br />in a complementary web application <br /><a href="https://ghz-demo.herokuapp.com">Demo</a>',
+            content: 'Save, track, view and analyse test results <br />in a complementary web application',
             imageAlign: 'top',
             title: 'Complementary Web Application (Beta)',
           }
