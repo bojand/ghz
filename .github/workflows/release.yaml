@@ -125,7 +125,17 @@ jobs:
       - name: Download releases from github_build
         uses: actions/download-artifact@v3
         with:
+          name: ghz-linux-arm64.tar.gz
+          path: .
+      - name: Download releases from github_build
+        uses: actions/download-artifact@v3
+        with:
           name: ghz-darwin-x86_64.tar.gz
+          path: .
+      - name: Download releases from github_build
+        uses: actions/download-artifact@v3
+        with:
+          name: ghz-darwin-arm64.tar.gz
           path: .
       - name: Download releases from github_build
         uses: actions/download-artifact@v3
