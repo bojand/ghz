@@ -12,18 +12,36 @@ jobs:
       matrix:
         target:
           - linux-x86_64
+          - linux-arm64
           - darwin-x86_64
+          - darwin-arm64
           - windows-x86_64
         include:
           - target: linux-x86_64
             os: ubuntu-latest
             name: ghz-linux-x86_64.tar.gz
+            goos: linux
+            goarch: amd64
+          - target: linux-arm64
+            os: ubuntu-latest
+            name: ghz-linux-arm64.tar.gz
+            goos: linux
+            goarch: arm64
           - target: darwin-x86_64
             os: macOS-latest
             name: ghz-darwin-x86_64.tar.gz
+            goos: darwin
+            goarch: amd64
+          - target: darwin-arm64
+            os: macOS-latest
+            name: ghz-darwin-arm64.tar.gz
+            goos: darwin
+            goarch: arm64
           - target: windows-x86_64
             os: windows-latest
             name: ghz-windows-x86_64.zip
+            goos: windows
+            goarch: amd64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -46,6 +64,8 @@ jobs:
       - name: Build ghz
         env:
           CGO_ENABLED: 0
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
         run: |
           mkdir ./dist/
           mkdir ./dist/${{ matrix.target }}/
@@ -118,9 +138,8 @@ jobs:
 
       - name: Generate release notes
         run: |
-          # Temporary fix for https://github.com/actions/setup-go/issues/14
           export PATH=$PATH:$(go env GOPATH)/bin
-          go get -u github.com/git-chglog/git-chglog/cmd/git-chglog
+          go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
           # git-chglog -c .chglog/config.yml $(git describe --tags $(git rev-list --tags --max-count=1))
           git-chglog -c .chglog/config.yml ${{ env.RELEASE_VERSION }} > RELEASE-${{ env.RELEASE_VERSION }}.md
       - name: Create GitHub release ${{ matrix.target }}
@@ -129,8 +148,12 @@ jobs:
           files: |
             ghz-linux-x86_64.tar.gz
             ghz-linux-x86_64.tar.gz.sha256
+            ghz-linux-arm64.tar.gz
+            ghz-linux-arm64.tar.gz.sha256
             ghz-darwin-x86_64.tar.gz
             ghz-darwin-x86_64.tar.gz.sha256
+            ghz-darwin-arm64.tar.gz
+            ghz-darwin-arm64.tar.gz.sha256
             ghz-windows-x86_64.zip
             ghz-windows-x86_64.zip.sha256
           body_path: RELEASE-${{ env.RELEASE_VERSION }}.md
