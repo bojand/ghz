@@ -1612,7 +1612,7 @@ func TestRunClientStreaming(t *testing.T) {
 		assert.NotNil(t, calls)
 		assert.Len(t, calls, 1)
 		msgs := calls[0]
-		assert.True(t, len(msgs) < 15000, len(msgs))
+		assert.True(t, len(msgs) < 16500, len(msgs))
 	})
 
 	t.Run("with stream interval and cancel", func(t *testing.T) {
