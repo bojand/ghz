@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io"
+	"net/http"
 	"os"
 	"runtime"
 	"strconv"
@@ -30,81 +32,81 @@ var (
 	// Proto
 	isProtoSet = false
 	proto      = kingpin.Flag("proto", `The Protocol Buffer .proto file.`).
-			PlaceHolder(" ").IsSetByUser(&isProtoSet).String()
+		PlaceHolder(" ").IsSetByUser(&isProtoSet).String()
 
 	isProtoSetSet = false
 	protoset      = kingpin.Flag("protoset", "The compiled protoset file. Alternative to proto. -proto takes precedence.").
-			PlaceHolder(" ").IsSetByUser(&isProtoSetSet).String()
+		PlaceHolder(" ").IsSetByUser(&isProtoSetSet).String()
 
 	isCallSet = false
 	call      = kingpin.Flag("call", `A fully-qualified method name in 'package.Service/method' or 'package.Service.Method' format.`).
-			PlaceHolder(" ").IsSetByUser(&isCallSet).String()
+		PlaceHolder(" ").IsSetByUser(&isCallSet).String()
 
 	isImportSet = false
 	paths       = kingpin.Flag("import-paths", "Comma separated list of proto import paths. The current working directory and the directory of the protocol buffer file are automatically added to the import list.").
-			Short('i').PlaceHolder(" ").IsSetByUser(&isImportSet).String()
+		Short('i').PlaceHolder(" ").IsSetByUser(&isImportSet).String()
 
 	// Security
 	isCACertSet = false
 	cacert      = kingpin.Flag("cacert", "File containing trusted root certificates for verifying the server.").
-			PlaceHolder(" ").IsSetByUser(&isCACertSet).String()
+		PlaceHolder(" ").IsSetByUser(&isCACertSet).String()
 
 	isCertSet = false
 	cert      = kingpin.Flag("cert", "File containing client certificate (public key), to present to the server. Must also provide -key option.").
-			PlaceHolder(" ").IsSetByUser(&isCertSet).String()
+		PlaceHolder(" ").IsSetByUser(&isCertSet).String()
 
 	isKeySet = false
 	key      = kingpin.Flag("key", "File containing client private key, to present to the server. Must also provide -cert option.").
-			PlaceHolder(" ").IsSetByUser(&isKeySet).String()
+		PlaceHolder(" ").IsSetByUser(&isKeySet).String()
 
 	isCNameSet = false
 	cname      = kingpin.Flag("cname", "Server name override when validating TLS certificate - useful for self signed certs.").
-			PlaceHolder(" ").IsSetByUser(&isCNameSet).String()
+		PlaceHolder(" ").IsSetByUser(&isCNameSet).String()
 
 	isSkipSet  = false
 	skipVerify = kingpin.Flag("skipTLS", "Skip TLS client verification of the server's certificate chain and host name.").
-			Default("false").IsSetByUser(&isSkipSet).Bool()
+		Default("false").IsSetByUser(&isSkipSet).Bool()
 
 	isInsecSet = false
 	insecure   = kingpin.Flag("insecure", "Use plaintext and insecure connection.").
-			Default("false").IsSetByUser(&isInsecSet).Bool()
+		Default("false").IsSetByUser(&isInsecSet).Bool()
 
 	isAuthSet = false
 	authority = kingpin.Flag("authority", "Value to be used as the :authority pseudo-header. Only works if -insecure is used.").
-			PlaceHolder(" ").IsSetByUser(&isAuthSet).String()
+		PlaceHolder(" ").IsSetByUser(&isAuthSet).String()
 
 	// Run
 	isAsyncSet = false
 	async      = kingpin.Flag("async", "Make requests asynchronous as soon as possible. Does not wait for request to finish before sending next one.").
-			Default("false").IsSetByUser(&isAsyncSet).Bool()
+		Default("false").IsSetByUser(&isAsyncSet).Bool()
 
 	isRPSSet = false
 	rps      = kingpin.Flag("rps", "Requests per second (RPS) rate limit for constant load schedule. Default is no rate limit.").
-			Default("0").Short('r').IsSetByUser(&isRPSSet).Uint()
+		Default("0").Short('r').IsSetByUser(&isRPSSet).Uint()
 
 	isScheduleSet = false
 	schedule      = kingpin.Flag("load-schedule", "Specifies the load schedule. Options are const, step, or line. Default is const.").
-			Default("const").IsSetByUser(&isScheduleSet).String()
+		Default("const").IsSetByUser(&isScheduleSet).String()
 
 	isLoadStartSet = false
 	loadStart      = kingpin.Flag("load-start", "Specifies the RPS load start value for step or line schedules.").
-			Default("0").IsSetByUser(&isLoadStartSet).Uint()
+		Default("0").IsSetByUser(&isLoadStartSet).Uint()
 
 	isLoadStepSet = false
 	loadStep      = kingpin.Flag("load-step", "Specifies the load step value or slope value.").
-			Default("0").IsSetByUser(&isLoadStepSet).Int()
+		Default("0").IsSetByUser(&isLoadStepSet).Int()
 
 	isLoadEndSet = false
 	loadEnd      = kingpin.Flag("load-end", "Specifies the load end value for step or line load schedules.").
-			Default("0").IsSetByUser(&isLoadEndSet).Uint()
+		Default("0").IsSetByUser(&isLoadEndSet).Uint()
 
 	isLoadStepDurSet = false
 	loadStepDuration = kingpin.Flag("load-step-duration", "Specifies the load step duration value for step load schedule.").
-				Default("0").IsSetByUser(&isLoadStepDurSet).Duration()
+		Default("0").IsSetByUser(&isLoadStepDurSet).Duration()
 
 	isLoadMaxDurSet = false
 	loadMaxDuration = kingpin.Flag("load-max-duration", "Specifies the max load duration value for step or line load schedule.").
-			Default("0").IsSetByUser(&isLoadMaxDurSet).Duration()
+		Default("0").IsSetByUser(&isLoadMaxDurSet).Duration()
 
 	// Concurrency
 	isCSet = false
@@ -113,27 +115,27 @@ var (
 
 	isCScheduleSet = false
 	cschdule       = kingpin.Flag("concurrency-schedule", "Concurrency change schedule. Options are const, step, or line. Default is const.").
-			Default("const").IsSetByUser(&isCScheduleSet).String()
+		Default("const").IsSetByUser(&isCScheduleSet).String()
 
 	isCStartSet = false
 	cStart      = kingpin.Flag("concurrency-start", "Concurrency start value for step and line concurrency schedules.").
-			Default("0").IsSetByUser(&isCStartSet).Uint()
+		Default("0").IsSetByUser(&isCStartSet).Uint()
 
 	isCEndSet = false
 	cEnd      = kingpin.Flag("concurrency-end", "Concurrency end value for step and line concurrency schedules.").
-			Default("0").IsSetByUser(&isCEndSet).Uint()
+		Default("0").IsSetByUser(&isCEndSet).Uint()
 
 	isCStepSet = false
 	cstep      = kingpin.Flag("concurrency-step", "Concurrency step / slope value for step and line concurrency schedules.").
-			Default("1").IsSetByUser(&isCStepSet).Int()
+		Default("1").IsSetByUser(&isCStepSet).Int()
 
 	isCStepDurSet = false
 	cStepDuration = kingpin.Flag("concurrency-step-duration", "Specifies the concurrency step duration value for step concurrency schedule.").
-			Default("0").IsSetByUser(&isCStepDurSet).Duration()
+		Default("0").IsSetByUser(&isCStepDurSet).Duration()
 
 	isCMaxDurSet = false
 	cMaxDuration = kingpin.Flag("concurrency-max-duration", "Specifies the max concurrency adjustment duration value for step or line concurrency schedule.").
-			Default("0").IsSetByUser(&isCMaxDurSet).Duration()
+		Default("0").IsSetByUser(&isCMaxDurSet).Duration()
 
 	// Other
 	isNSet = false
@@ -154,24 +156,24 @@ var (
 
 	isZStopSet = false
 	zstop      = kingpin.Flag("duration-stop", "Specifies how duration stop is reported. Options are close, wait or ignore. Default is close.").
-			Default("close").IsSetByUser(&isZStopSet).String()
+		Default("close").IsSetByUser(&isZStopSet).String()
 
 	// Data
 	isDataSet = false
 	data      = kingpin.Flag("data", "The call data as stringified JSON. If the value is '@' then the request contents are read from stdin.").
-			Short('d').PlaceHolder(" ").IsSetByUser(&isDataSet).String()
+		Short('d').PlaceHolder(" ").IsSetByUser(&isDataSet).String()
 
 	isDataPathSet = false
 	dataPath      = kingpin.Flag("data-file", "File path for call data JSON file. Examples: /home/user/file.json or ./file.json.").
-			Short('D').PlaceHolder("PATH").PlaceHolder(" ").IsSetByUser(&isDataPathSet).String()
+		Short('D').PlaceHolder("PATH").PlaceHolder(" ").IsSetByUser(&isDataPathSet).String()
 
 	isBinDataSet = false
 	binData      = kingpin.Flag("binary", "The call data comes as serialized binary message or multiple count-prefixed messages read from stdin.").
-			Short('b').Default("false").IsSetByUser(&isBinDataSet).Bool()
+		Short('b').Default("false").IsSetByUser(&isBinDataSet).Bool()
 
 	isBinDataPathSet = false
 	binPath          = kingpin.Flag("binary-file", "File path for the call data as serialized binary message or multiple count-prefixed messages.").
-				Short('B').PlaceHolder(" ").IsSetByUser(&isBinDataPathSet).String()
+		Short('B').PlaceHolder(" ").IsSetByUser(&isBinDataPathSet).String()
 
 	isMDSet = false
 	md      = kingpin.Flag("metadata", "Request metadata as stringified JSON.").
@@ -179,7 +181,7 @@ var (
 
 	isMDPathSet = false
 	mdPath      = kingpin.Flag("metadata-file", "File path for call metadata JSON file. Examples: /home/user/metadata.json or ./metadata.json.").
-			Short('M').PlaceHolder(" ").IsSetByUser(&isMDPathSet).String()
+		Short('M').PlaceHolder(" ").IsSetByUser(&isMDPathSet).String()
 
 	isSISet = false
 	si      = kingpin.Flag("stream-interval", "Interval for stream requests between message sends.").
@@ -191,37 +193,41 @@ var (
 
 	isSCCSet = false
 	scc      = kingpin.Flag("stream-call-count", "Count of messages sent, after which client will close the stream in each streaming call.").
-			Default("0").IsSetByUser(&isSCCSet).Uint()
+		Default("0").IsSetByUser(&isSCCSet).Uint()
 
 	isSDMSet = false
 	sdm      = kingpin.Flag("stream-dynamic-messages", "In streaming calls, regenerate and apply call template data on every message send.").
-			Default("false").IsSetByUser(&isSDMSet).Bool()
+		Default("false").IsSetByUser(&isSDMSet).Bool()
 
 	isRMDSet = false
 	rmd      = kingpin.Flag("reflect-metadata", "Reflect metadata as stringified JSON used only for reflection request.").
-			PlaceHolder(" ").IsSetByUser(&isRMDSet).String()
+		PlaceHolder(" ").IsSetByUser(&isRMDSet).String()
 
 	// Output
 	isOutputSet = false
 	output      = kingpin.Flag("output", "Output path. If none provided stdout is used.").
-			Short('o').PlaceHolder(" ").IsSetByUser(&isOutputSet).String()
+		Short('o').PlaceHolder(" ").IsSetByUser(&isOutputSet).String()
 
 	isFormatSet = false
 	format      = kingpin.Flag("format", "Output format. One of: summary, csv, json, pretty, html, influx-summary, influx-details. Default is summary.").
-			Short('O').Default("summary").PlaceHolder(" ").IsSetByUser(&isFormatSet).Enum("summary", "csv", "json", "pretty", "html", "influx-summary", "influx-details", "prometheus")
+		Short('O').Default("summary").PlaceHolder(" ").IsSetByUser(&isFormatSet).Enum("summary", "csv", "json", "pretty", "html", "influx-summary", "influx-details", "prometheus")
+
+	isPrometheusSet = false
+	prometheus      = kingpin.Flag("prometheus", "Enable prometheus listener").
+		Default("false").IsSetByUser(&isPrometheusSet).Bool()
 
 	isSkipFirstSet = false
 	skipFirst      = kingpin.Flag("skipFirst", "Skip the first X requests when doing the results tally.").
-			Default("0").IsSetByUser(&isSkipFirstSet).Uint()
+		Default("0").IsSetByUser(&isSkipFirstSet).Uint()
 
 	isCESet     = false
 	countErrors = kingpin.Flag("count-errors", "Count erroneous (non-OK) resoponses in stats calculations.").
-			Default("false").IsSetByUser(&isCESet).Bool()
+		Default("false").IsSetByUser(&isCESet).Bool()
 
 	// Connection
 	isConnSet = false
 	conns     = kingpin.Flag("connections", "Number of connections to use. Concurrency is distributed evenly among all the connections. Default is 1.").
-			Default("1").IsSetByUser(&isConnSet).Uint()
+		Default("1").IsSetByUser(&isConnSet).Uint()
 
 	isCTSet = false
 	ct      = kingpin.Flag("connect-timeout", "Connection timeout for the initial connection dial. Default is 10s.").
@@ -234,45 +240,45 @@ var (
 	// Meta
 	isNameSet = false
 	name      = kingpin.Flag("name", "User specified name for the test.").
-			PlaceHolder(" ").IsSetByUser(&isNameSet).String()
+		PlaceHolder(" ").IsSetByUser(&isNameSet).String()
 
 	isTagsSet = false
 	tags      = kingpin.Flag("tags", "JSON representation of user-defined string tags.").
-			PlaceHolder(" ").IsSetByUser(&isTagsSet).String()
+		PlaceHolder(" ").IsSetByUser(&isTagsSet).String()
 
 	isCPUSet = false
 	cpus     = kingpin.Flag("cpus", "Number of cpu cores to use.").
-			Default(strconv.FormatUint(uint64(nCPUs), 10)).IsSetByUser(&isCPUSet).Uint()
+		Default(strconv.FormatUint(uint64(nCPUs), 10)).IsSetByUser(&isCPUSet).Uint()
 
 	// Debug
 	isDebugSet = false
 	debug      = kingpin.Flag("debug", "The path to debug log file.").
-			PlaceHolder(" ").IsSetByUser(&isDebugSet).String()
+		PlaceHolder(" ").IsSetByUser(&isDebugSet).String()
 
 	isEnableCompressionSet = false
 	enableCompression      = kingpin.Flag("enable-compression", "Enable Gzip compression on requests.").
-				Short('e').Default("false").IsSetByUser(&isEnableCompressionSet).Bool()
+		Short('e').Default("false").IsSetByUser(&isEnableCompressionSet).Bool()
 
 	isLBStrategySet = false
 	lbStrategy      = kingpin.Flag("lb-strategy", "Client load balancing strategy.").
-			PlaceHolder(" ").IsSetByUser(&isLBStrategySet).String()
+		PlaceHolder(" ").IsSetByUser(&isLBStrategySet).String()
 
 	// message size
 	isMaxRecvMsgSizeSet = false
 	maxRecvMsgSize      = kingpin.Flag("max-recv-message-size", "Maximum message size the client can receive.").
-				PlaceHolder(" ").IsSetByUser(&isMaxRecvMsgSizeSet).String()
+		PlaceHolder(" ").IsSetByUser(&isMaxRecvMsgSizeSet).String()
 
 	isMaxSendMsgSizeSet = false
 	maxSendMsgSize      = kingpin.Flag("max-send-message-size", "Maximum message size the client can send.").
-				PlaceHolder(" ").IsSetByUser(&isMaxSendMsgSizeSet).String()
+		PlaceHolder(" ").IsSetByUser(&isMaxSendMsgSizeSet).String()
 
 	isDisableTemplateFuncsSet = false
 	disableTemplateFuncs      = kingpin.Flag("disable-template-functions", "Do not use and execute any template functions in call template data. Useful for better performance").
-					Default("false").IsSetByUser(&isDisableTemplateFuncsSet).Bool()
+		Default("false").IsSetByUser(&isDisableTemplateFuncsSet).Bool()
 
 	isDisableTemplateDataSet = false
 	disableTemplateData      = kingpin.Flag("disable-template-data", "Do not use and execute any call template data. Useful for better performance.").
-					Default("false").IsSetByUser(&isDisableTemplateDataSet).Bool()
+		Default("false").IsSetByUser(&isDisableTemplateDataSet).Bool()
 
 	// host main argument
 	isHostSet = false
@@ -308,6 +314,14 @@ func main() {
 		err := createConfigFromArgs(&cfg)
 
 		kingpin.FatalIfError(err, "")
+	}
+
+	if cfg.Prometheus {
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			fmt.Println("metrics listener open on port :9090")
+			http.ListenAndServe(":9090", nil)
+		}()
 	}
 
 	var logger *zap.SugaredLogger
@@ -488,6 +502,7 @@ func createConfigFromArgs(cfg *runner.Config) error {
 	cfg.StreamDynamicMessages = *sdm
 	cfg.Output = *output
 	cfg.Format = *format
+	cfg.Prometheus = *prometheus
 	cfg.ImportPaths = iPaths
 	cfg.Connections = *conns
 	cfg.DialTimeout = runner.Duration(*ct)
@@ -650,6 +665,10 @@ func mergeConfig(dest *runner.Config, src *runner.Config) error {
 
 	if isFormatSet {
 		dest.Format = src.Format
+	}
+
+	if isPrometheusSet {
+		dest.Prometheus = src.Prometheus
 	}
 
 	if isImportSet {

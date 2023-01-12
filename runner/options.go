@@ -48,6 +48,7 @@ type RunConfig struct {
 	protosetBinary     []byte
 	enableCompression  bool
 	defaultCallOptions []grpc.CallOption
+	prometheusEnabled  bool
 
 	// security settings
 	creds      credentials.TransportCredentials
@@ -370,6 +371,17 @@ func WithRootCertificate(cert string) Option {
 	}
 }
 
+// WithPrometheusEnabled specifies that this run should be done using insecure mode
+//
+//	WithPrometheusEnabled(true)
+func WithPrometheusEnabled(prometheus bool) Option {
+	return func(o *RunConfig) error {
+		o.prometheusEnabled = prometheus
+
+		return nil
+	}
+}
+
 // WithInsecure specifies that this run should be done using insecure mode
 //
 //	WithInsecure(true)
@@ -441,7 +453,6 @@ func WithRunDuration(z time.Duration) Option {
 func WithDurationStopAction(action string) Option {
 	return func(o *RunConfig) error {
 		action = strings.ToLower(action)
-
 		if action == "close" || action == "wait" || action == "ignore" {
 			o.zstop = action
 		}
@@ -1211,6 +1222,7 @@ func fromConfig(cfg *Config) []Option {
 		WithCountErrors(cfg.CountErrors),
 		WithDisableTemplateFuncs(cfg.DisableTemplateFuncs),
 		WithDisableTemplateData(cfg.DisableTemplateData),
+		WithPrometheusEnabled(cfg.Prometheus),
 		func(o *RunConfig) error {
 			o.call = cfg.Call
 			return nil
