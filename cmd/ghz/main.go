@@ -319,7 +319,6 @@ func main() {
 	if cfg.Prometheus {
 		http.Handle("/metrics", promhttp.Handler())
 		go func() {
-			fmt.Println("metrics listener open on port :9090")
 			http.ListenAndServe(":9090", nil)
 		}()
 	}
