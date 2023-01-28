@@ -75,8 +75,10 @@ jobs:
       - name: Build ghz-web
         env:
           CGO_ENABLED: 1
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
+          # various issues with GitHub actions, ARM and CGO
+          # disable for now
+          # GOOS: ${{ matrix.goos }}
+          # GOARCH: ${{ matrix.goarch }}
         run: |
           go build -ldflags="-s -w -X 'main.version=${{ github.ref }}' -X 'main.commit=${{ github.sha }}' -X 'main.date=${{ steps.current-time.outputs.time }}'" -o ./dist/${{ matrix.target }}/ ./cmd/ghz-web/...
 
