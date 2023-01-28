@@ -229,7 +229,7 @@ func (b *Requester) Finish() *Report {
 	<-b.reporter.done
 
 	if b.config.hasLog {
-		b.config.log.Debug("Finilizing report")
+		b.config.log.Debug("Finalizing report")
 	}
 
 	var r StopReason
