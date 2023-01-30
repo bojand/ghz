@@ -9,11 +9,11 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"github.com/jhump/protoreflect/desc"
-	"github.com/jhump/protoreflect/dynamic"
 	"google.golang.org/grpc/metadata"
+	jsonpb "google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	desc "google.golang.org/protobuf/reflect/protoreflect"
+	dynamic "google.golang.org/protobuf/types/dynamicpb"
 )
 
 // TODO move to own pacakge?
@@ -274,7 +274,7 @@ func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error 
 		return err
 	}
 
-	err = jsonpb.UnmarshalString(string(strData), input)
+	err = jsonpb.Unmarshal(strData, input)
 	if err != nil {
 		return err
 	}
@@ -311,7 +311,7 @@ func createPayloadsFromJSON(data string, mtd *desc.MethodDescriptor) ([]*dynamic
 		} else {
 			inputs = make([]*dynamic.Message, 1)
 			inputs[0] = dynamic.NewMessage(md)
-			err := jsonpb.UnmarshalString(data, inputs[0])
+			err := jsonpb.Unmarshal([]byte(data), inputs[0])
 			if err != nil {
 				return nil, fmt.Errorf("Error creating message from data. Data: '%v' Error: %v", data, err.Error())
 			}
@@ -342,9 +342,9 @@ func createPayloadsFromBinSingleMessage(binData []byte, mtd *desc.MethodDescript
 	return inputs, nil
 }
 
-func createPayloadsFromBinCountDelimited(binData []byte, mtd *desc.MethodDescriptor) ([]*dynamic.Message, error) {
+func createPayloadsFromBinCountDelimited(binData []byte, mtd desc.MethodDescriptor) ([]*dynamic.Message, error) {
 	inputs := make([]*dynamic.Message, 0)
-	md := mtd.GetInputType()
+	md := mtd.Input()
 
 	// return empty array if no data
 	if len(binData) == 0 {

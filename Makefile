@@ -86,6 +86,12 @@ build:
 	CGO_ENABLED=0 go build --ldflags="-s -w" -o $(DIST_DIR)/ghz ./cmd/ghz/...
 	go build --ldflags="-s -w" -o $(DIST_DIR)/ghz-web ./cmd/ghz-web/...
 
+# protoc
+.PHONY: protoc
+protoc:
+	protoc --go_out=.. --go_opt=paths=import --go-grpc_out=.. --go-grpc_opt=paths=import testdata/gtime.proto
+	protoc --go_out=.. --go_opt=paths=import --go-grpc_out=.. --go-grpc_opt=paths=import testdata/greeter.proto
+
 # Cover runs go_test on GO_PKGS and produces code coverage in multiple formats.
 # A coverage.html file for human viewing will be at $(TMP_COVERAGE)/coverage.html
 # This target will echo "open $(TMP_COVERAGE)/coverage.html" with TMP_COVERAGE

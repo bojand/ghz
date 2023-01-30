@@ -10,13 +10,13 @@ import (
 
 	"github.com/bojand/ghz/internal"
 	"github.com/bojand/ghz/internal/helloworld"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/uuid"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/proto"
+	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func changeFunc(mtd *desc.MethodDescriptor, cd *CallData) []byte {

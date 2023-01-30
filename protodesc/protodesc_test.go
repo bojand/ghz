@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
 func TestProtodesc_GetMethodDescFromProto(t *testing.T) {
@@ -148,7 +147,7 @@ func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
 
 		refCtx := metadata.NewOutgoingContext(ctx, md)
 
-		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(conn))
+		refClient := grpcreflect.NewClientAuto(refCtx, conn)
 
 		mtd, err := GetMethodDescFromReflect("helloworld.Greeter.SayHello", refClient)
 		assert.NoError(t, err)
@@ -167,7 +166,7 @@ func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
 
 		refCtx := metadata.NewOutgoingContext(ctx, md)
 
-		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(conn))
+		refClient := grpcreflect.NewClientAuto(refCtx, conn)
 
 		mtd, err := GetMethodDescFromReflect("helloworld.Greeter/SayHello", refClient)
 		assert.NoError(t, err)
@@ -186,7 +185,7 @@ func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
 
 		refCtx := metadata.NewOutgoingContext(ctx, md)
 
-		refClient := grpcreflect.NewClient(refCtx, reflectpb.NewServerReflectionClient(conn))
+		refClient := grpcreflect.NewClientAuto(refCtx, conn)
 
 		mtd, err := GetMethodDescFromReflect("helloworld.Greeter/SayHelloAsdf", refClient)
 		assert.Error(t, err)

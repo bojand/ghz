@@ -5,7 +5,7 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/bojand/ghz/internal/helloworld"
 	"github.com/bojand/ghz/protodesc"

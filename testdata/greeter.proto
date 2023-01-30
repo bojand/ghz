@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package helloworld;
 
+option go_package = "internal/gtime";
+
 service Greeter {
   rpc SayHello (HelloRequest) returns (HelloReply) {}
   rpc SayHelloCS (stream HelloRequest) returns (HelloReply) {}

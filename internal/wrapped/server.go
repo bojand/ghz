@@ -3,7 +3,7 @@ package wrapped
 import (
 	"context"
 
-	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 type WrappedService struct{}
