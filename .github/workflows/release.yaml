@@ -178,10 +178,13 @@ jobs:
     name: Update Brew Formula
     needs: github_release
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        formula: [ghz, ghz-web]
     steps:
       - uses: mislav/bump-homebrew-formula-action@v2
         with:
-          formula-name: ghz
+          formula-name: ${{ matrix.formula }}
         env:
           COMMITTER_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
 
