@@ -7,9 +7,9 @@
     <title>ghz - Greeter SayHello</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/papaparse@4.5.0/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/britecharts@2/dist/bundled/britecharts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/britecharts@3/dist/bundled/britecharts.min.js"></script>
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/britecharts/dist/css/britecharts.min.css" type="text/css" /></head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/britecharts@3/dist/css/britecharts.min.css" type="text/css" /></head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" />
 
   </head>
@@ -397,12 +397,6 @@
 			containerWidth = barContainer.node() ? barContainer.node().getBoundingClientRect().width : false,
 			tooltipContainer,
 			dataset;
-
-		tooltip.numberFormat('')
-		tooltip.valueFormatter(function(v) {
-			var percent = v / count * 100;
-			return v + ' ' + '(' + Number.parseFloat(percent).toFixed(1) + ' %)';
-		})
 
 		if (containerWidth) {
 			dataset = data;
