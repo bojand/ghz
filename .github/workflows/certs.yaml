@@ -3,6 +3,13 @@ name: certs
 on:
   schedule:
     - cron: '10 0 1 * *'
+  workflow_dispatch:
+    inputs:
+      comment:
+        description: 'comment on the workflow dispatch'
+        required: false
+        default: 'manual workflow dispatch' 
+        type: string
 
 jobs:
   build:
