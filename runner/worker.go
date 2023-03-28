@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -177,10 +178,13 @@ func (w *Worker) makeUnaryRequest(ctx *context.Context, reqMD *metadata.MD, inpu
 	res, resErr = w.stub.InvokeRpc(*ctx, w.mtd, input, callOptions...)
 
 	if w.config.hasLog {
+		inputData, _ := input.MarshalJSON()
+		resData, _ := json.Marshal(res)
+
 		w.config.log.Debugw("Received response", "workerID", w.workerID, "call type", "unary",
 			"call", w.mtd.GetFullyQualifiedName(),
-			"input", input, "metadata", reqMD,
-			"response", res, "error", resErr)
+			"input", string(inputData), "metadata", reqMD,
+			"response", string(resData), "error", resErr)
 	}
 
 	return resErr
