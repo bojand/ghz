@@ -13,13 +13,16 @@ FROM osmap-$TARGETOS AS osmap
 
 FROM alpine AS fetcher
 WORKDIR /app
+ARG VERSION
 RUN \
     --mount=from=osmap,source=/os,target=/os <<EOF
 set -eux
 apk add --no-cache curl
 export url=https://github.com/bojand/ghz/releases
 export arch=x86_64
-export VERSION=$( ( curl -#fSLo /dev/null -w '%{url_effective}' $url/latestecho ) | while read -r x; do basename $x; done)
+if [ "${VERSION:-}" = '' ]; then
+    export VERSION=$( ( curl -#fSLo /dev/null -w '%{url_effective}' $url/latest && echo ) | while read -r x; do basename $x; done)
+fi
 curl -#fSLo exe.tar.gz $url/download/$VERSION/ghz-$(cat /os)-$arch.tar.gz
 curl -#fSLo sha2 $url/download/$VERSION/ghz-$(cat /os)-$arch.tar.gz.sha256
 sha256sum exe.tar.gz | grep -F $(cat sha2)
