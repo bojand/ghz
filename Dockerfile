@@ -1,7 +1,32 @@
 # syntax=docker.io/docker/dockerfile:1.3-labs@sha256:250ce669e1aeeb5ffb892b18039c3f0801466536cb4210c8eb2638e628859bfd
 
 FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.17 AS alpine
+FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:403f48633fb5ebd49f9a2b6ad6719f912df23dae44974a0c9445be331e72ff5e AS golang
 FROM --platform=$BUILDPLATFORM gcr.io/distroless/base:nonroot@sha256:e406b1da09bc455495417a809efe48a03c48011a89f6eb57b0ab882508021c0d AS distroless
+
+
+FROM golang AS builder
+WORKDIR /app
+ARG TARGETOS TARGETARCH
+ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
+COPY go.??? .
+RUN \
+  --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build <<EOF
+set -eux
+go mod download
+EOF
+COPY . .
+RUN \
+  --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build <<EOF
+set -eux
+go build -mod=readonly -o ./dist/ghz -a -installsuffix cgo -ldflags '-w -s -extldflags "-static"' ./cmd/ghz/...
+EOF
+
+FROM scratch AS ghz-binary-built
+COPY --from=builder /app/dist/ghz /
+
 
 FROM alpine AS osmap-linux
 RUN echo linux   >/os
