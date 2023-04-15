@@ -177,16 +177,15 @@ jobs:
   update_brew_formula:
     name: Update Brew Formula
     needs: github_release
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     strategy:
       matrix:
         formula: [ghz, ghz-web]
     steps:
-      - uses: mislav/bump-homebrew-formula-action@v2
+      - uses: dawidd6/action-homebrew-bump-formula@v3
         with:
-          formula-name: ${{ matrix.formula }}
-        env:
-          COMMITTER_TOKEN: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
+          formula: ${{ matrix.formula }}
+          token: ${{ secrets.GH_PAGES_ACTION_TOKEN }}
 
   push_docker_image:
     name: Push Docker image
