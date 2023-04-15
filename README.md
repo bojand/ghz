@@ -59,6 +59,12 @@ go build .
 go install github.com/bojand/ghz/cmd/ghz@latest
 ```
 
+**Install using Docker**
+
+```sh
+DOCKER_BUILDKIT=1 docker build --output=/usr/local/bin --target=ghz-binary-built https://github.com/bojand/ghz.git
+```
+
 ## Usage
 
 ```
