@@ -97,6 +97,7 @@ type Config struct {
 	StreamDynamicMessages bool              `json:"stream-dynamic-messages" toml:"stream-dynamic-messages" yaml:"stream-dynamic-messages"`
 	Output                string            `json:"output" toml:"output" yaml:"output"`
 	Format                string            `json:"format" toml:"format" yaml:"format" default:"summary"`
+	Prometheus            bool              `json:"prometheus" toml:"prometheus" yaml:"prometheus"`
 	DialTimeout           Duration          `json:"connect-timeout" toml:"connect-timeout" yaml:"connect-timeout" default:"10s"`
 	KeepaliveTime         Duration          `json:"keepalive" toml:"keepalive" yaml:"keepalive"`
 	CPUs                  uint              `json:"cpus" toml:"cpus" yaml:"cpus"`

@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"math"
 	"strconv"
 	"sync"
@@ -62,6 +63,10 @@ type Requester struct {
 	workers    []*Worker
 }
 
+func init() {
+	grpc_prometheus.EnableClientHandlingTimeHistogram()
+}
+
 // NewRequester creates a new requestor from the passed RunConfig
 func NewRequester(c *RunConfig) (*Requester, error) {
 
@@ -89,6 +94,7 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 		var cc *grpc.ClientConn
 		// temporary connection for reflection, do not store as requester connections
 		cc, err = reqr.newClientConn(false)
+
 		if err != nil {
 			return nil, err
 		}
@@ -312,6 +318,13 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 				grpc.MaxCallSendMsgSize(math.MaxInt32),
 			))
 
+	}
+
+	if b.config.prometheusEnabled {
+		opts = append(opts,
+			grpc.WithStreamInterceptor(grpc_prometheus.StreamClientInterceptor),
+			grpc.WithUnaryInterceptor(grpc_prometheus.UnaryClientInterceptor),
+		)
 	}
 
 	ctx := context.Background()
