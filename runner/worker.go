@@ -159,7 +159,7 @@ func (w *Worker) makeRequest(tv TickValue) error {
 	} else if w.mtd.IsClientStreaming() {
 		_ = w.makeClientStreamingRequest(&ctx, ctd, msgProvider)
 	} else if w.mtd.IsServerStreaming() {
-		_ = w.makeServerStreamingRequest(&ctx, inputs[0])
+		_ = w.makeServerStreamingRequest(&ctx, ctd, inputs[0])
 	} else {
 		_ = w.makeUnaryRequest(&ctx, reqMD, inputs[0])
 	}
@@ -314,7 +314,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 	return nil
 }
 
-func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic.Message) error {
+func (w *Worker) makeServerStreamingRequest(ctx *context.Context, callData *CallData, input *dynamic.Message) error {
 	var callOptions = []grpc.CallOption{}
 	if w.config.enableCompression {
 		callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
@@ -378,7 +378,7 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 
 		if w.streamRecv != nil {
 			if converted, ok := res.(*dynamic.Message); ok {
-				err = w.streamRecv(converted, err)
+				err = w.streamRecv(callData, converted, err)
 				if errors.Is(err, ErrEndStream) && !interceptCanceled {
 					interceptCanceled = true
 					err = nil
@@ -483,7 +483,7 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 
 			if w.streamRecv != nil {
 				if converted, ok := res.(*dynamic.Message); ok {
-					iErr := w.streamRecv(converted, recvErr)
+					iErr := w.streamRecv(ctd, converted, recvErr)
 					if errors.Is(iErr, ErrEndStream) && !interceptCanceled {
 						interceptCanceled = true
 						if len(cancel) == 0 {

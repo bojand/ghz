@@ -1367,7 +1367,7 @@ func TestRunServerStreaming(t *testing.T) {
 			WithInsecure(true),
 			WithName("server streaming test"),
 			WithCountErrors(true),
-			WithStreamRecvMsgIntercept(func(msg *dynamic.Message, err error) error {
+			WithStreamRecvMsgIntercept(func(ctd *CallData, msg *dynamic.Message, err error) error {
 				if err == nil {
 					reply := &helloworld.HelloReply{}
 					convertErr := msg.ConvertTo(reply)
@@ -2558,7 +2558,7 @@ func TestRunBidi(t *testing.T) {
 			WithStreamInterval(100*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
-			WithStreamRecvMsgIntercept(func(msg *dynamic.Message, err error) error {
+			WithStreamRecvMsgIntercept(func(ctd *CallData, msg *dynamic.Message, err error) error {
 				if err == nil {
 					reply := &helloworld.HelloReply{}
 					convertErr := msg.ConvertTo(reply)
@@ -2643,7 +2643,7 @@ func TestRunBidi(t *testing.T) {
 			WithStreamInterval(100*time.Millisecond),
 			WithData(data),
 			WithInsecure(true),
-			WithStreamRecvMsgIntercept(func(msg *dynamic.Message, err error) error {
+			WithStreamRecvMsgIntercept(func(ctd *CallData, msg *dynamic.Message, err error) error {
 				if err == nil {
 					reply := &helloworld.HelloReply{}
 					convertErr := msg.ConvertTo(reply)
