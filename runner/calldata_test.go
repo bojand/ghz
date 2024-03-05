@@ -332,3 +332,14 @@ func TestCallTemplateData_ExecuteFuncs(t *testing.T) {
 		assert.Equal(t, `{"trace_id":"ABCABCABC"}`, string(r))
 	})
 }
+
+func BenchmarkCallData_randomString(b *testing.B) {
+	b.N = 100000000
+	b.SetParallelism(1024)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_ = randomString(10)
+		}
+	})
+	b.Logf("pass")
+}
