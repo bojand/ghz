@@ -195,6 +195,9 @@ func (b *Requester) Run() (*Report, error) {
 func (b *Requester) Stop(reason StopReason) {
 
 	b.stopCh <- true
+	if *b.config.stopChan != nil {
+		*b.config.stopChan <- true
+	}
 
 	b.lock.Lock()
 	b.stopReason = reason
@@ -217,6 +220,9 @@ func (b *Requester) Stop(reason StopReason) {
 // Finish finishes the test run
 func (b *Requester) Finish() *Report {
 	close(b.results)
+	if *b.config.stopChan != nil {
+		*b.config.stopChan <- true
+	}
 	total := time.Since(b.start)
 
 	if b.config.hasLog {

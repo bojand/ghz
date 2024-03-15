@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"io"
 	"math"
 	"os"
@@ -129,12 +130,14 @@ type RunConfig struct {
 	disableTemplateData  bool
 
 	// misc
-	name        string
-	cpus        int
-	tags        []byte
-	skipFirst   int
-	countErrors bool
-	recvMsgFunc StreamRecvMsgInterceptFunc
+	name             string
+	cpus             int
+	tags             []byte
+	skipFirst        int
+	countErrors      bool
+	recvMsgFunc      StreamRecvMsgInterceptFunc
+	responsesChannel *chan proto.Message
+	stopChan         *chan bool
 }
 
 // Option controls some aspect of run
@@ -145,14 +148,16 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 
 	// init with defaults
 	c := &RunConfig{
-		n:            200,
-		c:            50,
-		nConns:       1,
-		timeout:      time.Duration(20 * time.Second),
-		dialTimeout:  time.Duration(10 * time.Second),
-		cpus:         runtime.GOMAXPROCS(-1),
-		zstop:        "close",
-		loadSchedule: ScheduleConst,
+		n:                200,
+		c:                50,
+		nConns:           1,
+		timeout:          time.Duration(20 * time.Second),
+		dialTimeout:      time.Duration(10 * time.Second),
+		cpus:             runtime.GOMAXPROCS(-1),
+		zstop:            "close",
+		loadSchedule:     ScheduleConst,
+		responsesChannel: nil,
+		stopChan:         nil,
 	}
 
 	// apply options
@@ -386,6 +391,14 @@ func WithSkipTLSVerify(skip bool) Option {
 	return func(o *RunConfig) error {
 		o.skipVerify = skip
 
+		return nil
+	}
+}
+
+func WithResponsesChannel(channel *chan proto.Message, stopChan *chan bool) Option {
+	return func(o *RunConfig) error {
+		o.responsesChannel = channel
+		o.stopChan = stopChan
 		return nil
 	}
 }
