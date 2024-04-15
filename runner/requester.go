@@ -389,17 +389,18 @@ func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {
 					}
 
 					w := Worker{
-						ticks:            ticks,
-						active:           true,
-						stub:             b.stubs[n],
-						mtd:              b.mtd,
-						config:           b.config,
-						stopCh:           make(chan bool),
-						workerID:         wID,
-						dataProvider:     b.dataProvider,
-						metadataProvider: b.metadataProvider,
-						streamRecv:       b.config.recvMsgFunc,
-						msgProvider:      b.config.dataStreamFunc,
+						ticks:                         ticks,
+						active:                        true,
+						stub:                          b.stubs[n],
+						mtd:                           b.mtd,
+						config:                        b.config,
+						stopCh:                        make(chan bool),
+						workerID:                      wID,
+						dataProvider:                  b.dataProvider,
+						metadataProvider:              b.metadataProvider,
+						streamRecv:                    b.config.recvMsgFunc,
+						msgProvider:                   b.config.dataStreamFunc,
+						streamInterceptorProviderFunc: b.config.streamInterceptorProviderFunc,
 					}
 
 					wc++ // increment worker id
