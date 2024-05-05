@@ -129,12 +129,13 @@ type RunConfig struct {
 	disableTemplateData  bool
 
 	// misc
-	name        string
-	cpus        int
-	tags        []byte
-	skipFirst   int
-	countErrors bool
-	recvMsgFunc StreamRecvMsgInterceptFunc
+	name                          string
+	cpus                          int
+	tags                          []byte
+	skipFirst                     int
+	countErrors                   bool
+	recvMsgFunc                   StreamRecvMsgInterceptFunc
+	streamInterceptorProviderFunc StreamInterceptorProviderFunc
 }
 
 // Option controls some aspect of run
@@ -1029,6 +1030,15 @@ func WithWorkerTicker(ticker load.WorkerTicker) Option {
 func WithStreamRecvMsgIntercept(fn StreamRecvMsgInterceptFunc) Option {
 	return func(o *RunConfig) error {
 		o.recvMsgFunc = fn
+
+		return nil
+	}
+}
+
+// WithStreamInterceptor specifies the stream interceptor provider function
+func WithStreamInterceptorProviderFunc(interceptor StreamInterceptorProviderFunc) Option {
+	return func(o *RunConfig) error {
+		o.streamInterceptorProviderFunc = interceptor
 
 		return nil
 	}

@@ -44,6 +44,16 @@ type StreamMessageProviderFunc func(*CallData) (*dynamic.Message, error)
 // Clients can return ErrEndStream to end the call early
 type StreamRecvMsgInterceptFunc func(*dynamic.Message, error) error
 
+// StreamInterceptorProviderFunc is an interface for a function invoked to generate a stream interceptor
+type StreamInterceptorProviderFunc func(*CallData) StreamInterceptor
+
+// StreamInterceptor is an interface for sending and receiving stream messages.
+// The interceptor can keep shared state for the send and receive calls.
+type StreamInterceptor interface {
+	Recv(*dynamic.Message, error) error
+	Send(*CallData) (*dynamic.Message, error)
+}
+
 type dataProvider struct {
 	binary   bool
 	data     []byte
