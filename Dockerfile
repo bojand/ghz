@@ -1,11 +1,10 @@
 # syntax=docker.io/docker/dockerfile:1.3-labs@sha256:250ce669e1aeeb5ffb892b18039c3f0801466536cb4210c8eb2638e628859bfd
 
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.17 AS alpine
-FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:403f48633fb5ebd49f9a2b6ad6719f912df23dae44974a0c9445be331e72ff5e AS golang
-FROM --platform=$BUILDPLATFORM gcr.io/distroless/base:nonroot@sha256:e406b1da09bc455495417a809efe48a03c48011a89f6eb57b0ab882508021c0d AS distroless
+# FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.19 AS alpine
+# FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:403f48633fb5ebd49f9a2b6ad6719f912df23dae44974a0c9445be331e72ff5e AS golang
+# FROM --platform=$BUILDPLATFORM gcr.io/distroless/base:nonroot@sha256:e406b1da09bc455495417a809efe48a03c48011a89f6eb57b0ab882508021c0d AS distroless
 
-
-FROM golang AS builder
+FROM golang:1.22.2 AS builder
 WORKDIR /app
 ARG TARGETOS TARGETARCH
 ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
@@ -28,11 +27,11 @@ FROM scratch AS ghz-binary-built
 COPY --from=builder /app/dist/ghz /
 
 
-FROM alpine AS osmap-linux
+FROM alpine:3.19 AS osmap-linux
 RUN echo linux   >/os
-FROM alpine AS osmap-macos
+FROM alpine:3.19 AS osmap-macos
 RUN echo darwin  >/os
-FROM alpine AS osmap-windows
+FROM alpine:3.19 AS osmap-windows
 RUN echo windows >/os
 FROM osmap-$TARGETOS AS osmap
 
@@ -58,7 +57,7 @@ EOF
 FROM scratch AS ghz-binary
 COPY --from=fetcher /app/exe/* /
 
-FROM distroless AS ghz
+FROM gcr.io/distroless/base:nonroot AS ghz
 COPY --from=ghz-binary --chown=nonroot /ghz /
 RUN ["/ghz", "--version"]
 ENTRYPOINT ["/ghz"]
