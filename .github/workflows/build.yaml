@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
-      GOLANGCI_LINT_VERSION: v1.49.0
+      GOLANGCI_LINT_VERSION: v1.58.0
 
     steps:
     - name: Set up Go
