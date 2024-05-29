@@ -13,7 +13,7 @@ import (
 // https://github.com/prometheus/docs/blob/master/content/docs/instrumenting/exposition_formats.md
 
 func (rp *ReportPrinter) printPrometheus() error {
-	encoder := expfmt.NewEncoder(rp.Out, expfmt.FmtText)
+	encoder := expfmt.NewEncoder(rp.Out, expfmt.NewFormat(expfmt.TypeTextPlain))
 
 	labels, err := rp.getCommonPrometheusLabels()
 	if err != nil {
