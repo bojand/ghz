@@ -97,7 +97,7 @@ func (w *Worker) makeRequest(tv TickValue) error {
 	}
 
 	if w.config.enableCompression {
-		reqMD.Append("grpc-accept-encoding", gzip.Name)
+		reqMD.Set("grpc-accept-encoding", gzip.Name)
 	}
 
 	ctx := context.Background()
