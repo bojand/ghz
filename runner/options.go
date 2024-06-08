@@ -397,11 +397,11 @@ func WithSkipTLSVerify(skip bool) Option {
 
 // WithTransportCredentials specifies TransportCredentials to use
 //
-//	creds, _ := xds.NewClientCredentials(xds.ClientOptions{
-//	    FallbackCreds: insecure.NewCredentials()
-//	})
+//		creds, _ := xds.NewClientCredentials(xds.ClientOptions{
+//		    FallbackCreds: insecure.NewCredentials()
+//		})
 //
-// opt := WithTransportCredentials(creds)
+//	 opt := WithTransportCredentials(creds)
 func WithTransportCredentials(creds credentials.TransportCredentials) Option {
 	return func(o *RunConfig) error {
 		o.creds = creds
