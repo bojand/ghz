@@ -1,4 +1,4 @@
-module github.com/synackSA/ghz
+module github.com/bojand/ghz
 
 go 1.18
 
