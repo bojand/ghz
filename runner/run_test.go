@@ -945,7 +945,7 @@ func TestRunUnary(t *testing.T) {
 
 				return []*dynamic.Message{dynamicMsg}, nil
 			}),
-			WithMetadataProvider(func(*CallData) (*metadata.MD, error) {
+			WithMetadataProvider(func(*CallData, *dynamic.Message) (*metadata.MD, error) {
 				mdv := "secret" + strconv.Itoa(callCounter)
 				return &metadata.MD{"token": []string{mdv}}, nil
 			}),

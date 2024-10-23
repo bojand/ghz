@@ -91,30 +91,6 @@ func (w *Worker) makeRequest(tv TickValue) error {
 		}
 	}
 
-	reqMD, err := w.metadataProvider(ctd)
-	if err != nil {
-		return err
-	}
-
-	if w.config.enableCompression {
-		reqMD.Set("grpc-accept-encoding", gzip.Name)
-	}
-
-	ctx := context.Background()
-	var cancel context.CancelFunc
-
-	if w.config.timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, w.config.timeout)
-	} else {
-		ctx, cancel = context.WithCancel(ctx)
-	}
-	defer cancel()
-
-	// include the metadata
-	if reqMD != nil {
-		ctx = metadata.NewOutgoingContext(ctx, *reqMD)
-	}
-
 	inputs, err := w.dataProvider(ctd)
 	if err != nil {
 		return err
@@ -145,6 +121,30 @@ func (w *Worker) makeRequest(tv TickValue) error {
 
 	if len(inputs) == 0 && msgProvider == nil {
 		return fmt.Errorf("no data provided for request")
+	}
+
+	reqMD, err := w.metadataProvider(ctd, inputs[0])
+	if err != nil {
+		return err
+	}
+
+	if w.config.enableCompression {
+		reqMD.Set("grpc-accept-encoding", gzip.Name)
+	}
+
+	ctx := context.Background()
+	var cancel context.CancelFunc
+
+	if w.config.timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, w.config.timeout)
+	} else {
+		ctx, cancel = context.WithCancel(ctx)
+	}
+	defer cancel()
+
+	// include the metadata
+	if reqMD != nil {
+		ctx = metadata.NewOutgoingContext(ctx, *reqMD)
 	}
 
 	var callType string

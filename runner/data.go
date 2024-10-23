@@ -35,7 +35,7 @@ var ErrLastMessage = errors.New("last message")
 type DataProviderFunc func(*CallData) ([]*dynamic.Message, error)
 
 // MetadataProviderFunc is the interface for providing metadadata for calls
-type MetadataProviderFunc func(*CallData) (*metadata.MD, error)
+type MetadataProviderFunc func(*CallData, *dynamic.Message) (*metadata.MD, error)
 
 // StreamMessageProviderFunc is the interface for providing a message for every message send in the course of a streaming call
 type StreamMessageProviderFunc func(*CallData) (*dynamic.Message, error)
@@ -257,7 +257,7 @@ func newMetadataProvider(mtd *desc.MethodDescriptor, mdData []byte, withFuncs, w
 	return &mdProvider{metadata: mdData, preseed: preseed}, nil
 }
 
-func (dp *mdProvider) getMetadataForCall(ctd *CallData) (*metadata.MD, error) {
+func (dp *mdProvider) getMetadataForCall(ctd *CallData, msg *dynamic.Message) (*metadata.MD, error) {
 	if dp.preseed != nil {
 		return &dp.preseed, nil
 	}
