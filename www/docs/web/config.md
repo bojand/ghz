@@ -15,7 +15,7 @@ title: Configuration
 
 ## Configuration File
 
-A cofiguration file can be specified using `-config` option. Configuration file can be in YAML, TOML or JSON format.
+A cofiguration file can be specified using `--config` option. Configuration file can be in YAML, TOML or JSON format.
 
 **YAML**
 
