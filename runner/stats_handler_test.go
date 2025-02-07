@@ -32,7 +32,7 @@ func TestStatsHandler(t *testing.T) {
 		done <- true
 	}()
 
-	conn, err := grpc.Dial(
+	conn, err := grpc.NewClient(
 		internal.TestLocalhost,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(&statsHandler{results: rChan}))

@@ -312,8 +312,7 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 
 	}
 
-	ctx := context.Background()
-	ctx, _ = context.WithTimeout(ctx, b.config.dialTimeout)
+	// ctx, _ = context.WithTimeout(ctx, b.config.dialTimeout)
 	// cancel is ignored here as connection.Close() is used.
 	// See https://godoc.org/google.golang.org/grpc#DialContext
 
@@ -347,7 +346,7 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 	}
 
 	// create client connection
-	return grpc.DialContext(ctx, b.config.host, opts...)
+	return grpc.NewClient(b.config.host, opts...)
 }
 
 func (b *Requester) runWorkers(wt load.WorkerTicker, p load.Pacer) error {

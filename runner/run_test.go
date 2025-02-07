@@ -3105,7 +3105,7 @@ func TestRunUnaryDurationStop(t *testing.T) {
 		assert.Len(t, report.ErrorDist, 1)
 		assert.Len(t, report.StatusCodeDist, 2)
 		assert.Equal(t, 6, report.StatusCodeDist["OK"])
-		assert.Equal(t, 1, report.StatusCodeDist["Unavailable"])
+		assert.Equal(t, 1, report.StatusCodeDist["Canceled"])
 	})
 
 	t.Run("test wait", func(t *testing.T) {
