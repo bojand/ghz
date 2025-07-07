@@ -53,7 +53,7 @@ cd cmd/ghz
 go build .
 ```
 
-**Install using go >= 1.16**
+**Install using go >= 1.20**
 
 ```sh
 go install github.com/bojand/ghz/cmd/ghz@latest
