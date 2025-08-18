@@ -140,7 +140,7 @@ func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
 		var opts []grpc.DialOption
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		ctx := context.Background()
-		conn, err := grpc.DialContext(ctx, internal.TestLocalhost, opts...)
+		conn, err := grpc.NewClient(internal.TestLocalhost, opts...)
 		assert.NoError(t, err)
 
 		md := make(metadata.MD)
@@ -159,7 +159,7 @@ func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
 		var opts []grpc.DialOption
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		ctx := context.Background()
-		conn, err := grpc.DialContext(ctx, internal.TestLocalhost, opts...)
+		conn, err := grpc.NewClient(internal.TestLocalhost, opts...)
 		assert.NoError(t, err)
 
 		md := make(metadata.MD)
@@ -178,7 +178,7 @@ func TestProtodesc_GetMethodDescFromReflect(t *testing.T) {
 		var opts []grpc.DialOption
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		ctx := context.Background()
-		conn, err := grpc.DialContext(ctx, internal.TestLocalhost, opts...)
+		conn, err := grpc.NewClient(internal.TestLocalhost, opts...)
 		assert.NoError(t, err)
 
 		md := make(metadata.MD)
