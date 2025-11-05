@@ -102,7 +102,7 @@ func NewRequester(c *RunConfig) (*Requester, error) {
 		ctx, _ := context.WithTimeout(context.Background(), c.dialTimeout)
 
 		md := make(metadata.MD)
-		if c.rmd != nil && len(c.rmd) > 0 {
+		if len(c.rmd) > 0 {
 			md = metadata.New(c.rmd)
 		}
 
@@ -246,7 +246,7 @@ func (b *Requester) openClientConns() ([]*grpc.ClientConn, error) {
 		return b.conns, nil
 	}
 
-	for n := 0; n < b.config.nConns; n++ {
+	for n := len(b.conns); n < b.config.nConns; n++ {
 		c, err := b.newClientConn(true)
 		if err != nil {
 			if b.config.hasLog {
