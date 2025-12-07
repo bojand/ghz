@@ -67,7 +67,7 @@ jobs:
       if: steps.cache-go-bin.outputs.cache-hit != 'true'
       run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/go/bin $GOLANGCI_LINT_VERSION
     - name: Lint
-      run: $HOME/go/bin/golangci-lint run --timeout=2m ./...
+      run: $HOME/go/bin/golangci-lint run --timeout=5m ./...
     - name: Test
       run: go test -failfast -race -covermode=atomic -coverprofile=coverage.txt -cover -json ./... | $HOME/go/bin/tparse
 
