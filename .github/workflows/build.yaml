@@ -39,36 +39,18 @@ jobs:
       GOLANGCI_LINT_VERSION: v1.58.0
 
     steps:
+    - name: Check out code
+      uses: actions/checkout@v5
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version: 1.23.0
-      id: go
-    - name: Check out code
-      uses: actions/checkout@v4
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      id: cache-go-mod
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Cache bin directory
-      id: cache-go-bin
-      uses: actions/cache@v4
-      with:
-        path: ~/go/bin
-        key: ${{ runner.os }}-go-bin-${{ env.GOLANGCI_LINT_VERSION }}
-    - name: Install tparse
-      if: steps.cache-go-bin.outputs.cache-hit != 'true'
-      run: go install github.com/mfridman/tparse
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v2
       with:
         version: v1.58.0
     - name: Test
-      run: go test -failfast -race -covermode=atomic -coverprofile=coverage.txt -cover -json ./... | $HOME/go/bin/tparse
+      run: go test -failfast -race
 
   build_docker_image:
     name: Build Docker image from latest tag
