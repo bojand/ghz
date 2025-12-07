@@ -29,6 +29,7 @@ on:
     - '*/*/*/*/*/*.go'
     - '*/*/*/*/*/*/*.go'
     - '*/*/*/*/*/*/*/*.go'
+  workflow_dispatch:
 
 jobs:
   build:
