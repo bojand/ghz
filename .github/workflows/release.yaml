@@ -122,27 +122,27 @@ jobs:
 
       # These can be squashed when https://github.com/actions/download-artifact/issues/6 is closed
       - name: Download releases from github_build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ghz-linux-x86_64.tar.gz
           path: .
       - name: Download releases from github_build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ghz-linux-arm64.tar.gz
           path: .
       - name: Download releases from github_build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ghz-darwin-x86_64.tar.gz
           path: .
       - name: Download releases from github_build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ghz-darwin-arm64.tar.gz
           path: .
       - name: Download releases from github_build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ghz-windows-x86_64.zip
           path: .
