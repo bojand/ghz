@@ -63,11 +63,10 @@ jobs:
     - name: Install tparse
       if: steps.cache-go-bin.outputs.cache-hit != 'true'
       run: go install github.com/mfridman/tparse
-    - name: Install golangci-lint
-      if: steps.cache-go-bin.outputs.cache-hit != 'true'
-      run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/go/bin $GOLANGCI_LINT_VERSION
-    - name: Lint
-      run: $HOME/go/bin/golangci-lint run --timeout=5m ./...
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: v1.58.0
     - name: Test
       run: go test -failfast -race -covermode=atomic -coverprofile=coverage.txt -cover -json ./... | $HOME/go/bin/tparse
 
