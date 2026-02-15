@@ -95,6 +95,12 @@ func New(db *database.Database, appInfo *api.ApplicationInfo, conf *config.Confi
 	// Ingest to project
 	projectGroup.POST("/:pid/ingest/", ingestAPI.IngestToProject).Name = "ghz api: ingest to project"
 
+	// Run
+	runAPI := api.RunAPI{DB: db, Jobs: api.NewRunJobManager()}
+	apiRoot.POST("/run/", runAPI.Run).Name = "ghz api: run test"
+	projectGroup.POST("/:pid/run/", runAPI.RunToProject).Name = "ghz api: run test to project"
+	apiRoot.GET("/run/jobs/:jid/", runAPI.GetJob).Name = "ghz api: get run job"
+
 	// Info
 
 	infoAPI := api.InfoAPI{Info: *appInfo}
