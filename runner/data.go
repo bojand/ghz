@@ -217,7 +217,7 @@ func (dp *dataProvider) getMessages(ctd *CallData, i int, inputData []byte) ([]*
 	} else {
 		var err error
 		if dp.dataFunc != nil {
-			inputData = dp.dataFunc(dp.mtd, ctd)
+			inputData = dp.dataFunc(dp.mtd.UnwrapMethod(), ctd)
 		}
 		inputs, err = createPayloadsFromBin(inputData, dp.mtd)
 		if err != nil {
