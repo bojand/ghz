@@ -486,13 +486,13 @@ func (m *dynamicMessageProvider) GetStreamMessage(parentCallData *CallData) (*dy
 	msg := dynamic.NewMessage(md)
 	err = jsonpb.UnmarshalString(string(buf), msg)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating message from data. Data: '%v' Error: %v", data, err.Error())
+		return nil, fmt.Errorf("error creating message from data. Data: '%v' Error: %v", data, err.Error())
 	}
 
 	m.counter++
 	m.indexCounter++
 
-	if err == nil && isLast {
+	if isLast {
 		err = ErrLastMessage
 	}
 
