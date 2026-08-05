@@ -248,6 +248,10 @@ func NewConfig(call, host string, options ...Option) (*RunConfig, error) {
 		return nil, errors.New("you cannot skip more requests than those run")
 	}
 
+	if c.creds != nil {
+		return c, nil
+	}
+
 	creds, err := createClientTransportCredentials(
 		c.skipVerify,
 		c.cacert,
@@ -386,6 +390,21 @@ func WithInsecure(insec bool) Option {
 func WithSkipTLSVerify(skip bool) Option {
 	return func(o *RunConfig) error {
 		o.skipVerify = skip
+
+		return nil
+	}
+}
+
+// WithTransportCredentials specifies TransportCredentials to use
+//
+//	creds, _ := xds.NewClientCredentials(xds.ClientOptions{
+//		FallbackCreds: insecure.NewCredentials()
+//	})
+//
+//	opt := WithTransportCredentials(creds)
+func WithTransportCredentials(creds credentials.TransportCredentials) Option {
+	return func(o *RunConfig) error {
+		o.creds = creds
 
 		return nil
 	}

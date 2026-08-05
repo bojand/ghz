@@ -2,6 +2,7 @@ package runner
 
 import (
 	"encoding/json"
+	"google.golang.org/grpc/credentials/insecure"
 	"math"
 	"os"
 	"reflect"
@@ -118,6 +119,56 @@ func TestRunConfig_newRunConfig(t *testing.T) {
 		assert.Equal(t, "", string(c.protoset))
 		assert.Equal(t, []string{"testdata", ".", "/home/protos"}, c.importPaths)
 		assert.Equal(t, c.enableCompression, false)
+		assert.NotNil(t, c.creds)
+	})
+
+	t.Run("with transport credentials", func(t *testing.T) {
+
+		expectedCreds := insecure.NewCredentials()
+
+		c, err := NewConfig(
+			"call", "localhost:50050",
+			WithInsecure(true),
+			WithTotalRequests(100),
+			WithConcurrency(20),
+			WithRPS(5),
+			WithSkipFirst(5),
+			WithRunDuration(time.Duration(5*time.Minute)),
+			WithKeepalive(time.Duration(60*time.Second)),
+			WithTimeout(time.Duration(10*time.Second)),
+			WithDialTimeout(time.Duration(30*time.Second)),
+			WithName("asdf"),
+			WithCPUs(4),
+			WithDataFromJSON(`{"name":"bob"}`),
+			WithMetadataFromJSON(`{"request-id":"123"}`),
+			WithProtoFile("testdata/data.proto", []string{"/home/protos"}),
+			WithTransportCredentials(expectedCreds),
+		)
+
+		assert.NoError(t, err)
+
+		assert.Equal(t, "call", c.call)
+		assert.Equal(t, "localhost:50050", c.host)
+		assert.Equal(t, true, c.insecure)
+		assert.Equal(t, math.MaxInt32, c.n)
+		assert.Equal(t, 20, c.c)
+		assert.Equal(t, 5, c.rps)
+		assert.Equal(t, 5, c.skipFirst)
+		assert.Equal(t, false, c.binary)
+		assert.Equal(t, time.Duration(5*time.Minute), c.z)
+		assert.Equal(t, time.Duration(60*time.Second), c.keepaliveTime)
+		assert.Equal(t, time.Duration(10*time.Second), c.timeout)
+		assert.Equal(t, time.Duration(30*time.Second), c.dialTimeout)
+		assert.Equal(t, 4, c.cpus)
+		assert.False(t, c.binary)
+		assert.Equal(t, "asdf", c.name)
+		assert.Equal(t, `{"name":"bob"}`, string(c.data))
+		assert.Equal(t, `{"request-id":"123"}`, string(c.metadata))
+		assert.Equal(t, "testdata/data.proto", string(c.proto))
+		assert.Equal(t, "", string(c.protoset))
+		assert.Equal(t, []string{"testdata", ".", "/home/protos"}, c.importPaths)
+		assert.Equal(t, c.enableCompression, false)
+		assert.Equal(t, expectedCreds, c.creds)
 	})
 
 	t.Run("with binary data, protoset and metadata file", func(t *testing.T) {
