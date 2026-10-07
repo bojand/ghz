@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/bojand/ghz/load"
-	"github.com/jhump/protoreflect/desc"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	humanize "github.com/dustin/go-humanize"
 )
@@ -26,7 +26,7 @@ import (
 // BinaryDataFunc is a function that can be used for provide binary data for request programatically.
 // MethodDescriptor of the call is passed to the data function.
 // CallData for the request is passed and can be used to access worker id, request number, etc...
-type BinaryDataFunc func(mtd *desc.MethodDescriptor, callData *CallData) []byte
+type BinaryDataFunc func(mtd protoreflect.MethodDescriptor, callData *CallData) []byte
 
 // ScheduleConst is a constant load schedule
 const ScheduleConst = "const"
@@ -512,7 +512,7 @@ func WithClientLoadBalancing(strategy string) Option {
 // WithBinaryDataFunc specifies the binary data func which will be called on each request
 //
 //	WithBinaryDataFunc(changeFunc)
-func WithBinaryDataFunc(data func(mtd *desc.MethodDescriptor, callData *CallData) []byte) Option {
+func WithBinaryDataFunc(data func(mtd protoreflect.MethodDescriptor, callData *CallData) []byte) Option {
 	return func(o *RunConfig) error {
 		o.dataFunc = data
 		o.binary = true
