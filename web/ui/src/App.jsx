@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Pane, Tab, Icon, Text } from 'evergreen-ui'
-import { BrowserRouter as Router, Route, Link as RouterLink, Switch } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Link as RouterLink, Switch, useLocation } from 'react-router-dom'
 import { Provider, Subscribe } from 'unstated'
 
 import ProjectListPage from './components/ProjectListPage'
@@ -10,6 +10,7 @@ import ReportDetailPage from './components/ReportDetailPage'
 import Footer from './components/Footer'
 import InfoComponent from './components/InfoComponent'
 import ComparePage from './components/ComparePage'
+import RunTestPage from './components/RunTestPage'
 
 import InfoContainer from './containers/InfoContainer'
 
@@ -20,17 +21,18 @@ export default class App extends Component {
         <div>
           <Pane display='flex' paddingY={12} borderBottom>
             <Pane flex={1} alignItems='center' display='flex' marginLeft={8}>
-              <TabLink to='/projects' linkText='PROJECTS' icon='control' />
-              <TabLink to='/reports' linkText='REPORTS' icon='dashboard' />
+              <NavTabs />
             </Pane>
           </Pane>
           <Switch>
             <Route exact path='/' component={Projects} />
+            <Route path='/projects/:projectId/run' component={RunInProject} />
             <Route path='/projects/:projectId' component={Projects} />
             <Route path='/projects' component={Projects} />
             <Route path='/reports/:reportId' component={Reports} />
             <Route path='/compare/:reportId1/:reportId2' component={Compare} />
             <Route path='/reports' component={Reports} />
+            <Route path='/run' component={Run} />
             <Route path='/about' component={Info} />
           </Switch>
           <Footer />
@@ -70,6 +72,22 @@ function Compare ({ match }) {
   )
 }
 
+function Run () {
+  return (
+    <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
+      <RunTestPage />
+    </Pane>
+  )
+}
+
+function RunInProject ({ match }) {
+  return (
+    <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
+      <RunTestPage projectId={match.params.projectId} />
+    </Pane>
+  )
+}
+
 function Info () {
   return (
     <Pane minHeight={600} paddingX={24} paddingY={10} marginTop={6}>
@@ -84,14 +102,25 @@ function Info () {
   )
 }
 
-const TabLink = ({ to, linkText, icon, ...rest }) => (
-  <Route
-    path={to}
-    children={() => (
-      <RouterLink to={to} {...rest} style={{ textDecoration: 'none' }}>
-        <Tab height={36} paddingX={14}><Icon icon={icon} marginRight={12} /><Text size={400}>{linkText}</Text></Tab>
-      </RouterLink>
-    )
-    }
-  />
-)
+const NavTabs = () => {
+  const location = useLocation()
+  const tabs = [
+    { to: '/projects', text: 'PROJECTS', icon: 'control' },
+    { to: '/reports', text: 'REPORTS', icon: 'dashboard' },
+    { to: '/run', text: 'RUN', icon: 'play' }
+  ]
+  return (
+    <>
+      {tabs.map(t => {
+        const active = location.pathname.startsWith(t.to)
+        return (
+          <RouterLink key={t.to} to={t.to} style={{ textDecoration: 'none' }}>
+            <Tab height={36} paddingX={14} isSelected={active} aria-current={active ? 'page' : undefined}>
+              <Icon icon={t.icon} marginRight={12} /><Text size={400}>{t.text}</Text>
+            </Tab>
+          </RouterLink>
+        )
+      })}
+    </>
+  )
+}
