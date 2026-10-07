@@ -99,6 +99,7 @@ type RunConfig struct {
 	streamInterval        time.Duration
 	streamCallDuration    time.Duration
 	streamCallCount       uint
+	streamCloseDelay      time.Duration
 	streamDynamicMessages bool
 
 	// lbStrategy
@@ -790,6 +791,15 @@ func WithStreamCallCount(c uint) Option {
 	}
 }
 
+// WithStreamCloseDelay sets the delay between sending the last message and closing the stream
+func WithStreamCloseDelay(d time.Duration) Option {
+	return func(o *RunConfig) error {
+		o.streamCloseDelay = d
+
+		return nil
+	}
+}
+
 // WithStreamDynamicMessages sets the stream dynamic message generation
 func WithStreamDynamicMessages(v bool) Option {
 	return func(o *RunConfig) error {
@@ -1199,6 +1209,7 @@ func fromConfig(cfg *Config) []Option {
 		WithStreamInterval(time.Duration(cfg.SI)),
 		WithStreamCallDuration(time.Duration(cfg.StreamCallDuration)),
 		WithStreamCallCount(cfg.StreamCallCount),
+		WithStreamCloseDelay(time.Duration(cfg.StreamCloseDelay)),
 		WithStreamDynamicMessages(cfg.StreamDynamicMessages),
 		WithReflectionMetadata(cfg.ReflectMetadata),
 		WithConnections(cfg.Connections),

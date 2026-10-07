@@ -1419,6 +1419,50 @@ func TestRunServerStreaming(t *testing.T) {
 		// reset
 		gs.StreamData = oldData
 	})
+
+	t.Run("with stream close delay on stream count", func(t *testing.T) {
+		gs.ResetCounters()
+
+		oldData := gs.StreamData
+
+		nc := 100
+		gs.StreamData = make([]*helloworld.HelloReply, nc)
+		for i := 0; i < nc; i++ {
+			name := "name " + strconv.FormatInt(int64(i), 10)
+			gs.StreamData[i] = &helloworld.HelloReply{Message: "Hello " + name}
+		}
+
+		data := make(map[string]interface{})
+		data["name"] = "bob"
+
+		report, err := Run(
+			"helloworld.Greeter.SayHellos",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithData(data),
+			WithInsecure(true),
+			WithStreamCallCount(3),
+			WithStreamCloseDelay(150*time.Millisecond),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+		assert.Equal(t, 1, int(report.Count))
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+
+		// close delay of 150ms after receiving streamCallCount messages
+		assert.True(t, dr.Latency > 150*time.Millisecond && dr.Latency < 400*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		// reset
+		gs.StreamData = oldData
+	})
 }
 
 func TestRunClientStreaming(t *testing.T) {
@@ -1976,6 +2020,101 @@ func TestRunClientStreaming(t *testing.T) {
 
 		assert.Equal(t, "g0c0: 0", msgs[0].GetName())
 		assert.Equal(t, "g0c0: 4", msgs[4].GetName())
+	})
+
+	t.Run("with stream close delay on last message", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+
+		data := []interface{}{m1, m2, m3}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCloseDelay(150*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+		assert.Equal(t, 1, int(report.Count))
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+
+		// 2 intervals at 100ms each plus close delay of 150ms = 350ms minimum
+		assert.True(t, dr.Latency > 350*time.Millisecond && dr.Latency < 600*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 3)
+	})
+
+	t.Run("with stream close delay on stream count", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+
+		data := []interface{}{m1, m2, m3, m4, m5}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloCS",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCallCount(3),
+			WithStreamCloseDelay(150*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+		assert.Equal(t, 1, int(report.Count))
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+
+		// 2 intervals at 100ms each plus close delay of 150ms = 350ms minimum
+		assert.True(t, dr.Latency > 350*time.Millisecond && dr.Latency < 600*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 3)
 	})
 }
 
@@ -2767,6 +2906,101 @@ func TestRunBidi(t *testing.T) {
 
 		assert.Equal(t, "g0c0: 0", msgs[0].GetName())
 		assert.Equal(t, "g0c0: 6", msgs[6].GetName())
+	})
+
+	t.Run("with stream close delay on last message", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+
+		data := []interface{}{m1, m2, m3}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCloseDelay(150*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+		assert.Equal(t, 1, int(report.Count))
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+
+		// 2 intervals at 100ms each plus close delay of 150ms = 350ms minimum
+		assert.True(t, dr.Latency > 350*time.Millisecond && dr.Latency < 600*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 3)
+	})
+
+	t.Run("with stream close delay on stream count", func(t *testing.T) {
+		gs.ResetCounters()
+
+		m1 := make(map[string]interface{})
+		m1["name"] = "bob"
+		m2 := make(map[string]interface{})
+		m2["name"] = "Kate"
+		m3 := make(map[string]interface{})
+		m3["name"] = "foo"
+		m4 := make(map[string]interface{})
+		m4["name"] = "bar"
+		m5 := make(map[string]interface{})
+		m5["name"] = "biz"
+
+		data := []interface{}{m1, m2, m3, m4, m5}
+
+		report, err := Run(
+			"helloworld.Greeter.SayHelloBidi",
+			internal.TestLocalhost,
+			WithProtoFile("../testdata/greeter.proto", []string{}),
+			WithTotalRequests(1),
+			WithConcurrency(1),
+			WithTimeout(time.Duration(20*time.Second)),
+			WithDialTimeout(time.Duration(20*time.Second)),
+			WithStreamInterval(100*time.Millisecond),
+			WithStreamCallCount(3),
+			WithStreamCloseDelay(150*time.Millisecond),
+			WithData(data),
+			WithInsecure(true),
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, report)
+		assert.Equal(t, 1, int(report.Count))
+		assert.Equal(t, ReasonNormalEnd, report.EndReason)
+		assert.Empty(t, report.ErrorDist)
+
+		assert.Len(t, report.Details, 1)
+		dr := report.Details[0]
+
+		// 2 intervals at 100ms each plus close delay of 150ms = 350ms minimum
+		assert.True(t, dr.Latency > 350*time.Millisecond && dr.Latency < 600*time.Millisecond, dr.Latency.String()+" not in interval")
+
+		calls := gs.GetCalls(callType)
+		assert.NotNil(t, calls)
+		assert.Len(t, calls, 1)
+		msgs := calls[0]
+		assert.Len(t, msgs, 3)
 	})
 }
 

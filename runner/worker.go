@@ -265,6 +265,7 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 	done := false
 	counter := uint(0)
 	end := false
+	shouldDelay := false
 	for !done && len(cancel) == 0 {
 		// default message provider checks counter
 		// but we also need to keep our own counts
@@ -288,12 +289,16 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 
 		end, err = performSend(payload)
 		if end || err != nil || isLast || len(cancel) > 0 {
+			if isLast {
+				shouldDelay = true
+			}
 			break
 		}
 
 		counter++
 
 		if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
+			shouldDelay = true
 			break
 		}
 
@@ -316,6 +321,9 @@ func (w *Worker) makeClientStreamingRequest(ctx *context.Context,
 		<-cancel
 	}
 
+	if shouldDelay && w.config.streamCloseDelay > 0 {
+		time.Sleep(w.config.streamCloseDelay)
+	}
 	closeStream()
 
 	close(doneCh)
@@ -421,6 +429,9 @@ func (w *Worker) makeServerStreamingRequest(ctx *context.Context, input *dynamic
 		counter++
 
 		if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
+			if w.config.streamCloseDelay > 0 {
+				time.Sleep(w.config.streamCloseDelay)
+			}
 			callCancel()
 		}
 
@@ -586,6 +597,9 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			}
 
 			if isLast {
+				if w.config.streamCloseDelay > 0 {
+					time.Sleep(w.config.streamCloseDelay)
+				}
 				closeStream()
 				break
 			}
@@ -594,6 +608,9 @@ func (w *Worker) makeBidiRequest(ctx *context.Context,
 			indexCounter++
 
 			if w.config.streamCallCount > 0 && counter >= w.config.streamCallCount {
+				if w.config.streamCloseDelay > 0 {
+					time.Sleep(w.config.streamCloseDelay)
+				}
 				closeStream()
 				break
 			}

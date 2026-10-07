@@ -94,6 +94,7 @@ type Config struct {
 	SI                    Duration          `json:"stream-interval" toml:"stream-interval" yaml:"stream-interval"`
 	StreamCallDuration    Duration          `json:"stream-call-duration" toml:"stream-call-duration" yaml:"stream-call-duration"`
 	StreamCallCount       uint              `json:"stream-call-count" toml:"stream-call-count" yaml:"stream-call-count"`
+	StreamCloseDelay      Duration          `json:"stream-close-delay" toml:"stream-close-delay" yaml:"stream-close-delay"`
 	StreamDynamicMessages bool              `json:"stream-dynamic-messages" toml:"stream-dynamic-messages" yaml:"stream-dynamic-messages"`
 	Output                string            `json:"output" toml:"output" yaml:"output"`
 	Format                string            `json:"format" toml:"format" yaml:"format" default:"summary"`
